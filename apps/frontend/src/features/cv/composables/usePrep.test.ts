@@ -11,6 +11,7 @@ import { sampleProfile } from '@/test/profile-service'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { prepQuestions } from '../mocks/engine/questions'
 import { OTHER, usePrep } from './usePrep'
+import { seedId } from '@/test/jobs-seed'
 
 const job = engineJob(0)
 
@@ -95,7 +96,7 @@ describe('usePrep', () => {
     prep.claimPick(3, 'Kept Terraform state tidy')
     prep.claimNo(2)
     expect(prep.progress.value).toBe('2 of 7 questions answered')
-    expect(prep.toRequest('1').confirmed).toEqual([3])
+    expect(prep.toRequest(seedId(1)).confirmed).toEqual([3])
     await prep.claimUndo(3)
     expect(prep.state.claims[3]).toBeUndefined()
   })
@@ -137,7 +138,7 @@ describe('usePrep', () => {
     expect(prep.state.focus).toBeNull()
     prep.toggleFocus('Git')
     prep.toggleFocus('Python')
-    expect(prep.toRequest('1')).toEqual({ job_id: '1', skip_roles: ['r2'], focus: ['SQL', 'CI/CD', 'Python'], confirmed: [] })
+    expect(prep.toRequest(seedId(1))).toEqual({ job_id: seedId(1), skip_roles: ['r2'], focus: ['SQL', 'CI/CD', 'Python'], confirmed: [] })
   })
 
   it('falls back to additional information without a role or project', async () => {

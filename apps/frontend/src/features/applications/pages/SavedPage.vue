@@ -9,7 +9,7 @@ import { jobKeys } from '@/features/jobs/composables/useJobs'
 import { matchJob, placeOf } from '@/features/jobs/match'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { knownSkills } from '@/features/profile/skills'
-import { STATUS_LABELS, type ApplicationStatus } from '../api/applications.schema'
+import { STATUS_LABELS, statusSince, type ApplicationStatus } from '../api/applications.schema'
 import { useApplicationMutations, useApplicationsQuery } from '../composables/useApplications'
 
 type Tab = 'all' | ApplicationStatus
@@ -38,7 +38,7 @@ const tracked = computed(() => {
   const skills = profile.data.value ? knownSkills(profile.data.value) : []
   return (applications.data.value ?? []).flatMap((application) => {
     const job = byId.get(application.job_id)
-    return job ? [{ job, status: application.status, ...matchJob(job, skills) }] : []
+    return job ? [{ job, status: application.status, since: statusSince(application), ...matchJob(job, skills) }] : []
   })
 })
 const tabs = computed(() => TABS.map(item => ({
@@ -73,6 +73,7 @@ function primary(jobId: string, status: ApplicationStatus) {
           <span class="flex min-w-0 flex-1 flex-col gap-0.5">
             <h2 class="m-0 text-[17px] leading-tight font-extrabold">{{ entry.job.title }}</h2>
             <span class="text-sm font-medium text-muted">{{ [entry.job.company, placeOf(entry.job)].filter(Boolean).join(' · ') }}</span>
+            <span v-if="entry.since" class="text-xs font-medium text-dimmed" data-test="since">{{ entry.since }}</span>
           </span>
           <ScoreTile :score="entry.score" size="sm" />
         </div>

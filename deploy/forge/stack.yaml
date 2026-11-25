@@ -7,6 +7,8 @@ backends:
   - { name: profile, language: go, go_version: "1.27", app_template: crud-service, features: [profiles], server_port: 5010 }
   # jobs holds the jobs a person finds or adds (from a link or pasted text) and reads their requirements with rules
   - { name: jobs, language: go, go_version: "1.27", app_template: crud-service, features: [jobs], server_port: 5020 }
+  # applications tracks what a person does with each job: saved, CV ready, applied, and the jobs they skipped
+  - { name: applications, language: go, go_version: "1.27", app_template: crud-service, features: [applications], server_port: 5030 }
 # The web app on forge's app-shell template: no generated page of its own; hoply's pages are composed into the
 # router factory. Jobs, saved jobs and CVs run on MSW mocks until their services exist.
 frontend:

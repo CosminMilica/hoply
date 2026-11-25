@@ -34,6 +34,23 @@
         "rust_edition": "2024",
         "sdk_consumption": null,
         "server_port": 5020
+      },
+      {
+        "app_template": "crud-service",
+        "depends_on": [],
+        "description": "Hoply: job search with a CV tailored to each job",
+        "features": [
+          "applications"
+        ],
+        "go_version": "1.27",
+        "language": "go",
+        "name": "applications",
+        "node_version": "26",
+        "project_name": "hoply",
+        "python_version": "3.13",
+        "rust_edition": "2024",
+        "sdk_consumption": null,
+        "server_port": 5030
       }
     ],
     "component_origins": {},

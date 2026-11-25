@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import JobPage from './JobPage.vue'
+import { seedId } from '@/test/jobs-seed'
 
 const text = () => document.body.textContent ?? ''
 
@@ -11,7 +12,7 @@ afterEach(() => {
 describe('JobPage', () => {
   it('shows the job, the match and lets the person save it or not', async () => {
     const { applications } = useServices()
-    await mountPage(JobPage, { at: '/jobs/2', props: { id: '2' } })
+    await mountPage(JobPage, { at: `/jobs/${seedId(2)}`, props: { id: seedId(2) } })
     expect(text()).toContain('Bitdefender · Bucharest, hybrid')
     expect(text()).toContain('Sample listing, not a real posting · DevOps · Mid')
     expect(text()).toContain('Good match, with a couple of things to pick up.')
@@ -19,24 +20,24 @@ describe('JobPage', () => {
     expect(text()).toContain('About Bitdefender')
     expect(text()).toContain('What we look for·Experience with Kubernetes.')
     expect(text()).not.toContain('View the original ad')
-    expect(button('Prepare my CV').getAttribute('href')).toBe('/jobs/2/prepare')
+    expect(button('Prepare my CV').getAttribute('href')).toBe(`/jobs/${seedId(2)}/prepare`)
     await click(button('Save for later'))
-    expect(applications.applications.get('2')?.status).toBe('saved')
+    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
     await click(button('Saved · tap to remove'))
-    expect(applications.applications.has('2')).toBe(false)
+    expect(applications.applications.has(seedId(2))).toBe(false)
   })
 
   it('offers a new CV once one is made, and no save button', async () => {
     const { applications } = useServices()
-    applications.applications.set('1', { job_id: '1', status: 'applied', updated_at: '2026-11-25T00:00:00Z' })
-    await mountPage(JobPage, { at: '/jobs/1', props: { id: '1' } })
+    applications.track(seedId(1), 'applied')
+    await mountPage(JobPage, { at: `/jobs/${seedId(1)}`, props: { id: seedId(1) } })
     expect(button('Prepare a new CV')).toBeTruthy()
     expect(text()).not.toContain('Save for later')
   })
 
   it('goes back where the person came from, or to Saved', async () => {
     useServices()
-    const { router } = await mountPage(JobPage, { at: '/jobs/1', props: { id: '1' } })
+    const { router } = await mountPage(JobPage, { at: `/jobs/${seedId(1)}`, props: { id: seedId(1) } })
     await click(button('Back'))
     expect(router.currentRoute.value.name).toBe('hoply-saved')
   })

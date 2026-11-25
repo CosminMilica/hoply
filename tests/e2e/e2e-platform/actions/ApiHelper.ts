@@ -6,7 +6,7 @@ interface BackendInfo {
 }
 
 const BACKEND_FEATURES: Record<string, BackendInfo> = JSON.parse(
-  '{"profile": {"port": 5010, "features": ["profiles"]}, "jobs": {"port": 5020, "features": ["jobs"]}}'
+  '{"profile": {"port": 5010, "features": ["profiles"]}, "jobs": {"port": 5020, "features": ["jobs"]}, "applications": {"port": 5030, "features": ["applications"]}}'
 );
 
 export class ApiHelper {

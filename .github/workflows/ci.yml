@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: [{"name": "profile", "path": "services/profile", "language": "go", "runtime": "1.27"}, {"name": "jobs", "path": "services/jobs", "language": "go", "runtime": "1.27"}]
+        include: [{"name": "profile", "path": "services/profile", "language": "go", "runtime": "1.27"}, {"name": "jobs", "path": "services/jobs", "language": "go", "runtime": "1.27"}, {"name": "applications", "path": "services/applications", "language": "go", "runtime": "1.27"}]
     defaults:
       run:
         working-directory: ${{ matrix.path }}

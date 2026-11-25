@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { saveCoverage } from './coverage';
+import { mockApplicationsService } from './applications';
 import { mockJobsService } from './jobs';
 import { mockProfileService } from './profile';
 
@@ -11,6 +12,7 @@ test('a phone edits the profile with the tab bar at hand', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
   const profile = await mockProfileService(page);
   await mockJobsService(page);
+  await mockApplicationsService(page);
   await page.goto('/');
   await expect(page.getByText('Ready to tailor')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: 'Andrei Popescu' })).toBeVisible();
@@ -35,6 +37,7 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   page.on('pageerror', error => errors.push(error.message));
   const profile = await mockProfileService(page);
   await mockJobsService(page);
+  await mockApplicationsService(page);
   await page.goto('/jobs');
   await expect(page.getByRole('heading', { name: 'Finding jobs is coming soon' })).toBeVisible();
   await page.getByRole('link', { name: /Add a job from a link or its text/ }).click();
@@ -71,6 +74,7 @@ test('a role and an education entry are edited in place', async ({ page }) => {
   page.on('pageerror', error => errors.push(error.message));
   const profile = await mockProfileService(page);
   await mockJobsService(page);
+  await mockApplicationsService(page);
   await page.goto('/profile');
   await page.getByRole('button', { name: 'Edit DevOps Engineer' }).click();
   const roleForm = page.getByRole('form', { name: 'Edit DevOps Engineer' });
@@ -99,6 +103,7 @@ test('work preferences, a project and a certification are saved from the profile
   page.on('pageerror', error => errors.push(error.message));
   const profile = await mockProfileService(page);
   await mockJobsService(page);
+  await mockApplicationsService(page);
   await page.goto('/profile');
   await page.getByRole('button', { name: /Work preferences/ }).click();
   await page.getByRole('button', { name: 'Remote', exact: true }).click();
@@ -134,6 +139,7 @@ test('a job read from pasted text after its link needed a login, then prepared',
   await page.setViewportSize({ width: 390, height: 860 });
   await mockProfileService(page);
   const jobs = await mockJobsService(page);
+  await mockApplicationsService(page);
   await page.goto('/saved');
   await page.getByRole('link', { name: 'Add a job', exact: true }).click();
   await expect(page.locator('[data-shell="tabs"]').getByRole('link', { name: /Saved/ })).toHaveAttribute('aria-current', 'page');
@@ -153,5 +159,24 @@ test('a job read from pasted text after its link needed a login, then prepared',
   await expect(page.getByRole('heading', { name: 'Prepare your CV' })).toBeVisible();
   await expect(page.getByText(/^DevOps Engineer ·/)).toBeVisible();
   expect(jobs.jobs[0]).toMatchObject({ source: 'text', url: 'https://www.linkedin.com/jobs/view/42', added_by_me: true });
+  expect(errors).toEqual([]);
+});
+
+test('a saved job is still in Saved after a reload', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await mockProfileService(page);
+  await mockJobsService(page);
+  const applications = await mockApplicationsService(page);
+  await page.goto('/jobs/add?from=saved');
+  await page.getByLabel('Link to the job ad').fill('https://careers.northwind.example/jobs/platform-engineer');
+  await page.getByRole('button', { name: 'Read the job' }).click();
+  await page.getByRole('button', { name: 'Save to my jobs' }).click();
+  await expect(page.getByRole('heading', { name: 'Platform Engineer' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Platform Engineer' })).toBeVisible();
+  await expect(page.locator('[data-test="since"]')).toHaveText(/^Saved \d{1,2} [A-Z][a-z]{2}$/);
+  await expect(page.getByRole('button', { name: 'Saved 1' })).toBeVisible();
+  expect([...applications.applications.values()].map(item => item.status)).toEqual(['saved']);
   expect(errors).toEqual([]);
 });

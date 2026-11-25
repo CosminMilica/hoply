@@ -1,7 +1,10 @@
+/** The ids of the catalog jobs: 1 Snowflake at Capgemini, 2 DevOps at Bitdefender, 3 Amazon, 4 Carpathia. */
+export const seedId = (n: 1 | 2 | 3 | 4) => `00000000-0000-4000-8000-00000000000${n}`
+
 /** The catalog's four sample jobs as the jobs service returns them (docs/api/jobs.md, "Catalog seed"). */
 export const CATALOG_JOBS = [
   {
-    id: "1",
+    id: "00000000-0000-4000-8000-000000000001",
     title: "Snowflake Administrator DevOps",
     company: "Capgemini Romania",
     city: "Iași",
@@ -52,7 +55,7 @@ export const CATALOG_JOBS = [
     created_at: "2026-11-21T08:00:00Z"
   },
   {
-    id: "2",
+    id: "00000000-0000-4000-8000-000000000002",
     title: "DevOps Engineer",
     company: "Bitdefender",
     city: "Bucharest",
@@ -101,7 +104,7 @@ export const CATALOG_JOBS = [
     created_at: "2026-11-22T08:00:00Z"
   },
   {
-    id: "3",
+    id: "00000000-0000-4000-8000-000000000003",
     title: "Software Engineer",
     company: "Amazon",
     city: "Bucharest",
@@ -150,7 +153,7 @@ export const CATALOG_JOBS = [
     created_at: "2026-11-23T08:00:00Z"
   },
   {
-    id: "4",
+    id: "00000000-0000-4000-8000-000000000004",
     title: "System Administrator",
     company: "Carpathia Systems",
     city: "Cluj-Napoca",

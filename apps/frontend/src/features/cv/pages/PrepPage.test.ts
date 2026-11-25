@@ -4,6 +4,7 @@ import { server } from '@/shared/mocks/node'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
 import PrepPage from './PrepPage.vue'
+import { seedId } from '@/test/jobs-seed'
 
 const text = () => document.body.textContent ?? ''
 const card = (selector: string, title: string) =>
@@ -20,7 +21,7 @@ afterEach(() => {
 describe('PrepPage', () => {
   it('saves gap answers in the profile, and the match follows them', async () => {
     const { profile } = useServices()
-    await mountPage(PrepPage, { at: '/jobs/1/prepare', props: { id: '1' } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     expect(text()).toContain('Snowflake Administrator DevOps · Capgemini Romania')
     expect(text()).toContain('0 of 8 questions answered')
     expect(document.querySelector('[data-test="match"]')!.textContent).toBe('56%')
@@ -52,7 +53,7 @@ describe('PrepPage', () => {
     const person = sampleProfile()
     person.experience[0]!.bullets.push({ text: 'Kept Terraform state tidy', result: '', skills: [] })
     const { profile } = useServices(person)
-    await mountPage(PrepPage, { at: '/jobs/1/prepare', props: { id: '1' } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     const claim = (index: number) => [...document.querySelectorAll<HTMLElement>('[data-test="claim"]')][index]!
 
     expect(claim(3).textContent).toContain('From your profile')
@@ -74,14 +75,14 @@ describe('PrepPage', () => {
 
   it('remembers a fact for the next job, which does not ask about it again', async () => {
     useServices()
-    const first = await mountPage(PrepPage, { at: '/jobs/1/prepare', props: { id: '1' } })
+    const first = await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     expect(gaps()).toContain('Terraform')
     await type(input('Your experience with Terraform'), 'Wrote Terraform modules for 3 environments')
     await click(within(card('[data-test="gap"]', 'Terraform'), 'Add to my CV'))
     first.wrapper.unmount()
     document.body.innerHTML = ''
 
-    await mountPage(PrepPage, { at: '/jobs/2/prepare', props: { id: '2' } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(2)}/prepare`, props: { id: seedId(2) } })
     expect(gaps()).toEqual(['Kubernetes', 'AWS'])
     expect(text()).toContain('Terraform')
     expect(document.querySelector('[data-test="match"]')!.textContent).toBe('75%')
@@ -89,7 +90,7 @@ describe('PrepPage', () => {
 
   it('saves results and extra lines in the profile, and keeps the CV’s choices', async () => {
     const { profile } = useServices()
-    await mountPage(PrepPage, { at: '/jobs/1/prepare', props: { id: '1' } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     const impacts = document.querySelectorAll<HTMLInputElement>('[aria-label="What changed because of it"]')
     expect(impacts).toHaveLength(3)
     await type(impacts[0]!, 'cut release time to 15 minutes')
@@ -108,8 +109,8 @@ describe('PrepPage', () => {
 
   it('generates the CV, steps through the progress and opens it', async () => {
     const { applications } = useServices()
-    applications.applications.set('1', { job_id: '1', status: 'saved', updated_at: '2026-11-25T00:00:00Z' })
-    const { router } = await mountPage(PrepPage, { at: '/jobs/1/prepare', props: { id: '1' } })
+    applications.track(seedId(1), 'saved')
+    const { router } = await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     vi.useFakeTimers()
     button('Generate CV · 56% match').click()
     await vi.advanceTimersByTimeAsync(50)
@@ -121,25 +122,25 @@ describe('PrepPage', () => {
     await vi.advanceTimersByTimeAsync(1600)
     vi.useRealTimers()
     await settle()
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-cv', params: { id: '1' } })
-    expect(applications.applications.get('1')?.status).toBe('cv_ready')
+    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-cv', params: { id: seedId(1) } })
+    expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready')
   })
 
   it('keeps an applied job applied and goes back to the form when generation fails', async () => {
     const { applications } = useServices()
-    applications.applications.set('2', { job_id: '2', status: 'applied', updated_at: '2026-11-25T00:00:00Z' })
-    await mountPage(PrepPage, { at: '/jobs/2/prepare', props: { id: '2' } })
+    applications.track(seedId(2), 'applied')
+    await mountPage(PrepPage, { at: `/jobs/${seedId(2)}/prepare`, props: { id: seedId(2) } })
     server.use(http.post('*/api/cv/v1/cvs', () => HttpResponse.json({ message: 'busy' }, { status: 503 })))
     await click(button(/^Generate CV/))
     await settle()
     expect(text()).toContain('Prepare your CV')
-    expect(applications.applications.get('2')?.status).toBe('applied')
+    expect(applications.applications.get(seedId(2))?.status).toBe('applied')
   })
 
   it('says so when the profile cannot be read', async () => {
     useServices()
     server.use(http.get('*/api/profile/v1/profiles/me', () => HttpResponse.json({ message: 'down' }, { status: 503 })))
-    await mountPage(PrepPage, { at: '/jobs/1/prepare', props: { id: '1' } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     expect(text()).toContain('We could not prepare this CV')
   })
 })

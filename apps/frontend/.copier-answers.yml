@@ -28,7 +28,7 @@ application: "{\n  \"title\": \"hoply\",\n  \"auth\": false,\n  \"routing\": {\n
 auth_runtime: forge
 author_name: Your Name
 backend_features: '{"profile": {"port": 5010, "features": ["profiles"]}, "jobs": {"port":
-  5020, "features": ["jobs"]}}'
+  5020, "features": ["jobs"]}, "applications": {"port": 5030, "features": ["applications"]}}'
 builtin_pages: not_found,forbidden
 default_color_scheme: blue
 description: 'Hoply: job search with a CV tailored to each job'
@@ -51,7 +51,8 @@ nuxt_ui_version: 4.12.0
 package_manager: npm
 project_name: hoply
 project_slug: frontend
-proxy_targets: '[{"name": "profile", "port": 5010}, {"name": "jobs", "port": 5020}]'
+proxy_targets: '[{"name": "profile", "port": 5010}, {"name": "jobs", "port": 5020},
+  {"name": "applications", "port": 5030}]'
 security_csp: true
 server_port: 5173
 session_dialog: none
@@ -61,4 +62,6 @@ vite_proxy_config: "      '/api/profile': {\n        target: 'http://localhost:5
   \        changeOrigin: true,\n        rewrite: (path: string) => path.replace(/^\\\
   /api\\/profile/, '/api'),\n      },\n      '/api/jobs': {\n        target: 'http://localhost:5020',\n\
   \        changeOrigin: true,\n        rewrite: (path: string) => path.replace(/^\\\
-  /api\\/jobs/, '/api'),\n      },"
+  /api\\/jobs/, '/api'),\n      },\n      '/api/applications': {\n        target:\
+  \ 'http://localhost:5030',\n        changeOrigin: true,\n        rewrite: (path:\
+  \ string) => path.replace(/^\\/api\\/applications/, '/api'),\n      },"

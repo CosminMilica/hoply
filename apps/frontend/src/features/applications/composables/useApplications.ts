@@ -23,6 +23,18 @@ export function useSkipsQuery() {
   return useQuery({ queryKey: applicationKeys.skips, queryFn: applicationsApi.skips })
 }
 
+/** An application after a status change, by the service's rules, for the cache until the service answers. */
+function changed(current: Application | undefined, jobId: string, status: ApplicationStatus): Application {
+  const now = new Date().toISOString()
+  const next: Application = current
+    ? { ...current }
+    : { job_id: jobId, status, saved_at: null, cv_ready_at: null, applied_at: null, created_at: now, updated_at: now }
+  next.status = status === 'cv_ready' && current?.status === 'applied' ? 'applied' : status
+  next[`${status}_at`] = now
+  next.updated_at = now
+  return next
+}
+
 /**
  * The applications' and skips' mutations. They change the cache first, so the deck moves on at
  * once, and put it back when the service refuses.
@@ -48,7 +60,7 @@ export function useApplicationMutations() {
   const setStatus = useMutation({
     mutationFn: ({ jobId, status }: { jobId: string, status: ApplicationStatus }) => applicationsApi.setStatus(jobId, status),
     onMutate: ({ jobId, status }) => optimistic<Application[]>(applicationKeys.list, list => [
-      { job_id: jobId, status, updated_at: new Date().toISOString() },
+      changed(list.find(item => item.job_id === jobId), jobId, status),
       ...list.filter(item => item.job_id !== jobId),
     ])(),
     onError: rollback<Application[]>(applicationKeys.list),

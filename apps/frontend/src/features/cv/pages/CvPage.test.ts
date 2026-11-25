@@ -3,9 +3,10 @@ import { cvApi } from '../api/cvApi'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
 import CvPage from './CvPage.vue'
+import { seedId } from '@/test/jobs-seed'
 
 const text = () => document.body.textContent ?? ''
-const request = { job_id: '1', skip_roles: [], focus: [], confirmed: [] }
+const request = { job_id: seedId(1), skip_roles: [], focus: [], confirmed: [] }
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -15,9 +16,9 @@ afterEach(() => {
 describe('CvPage', () => {
   it('shows the tailored CV with its ATS check, and the profile version', async () => {
     const { applications } = useServices()
-    applications.applications.set('1', { job_id: '1', status: 'cv_ready', updated_at: '2026-11-25T00:00:00Z' })
+    applications.track(seedId(1), 'cv_ready')
     await cvApi.generate(request)
-    const { router } = await mountPage(CvPage, { at: '/jobs/1/cv', props: { id: '1' } })
+    const { router } = await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     expect(text()).toContain('For Snowflake Administrator DevOps at Capgemini Romania')
     expect(button('Tailored').getAttribute('aria-pressed')).toBe('true')
     expect(text()).toContain('ATS check')
@@ -32,7 +33,7 @@ describe('CvPage', () => {
     expect(document.querySelectorAll('[data-print-root] mark')).toHaveLength(0)
 
     await click(button('I applied to this job'))
-    expect(applications.applications.get('1')?.status).toBe('applied')
+    expect(applications.applications.get(seedId(1))?.status).toBe('applied')
     expect(button('Marked as applied ✓').disabled).toBe(true)
 
     await click(button('Tailored'))
@@ -43,7 +44,7 @@ describe('CvPage', () => {
   it('prints the CV under its file name', async () => {
     useServices()
     await cvApi.generate(request)
-    await mountPage(CvPage, { at: '/jobs/1/cv', props: { id: '1' } })
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     const titles: string[] = []
     vi.spyOn(window, 'print').mockImplementation(() => titles.push(document.title))
     document.title = 'hoply'
@@ -55,7 +56,7 @@ describe('CvPage', () => {
   it('starts with the headline and keeps the plain file name without a name', async () => {
     useServices(sampleProfile({ name: '' }))
     await cvApi.generate(request)
-    await mountPage(CvPage, { at: '/jobs/1/cv', props: { id: '1' } })
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     expect(document.querySelector('[data-test="cv-name"]')).toBeNull()
     expect(document.querySelector('[data-print-root] header span')!.textContent).toBe('DevOps Engineer | SQL, Git, CI/CD')
     expect(text()).toContain('CV_Capgemini_Romania.pdf')
@@ -64,7 +65,7 @@ describe('CvPage', () => {
 
   it('has nothing to show before a CV is made', async () => {
     useServices()
-    await mountPage(CvPage, { at: '/jobs/2/cv', props: { id: '2' } })
+    await mountPage(CvPage, { at: `/jobs/${seedId(2)}/cv`, props: { id: seedId(2) } })
     expect(text()).toContain('No CV yet')
     expect(text()).toContain('Add a job, prepare your CV, and the tailored version shows up here.')
     expect(button('Add a job').getAttribute('href')).toBe('/jobs/add')

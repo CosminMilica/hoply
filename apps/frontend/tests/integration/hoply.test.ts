@@ -49,8 +49,7 @@ it('opens Find jobs on the coming-soon page, which leads to adding a job', async
   expect(text()).toContain('Finding jobs is coming soon')
   expect(text()).not.toContain('Position area')
   await click(button(/^Add a job from a link or its text/))
-  await settle(8)
-  expect(router.currentRoute.value.name).toBe('hoply-job-add')
+  await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('hoply-job-add'))
 })
 
 it('adds a job from a link and lists it under Saved', async () => {

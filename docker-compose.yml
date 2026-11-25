@@ -131,6 +131,66 @@ services:
         condition: service_completed_successfully
     networks:
       - app-network
+  # ── Migrations for applications ──
+  applications-migrate:
+    build:
+      context: ./services/applications
+      dockerfile: Dockerfile
+      # Multi-stage Dockerfiles reference the platform's weld-* SDK
+      # source tree via ``COPY --from=packages`` and the workspace root
+      # (workspace package.json + lockfile) via ``COPY --from=project_root``.
+      # ``additional_contexts`` binds those build-context names to the
+      # on-disk ``./packages/`` directory and the project root (sibling /
+      # parent of the compose file). The ``packages`` context is only declared
+      # when a project-root ``packages/`` tree actually ships (the platform-auth
+      # SDK fragments) — BuildKit FAILS the build on a declared-but-missing
+      # context dir, and forge-core comes from the main context, not here.
+      additional_contexts:
+        project_root: .
+    environment:
+      ENV: development
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/applications"
+    command: ["/app/migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ── applications ──
+  applications:
+    build:
+      context: ./services/applications
+      dockerfile: Dockerfile
+      # See the applications-migrate build above — same rationale (the
+      # ``packages`` context is only declared when a project-root packages/ ships).
+      additional_contexts:
+        project_root: .
+    # Direct host:container port so the matrix-nightly lane-C smoke
+    # contract — and any local ``curl http://localhost:5030`` —
+    # can reach the backend without going through Traefik. The Traefik
+    # entry above remains for the production-shape ``app.localhost``
+    # route; this is the dev/test stack so exposing both is fine.
+    ports:
+      - "5030:5030"
+    environment:
+      ENV: development
+      PORT: "5030"
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/applications"
+      APP__SECURITY__AUTH__ENABLED: "false"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.applications.rule=Host(`app.localhost`) && PathPrefix(`/api/applications`)"
+      - "traefik.http.routers.applications.entrypoints=web"
+      - "traefik.http.middlewares.applications-rewrite.replacepathregex.regex=^/api/applications/(.*)"
+      - "traefik.http.middlewares.applications-rewrite.replacepathregex.replacement=/api/$$1"
+      - "traefik.http.routers.applications.middlewares=applications-rewrite"
+      - "traefik.http.services.applications.loadbalancer.server.port=5030"
+    depends_on:
+      applications-migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
 
   # ── Database ──
   # ``pgvector/pgvector:pg16`` is a superset of stock ``postgres:16``
@@ -179,6 +239,7 @@ services:
     depends_on:
       - profile
       - jobs
+      - applications
     networks:
       - app-network
 
@@ -230,6 +291,7 @@ services:
       - frontend
       - profile
       - jobs
+      - applications
     profiles:
       - test
 

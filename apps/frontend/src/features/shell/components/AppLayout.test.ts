@@ -9,6 +9,7 @@ import { testAuth } from '@/shared/application/testing'
 import UApp from '@nuxt/ui/components/App.vue'
 import { settle, useServices } from '@/test/hoply'
 import AppLayout from './AppLayout.vue'
+import { seedId } from '@/test/jobs-seed'
 
 const Page = defineComponent({ props: { id: { type: String, default: '' } }, setup: props => () => h('p', { 'data-test': 'page' }, props.id) })
 
@@ -54,9 +55,9 @@ describe('AppLayout', () => {
 
   it('marks Saved on a CV and shows how many jobs are saved', async () => {
     const { applications } = useServices()
-    applications.applications.set('1', { job_id: '1', status: 'saved', updated_at: '2026-11-25T00:00:00Z' })
-    applications.applications.set('2', { job_id: '2', status: 'applied', updated_at: '2026-11-25T00:00:00Z' })
-    await render('/jobs/1/cv')
+    applications.track(seedId(1), 'saved')
+    applications.track(seedId(2), 'applied')
+    await render(`/jobs/${seedId(1)}/cv`)
     const saved = tabs()[2]!
     expect(saved.getAttribute('aria-current')).toBe('page')
     expect(saved.textContent).toContain('2 saved')

@@ -4,14 +4,15 @@ import { server } from '@/shared/mocks/node'
 import { jobsServiceHandlers } from '@/test/jobs-service'
 import { jobDraftSchema, jobInputSchema } from './jobs.schema'
 import { jobSearchParams, jobsApi, unreadableReason } from './jobsApi'
+import { seedId } from '@/test/jobs-seed'
 
 describe('jobsApi', () => {
   it('lists, filters, reads, adds and removes jobs by the contract', async () => {
     server.use(...jobsServiceHandlers().handlers)
     expect((await jobsApi.list()).total).toBe(4)
-    expect((await jobsApi.list({ city: 'Iasi', country: 'Romania' })).items.map(job => job.id)).toEqual(['1'])
-    expect((await jobsApi.list({ level: 'Senior' })).items.map(job => job.id)).toEqual(['1'])
-    expect((await jobsApi.get('2')).company).toBe('Bitdefender')
+    expect((await jobsApi.list({ city: 'Iasi', country: 'Romania' })).items.map(job => job.id)).toEqual([seedId(1)])
+    expect((await jobsApi.list({ level: 'Senior' })).items.map(job => job.id)).toEqual([seedId(1)])
+    expect((await jobsApi.get(seedId(2))).company).toBe('Bitdefender')
     await expect(jobsApi.get('nope')).rejects.toThrow()
     const draft = await jobsApi.read({ url: 'https://careers.northwind.example/jobs/1' })
     expect(draft).toMatchObject({ title: 'Platform Engineer', host: 'careers.northwind.example', read_from: 'json_ld' })
@@ -20,7 +21,7 @@ describe('jobsApi', () => {
     expect(job).toMatchObject({ added_by_me: true, source: 'link' })
     expect((await jobsApi.list()).items[0]!.id).toBe(job.id)
     await jobsApi.remove(job.id)
-    await expect(jobsApi.remove('1')).rejects.toThrow()
+    await expect(jobsApi.remove(seedId(1))).rejects.toThrow()
   })
 
   it('reads every documented read_from, and a new one as plain text', () => {

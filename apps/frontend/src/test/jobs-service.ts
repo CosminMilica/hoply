@@ -87,7 +87,7 @@ export function createJobsBackend() {
       if (body.source === 'catalog') return invalid('source', 'source must be link or text')
       sequence += 1
       const job = {
-        ...(body as unknown as Job), id: `added-${sequence}`, about_company: '', product: '', perks: [], areas: [],
+        ...(body as unknown as Job), id: `00000000-0000-4000-9000-${String(sequence).padStart(12, '0')}`, about_company: '', product: '', perks: [], areas: [],
         sample: false, added_by_me: true, created_at: `2026-12-0${sequence}T08:00:00Z`,
       }
       jobs.unshift(job)

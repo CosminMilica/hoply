@@ -5,7 +5,7 @@ import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 import UApp from '@nuxt/ui/components/App.vue'
 import { server } from '@/shared/mocks/node'
-import { createApplicationsHandlers, createApplicationsStore } from '@/features/applications/mocks/handlers'
+import { applicationsServiceHandlers } from './applications-service'
 import { createCvHandlers } from '@/features/cv/mocks/handlers'
 import { jobSchema } from '@/features/jobs/api/jobs.schema'
 import { toEngineJob } from '@/features/cv/mocks/engine/job'
@@ -35,11 +35,11 @@ export function testRouter(pages: Partial<Record<string, Component>> = {}) {
 export function useServices(profile: Profile = sampleProfile()) {
   const profileService = profileServiceHandlers(profile)
   const jobsService = jobsServiceHandlers()
-  const applications = createApplicationsStore()
+  const applicationsService = applicationsServiceHandlers()
   server.use(
     ...profileService.handlers,
     ...jobsService.handlers,
-    ...createApplicationsHandlers(applications),
+    ...applicationsService.handlers,
     ...createCvHandlers({
       loadProfile: async () => structuredClone(profileService.profile),
       loadJob: async (_, id) => {
@@ -49,7 +49,7 @@ export function useServices(profile: Profile = sampleProfile()) {
       now: () => new Date('2026-11-25T10:00:00Z'),
     }),
   )
-  return { profile: profileService.profile, applications, jobs: jobsService.backend }
+  return { profile: profileService.profile, applications: applicationsService.backend, jobs: jobsService.backend }
 }
 
 interface MountOptions {

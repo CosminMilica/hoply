@@ -5,6 +5,7 @@ import { button, click, input, mountPage, settle, type, useServices as useAllSer
 import { sampleProfile } from '@/test/profile-service'
 import { useJobSearchStore } from '../stores/search'
 import JobSearch from './JobSearch.vue'
+import { seedId } from '@/test/jobs-seed'
 
 const text = () => document.body.textContent ?? ''
 /** A person without work preferences, so the filters start empty. */
@@ -49,17 +50,17 @@ describe('JobSearch (parked)', () => {
 
     await click(button('Save this job'))
     await wait(260)
-    expect(applications.applications.get('2')?.status).toBe('saved')
+    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
     expect(text()).toContain('Saved · DevOps Engineer')
     await click(button('Undo'))
-    expect(applications.applications.has('2')).toBe(false)
+    expect(applications.applications.has(seedId(2))).toBe(false)
     expect(cardTitle()).toBe('DevOps Engineer')
 
     await click(button('Skip this job'))
     await wait(260)
     expect(text()).toContain('Skipped · DevOps Engineer')
     await click(button('Undo'))
-    expect(applications.skips.size).toBe(0)
+    expect(applications.skips.length).toBe(0)
 
     for (let i = 0; i < 4; i += 1) {
       await click(button('Skip this job'))
@@ -67,7 +68,7 @@ describe('JobSearch (parked)', () => {
     }
     expect(text()).toContain('You are all caught up')
     await click(button('Bring back skipped jobs'))
-    expect(applications.skips.size).toBe(0)
+    expect(applications.skips.length).toBe(0)
     expect(cardTitle()).toBeTruthy()
   })
 
@@ -90,13 +91,13 @@ describe('JobSearch (parked)', () => {
     const { router } = await mountPage(JobSearch)
     await click(button('Show 4 jobs'))
     await click(button('Details'))
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-job', params: { id: '2' } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-job', params: { id: seedId(2) } })
     await router.push('/jobs')
     await settle()
     await click(button('Tailor CV'))
     await wait(260)
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: '2' } })
-    expect(applications.applications.get('2')?.status).toBe('saved')
+    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: seedId(2) } })
+    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
   })
 
   it('reacts to swipes and taps on the card', async () => {

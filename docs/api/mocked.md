@@ -1,37 +1,18 @@
 # Mocked services
 
-Two services the web app calls through typed clients don't exist yet: applications and cv. In the browser, MSW
-answers them from in-memory stores, which reset on every page load. MSW runs on the Vite dev server only
-(`VITE_MSW_ENABLED=true` in `apps/frontend/.env.development`); a production build has neither the handlers nor
-the worker script. The profile and jobs services are real (`docs/api/profile.md`, `docs/api/jobs.md`): they have no
-handler, and their requests pass through to the network.
+One service the web app calls through a typed client doesn't exist yet: cv. In the browser, MSW answers it from an
+in-memory store, which resets on every page load. MSW runs on the Vite dev server only (`VITE_MSW_ENABLED=true` in
+`apps/frontend/.env.development`); a production build has neither the handlers nor the worker script. The profile,
+jobs and applications services are real (`docs/api/profile.md`, `docs/api/jobs.md`, `docs/api/applications.md`):
+they have no handler, and their requests pass through to the network.
 
 JSON is `snake_case`. Errors use the platform envelope `{ message, type, detail }`.
 
 ```text
 apps/frontend/src/
   custom/mocks/handlers.ts       the list the browser worker serves; delete a service's line when it ships
-  features/applications/mocks/   handlers.ts (store inside)
   features/cv/mocks/             handlers.ts, engine/ (the tailoring engine, plain TypeScript)
 ```
-
-## applications (`/api/applications/v1`)
-
-| Method | Path | Body | Response |
-| --- | --- | --- | --- |
-| GET | `/applications` | | 200 `{ items: [Application] }`, most recently changed first |
-| PUT | `/applications/{job_id}` | `{ status }` | 200 `Application` (creates or updates), 422 for an unknown status |
-| DELETE | `/applications/{job_id}` | | 204, 404 |
-| GET | `/skips` | | 200 `{ job_ids: [string] }` |
-| PUT | `/skips/{job_id}` | | 204 |
-| DELETE | `/skips/{job_id}` | | 204 |
-| DELETE | `/skips` | | 204 (brings back every skipped job) |
-
-```text
-Application { job_id, status: saved | cv_ready | applied, updated_at }
-```
-
-The UI sets `cv_ready` after it generates a CV. A job that is already `applied` stays `applied`.
 
 ## cv (`/api/cv/v1`)
 

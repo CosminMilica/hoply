@@ -4,7 +4,7 @@
 _src_path: /private/tmp/claude-501/-Users-milicacosmin-sergiu-work/51a792af-8bc4-48a1-ba26-d99f6fea7acf/scratchpad/forge-main/forge/templates/tests/e2e-testing-template
 _commit: 5b6b671fa2518fcc58201175ced78142a4b67661
 backend_features: '{"profile": {"port": 5010, "features": ["profiles"]}, "jobs": {"port":
-  5020, "features": ["jobs"]}}'
+  5020, "features": ["jobs"]}, "applications": {"port": 5030, "features": ["applications"]}}'
 base_url: http://localhost:5173
 features: ''
 frontend_framework: vue
