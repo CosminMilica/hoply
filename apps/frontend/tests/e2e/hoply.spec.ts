@@ -53,7 +53,7 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   await page.getByLabel('Your experience with Kubernetes').fill('Ran a Kubernetes cluster with 30 services');
   await page.locator('[data-test="gap"]').filter({ hasText: 'Kubernetes' }).getByRole('button', { name: 'Add to my CV' }).click();
   await expect(page.locator('[data-test="match"]')).toHaveText('38% → 48%');
-  expect(profile.experience[0]!.bullets.at(-1)).toEqual({ text: 'Ran a Kubernetes cluster with 30 services', result: '', skills: ['Kubernetes'] });
+  expect(profile.experience[0]!.notes.at(-1)).toEqual({ text: 'Ran a Kubernetes cluster with 30 services', skills: ['Kubernetes'] });
   await page.getByRole('button', { name: 'Generate CV · 48% match' }).click();
   await expect(page.getByRole('heading', { name: 'Tailoring your CV' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your CV is ready' })).toBeVisible({ timeout: 10_000 });

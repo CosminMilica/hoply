@@ -3,7 +3,7 @@ import { matchJob } from '@/features/jobs/match'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { knownSkills } from '@/features/profile/skills'
 import type { PrepQuestions } from '@/features/cv/api/cv.schema'
-import { capitalize, pastPhrase } from './text'
+import { capitalize, joinList, pastPhrase } from './text'
 
 const EXAMPLES: Record<string, string> = {
   'terraform': 'Wrote Terraform modules for our staging environments, cutting setup from 2 days to 30 minutes',
@@ -30,11 +30,16 @@ export const exampleFor = (skill: string) => EXAMPLES[skill.toLowerCase()] ?? `U
  * tools or a highlight that proves one), and the job's key responsibilities.
  */
 export function prepQuestions(job: Job, profile: Pick<Profile, 'skills' | 'experience' | 'projects'>): PrepQuestions {
-  const { matched, missing, score } = matchJob(job, knownSkills(profile))
+  const { matched, related, missing, score } = matchJob(job, knownSkills(profile))
   return {
     job_id: job.id,
     base_score: score,
     covered: matched,
+    related: related.map(({ skill, via }) => ({
+      skill,
+      via,
+      note: `You use ${joinList(via)}, which is close to ${skill}. Your CV says so, without claiming ${skill} itself.`,
+    })),
     gaps: missing.map(skill => ({
       skill,
       ask: `Have you used ${skill}? Tell us where and what you did. Numbers help: how many, how much, how fast.`,

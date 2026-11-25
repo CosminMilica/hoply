@@ -246,6 +246,7 @@ services:
       CLAUDE_TOKEN_FILE: "/run/secrets/hoply/claude_oauth_token"
       CV_MODEL: "claude-sonnet-5-5"
       CV_EFFORT: "high"
+      GOTENBERG_URL: "http://gotenberg:3000"
     volumes:
       - ./deploy/compose/secrets:/run/secrets/hoply:ro
     labels:
@@ -259,6 +260,18 @@ services:
     depends_on:
       cv-migrate:
         condition: service_completed_successfully
+    networks:
+      - app-network
+
+  # ── PDF export for cv ──
+  # Chromium prints the CV's HTML to PDF. No published port: only the cv service reaches it.
+  gotenberg:
+    image: gotenberg/gotenberg:9.4.0
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - app-network
 

@@ -92,7 +92,7 @@ func TestProfileV2MigrationConvertsExistingData(t *testing.T) {
 	exec("INSERT INTO profile_education (profile_id, level, field, degree, start_year, end_year) "+
 		"VALUES ($1, 'high_school', 'Science', '', '2005', '2009')", profileID)
 	exec("INSERT INTO profile_projects (profile_id, name) VALUES ($1, 'dropped on down')", profileID)
-	if _, err := migrator.Down(ctx); err != nil {
+	if _, err := migrator.DownTo(ctx, 100); err != nil {
 		t.Fatal(err)
 	}
 	var startYear, endYear string

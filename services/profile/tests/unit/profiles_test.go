@@ -3,6 +3,7 @@ package unit_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -839,5 +840,38 @@ func TestProfileRepositoryFailuresSurface(t *testing.T) {
 		if status, body := testutil.Do(t, handler, tc.method, tc.path, tc.payload); status != http.StatusServiceUnavailable {
 			t.Fatalf("%s %s: %d %v", tc.method, tc.path, status, body)
 		}
+	}
+}
+
+func TestCleanNotes(t *testing.T) {
+	long := strings.Repeat("a", services.MaxNoteText+1)
+	cleaned, err := services.CleanExperience(models.ExperienceInput{Role: "dev", Notes: []models.Note{
+		{Text: "  Ran the CI  ", Skills: []string{" CI/CD ", "ci/cd", ""}}, {Text: "   "},
+	}})
+	if err != nil || len(cleaned.Notes) != 1 || cleaned.Notes[0].Text != "Ran the CI" || !slices.Equal(cleaned.Notes[0].Skills, []string{"CI/CD"}) {
+		t.Fatalf("notes are trimmed and empty ones dropped: %+v %v", cleaned.Notes, err)
+	}
+	if kept, err := services.CleanProject(models.ProjectInput{Name: "p"}); err != nil || kept.Notes != nil {
+		t.Fatalf("notes left out stay left out: %+v %v", kept.Notes, err)
+	}
+	many := make([]models.Note, services.MaxNotes+1)
+	for i := range many {
+		many[i] = models.Note{Text: fmt.Sprint(i)}
+	}
+	for _, tc := range []struct {
+		notes []models.Note
+		want  string
+	}{
+		{[]models.Note{{Text: long}}, "notes.text"},
+		{many, "notes"},
+	} {
+		_, err := services.CleanProject(models.ProjectInput{Name: "p", Notes: tc.notes})
+		var appErr *apperrors.Error
+		if !errors.As(err, &appErr) || appErr.Context["field"] != tc.want {
+			t.Errorf("%s: %v", tc.want, err)
+		}
+	}
+	if patch, err := services.CleanPatch(models.ProfilePatch{Notes: []models.Note{{Text: " x "}}}); err != nil || patch.Notes[0].Text != "x" || patch.Empty() {
+		t.Fatalf("profile notes: %+v %v", patch.Notes, err)
 	}
 }

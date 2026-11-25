@@ -72,7 +72,7 @@ func (w *Writer) Write(ctx context.Context, task *repositories.Task) (models.Wri
 	request := claude.Request{
 		System: grounding.System,
 		Schema: grounding.Schema(),
-		Prompt: catalogue.Prompt(job, task.Request, rules.Tailored.Skills),
+		Prompt: catalogue.Prompt(job, task.Request, catalogue.Known),
 	}
 	for attempt := 1; attempt <= Attempts; attempt++ {
 		raw, err := w.claude.Run(ctx, request)
@@ -98,14 +98,17 @@ func (w *Writer) Write(ctx context.Context, task *repositories.Task) (models.Wri
 			continue
 		}
 		w.setLoginNeeded(false)
-		tailored, refused := catalogue.Assemble(answer, job, rules.Tailored)
+		tailored, refusals := catalogue.Assemble(answer, job, rules.Tailored)
+		for _, reason := range refusals {
+			slog.Info("claude sentence refused", "cv_id", task.ID, "reason", reason)
+		}
 		written := models.Written{
 			Highlights: rules.Highlights,
 			Profile:    rules.Profile,
 			Tailored:   tailored,
-			Ats:        cvdoc.Score(cvdoc.AtsChecks(tailored, job, task.Profile, task.Request)),
+			Ats:        cvdoc.Score(cvdoc.AtsChecks(tailored, job, task.Profile, task.Request, task.CreatedAt)),
 		}
-		return written, models.Authorship{WrittenBy: models.WrittenByClaude, Model: w.claude.Model(), Refused: refused}, nil
+		return written, models.Authorship{WrittenBy: models.WrittenByClaude, Model: w.claude.Model(), Refused: len(refusals)}, nil
 	}
 	return byRules(models.ClaudeFailed, nil)
 }

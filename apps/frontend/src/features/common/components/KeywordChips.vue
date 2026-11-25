@@ -1,6 +1,9 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ matched?: string[], missing?: string[], size?: 'sm' | 'md' }>(), {
+import type { RelatedSkill } from '@/features/jobs/match'
+
+withDefaults(defineProps<{ matched?: string[], related?: RelatedSkill[], missing?: string[], size?: 'sm' | 'md' }>(), {
   matched: () => [],
+  related: () => [],
   missing: () => [],
   size: 'sm',
 })
@@ -14,6 +17,14 @@ withDefaults(defineProps<{ matched?: string[], missing?: string[], size?: 'sm' |
       class="rounded-lg bg-hoply-900 px-3 py-1.5 font-bold text-hoply-300"
     >
       {{ keyword }}
+    </li>
+    <li
+      v-for="item in related"
+      :key="`r-${item.skill}`"
+      class="rounded-lg border-[1.5px] border-dashed border-hoply-700 px-2.5 py-1 font-bold text-hoply-300"
+      :title="`Close to ${item.via.join(', ')}`"
+    >
+      {{ item.skill }}<span class="sr-only"> (close to {{ item.via.join(', ') }})</span>
     </li>
     <li
       v-for="keyword in missing"

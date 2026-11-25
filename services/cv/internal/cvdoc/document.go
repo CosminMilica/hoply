@@ -165,15 +165,13 @@ func buildDocument(profile models.Profile, job Job, request models.CvRequest, ta
 			second,
 			"Looking to join "+job.Company+" as "+job.Title+" and work on its "+job.Product+".",
 		), " ")
-		if len(top) > 0 {
-			headline = profile.Headline + " | " + strings.Join(top, ", ")
-		}
 		skills = append([]string{}, matched...)
 		for _, skill := range profile.Skills {
 			if !containsFold(matched, skill) {
 				skills = append(skills, skill)
 			}
 		}
+		skills = skills[:min(len(skills), max(MaxSkills, len(matched)))]
 	}
 
 	experience := []models.RoleSection{}
@@ -288,14 +286,112 @@ func nonNil(values []string) []string {
 }
 
 var (
-	actionVerbs = []string{"built", "wrote", "made", "ran", "led", "kept", "set", "took"}
+	actionVerbs = []string{"built", "wrote", "made", "ran", "led", "kept", "took", "won", "grew", "found", "drove", "rebuilt", "rewrote", "taught", "oversaw", "undertook", "began", "brought", "sold", "spoke", "accelerate", "achieve", "adapt", "add", "administer", "advise", "align", "analyze", "apply", "architect", "assemble", "assess", "audit", "automate", "balance", "benchmark", "build", "cache", "calculate", "centralize", "champion", "clarify", "close", "coach", "collaborate", "compile", "configure", "consolidate", "construct", "containerize", "contribute", "convert", "coordinate", "create", "cut", "debug", "decouple", "define", "delegate", "deliver", "deploy", "design", "detect", "develop", "diagnose", "direct", "document", "draft", "drive", "earn", "edit", "eliminate", "enable", "engineer", "enhance", "establish", "evaluate", "examine", "execute", "expand", "expedite", "extend", "facilitate", "find", "fix", "forecast", "formulate", "found", "generate", "grow", "guide", "handle", "harden", "head", "identify", "implement", "improve", "increase", "influence", "initiate", "inspect", "install", "instrument", "integrate", "introduce", "investigate", "isolate", "keep", "launch", "lead", "maintain", "make", "manage", "map", "measure", "mentor", "merge", "migrate", "minimize", "mitigate", "model", "moderate", "modernize", "monitor", "motivate", "negotiate", "onboard", "open", "operate", "optimize", "orchestrate", "organize", "oversee", "own", "parallelize", "partner", "perform", "pilot", "plan", "prepare", "present", "prevent", "prioritize", "process", "produce", "profile", "program", "prototype", "provide", "provision", "publish", "raise", "rebuild", "recommend", "redesign", "reduce", "refactor", "remove", "reorganize", "replace", "report", "research", "resolve", "restore", "restructure", "review", "revise", "rewrite", "run", "save", "scale", "schedule", "script", "secure", "select", "set", "ship", "simplify", "solve", "spearhead", "standardize", "streamline", "strengthen", "structure", "supervise", "support", "take", "teach", "test", "track", "train", "transform", "translate", "troubleshoot", "tune", "unify", "update", "upgrade", "validate", "verify", "win", "write"}
 	leadWord    = regexp.MustCompile(`^(\w+)`)
 	pastTense   = regexp.MustCompile(`ed$`)
+	nonAlnum    = regexp.MustCompile(`[^\pL\pN]+`)
 )
+
+// MaxSkills is how many skills the tailored CV lists: the job's first, then the person's own.
+const MaxSkills = 20
+
+// PageLines is about how many lines of the exported CV fit on one A4 page
+// (internal/render), measured on rendered CVs.
+const PageLines = 50
+
+// isActionVerb reports whether a bullet's first word is an action verb, past or present ("Built", "Run", "Keeps").
+func isActionVerb(word string) bool {
+	word = lc(word)
+	if pastTense.MatchString(word) || slices.Contains(actionVerbs, word) {
+		return true
+	}
+	for _, form := range []string{word, strings.TrimSuffix(word, "s"), strings.TrimSuffix(word, "es")} {
+		if _, ok := past[form]; ok {
+			return true
+		}
+		if slices.Contains(actionVerbs, form) {
+			return true
+		}
+	}
+	for _, verb := range past {
+		if verb == word {
+			return true
+		}
+	}
+	return false
+}
+
+// words is text as lower-case words, punctuation dropped: "DevOps Engineer- Senior" is "devops engineer senior".
+func words(text string) string {
+	return strings.TrimSpace(nonAlnum.ReplaceAllString(lc(text), " "))
+}
+
+// charsPerLine is about how many characters a line of the exported CV holds
+// (internal/render: A4, 14 mm margins, 10 pt), measured on rendered CVs.
+const charsPerLine = 110
+
+// lines is about how many lines text takes in the exported CV, width
+// characters to a line.
+func lines(text string, width int) int {
+	if text == "" {
+		return 0
+	}
+	return (utf16Length(text) + width - 1) / width
+}
+
+// EstimatedLines is about how many lines the document takes when exported.
+func EstimatedLines(d models.CvDocument) int {
+	total := 2 + min(1, len(d.Contact)) + min(1, len(d.Links))
+	total += 1 + lines(d.Summary, charsPerLine)
+	if len(d.Skills) > 0 {
+		total += 1 + lines(strings.Join(d.Skills, ", "), charsPerLine)
+	}
+	entry := func(meta string, bullets []string) int {
+		n := 1 + lines(meta, charsPerLine)
+		for _, bullet := range bullets {
+			n += max(1, lines(bullet, charsPerLine-4))
+		}
+		return n
+	}
+	if len(d.Experience) > 0 {
+		total++
+		for _, role := range d.Experience {
+			total += entry(role.Meta, role.Bullets)
+		}
+	}
+	if len(d.Projects) > 0 {
+		total++
+		for _, project := range d.Projects {
+			total += entry(project.Meta, project.Bullets)
+		}
+	}
+	if len(d.Education) > 0 {
+		total += 1 + len(d.Education)
+	}
+	if len(d.Certifications) > 0 {
+		total += 1 + len(d.Certifications)
+	}
+	if d.Languages != "" {
+		total += 1 + lines(d.Languages, charsPerLine)
+	}
+	if len(d.Additional) > 0 {
+		total += 1 + len(d.Additional)
+	}
+	return total
+}
+
+// PageLimit is how many pages a CV gets: one under eight years of experience,
+// two from then on, the common advice for experienced people.
+func PageLimit(profile models.Profile, now time.Time) int {
+	if YearsOfExperience(profile, now) >= 8 {
+		return 2
+	}
+	return 1
+}
 
 // AtsChecks is what an applicant tracking system looks for, checked on the
 // final text and the profile it came from.
-func AtsChecks(document models.CvDocument, job Job, profile models.Profile, request models.CvRequest) []models.AtsCheck {
+func AtsChecks(document models.CvDocument, job Job, profile models.Profile, request models.CvRequest, now time.Time) []models.AtsCheck {
 	bullets := []string{}
 	for _, entry := range document.Experience {
 		bullets = append(bullets, entry.Bullets...)
@@ -322,14 +418,13 @@ func AtsChecks(document models.CvDocument, job Job, profile models.Profile, requ
 		if lead := leadWord.FindStringSubmatch(bullet); lead != nil {
 			word = lc(lead[1])
 		}
-		if !pastTense.MatchString(word) && !slices.Contains(actionVerbs, word) {
+		if !isActionVerb(word) {
 			verbs = false
 		}
 		if strings.ContainsAny(bullet, "0123456789") {
 			withNumbers++
 		}
 	}
-	length := utf16Length(document.Summary + skillsLine + strings.Join(bullets, " "))
 	dated, roles := true, 0
 	for _, role := range profile.Experience {
 		if slices.Contains(request.SkipRoles, role.ID) {
@@ -358,18 +453,26 @@ func AtsChecks(document models.CvDocument, job Job, profile models.Profile, requ
 		check(strings.TrimSpace(profile.City) != "" || strings.TrimSpace(profile.Country) != "",
 			"Location in the header", "Add your city and country in Profile."),
 		check(dated, "Dates with month and year", "Add the start month of each role in Profile."),
-		check(HasWord(document.Summary, job.Title), "Target job title “"+job.Title+"” in the summary", ""),
+		check(strings.Contains(" "+words(document.Summary)+" ", " "+words(job.Title)+" "), "Target job title “"+job.Title+"” in the summary", ""),
 		check(found == len(job.Keywords), fmt.Sprintf("Keywords from the job: %d of %d", found, len(job.Keywords)),
 			"The missing ones are not in your profile yet. Tell us about them in Prepare your CV."),
 		check(inContext >= (found*6+9)/10, fmt.Sprintf("Keywords used in sentences, not only listed: %d of %d", inContext, found),
 			"List the tools you used for each role in Profile."),
-		check(len(mirrored) > 0, fmt.Sprintf("Job responsibilities mirrored: %d of %d", len(mirrored), len(job.KeyResponsibilities)),
+		check(len(mirrored) > 0 || len(job.KeyResponsibilities) == 0, fmt.Sprintf("Job responsibilities mirrored: %d of %d", len(mirrored), len(job.KeyResponsibilities)),
 			"Describe them in Prepare your CV."),
 		check(verbs, "Every bullet starts with an action verb", ""),
 		check(withNumbers > 0, fmt.Sprintf("Results with numbers: %d of %d", withNumbers, len(bullets)),
 			"Add a result to your highlights in Prepare your CV."),
-		check(length < 3600, "Fits on one page", ""),
+		fits(document, PageLimit(profile, now)),
 	}
+}
+
+func fits(document models.CvDocument, pages int) models.AtsCheck {
+	label := "Fits on one page"
+	if pages == 2 {
+		label = "Fits on two pages"
+	}
+	return models.AtsCheck{OK: EstimatedLines(document) <= pages*PageLines, Label: label, Hint: "Leave out a role or a project in Prepare your CV."}
 }
 
 // utf16Length counts text the way the web app does, in UTF-16 code units.
@@ -421,7 +524,7 @@ func Write(profile models.Profile, job Job, request models.CvRequest, now time.T
 		Highlights: tailored.matched,
 		Profile:    plain.document,
 		Tailored:   tailored.document,
-		Ats:        Score(AtsChecks(tailored.document, job, profile, request)),
+		Ats:        Score(AtsChecks(tailored.document, job, profile, request, now)),
 	}
 }
 

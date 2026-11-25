@@ -48,6 +48,15 @@ const tabs = computed(() => TABS.map(item => ({
 const visible = computed(() => tracked.value.filter(entry => tab.value === 'all' || entry.status === tab.value))
 const loading = computed(() => applications.isPending.value || jobs.isPending.value)
 
+/** "Missing: GraphQL · Close: Argo CD", or that every keyword is covered. */
+function keywordLine(entry: { missing: string[], related: { skill: string }[] }) {
+  const parts = [
+    entry.missing.length ? `Missing: ${entry.missing.join(', ')}` : '',
+    entry.related.length ? `Close: ${entry.related.map(item => item.skill).join(', ')}` : '',
+  ].filter(Boolean)
+  return parts.length ? parts.join(' · ') : 'Every keyword is covered'
+}
+
 function primary(jobId: string, status: ApplicationStatus) {
   router.push({ name: status === 'saved' ? 'hoply-prep' : 'hoply-cv', params: { id: jobId } })
 }
@@ -79,7 +88,7 @@ function primary(jobId: string, status: ApplicationStatus) {
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <span class="rounded-lg px-2.5 py-1 text-xs font-extrabold" :class="BADGE[entry.status]">{{ STATUS_LABELS[entry.status] }}</span>
-          <span class="text-[13px] font-medium text-muted">{{ entry.missing.length ? `Missing: ${entry.missing.join(', ')}` : 'Every keyword is covered' }}</span>
+          <span class="text-[13px] font-medium text-muted">{{ keywordLine(entry) }}</span>
         </div>
         <div class="flex items-center gap-2">
           <UButton :label="entry.status === 'saved' ? 'Prepare CV' : 'View CV'" block class="flex-1 justify-center" @click="primary(entry.job.id, entry.status)" />

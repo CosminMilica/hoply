@@ -23,11 +23,11 @@ describe('CvPage', () => {
     expect(document.querySelector('[data-test="written-by"]')!.textContent).toBe('Written without AI. The service is set to write with rules.')
     expect(button('Tailored').getAttribute('aria-pressed')).toBe('true')
     expect(text()).toContain('ATS check')
-    expect(text()).toContain('DevOps Engineer | SQL, Git, CI/CD')
+    expect(text()).toContain('strongest in SQL, Git and CI/CD')
     expect(document.querySelectorAll('[data-print-root] mark').length).toBeGreaterThan(0)
     expect(text()).toContain('Andrei_Popescu_CV_Capgemini_Romania.pdf')
     const lines = [...document.querySelectorAll('[data-print-root] header span')].map(element => element.textContent)
-    expect(lines.slice(0, 2)).toEqual(['Andrei Popescu', 'DevOps Engineer | SQL, Git, CI/CD'])
+    expect(lines.slice(0, 2)).toEqual(['Andrei Popescu', 'DevOps Engineer'])
 
     await click(button('Your profile'))
     expect(text()).not.toContain('ATS check')
@@ -42,16 +42,17 @@ describe('CvPage', () => {
     expect(router.currentRoute.value.name).toBe('hoply-prep')
   })
 
-  it('prints the CV under its file name', async () => {
-    useServices()
+  it('downloads the version on screen as a PDF or a DOCX from the service', async () => {
+    const { cvs } = useServices()
     await cvApi.generate(request)
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
-    const titles: string[] = []
-    vi.spyOn(window, 'print').mockImplementation(() => titles.push(document.title))
-    document.title = 'hoply'
-    await click(button('Download PDF'))
-    expect(titles).toEqual(['Andrei_Popescu_CV_Capgemini_Romania'])
-    expect(document.title).toBe('hoply')
+    const id = cvs.cvs[0]!.cv.id
+    const link = (name: string) => [...document.querySelectorAll('a')].find(element => element.textContent?.trim() === name)!
+    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=tailored`)
+    expect(link('Download PDF').hasAttribute('download')).toBe(true)
+    expect(link('DOCX').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=docx&version=tailored`)
+    await click(button('Your profile'))
+    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=profile`)
   })
 
   it('starts with the headline and keeps the plain file name without a name', async () => {
@@ -59,7 +60,7 @@ describe('CvPage', () => {
     await cvApi.generate(request)
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     expect(document.querySelector('[data-test="cv-name"]')).toBeNull()
-    expect(document.querySelector('[data-print-root] header span')!.textContent).toBe('DevOps Engineer | SQL, Git, CI/CD')
+    expect(document.querySelector('[data-print-root] header span')!.textContent).toBe('DevOps Engineer')
     expect(text()).toContain('CV_Capgemini_Romania.pdf')
     expect(text()).not.toContain('_CV_Capgemini')
   })

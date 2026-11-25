@@ -2,7 +2,7 @@ import { computed, reactive, ref, toValue, watch, type MaybeRefOrGetter } from '
 import { serviceErrorMessage } from '@/features/common/errors'
 import type { Job } from '@/features/jobs/api/jobs.schema'
 import { keywordsIn, matchJob, requirementsOf } from '@/features/jobs/match'
-import { withoutId, type Bullet, type Experience, type Profile, type Project } from '@/features/profile/api/profile.schema'
+import { withoutId, type Bullet, type Experience, type Note, type Profile, type Project } from '@/features/profile/api/profile.schema'
 import { useProfileMutations } from '@/features/profile/composables/useProfile'
 import { monthRange } from '@/features/profile/format'
 import { bulletLine, knownSkills } from '@/features/profile/skills'
@@ -12,7 +12,7 @@ export const OTHER = 'other'
 const MIN_ANSWER = 10
 
 type List = 'experience' | 'projects'
-/** Where an answer goes: `experience:<id>`, `projects:<id>`, or `other` (additional information). */
+/** Where an answer goes: `experience:<id>`, `projects:<id>`, or `other` (the person's own notes). */
 type Place = string
 /** What an answer added to the profile, so that Change takes exactly that back out. */
 interface Remembered {
@@ -77,7 +77,7 @@ export function usePrep({ job, profile, questions }: PrepInputs) {
   }
   function whereLabel(place: Place): string {
     const target = entryOf(place)
-    if (!target) return 'Additional information'
+    if (!target) return 'Your notes'
     if (target.list === 'projects') return `the ${(target.entry as Project).name} project`
     const role = target.entry as Experience
     return role.company ? `${role.role} at ${role.company}` : role.role
@@ -96,35 +96,35 @@ export function usePrep({ job, profile, questions }: PrepInputs) {
     const entry = entries.find(item => item.id === id)
     return entry ? { list, entry } : null
   }
-  async function putBullets(list: List, entry: Experience | Project, bullets: Bullet[]) {
-    const body = { ...withoutId(entry), bullets }
+  async function putEntry(list: List, entry: Experience | Project, change: Partial<Pick<Experience, 'bullets' | 'notes'>>) {
+    const body = { ...withoutId(entry), ...change }
     if (list === 'experience') await mutations.experience.update.mutateAsync({ id: entry.id, body: body as Omit<Experience, 'id'> as never })
     else await mutations.projects.update.mutateAsync({ id: entry.id, body: body as Omit<Project, 'id'> as never })
   }
+  const putBullets = (list: List, entry: Experience | Project, bullets: Bullet[]) => putEntry(list, entry, { bullets })
 
+  /** An answer becomes a note of the role or project it is about, or of the person: material Claude writes from. */
   async function remember(place: Place, text: string, skills: string[]): Promise<Remembered> {
+    const note: Note = { text, skills }
     const target = entryOf(place)
     if (!target) {
-      await mutations.patch.mutateAsync({ additional_info: [...(current()?.additional_info ?? []), text] })
+      await mutations.patch.mutateAsync({ notes: [...(current()?.notes ?? []), note] })
       return { place: OTHER, text, skills }
     }
-    await putBullets(target.list, target.entry, [...target.entry.bullets, { text, result: '', skills }])
+    await putEntry(target.list, target.entry, { notes: [...target.entry.notes, note] })
     return { place, text, skills }
   }
   async function forget({ place, text, skills }: Remembered) {
     const target = entryOf(place)
-    if (!target) {
-      const lines = current()?.additional_info ?? []
-      const at = lines.lastIndexOf(text)
-      if (at >= 0) await mutations.patch.mutateAsync({ additional_info: lines.filter((_, index) => index !== at) })
-      return
-    }
-    const bullets = target.entry.bullets
+    const notes = target ? target.entry.notes : (current()?.notes ?? [])
     let at = -1
-    bullets.forEach((bullet, index) => {
-      if (bullet.text === text && sameSkills(bullet.skills, skills)) at = index
+    notes.forEach((note, index) => {
+      if (note.text === text && sameSkills(note.skills, skills)) at = index
     })
-    if (at >= 0) await putBullets(target.list, target.entry, bullets.filter((_, index) => index !== at))
+    if (at < 0) return
+    const kept = notes.filter((_, index) => index !== at)
+    if (target) await putEntry(target.list, target.entry, { notes: kept })
+    else await mutations.patch.mutateAsync({ notes: kept })
   }
 
   /** Runs one save for a question, keeping its error next to it. */

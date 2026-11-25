@@ -145,6 +145,38 @@ function addToProfile(skill: string) {
           </ul>
         </section>
 
+        <section v-if="questions.data.value.related.length" class="flex flex-col gap-2.5">
+          <SectionLabel>Close to what you know</SectionLabel>
+          <div v-for="close in questions.data.value.related" :key="close.skill" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="close">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="m-0 text-[17px] font-extrabold tracking-tight">{{ close.skill }}</h3>
+              <StatusTag v-if="prep.state.gaps[close.skill]?.status === 'added'" label="Added" tone="added" />
+              <StatusTag v-else label="Close" tone="close" />
+            </div>
+            <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ close.note }}</p>
+            <template v-if="prep.state.gaps[close.skill]?.status === 'added'">
+              <p class="m-0 text-sm leading-snug font-medium">{{ addedText(prep.state.gaps[close.skill]!) }}</p>
+              <UButton label="Change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="prep.state.saving[`g:${close.skill}`]" @click="prep.undoGap(close.skill)" />
+            </template>
+            <details v-else class="flex flex-col gap-2">
+              <summary class="cursor-pointer text-[13px] font-bold text-hoply-300">I have used {{ close.skill }} myself</summary>
+              <div class="mt-2 flex flex-col gap-2">
+                <UTextarea
+                  :model-value="prep.draft(`g:${close.skill}`)"
+                  :aria-label="`Your experience with ${close.skill}`"
+                  :placeholder="`Where you used ${close.skill} and what you did with it`"
+                  :rows="3"
+                  class="w-full"
+                  @update:model-value="(value: string) => prep.setDraft(`g:${close.skill}`, String(value))"
+                />
+                <RolePicker :name="close.skill" :choices="prep.roleChoices(`g:${close.skill}`)" @pick="id => prep.pickRole(`g:${close.skill}`, id)" />
+                <UButton label="Add to my CV" class="self-start" :disabled="!prep.canAdd(`g:${close.skill}`)" :loading="prep.state.saving[`g:${close.skill}`]" @click="prep.addGap(close.skill)" />
+              </div>
+            </details>
+            <p v-if="prep.state.errors[`g:${close.skill}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`g:${close.skill}`] }}</p>
+          </div>
+        </section>
+
         <section v-if="questions.data.value.gaps.length" class="flex flex-col gap-2.5">
           <SectionLabel>Fill the gaps</SectionLabel>
           <div v-for="gap in questions.data.value.gaps" :key="gap.skill" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="gap">

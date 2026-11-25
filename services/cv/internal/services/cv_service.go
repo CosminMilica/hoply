@@ -14,6 +14,7 @@ import (
 	"cv/internal/data/repositories"
 	"cv/internal/identity"
 	"cv/internal/models"
+	"cv/internal/render"
 )
 
 // Sources reads the profile and the jobs a CV is made from.
@@ -22,18 +23,72 @@ type Sources interface {
 	Job(ctx context.Context, id uuid.UUID) (models.Job, json.RawMessage, error)
 }
 
+// Printer prints a page of HTML to PDF; *render.Gotenberg is one.
+type Printer interface {
+	PDF(ctx context.Context, page string) ([]byte, error)
+}
+
 // MaxFocus is how many skills a CV can put up front.
 const MaxFocus = 3
 
 type CvService struct {
 	repo    repositories.CvRepository
 	sources Sources
+	printer Printer
 	queued  func()
 }
 
 // NewCvService takes queued, called after a CV is queued to wake the worker.
-func NewCvService(repo repositories.CvRepository, sources Sources, queued func()) *CvService {
-	return &CvService{repo: repo, sources: sources, queued: queued}
+func NewCvService(repo repositories.CvRepository, sources Sources, printer Printer, queued func()) *CvService {
+	return &CvService{repo: repo, sources: sources, printer: printer, queued: queued}
+}
+
+// File is a CV as a file to download.
+type File struct {
+	Name        string
+	ContentType string
+	Body        []byte
+}
+
+// File renders a ready CV's tailored or profile version as a PDF or a DOCX.
+func (s *CvService) File(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, format, version string) (*File, error) {
+	if format != "pdf" && format != "docx" {
+		return nil, invalid("format", "'format' must be pdf or docx")
+	}
+	if version == "" {
+		version = "tailored"
+	}
+	if version != "tailored" && version != "profile" {
+		return nil, invalid("version", "'version' must be tailored or profile")
+	}
+	cv, err := s.Get(ctx, ident, id)
+	if err != nil {
+		return nil, err
+	}
+	if cv.Status != models.StatusReady || cv.Tailored == nil || cv.Profile == nil {
+		return nil, apperrors.New(apperrors.ConstraintViolation, "the CV is not ready yet")
+	}
+	document := *cv.Tailored
+	if version == "profile" {
+		document = *cv.Profile
+	}
+	name := strings.TrimSuffix(cv.FileName, ".pdf")
+	if format == "docx" {
+		body, err := render.DOCX(document)
+		if err != nil {
+			return nil, apperrors.NewInternal(err)
+		}
+		return &File{Name: name + ".docx", ContentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", Body: body}, nil
+	}
+	page, err := render.HTML(document)
+	if err != nil {
+		return nil, apperrors.NewInternal(err)
+	}
+	pdf, err := s.printer.PDF(ctx, page)
+	if err != nil {
+		return nil, err
+	}
+	return &File{Name: name + ".pdf", ContentType: "application/pdf", Body: pdf}, nil
 }
 
 // Questions is what Prepare your CV asks for the job.

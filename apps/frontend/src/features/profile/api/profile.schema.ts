@@ -39,6 +39,10 @@ const keys = <T extends Record<string, string>>(labels: T) => Object.keys(labels
 export const bulletSchema = z.object({ text, result: text, skills: list })
 export type Bullet = z.infer<typeof bulletSchema>
 
+/** What the person told Prepare your CV, in their own words: Claude writes CV bullets from it, never prints it as it is. */
+export const noteSchema = z.object({ text, skills: list })
+export type Note = z.infer<typeof noteSchema>
+
 export const experienceSchema = z.object({
   id,
   role: text,
@@ -52,9 +56,12 @@ export const experienceSchema = z.object({
   end: text,
   tools: list,
   bullets: many(bulletSchema),
+  notes: many(noteSchema),
 })
 
-export const projectSchema = z.object({ id, name: text, role: text, url: text, start: text, end: text, tools: list, bullets: many(bulletSchema) })
+export const projectSchema = z.object({
+  id, name: text, role: text, url: text, start: text, end: text, tools: list, bullets: many(bulletSchema), notes: many(noteSchema),
+})
 
 export const educationSchema = z.object({ id, level: text, field: text, degree: text, school: text, start_year: text, end_year: text })
 
@@ -86,6 +93,7 @@ export const profileSchema = z.object({
   salary_currency: text,
   salary_period: text,
   additional_info: list,
+  notes: many(noteSchema),
   skills: list,
   experience: many(experienceSchema),
   projects: many(projectSchema),
@@ -140,6 +148,7 @@ export const profilePatchSchema = z.object({
   salary_currency: z.string().trim().regex(/^([A-Za-z]{3})?$/, 'Use a three-letter code, e.g. EUR').transform(value => value.toUpperCase()),
   salary_period: z.union([z.literal(''), z.enum(keys(SALARY_PERIODS))]),
   additional_info: z.array(short(300)).max(10, 'At most 10 lines'),
+  notes: z.array(z.object({ text: z.string().trim().max(1000), skills: z.array(z.string()) })).max(30, 'At most 30 notes'),
 }).partial()
 
 export type ProfilePatch = z.infer<typeof profilePatchSchema>

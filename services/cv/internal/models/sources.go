@@ -2,6 +2,13 @@ package models
 
 import "github.com/google/uuid"
 
+// Note is something the person said about a role, a project or themselves, in
+// their own words: material for Claude, never printed as it is.
+type Note struct {
+	Text   string   `json:"text"`
+	Skills []string `json:"skills"`
+}
+
 // Bullet is a highlight of a role or a project.
 type Bullet struct {
 	Text   string   `json:"text"`
@@ -10,14 +17,19 @@ type Bullet struct {
 }
 
 type Experience struct {
-	ID       string   `json:"id"`
-	Role     string   `json:"role"`
-	Company  string   `json:"company"`
-	Location string   `json:"location"`
-	Start    string   `json:"start"`
-	End      string   `json:"end"`
-	Tools    []string `json:"tools"`
-	Bullets  []Bullet `json:"bullets"`
+	ID             string   `json:"id"`
+	Role           string   `json:"role"`
+	Company        string   `json:"company"`
+	Location       string   `json:"location"`
+	EmploymentType string   `json:"employment_type"`
+	Industry       string   `json:"industry"`
+	TeamSize       *int     `json:"team_size"`
+	PeopleManaged  *int     `json:"people_managed"`
+	Start          string   `json:"start"`
+	End            string   `json:"end"`
+	Tools          []string `json:"tools"`
+	Bullets        []Bullet `json:"bullets"`
+	Notes          []Note   `json:"notes"`
 }
 
 type Project struct {
@@ -29,6 +41,7 @@ type Project struct {
 	End     string   `json:"end"`
 	Tools   []string `json:"tools"`
 	Bullets []Bullet `json:"bullets"`
+	Notes   []Note   `json:"notes"`
 }
 
 type Education struct {
@@ -67,6 +80,7 @@ type Profile struct {
 	City           string          `json:"city"`
 	Country        string          `json:"country"`
 	AdditionalInfo []string        `json:"additional_info"`
+	Notes          []Note          `json:"notes"`
 	Skills         []string        `json:"skills"`
 	Experience     []Experience    `json:"experience"`
 	Projects       []Project       `json:"projects"`
@@ -81,7 +95,10 @@ type Job struct {
 	ID               uuid.UUID `json:"id"`
 	Title            string    `json:"title"`
 	Company          string    `json:"company"`
+	Level            string    `json:"level"`
+	YearsRequired    *int      `json:"years_required"`
 	About            string    `json:"about"`
+	AboutCompany     string    `json:"about_company"`
 	Product          string    `json:"product"`
 	MustHave         []string  `json:"must_have"`
 	NiceToHave       []string  `json:"nice_to_have"`

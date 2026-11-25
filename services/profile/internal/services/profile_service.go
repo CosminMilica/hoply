@@ -355,6 +355,32 @@ func (c *cleaner) bullets(values *[]models.Bullet) {
 	*values = cleaned
 }
 
+// Limits of notes.
+const (
+	MaxNotes    = 30
+	MaxNoteText = 1000
+)
+
+func (c *cleaner) notes(values *[]models.Note) {
+	if c.err != nil || *values == nil {
+		return
+	}
+	cleaned := make([]models.Note, 0, len(*values))
+	for _, note := range *values {
+		note.Text = strings.TrimSpace(note.Text)
+		if note.Text == "" {
+			continue
+		}
+		c.text("notes.text", &note.Text, MaxNoteText, false)
+		c.list("notes.skills", &note.Skills, 10, 60, true)
+		cleaned = append(cleaned, note)
+	}
+	if c.err == nil && len(cleaned) > MaxNotes {
+		c.err = invalid("notes", fmt.Sprintf("'notes' must have at most %d entries", MaxNotes))
+	}
+	*values = cleaned
+}
+
 // CleanPatch trims and validates every sent field.
 func CleanPatch(patch models.ProfilePatch) (models.ProfilePatch, error) {
 	var c cleaner
@@ -389,6 +415,7 @@ func CleanPatch(patch models.ProfilePatch) (models.ProfilePatch, error) {
 	}
 	c.enum("salary_period", patch.SalaryPeriod, SalaryPeriods, false)
 	c.optionalList("additional_info", &patch.AdditionalInfo, 10, 300, false)
+	c.notes(&patch.Notes)
 	return patch, c.err
 }
 
@@ -415,6 +442,7 @@ func CleanExperience(data models.ExperienceInput) (models.ExperienceInput, error
 	c.order(data.Start, data.End, "end", "start")
 	c.list("tools", &data.Tools, 30, 60, true)
 	c.bullets(&data.Bullets)
+	c.notes(&data.Notes)
 	return data, c.err
 }
 
@@ -428,6 +456,7 @@ func CleanProject(data models.ProjectInput) (models.ProjectInput, error) {
 	c.order(data.Start, data.End, "end", "start")
 	c.list("tools", &data.Tools, 30, 60, true)
 	c.bullets(&data.Bullets)
+	c.notes(&data.Notes)
 	return data, c.err
 }
 

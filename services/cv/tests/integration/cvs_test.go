@@ -209,7 +209,7 @@ func TestQueueFailuresSurface(t *testing.T) {
 func TestServiceWritesACvThroughTheWorker(t *testing.T) {
 	_, pool := application(t, isolatedSchema(t))
 	cfg := config.Defaults()
-	service := app.BuildWith(&cfg, pool, newSeedSources(t), writer.New(nil))
+	service := app.BuildWith(&cfg, pool, newSeedSources(t), writer.New(nil), nil)
 	status, cv := testutil.Do(t, service.Handler, http.MethodPost, "/api/v1/cvs", map[string]any{"job_id": jobID, "confirmed": []int{0}})
 	if status != http.StatusAccepted || cv["status"] != "queued" {
 		t.Fatalf("queued: %d %v", status, cv)

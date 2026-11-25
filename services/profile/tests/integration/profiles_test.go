@@ -378,3 +378,44 @@ func TestProfileRoutesUseRealPostgres(t *testing.T) {
 		t.Fatalf("update deleted: %d %v", status, body)
 	}
 }
+
+func TestNotesAreKeptUnlessSent(t *testing.T) {
+	_, pool := application(t, isolatedSchema(t))
+	ctx := context.Background()
+	repo := repositories.NewPgProfileRepository(pool).WithScope(bindTenant(pool))
+	owner := identity.New(uuid.New(), uuid.NewString())
+	notes := []models.Note{{Text: "Ran the CI for 40 services", Skills: []string{"CI/CD"}}}
+
+	role, err := repo.AddExperience(ctx, owner, models.ExperienceInput{Role: "dev"})
+	if err != nil || role.Notes == nil || len(role.Notes) != 0 {
+		t.Fatalf("a role added without notes has none: %+v %v", role, err)
+	}
+	role, err = repo.UpdateExperience(ctx, owner, role.ID, models.ExperienceInput{Role: "dev", Notes: notes})
+	if err != nil || len(role.Notes) != 1 || role.Notes[0].Skills[0] != "CI/CD" {
+		t.Fatalf("notes sent are stored: %+v %v", role, err)
+	}
+	role, err = repo.UpdateExperience(ctx, owner, role.ID, models.ExperienceInput{Role: "dev, renamed"})
+	if err != nil || role.Role != "dev, renamed" || len(role.Notes) != 1 {
+		t.Fatalf("notes left out are kept: %+v %v", role, err)
+	}
+	role, err = repo.UpdateExperience(ctx, owner, role.ID, models.ExperienceInput{Role: "dev", Notes: []models.Note{}})
+	if err != nil || len(role.Notes) != 0 {
+		t.Fatalf("an empty list clears them: %+v %v", role, err)
+	}
+
+	project, err := repo.AddProject(ctx, owner, models.ProjectInput{Name: "lab", Notes: []models.Note{{Text: "Kept it up"}}})
+	if err != nil || len(project.Notes) != 1 || project.Notes[0].Skills == nil {
+		t.Fatalf("project notes: %+v %v", project, err)
+	}
+	if project, err = repo.UpdateProject(ctx, owner, project.ID, models.ProjectInput{Name: "lab 2"}); err != nil || len(project.Notes) != 1 {
+		t.Fatalf("project notes left out are kept: %+v %v", project, err)
+	}
+
+	profile, err := repo.Patch(ctx, owner, models.ProfilePatch{Notes: notes})
+	if err != nil || len(profile.Notes) != 1 || profile.Notes[0].Text != notes[0].Text {
+		t.Fatalf("profile notes: %+v %v", profile.Notes, err)
+	}
+	if profile, err = repo.Patch(ctx, owner, models.ProfilePatch{Name: ptr("Ana")}); err != nil || len(profile.Notes) != 1 {
+		t.Fatalf("a patch without notes keeps them: %+v %v", profile.Notes, err)
+	}
+}

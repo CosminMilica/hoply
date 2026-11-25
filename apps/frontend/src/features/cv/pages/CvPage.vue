@@ -17,13 +17,9 @@ const mode = ref<'profile' | 'tailored'>('tailored')
 const applied = computed(() => statuses.value.get(props.id) === 'applied')
 const document = computed(() => (cv.value ? cv.value[mode.value] : null))
 
-function download() {
-  if (!cv.value) return
-  const title = window.document.title
-  window.document.title = cv.value.file_name.replace(/\.pdf$/, '')
-  window.print()
-  window.document.title = title
-}
+/** The file of the version on screen, as the cv service renders it. */
+const fileUrl = (format: 'pdf' | 'docx') =>
+  cv.value ? `/api/cv/v1/cvs/${encodeURIComponent(cv.value.id)}/file?format=${format}&version=${mode.value}` : ''
 </script>
 
 <template>
@@ -57,7 +53,10 @@ function download() {
         </div>
         <AtsCard v-if="mode === 'tailored'" :ats="cv.ats" class="order-3" @improve="router.push({ name: 'hoply-prep', params: { id } })" />
         <div class="order-6 flex flex-col gap-2.5">
-          <UButton label="Download PDF" size="lg" block class="justify-center" @click="download" />
+          <div class="flex gap-2">
+            <UButton :to="fileUrl('pdf')" external download label="Download PDF" size="lg" class="flex-1 justify-center" />
+            <UButton :to="fileUrl('docx')" external download label="DOCX" color="neutral" variant="outline" size="lg" class="justify-center" />
+          </div>
           <span class="text-center text-xs font-medium text-muted">{{ cv.file_name }}</span>
           <UButton
             :label="applied ? 'Marked as applied ✓' : 'I applied to this job'"

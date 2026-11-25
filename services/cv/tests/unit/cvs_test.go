@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/google/uuid"
 
 	"cv/internal/apperrors"
+	"cv/internal/cvdoc"
 	"cv/internal/data/repositories"
 	"cv/internal/identity"
 	"cv/internal/models"
@@ -137,12 +140,41 @@ func (f *fakeSources) Job(_ context.Context, id uuid.UUID) (models.Job, json.Raw
 type cvHarness struct {
 	repo    *memoryCvs
 	sources *fakeSources
+	printer *fakePrinter
 	queued  int
+}
+
+// fakePrinter plays Gotenberg.
+type fakePrinter struct {
+	page string
+	err  error
+}
+
+func (p *fakePrinter) PDF(_ context.Context, page string) ([]byte, error) {
+	p.page = page
+	return []byte("%PDF-fake"), p.err
+}
+
+// ready marks the caller's CV ready with the sample profile's documents.
+func (m *memoryCvs) ready(t *testing.T, id string) {
+	t.Helper()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	written := cvdoc.Write(sampleProfile(t), engineJob(t, 0), request(), now)
+	for owner, list := range m.cvs {
+		for i := range list {
+			if list[i].ID.String() == id {
+				list[i].Status = models.StatusReady
+				list[i].Tailored, list[i].Profile = &written.Tailored, &written.Profile
+			}
+		}
+		m.cvs[owner] = list
+	}
 }
 
 func (h *cvHarness) handler(ident *identity.IdentityContext) http.Handler {
 	router := chi.NewRouter()
-	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: services.NewCvService(h.repo, h.sources, func() { h.queued++ }), Writer: writer.New(nil)})
+	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: services.NewCvService(h.repo, h.sources, h.printer, func() { h.queued++ }), Writer: writer.New(nil)})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ident != nil {
 			r = r.WithContext(identity.WithContext(r.Context(), *ident))
@@ -152,7 +184,7 @@ func (h *cvHarness) handler(ident *identity.IdentityContext) http.Handler {
 }
 
 func newCvHarness(t *testing.T) (*cvHarness, http.Handler) {
-	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t)}
+	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t), printer: &fakePrinter{}}
 	dev := identity.Dev()
 	return h, h.handler(&dev)
 }
@@ -233,6 +265,43 @@ func TestWriterStatusThroughRoutes(t *testing.T) {
 	status, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/writer", nil)
 	if status != http.StatusOK || body["writer"] != "rules" || body["state"] != "off" {
 		t.Fatalf("writer: %d %v", status, body)
+	}
+}
+
+func TestCvFilesThroughRoutes(t *testing.T) {
+	h, handler := newCvHarness(t)
+	_, cv := testutil.Do(t, handler, http.MethodPost, cvsPath, map[string]any{"job_id": jobID})
+	file := cvsPath + "/" + cv["id"].(string) + "/file"
+	if status, body := testutil.Do(t, handler, http.MethodGet, file+"?format=pdf", nil); status != http.StatusConflict || testutil.ErrorCode(body) != "CONSTRAINT_VIOLATION" {
+		t.Fatalf("not ready: %d %v", status, body)
+	}
+	h.repo.ready(t, cv["id"].(string))
+	for _, tc := range []struct{ query, contentType, name, prefix string }{
+		{"?format=pdf", "application/pdf", "Andrei_Popescu_CV_Capgemini_Romania.pdf", "%PDF"},
+		{"?format=pdf&version=profile", "application/pdf", "Andrei_Popescu_CV_Capgemini_Romania.pdf", "%PDF"},
+		{"?format=docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Andrei_Popescu_CV_Capgemini_Romania.docx", "PK"},
+	} {
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, httptest.NewRequest(http.MethodGet, file+tc.query, nil))
+		if res.Code != http.StatusOK || res.Header().Get("Content-Type") != tc.contentType ||
+			res.Header().Get("Content-Disposition") != `attachment; filename=`+tc.name || !strings.HasPrefix(res.Body.String(), tc.prefix) {
+			t.Fatalf("%s: %d %v %q", tc.query, res.Code, res.Header(), res.Body.String()[:min(20, res.Body.Len())])
+		}
+	}
+	if !strings.Contains(h.printer.page, "<h2>Summary</h2>") {
+		t.Fatalf("the printer gets the page: %q", h.printer.page)
+	}
+	for _, tc := range []struct{ query, field string }{{"?format=txt", "format"}, {"", "format"}, {"?format=pdf&version=draft", "version"}} {
+		if status, body := testutil.Do(t, handler, http.MethodGet, file+tc.query, nil); status != http.StatusUnprocessableEntity || errorField(body) != tc.field {
+			t.Fatalf("%q: %d %v", tc.query, status, body)
+		}
+	}
+	if status, _ := testutil.Do(t, handler, http.MethodGet, cvsPath+"/"+uuid.NewString()+"/file?format=pdf", nil); status != http.StatusNotFound {
+		t.Fatalf("unknown CV: %d", status)
+	}
+	h.printer.err = apperrors.NewDependencyUnavailable("gotenberg")
+	if status, _ := testutil.Do(t, handler, http.MethodGet, file+"?format=pdf", nil); status != http.StatusServiceUnavailable {
+		t.Fatalf("no Gotenberg: %d", status)
 	}
 }
 

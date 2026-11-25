@@ -1,11 +1,19 @@
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { yearsOfExperience } from '@/features/profile/format'
 import { JOB_LEVELS, JOB_WORK_MODES, type Job } from './api/jobs.schema'
+import skillMap from './skillmap.json' with { type: 'json' }
 
 type Requirements = Pick<Job, 'must_have' | 'nice_to_have'>
 
+/** A requirement the person has not used but knows a close equivalent of (Argo CD for someone who uses FluxCD). */
+export interface RelatedSkill {
+  skill: string
+  via: string[]
+}
+
 export interface JobMatch {
   matched: string[]
+  related: RelatedSkill[]
   missing: string[]
   score: number
   verdict: string
@@ -16,18 +24,57 @@ export function requirementsOf(job: Requirements): string[] {
   return [...job.must_have, ...job.nice_to_have]
 }
 
-/** How the job's requirements line up with a set of skills (case-insensitive); a must-have counts twice a nice-to-have. */
+/** A name without case, spaces or punctuation: "Argo CD" and "argocd" fold alike. */
+const fold = (name: string) => name.trim().toLowerCase().replace(/[^\p{L}\p{N}+#]+/gu, '')
+
+const sameKey = new Map<string, string>()
+for (const group of skillMap.same) {
+  for (const name of group) sameKey.set(fold(name), fold(group[0]!))
+}
+/** One key per skill, whatever name it goes by. */
+const skillKey = (name: string) => sameKey.get(fold(name)) ?? fold(name)
+const coverBy = new Map(Object.entries(skillMap.covers).map(([umbrella, tools]) => [skillKey(umbrella), tools.map(skillKey)]))
+const families = skillMap.close.map(family => family.map(skillKey))
+
+/**
+ * How the job's requirements line up with a set of skills (skillmap.json, the cv service's copy): a requirement
+ * is matched when the person has it under any of its names or has a tool that proves it (GitHub Actions proves
+ * CI/CD), related when they have a close equivalent, missing otherwise. A must-have counts twice a
+ * nice-to-have; a related one counts half.
+ */
 export function matchJob(job: Requirements, skills: string[]): JobMatch {
-  const have = new Set(skills.map(skill => skill.toLowerCase()))
+  const have = new Map<string, string>()
+  for (const skill of skills) {
+    const key = skillKey(skill)
+    if (key && !have.has(key)) have.set(key, skill)
+  }
   const nice = new Set(job.nice_to_have.map(item => item.toLowerCase()))
-  const all = requirementsOf(job)
-  const weight = (item: string) => (nice.has(item.toLowerCase()) ? 1 : 2)
-  const matched = all.filter(item => have.has(item.toLowerCase()))
-  const missing = all.filter(item => !have.has(item.toLowerCase()))
-  const total = all.reduce((sum, item) => sum + weight(item), 0)
-  const got = matched.reduce((sum, item) => sum + weight(item), 0)
+  const weight = (item: string) => (nice.has(item.toLowerCase()) ? 2 : 4)
+  const matched: string[] = []
+  const related: RelatedSkill[] = []
+  const missing: string[] = []
+  let total = 0
+  let got = 0
+  for (const item of requirementsOf(job)) {
+    const key = skillKey(item)
+    total += weight(item)
+    const covered = have.has(key) || (coverBy.get(key) ?? []).some(tool => have.has(tool))
+    const via = [...new Set(families.filter(family => family.includes(key))
+      .flatMap(family => family.filter(member => member !== key && have.has(member)).map(member => have.get(member)!)))]
+    if (covered) {
+      matched.push(item)
+      got += weight(item)
+    }
+    else if (via.length) {
+      related.push({ skill: item, via })
+      got += weight(item) / 2
+    }
+    else {
+      missing.push(item)
+    }
+  }
   const score = total ? Math.round((got / total) * 100) : 0
-  return { matched, missing, score, verdict: verdictFor(score) }
+  return { matched, related, missing, score, verdict: verdictFor(score) }
 }
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

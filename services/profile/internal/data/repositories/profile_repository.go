@@ -50,7 +50,7 @@ const (
 	profileColumns = "id, name, headline, about, email, phone, github, linkedin, city, country, work_modes, " +
 		"open_to_relocation, work_authorization, work_authorization_region, notice_period_weeks, available_from, " +
 		"target_roles, target_seniority, employment_types, salary_min, salary_currency, salary_period, " +
-		"additional_info, skills, created_at, updated_at"
+		"additional_info, notes, skills, created_at, updated_at"
 	// ownedProfile selects the caller's profile id from the $1 tenant and $2 subject.
 	ownedProfile = "(SELECT id FROM profiles WHERE customer_id = $1 AND subject = $2)"
 )
@@ -66,9 +66,9 @@ type child struct {
 
 var (
 	experienceTable = child{"profile_experience", "position DESC", []string{"role", "company", "location",
-		"employment_type", "industry", "team_size", "people_managed", "start_month", "end_month", "tools", "bullets"}, true}
+		"employment_type", "industry", "team_size", "people_managed", "start_month", "end_month", "tools", "bullets", "notes"}, true}
 	projectTable = child{"profile_projects", "position DESC", []string{"name", "role", "url", "start_month",
-		"end_month", "tools", "bullets"}, true}
+		"end_month", "tools", "bullets", "notes"}, true}
 	educationTable = child{"profile_education", "position", []string{"level", "field", "degree", "school",
 		"start_year", "end_year"}, false}
 	certificationTable = child{"profile_certifications", "position", []string{"name", "issuer", "issued", "expires",
@@ -80,10 +80,17 @@ func (c child) returning() string {
 	return "id, " + strings.Join(c.columns, ", ")
 }
 
+// keptWhenAbsent are the columns a request may leave out (sent as NULL): an
+// insert stores their default, an update keeps their value.
+var keptWhenAbsent = map[string]string{"notes": "'[]'::jsonb"}
+
 func (c child) insert() string {
 	placeholders := make([]string, len(c.columns))
-	for i := range c.columns {
+	for i, column := range c.columns {
 		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		if fallback, ok := keptWhenAbsent[column]; ok {
+			placeholders[i] = fmt.Sprintf("COALESCE($%d::jsonb, %s)", i+2, fallback)
+		}
 	}
 	return "INSERT INTO " + c.table + " (profile_id, " + strings.Join(c.columns, ", ") + ") VALUES ($1, " +
 		strings.Join(placeholders, ", ") + ") RETURNING " + c.returning()
@@ -93,6 +100,9 @@ func (c child) update() string {
 	sets := make([]string, len(c.columns))
 	for i, column := range c.columns {
 		sets[i] = fmt.Sprintf("%s = $%d", column, i+4)
+		if _, ok := keptWhenAbsent[column]; ok {
+			sets[i] = fmt.Sprintf("%s = COALESCE($%d::jsonb, %s)", column, i+4, column)
+		}
 	}
 	if c.updated {
 		sets = append(sets, "updated_at = NOW()")
@@ -176,6 +186,9 @@ func (r *PgProfileRepository) Patch(ctx context.Context, ident identity.Identity
 			set(field.column, field.value)
 		}
 	}
+	if patch.Notes != nil {
+		set("notes", notes(patch.Notes))
+	}
 	if patch.OpenToRelocation != nil {
 		set("open_to_relocation", *patch.OpenToRelocation)
 	}
@@ -201,7 +214,7 @@ func (r *PgProfileRepository) SetSkills(ctx context.Context, ident identity.Iden
 
 func experienceValues(d models.ExperienceInput) []any {
 	return []any{d.Role, d.Company, d.Location, d.EmploymentType, d.Industry, d.TeamSize, d.PeopleManaged,
-		d.Start, d.End, nonNil(d.Tools), bullets(d.Bullets)}
+		d.Start, d.End, nonNil(d.Tools), bullets(d.Bullets), sentNotes(d.Notes)}
 }
 
 func (r *PgProfileRepository) AddExperience(ctx context.Context, ident identity.IdentityContext, data models.ExperienceInput) (*models.Experience, error) {
@@ -217,7 +230,7 @@ func (r *PgProfileRepository) DeleteExperience(ctx context.Context, ident identi
 }
 
 func projectValues(d models.ProjectInput) []any {
-	return []any{d.Name, d.Role, d.URL, d.Start, d.End, nonNil(d.Tools), bullets(d.Bullets)}
+	return []any{d.Name, d.Role, d.URL, d.Start, d.End, nonNil(d.Tools), bullets(d.Bullets), sentNotes(d.Notes)}
 }
 
 func (r *PgProfileRepository) AddProject(ctx context.Context, ident identity.IdentityContext, data models.ProjectInput) (*models.Project, error) {
@@ -429,7 +442,8 @@ func scanProfile(row pgx.CollectableRow) (models.Profile, error) {
 	err := row.Scan(&p.ID, &p.Name, &p.Headline, &p.About, &p.Email, &p.Phone, &p.GitHub, &p.LinkedIn, &p.City,
 		&p.Country, &p.WorkModes, &p.OpenToRelocation, &p.WorkAuthorization, &p.WorkAuthorizationRegion,
 		&p.NoticePeriodWeeks, &p.AvailableFrom, &p.TargetRoles, &p.TargetSeniority, &p.EmploymentTypes, &p.SalaryMin,
-		&p.SalaryCurrency, &p.SalaryPeriod, &p.AdditionalInfo, &p.Skills, &p.CreatedAt, &p.UpdatedAt)
+		&p.SalaryCurrency, &p.SalaryPeriod, &p.AdditionalInfo, &p.Notes, &p.Skills, &p.CreatedAt, &p.UpdatedAt)
+	p.Notes = notes(p.Notes)
 	for _, list := range []*[]string{&p.WorkModes, &p.TargetRoles, &p.TargetSeniority, &p.EmploymentTypes,
 		&p.AdditionalInfo, &p.Skills} {
 		*list = nonNil(*list)
@@ -440,15 +454,15 @@ func scanProfile(row pgx.CollectableRow) (models.Profile, error) {
 func scanExperience(row pgx.CollectableRow) (models.Experience, error) {
 	var e models.Experience
 	err := row.Scan(&e.ID, &e.Role, &e.Company, &e.Location, &e.EmploymentType, &e.Industry, &e.TeamSize,
-		&e.PeopleManaged, &e.Start, &e.End, &e.Tools, &e.Bullets)
-	e.Tools, e.Bullets = nonNil(e.Tools), bullets(e.Bullets)
+		&e.PeopleManaged, &e.Start, &e.End, &e.Tools, &e.Bullets, &e.Notes)
+	e.Tools, e.Bullets, e.Notes = nonNil(e.Tools), bullets(e.Bullets), notes(e.Notes)
 	return e, err
 }
 
 func scanProject(row pgx.CollectableRow) (models.Project, error) {
 	var p models.Project
-	err := row.Scan(&p.ID, &p.Name, &p.Role, &p.URL, &p.Start, &p.End, &p.Tools, &p.Bullets)
-	p.Tools, p.Bullets = nonNil(p.Tools), bullets(p.Bullets)
+	err := row.Scan(&p.ID, &p.Name, &p.Role, &p.URL, &p.Start, &p.End, &p.Tools, &p.Bullets, &p.Notes)
+	p.Tools, p.Bullets, p.Notes = nonNil(p.Tools), bullets(p.Bullets), notes(p.Notes)
 	return p, err
 }
 
@@ -472,6 +486,23 @@ func scanLanguage(row pgx.CollectableRow) (models.Language, error) {
 
 // bullets keeps every bullet's skills a list, so they serialise as [].
 func bullets(items []models.Bullet) []models.Bullet {
+	items = nonNil(items)
+	for i := range items {
+		items[i].Skills = nonNil(items[i].Skills)
+	}
+	return items
+}
+
+// sentNotes is NULL for notes the request left out, so they are kept.
+func sentNotes(items []models.Note) any {
+	if items == nil {
+		return nil
+	}
+	return notes(items)
+}
+
+// notes keeps every note's skills a list, so they serialise as [].
+func notes(items []models.Note) []models.Note {
 	items = nonNil(items)
 	for i := range items {
 		items[i].Skills = nonNil(items[i].Skills)

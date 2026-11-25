@@ -1,8 +1,11 @@
 package cvdoc
 
 import (
+	_ "embed"
+	"encoding/json"
 	"math"
 	"regexp"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -44,19 +47,34 @@ func ReadJob(job models.Job) Job {
 	return Job{Job: job, Keywords: keywords, Requirements: requirements, KeyResponsibilities: key}
 }
 
+// Related is a requirement the person has not used but knows a close
+// equivalent of (Argo CD for someone who uses FluxCD).
+type Related struct {
+	Skill string   `json:"skill"`
+	Via   []string `json:"via"`
+}
+
 // Match is how the job's requirements line up with a set of skills.
 type Match struct {
 	Matched []string
+	Related []Related
 	Missing []string
 	Score   int
 }
 
-// MatchJob compares the requirements with skills, ignoring case; a must-have
-// counts twice a nice-to-have.
+// MatchJob compares the requirements with skills (skillmap.json): a
+// requirement is matched when the person has it under any of its names or has a
+// tool that proves it (GitHub Actions proves CI/CD), related when they have a
+// close equivalent, missing otherwise. A must-have counts twice a nice-to-have;
+// a related one counts half.
 func MatchJob(job Job, skills []string) Match {
-	have := map[string]bool{}
+	have := map[string]string{}
 	for _, skill := range skills {
-		have[lc(skill)] = true
+		if key := skillKey(skill); key != "" {
+			if _, ok := have[key]; !ok {
+				have[key] = skill
+			}
+		}
 	}
 	nice := map[string]bool{}
 	for _, item := range job.NiceToHave {
@@ -64,18 +82,22 @@ func MatchJob(job Job, skills []string) Match {
 	}
 	weight := func(item string) int {
 		if nice[lc(item)] {
-			return 1
+			return 2
 		}
-		return 2
+		return 4
 	}
-	match := Match{Matched: []string{}, Missing: []string{}}
+	match := Match{Matched: []string{}, Related: []Related{}, Missing: []string{}}
 	total, got := 0, 0
 	for _, item := range job.Keywords {
 		total += weight(item)
-		if have[lc(item)] {
+		switch via := closeTo(item, have); {
+		case covered(item, have):
 			match.Matched = append(match.Matched, item)
 			got += weight(item)
-		} else {
+		case len(via) > 0:
+			match.Related = append(match.Related, Related{Skill: item, Via: via})
+			got += weight(item) / 2
+		default:
 			match.Missing = append(match.Missing, item)
 		}
 	}
@@ -86,21 +108,25 @@ func MatchJob(job Job, skills []string) Match {
 }
 
 // KnownSkills is every skill the profile shows: its skills, the tools of each
-// role and project, and the skills its highlights prove, once each.
+// role and project, and the skills its highlights and notes prove, once each.
 func KnownSkills(profile models.Profile) []string {
 	all := append([]string{}, profile.Skills...)
-	add := func(tools []string, bullets []models.Bullet) {
+	add := func(tools []string, bullets []models.Bullet, notes []models.Note) {
 		all = append(all, tools...)
 		for _, bullet := range bullets {
 			all = append(all, bullet.Skills...)
 		}
+		for _, note := range notes {
+			all = append(all, note.Skills...)
+		}
 	}
 	for _, role := range profile.Experience {
-		add(role.Tools, role.Bullets)
+		add(role.Tools, role.Bullets, role.Notes)
 	}
 	for _, project := range profile.Projects {
-		add(project.Tools, project.Bullets)
+		add(project.Tools, project.Bullets, project.Notes)
 	}
+	add(nil, nil, profile.Notes)
 	seen := map[string]bool{}
 	known := []string{}
 	for _, skill := range all {
@@ -125,4 +151,97 @@ func BulletLine(bullet models.Bullet) string {
 	text := trailingDots.ReplaceAllString(strings.TrimSpace(bullet.Text), "")
 	_, size := utf8.DecodeRuneInString(result)
 	return text + ", " + lowerFirst(result[:size]) + trailingDots.ReplaceAllString(result[size:], "") + "."
+}
+
+//go:embed skillmap.json
+var skillMapJSON []byte
+
+// skillMap is skillmap.json: the names of one skill, the tools that prove an
+// umbrella requirement, and families of interchangeable tools. The web app
+// holds a copy (apps/frontend/src/features/jobs/skillmap.json), kept identical
+// by a test.
+var skillMap = func() (m struct {
+	Same   [][]string          `json:"same"`
+	Covers map[string][]string `json:"covers"`
+	Close  [][]string          `json:"close"`
+}) {
+	if err := json.Unmarshal(skillMapJSON, &m); err != nil {
+		panic(err)
+	}
+	return m
+}()
+
+var (
+	sameKey  = map[string]string{}
+	coverBy  = map[string][]string{}
+	families = [][]string{}
+)
+
+func init() {
+	for _, group := range skillMap.Same {
+		for _, name := range group {
+			sameKey[fold(name)] = fold(group[0])
+		}
+	}
+	for umbrella, tools := range skillMap.Covers {
+		keys := make([]string, len(tools))
+		for i, tool := range tools {
+			keys[i] = skillKey(tool)
+		}
+		coverBy[skillKey(umbrella)] = keys
+	}
+	for _, family := range skillMap.Close {
+		keys := make([]string, len(family))
+		for i, tool := range family {
+			keys[i] = skillKey(tool)
+		}
+		families = append(families, keys)
+	}
+}
+
+var notAlnum = regexp.MustCompile(`[^\pL\pN+#]+`)
+
+// fold is a name without case, spaces or punctuation: "Argo CD" and "argocd" fold alike.
+func fold(name string) string {
+	return notAlnum.ReplaceAllString(lc(strings.TrimSpace(name)), "")
+}
+
+// skillKey identifies a skill whatever name it goes by.
+func skillKey(name string) string {
+	key := fold(name)
+	if same, ok := sameKey[key]; ok {
+		return same
+	}
+	return key
+}
+
+// covered reports whether the person has the requirement or a tool that proves it.
+func covered(requirement string, have map[string]string) bool {
+	key := skillKey(requirement)
+	if _, ok := have[key]; ok {
+		return true
+	}
+	for _, tool := range coverBy[key] {
+		if _, ok := have[tool]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// closeTo is the person's skills, in their spelling, that are interchangeable with the requirement.
+func closeTo(requirement string, have map[string]string) []string {
+	key := skillKey(requirement)
+	via := []string{}
+	for _, family := range families {
+		if !slices.Contains(family, key) {
+			continue
+		}
+		for _, member := range family {
+			if skill, ok := have[member]; ok && member != key && !slices.Contains(via, skill) {
+				via = append(via, skill)
+			}
+		}
+	}
+	return via
 }

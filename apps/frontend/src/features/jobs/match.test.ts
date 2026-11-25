@@ -13,6 +13,16 @@ describe('matchJob', () => {
     expect(requirementsOf(job)).toEqual(['Linux', 'Docker', 'Kubernetes', 'AWS'])
   })
 
+  it('knows other names, umbrella terms and close tools', () => {
+    const job = { must_have: ['CI/CD', 'Containers', 'Git', 'ArgoCD', 'GCP', 'GraphQL', 'k8s'], nice_to_have: ['Redis'] }
+    const match = matchJob(job, ['GitHub Actions', 'Docker', 'FluxCD', 'AWS', 'Kubernetes', 'Valkey'])
+    expect(match.matched).toEqual(['CI/CD', 'Containers', 'Git', 'k8s'])
+    expect(match.related).toEqual([{ skill: 'ArgoCD', via: ['FluxCD'] }, { skill: 'GCP', via: ['AWS'] }, { skill: 'Redis', via: ['Valkey'] }])
+    expect(match.missing).toEqual(['GraphQL'])
+    expect(match.score).toBe(70)
+    expect(matchJob(job, ['Argo CD']).matched).toEqual(['CI/CD', 'ArgoCD'])
+  })
+
   it('words the verdict by score and finds keywords in a text', () => {
     expect(verdictFor(80)).toMatch(/^Strong/)
     expect(verdictFor(60)).toMatch(/^Good/)

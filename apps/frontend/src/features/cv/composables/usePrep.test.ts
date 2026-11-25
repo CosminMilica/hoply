@@ -45,13 +45,15 @@ describe('usePrep', () => {
     prep.pickRole('g:Terraform', 'experience:r2')
     await prep.addGap('Terraform')
     await settle()
-    expect(profile.experience[1]!.bullets.at(-1)).toEqual({ text: 'Wrote modules for 3 environments', result: '', skills: ['Terraform'] })
+    expect(profile.experience[1]!.notes).toEqual([{ text: 'Wrote modules for 3 environments', skills: ['Terraform'] }])
+    expect(profile.experience[1]!.bullets).toHaveLength(4)
     expect(prep.whereLabel('experience:r2')).toBe('Junior system administrator at Bonbon Labs')
-    expect(prep.matchLabel.value).toBe('56% → 67%')
+    expect(prep.matchLabel.value).toBe('56% → 78%')
 
     await prep.undoGap('Terraform')
     await settle()
     expect(prep.state.gaps.Terraform).toBeUndefined()
+    expect(profile.experience[1]!.notes).toEqual([])
     expect(profile.experience[1]!.bullets.at(-1)).toEqual({ text: 'Wrote modules for 3 environments', result: '', skills: [] })
     expect(prep.matchLabel.value).toBe('56%')
     prep.skipGap('RBAC')
@@ -59,28 +61,30 @@ describe('usePrep', () => {
     expect(prep.state.gaps.RBAC).toBeUndefined()
   })
 
-  it('remembers elsewhere as additional information, and in a project', async () => {
-    const person = sampleProfile({ projects: [{ id: 'p1', name: 'Home lab', role: '', url: '', start: '', end: '', tools: [], bullets: [] }] })
+  it('remembers elsewhere as the person’s own notes, and in a project', async () => {
+    const person = sampleProfile({ projects: [{ id: 'p1', name: 'Home lab', role: '', url: '', start: '', end: '', tools: [], bullets: [], notes: [] }] })
     const { prep, profile } = await setup(person)
     prep.setDraft('g:Snowflake', 'Used Snowflake at a meetup demo')
     prep.pickRole('g:Snowflake', OTHER)
     await prep.addGap('Snowflake')
     await settle()
-    expect(profile.additional_info).toEqual(['Used Snowflake at a meetup demo'])
-    expect(prep.whereLabel(OTHER)).toBe('Additional information')
+    expect(profile.notes).toEqual([{ text: 'Used Snowflake at a meetup demo', skills: ['Snowflake'] }])
+    expect(profile.additional_info).toEqual([])
+    expect(prep.whereLabel(OTHER)).toBe('Your notes')
     await prep.undoGap('Snowflake')
     await settle()
-    expect(profile.additional_info).toEqual([])
+    expect(profile.notes).toEqual([])
 
     prep.setDraft('c:3', 'Built reusable Terraform modules for the lab')
     prep.pickRole('c:3', 'projects:p1')
     await prep.claimYes(3)
     await settle()
-    expect(profile.projects[0]!.bullets).toEqual([{ text: 'Built reusable Terraform modules for the lab', result: '', skills: ['Terraform'] }])
+    expect(profile.projects[0]!.notes).toEqual([{ text: 'Built reusable Terraform modules for the lab', skills: ['Terraform'] }])
+    expect(profile.projects[0]!.bullets).toEqual([])
     expect(prep.whereLabel('projects:p1')).toBe('the Home lab project')
     await prep.claimUndo(3)
     await settle()
-    expect(profile.projects[0]!.bullets).toEqual([])
+    expect(profile.projects[0]!.notes).toEqual([])
   })
 
   it('offers the person’s own highlights that share a keyword with a responsibility', async () => {
@@ -95,7 +99,7 @@ describe('usePrep', () => {
     expect(prep.suggestionsFor(job.responsibilities[7]!)).toEqual([])
     prep.claimPick(3, 'Kept Terraform state tidy')
     prep.claimNo(2)
-    expect(prep.progress.value).toBe('2 of 7 questions answered')
+    expect(prep.progress.value).toBe('2 of 6 questions answered')
     expect(prep.toRequest(seedId(1)).confirmed).toEqual([3])
     await prep.claimUndo(3)
     expect(prep.state.claims[3]).toBeUndefined()
@@ -141,7 +145,7 @@ describe('usePrep', () => {
     expect(prep.toRequest(seedId(1))).toEqual({ job_id: seedId(1), skip_roles: ['r2'], focus: ['SQL', 'CI/CD', 'Python'], confirmed: [] })
   })
 
-  it('falls back to additional information without a role or project', async () => {
+  it('falls back to the person’s own notes without a role or project', async () => {
     const { prep } = await setup(sampleProfile({ experience: [] }))
     expect(prep.roleChoices('c:1')).toEqual([{ id: OTHER, label: 'Elsewhere', pressed: true }])
     expect(prep.impactRows.value).toEqual([])

@@ -32,13 +32,14 @@ describe('PrepPage', () => {
     await click(within(terraform(), 'Bonbon Labs'))
     expect(within(terraform(), 'Bonbon Labs').getAttribute('aria-pressed')).toBe('true')
     await click(within(terraform(), 'Add to my CV'))
-    expect(profile.experience[1]!.bullets.at(-1)).toEqual({ text: 'Wrote modules for 3 environments', result: '', skills: ['Terraform'] })
+    expect(profile.experience[1]!.notes).toEqual([{ text: 'Wrote modules for 3 environments', skills: ['Terraform'] }])
     expect(terraform().textContent).toContain('Saved in your profile under Junior system administrator at Bonbon Labs')
-    expect(document.querySelector('[data-test="match"]')!.textContent).toBe('56% → 67%')
+    expect(document.querySelector('[data-test="match"]')!.textContent).toBe('56% → 78%')
     await click(within(terraform(), 'Also add Terraform to my skills'))
     expect(profile.skills).toContain('Terraform')
     expect(terraform().textContent).toContain('In your profile skills')
     await click(within(terraform(), 'Change'))
+    expect(profile.experience[1]!.notes).toEqual([])
     expect(profile.experience[1]!.bullets).toHaveLength(3)
     expect(terraform().textContent).toContain('Missing')
 
@@ -65,8 +66,11 @@ describe('PrepPage', () => {
     expect((claim(1).querySelector('textarea') as HTMLTextAreaElement).value).toBe('Automated provisioning, configuration, and deployment processes through Infrastructure as Code and CI/CD pipelines')
     await click(within(claim(1), 'Elsewhere'))
     await click(within(claim(1), 'Add to my CV'))
-    expect(profile.additional_info).toEqual(['Automated provisioning, configuration, and deployment processes through Infrastructure as Code and CI/CD pipelines'])
-    expect(claim(1).textContent).toContain('Saved in your profile under Additional information')
+    expect(profile.notes).toEqual([{
+      text: 'Automated provisioning, configuration, and deployment processes through Infrastructure as Code and CI/CD pipelines',
+      skills: ['Infrastructure as Code', 'CI/CD'],
+    }])
+    expect(claim(1).textContent).toContain('Saved in your profile under Your notes')
     await click(within(claim(2), 'Not really'))
     expect(claim(2).textContent).toContain('Left out')
     await click(within(claim(2), 'Change'))
@@ -155,6 +159,22 @@ describe('PrepPage', () => {
     expect(text()).toContain('Prepare your CV')
     expect(text()).toContain('We could not write this CV. Try again.')
     expect(applications.applications.get(seedId(1))?.status).toBe('saved')
+  })
+
+  it('shows the close equivalents apart from the gaps, and takes an answer for them', async () => {
+    const person = sampleProfile()
+    person.experience[0]!.tools.push('FluxCD')
+    const { jobs, profile } = useServices(person)
+    jobs.jobs[0]!.must_have.push('Argo CD')
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    const close = () => card('[data-test="close"]', 'Argo CD')
+    expect(close().textContent).toContain('You use FluxCD, which is close to Argo CD.')
+    expect(close().textContent).toContain('Close')
+    expect([...document.querySelectorAll('[data-test="gap"]')].some(gap => gap.textContent?.includes('Argo CD'))).toBe(false)
+    await type(input('Your experience with Argo CD'), 'Ran Argo CD for a side project')
+    await click(within(close(), 'Add to my CV'))
+    expect(profile.experience[0]!.notes).toEqual([{ text: 'Ran Argo CD for a side project', skills: ['Argo CD'] }])
+    expect(close().textContent).toContain('Added')
   })
 
   it('keeps an applied job applied and goes back to the form when generation fails', async () => {

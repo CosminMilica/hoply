@@ -157,7 +157,7 @@ func TestCvContractEndToEnd(t *testing.T) {
 	cv := base + "/cvs/" + queued["id"].(string)
 	ready := waitReady(t, cv)
 	tailored, _ := ready["tailored"].(map[string]any)
-	if ready["status"] != "ready" || tailored["headline"] != "DevOps Engineer | SQL, Git, CI/CD" || ready["written_by"] != "rules" ||
+	if ready["status"] != "ready" || tailored["headline"] != "DevOps Engineer" || ready["written_by"] != "rules" ||
 		ready["rules_reason"] != "off" {
 		t.Fatalf("the worker in the binary writes it: %v", ready)
 	}

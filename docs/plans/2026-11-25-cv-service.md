@@ -1,6 +1,6 @@
 # Plan: the cv service
 
-Status: phases 0 and 1 done; phase 2 built, its live run waits for the token, 2026-11-25. Next: phase 3.
+Status: phases 0 to 3 done and the prompt tuned, 2026-11-25. Next: phase 4.
 
 The last mocked part of Hoply becomes a real service: it prepares the questions for a job, writes a CV tailored to that
 job with Claude, checks it, and exports PDF and DOCX. Claude is reached the way `work/reviewer` does it: the Claude Code
@@ -226,7 +226,7 @@ Deviations from the plan: the queue is the `cvs` table instead of a second table
 the skills dictionary moves in phase 2, where the grounding checks need it, because the rules engine works on
 the job's requirements alone.
 
-**Phase 2. Claude** (built; the live run waits for the owner's token)
+**Phase 2. Claude** (done)
 1. `internal/claude`: the CLI runner (§5.1–5.3), with the CLI's own envelopes for "not logged in" and an invalid
    token recorded from 2.1.322 in `tests/testdata/claude/`, and synthetic ones for success and a usage limit.
 2. `internal/grounding`: the fact catalogue, the prompt and schema (`internal/grounding/prompts/`), the checks
@@ -238,7 +238,8 @@ the job's requirements alone.
 6. Image on `node:26-slim` with `@anthropic-ai/claude-code@2.1.322`. Compose mounts
    `deploy/compose/secrets/` (gitignored) at `/run/secrets/hoply/`.
 7. `docs/claude-setup.md`.
-8. Left: one live run on the owner's profile, its envelope recorded (personal data replaced).
+8. Live run on the owner's profile and the Linear job: written by Claude in 16 s, nothing refused. The CLI's real
+   success envelope (a neutral prompt, no personal data) is `tests/testdata/claude/success-2.1.322.json`.
 
 Deviations from the plan:
 - The skills dictionary stays in jobs. The skill check refuses the job's requirements that the profile does not
@@ -252,11 +253,43 @@ Deviations from the plan:
 - The organisation check covers only the company being applied to. Finding other organisation names needs more
   than rules; phase 4 measures whether it matters.
 
-**Phase 3. Export**
-1. Gotenberg in compose (pinned image, internal network only).
-2. `internal/render`: the HTML template and the DOCX writer, from one `CvDocument`.
-3. `GET /cvs/{id}/file?format=pdf|docx`, then Download PDF and Download DOCX in the web app.
-4. Tests: the PDF's text is extracted and the ATS checks run on it; the DOCX opens as a zip with the expected parts.
+**Phase 3. Export** (done)
+1. Gotenberg 9.4.0 in compose, internal network only (`GOTENBERG_URL`).
+2. `internal/render`: the HTML template, the Gotenberg client and the DOCX writer, from one `CvDocument`.
+3. `GET /cvs/{id}/file?format=pdf|docx&version=tailored|profile`; Download PDF and DOCX on the CV page, for the
+   version on screen.
+4. Checked by hand on the owner's CV: the PDF's text, extracted with pypdf, reads in order with diacritics; macOS
+   `textutil` opens the DOCX. Automated tests cover the HTML, the DOCX parts and XML, and the Gotenberg client against
+   a fake server. CI has no Gotenberg, so the PDF's own text is not checked there.
+
+Found while checking: the owner's PDF runs to two pages while "Fits on one page" passes (it counts characters), and
+the skills line lists all 50 skills. Both go to the prompt work.
+
+**The prompt** (done; measured on the owner's three saved jobs, one live run each)
+
+| Run | ATS (spektr, Linear, Publicis) | Pages | Skills listed | Sentences refused |
+| --- | --- | --- | --- | --- |
+| baseline | 9, 9, 8 | 2, 2, 2 | 52–54 | 1 |
+| final | 10, 10, 10 | 1, 1, 1 | 18–20 | 0 |
+
+What changed:
+- The ATS checks measure what they say: present-tense verbs from a wide verb list count, the title compares
+  words without punctuation, an ad without responsibilities passes that check, and "fits" estimates rendered lines
+  (calibrated on real PDFs) against one page under eight years of experience, two from then on.
+- The prompt says who reads the CV and why, gives a budget per section, the job's spelling of its terms, and the
+  rules in `docs/cv-writing.md` (from five articles the owner chose).
+- Claude chooses the skills (at most 20, every matched requirement kept) and the projects; the headline stays the
+  person's own.
+- Prepare your CV saves answers as notes (`docs/api/profile.md`), which Claude rewrites and combines with the
+  highlights; a role's fact (dates, team, industry) and the languages are facts too.
+- The export uses 10 pt and tighter spacing; education takes one line an entry.
+- Refusal reasons are logged (`claude sentence refused`).
+- Skills match by other names, umbrella terms and close tools (`skillmap.json`). On spektr the job keywords in the
+  CV went from 12 of 20 to 18 of 20, with Argo CD, GitLab CI and Datadog named as transferable from FluxCD,
+  GitHub Actions and Prometheus.
+
+What is left is the person's: the missing keywords are skills the profile does not show, and mirrored
+responsibilities need answers in Prepare your CV.
 
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.

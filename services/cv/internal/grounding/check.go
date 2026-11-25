@@ -64,15 +64,30 @@ func (c Catalogue) Check(sentence Sentence, owner string) string {
 		}
 		cited = append(cited, fact.Text)
 	}
-	source := strings.Join(cited, " ")
+	held := map[string]bool{}
+	for _, value := range number.FindAllString(strings.Join(cited, " "), -1) {
+		held[value] = true
+	}
 	for _, value := range number.FindAllString(text, -1) {
-		if !strings.Contains(source, value) {
+		if !held[value] {
 			return "names " + value + ", which no cited fact holds"
 		}
 	}
 	for _, skill := range c.Missing {
 		if cvdoc.HasWord(text, skill) {
 			return "claims " + skill + ", which the profile does not show"
+		}
+	}
+	for _, close := range c.Related {
+		if !cvdoc.HasWord(text, close.Skill) {
+			continue
+		}
+		named := false
+		for _, via := range close.Via {
+			named = named || cvdoc.HasWord(text, via)
+		}
+		if !named {
+			return "names " + close.Skill + " without " + cvdoc.JoinList(close.Via) + ", the close equivalent the person has"
 		}
 	}
 	if owner != "" && c.Company != "" && cvdoc.HasWord(text, c.Company) {
@@ -83,16 +98,18 @@ func (c Catalogue) Check(sentence Sentence, owner string) string {
 
 // Assemble builds the tailored CV from Claude's answer: each sentence that
 // passes Check, the rules engine's rewrite of the cited fact for each that
-// does not, and the rules engine's version of anything Claude left out. It
-// returns the document and how many sentences it refused.
-func (c Catalogue) Assemble(answer Answer, job cvdoc.Job, rules models.CvDocument) (models.CvDocument, int) {
+// does not, the rules engine's bullets for a role Claude left out, and only the
+// projects Claude chose. It returns the document and why each refused sentence
+// was refused.
+func (c Catalogue) Assemble(answer Answer, job cvdoc.Job, rules models.CvDocument) (models.CvDocument, []string) {
 	document := rules
-	refused := 0
+	refusals := []string{}
+	refuse := func(where, reason string) { refusals = append(refusals, where+": "+reason) }
 
 	summary := []string{}
 	for _, sentence := range answer.Summary {
-		if c.Check(sentence, "") != "" {
-			refused++
+		if reason := c.Check(sentence, ""); reason != "" {
+			refuse("summary", reason)
 			continue
 		}
 		summary = append(summary, strings.TrimSpace(sentence.Text))
@@ -103,31 +120,57 @@ func (c Catalogue) Assemble(answer Answer, job cvdoc.Job, rules models.CvDocumen
 
 	document.Experience = append([]models.RoleSection{}, rules.Experience...)
 	for i, entry := range c.Roles {
-		limit := 3
+		limit := 3 + c.PageLimit - 1
 		if i == 0 {
-			limit = 7
+			limit = MaxFirstRoleBullets + c.PageLimit - 1
 		}
 		bullets, failed, ok := c.section(answer.Roles, entry, job, limit)
-		refused += failed
+		for _, reason := range failed {
+			refuse(entry.ID, reason)
+		}
 		if ok && i < len(document.Experience) {
 			document.Experience[i].Bullets = bullets
 		}
 	}
-	document.Projects = append([]models.ProjectSection{}, rules.Projects...)
+	projects := []models.ProjectSection{}
 	for i, entry := range c.Projects {
-		bullets, failed, ok := c.section(answer.Projects, entry, job, 3)
-		refused += failed
-		if ok && i < len(document.Projects) {
-			document.Projects[i].Bullets = bullets
+		if !chosen(answer.Projects, entry.ID) || i >= len(rules.Projects) {
+			continue
+		}
+		project := rules.Projects[i]
+		bullets, failed, ok := c.section(answer.Projects, entry, job, MaxProjectBullets)
+		for _, reason := range failed {
+			refuse(entry.ID, reason)
+		}
+		if ok {
+			project.Bullets = bullets
+		}
+		project.Bullets = project.Bullets[:min(len(project.Bullets), MaxProjectBullets)]
+		projects = append(projects, project)
+	}
+	document.Projects = projects
+	document.Skills = c.skills(answer.Skills, rules.Skills)
+	return document, refusals
+}
+
+// Limits of the tailored CV for one page; a two-page CV gets one more bullet a role.
+const (
+	MaxFirstRoleBullets = 5
+	MaxProjectBullets   = 2
+)
+
+func chosen(sections []Section, id string) bool {
+	for _, section := range sections {
+		if section.ID == id {
+			return true
 		}
 	}
-	document.Skills = c.skills(answer.Skills, rules.Skills)
-	return document, refused
+	return false
 }
 
 // section is the bullets of one role or project, ok false when Claude wrote
 // none for it, so the rules engine's stay.
-func (c Catalogue) section(sections []Section, entry Entry, job cvdoc.Job, limit int) ([]string, int, bool) {
+func (c Catalogue) section(sections []Section, entry Entry, job cvdoc.Job, limit int) ([]string, []string, bool) {
 	var written *Section
 	for i := range sections {
 		if sections[i].ID == entry.ID {
@@ -136,18 +179,19 @@ func (c Catalogue) section(sections []Section, entry Entry, job cvdoc.Job, limit
 		}
 	}
 	if written == nil || len(written.Bullets) == 0 {
-		return nil, 0, false
+		return nil, nil, false
 	}
-	bullets, refused := []string{}, 0
+	bullets, refused := []string{}, []string{}
 	for index, sentence := range written.Bullets {
 		if len(bullets) == limit {
 			break
 		}
-		if c.Check(sentence, entry.ID) == "" {
+		reason := c.Check(sentence, entry.ID)
+		if reason == "" {
 			bullets = append(bullets, strings.TrimSpace(sentence.Text))
 			continue
 		}
-		refused++
+		refused = append(refused, reason)
 		if fallback := c.rewrite(sentence, entry.ID, job, index); fallback != "" && !contains(bullets, fallback) {
 			bullets = append(bullets, fallback)
 		}
@@ -169,23 +213,34 @@ func (c Catalogue) rewrite(sentence Sentence, owner string, job cvdoc.Job, index
 	return ""
 }
 
-// skills is Claude's order of the person's skills, then the rest in the rules
-// engine's order; a skill the person does not show is dropped.
+// skills is the skills Claude chose, in its order and the person's spelling,
+// then any of the job's requirements the person shows that it left out, at most
+// cvdoc.MaxSkills (more only to keep every matched requirement). A skill the
+// person does not show is dropped. Without a usable choice the rules' list stays.
 func (c Catalogue) skills(ordered, rules []string) []string {
 	skills := []string{}
 	for _, skill := range ordered {
-		for _, have := range rules {
-			if strings.EqualFold(strings.TrimSpace(skill), have) && !contains(skills, have) {
+		for _, have := range c.Known {
+			if strings.EqualFold(strings.TrimSpace(skill), strings.TrimSpace(have)) && !contains(skills, have) {
 				skills = append(skills, have)
 			}
 		}
 	}
-	for _, have := range rules {
-		if !contains(skills, have) {
-			skills = append(skills, have)
+	if len(skills) == 0 {
+		return rules
+	}
+	kept := []string{}
+	for _, skill := range skills {
+		if len(kept) < cvdoc.MaxSkills || contains(c.Matched, skill) {
+			kept = append(kept, skill)
 		}
 	}
-	return skills
+	for _, matched := range c.Matched {
+		if !contains(kept, matched) {
+			kept = append(kept, matched)
+		}
+	}
+	return kept
 }
 
 func contains(items []string, value string) bool {

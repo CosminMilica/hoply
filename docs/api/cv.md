@@ -18,6 +18,7 @@ else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 | POST | `/api/v1/cvs` | `CvRequest` | 202 `Cv` with `status: queued`; 404 unknown job; 422 invalid body; 503 profile or jobs unavailable |
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
 | GET | `/api/v1/cvs/{id}` | | 200 `Cv`; 404 |
+| GET | `/api/v1/cvs/{id}/file` | query `format` (`pdf` or `docx`), `version` (`tailored`, the default, or `profile`) | 200 the file as an attachment named `file_name` (`.docx` for DOCX); 409 not ready; 422 bad `format` or `version`; 503 PDF printer unavailable |
 | DELETE | `/api/v1/cvs/{id}` | | 204; 404 |
 | GET | `/api/v1/writer` | | 200 `WriterStatus` |
 
@@ -27,7 +28,7 @@ belongs to the caller; another person's CVs are never visible or changed.
 ## Shapes
 
 ```text
-PrepQuestions { job_id, base_score, covered: [skill], gaps: [{ skill, ask, example }],
+PrepQuestions { job_id, base_score, covered: [skill], gaps: [{ skill, ask, example }], related: [{ skill, via: [skill], note }],
                 responsibilities: [{ index, text, question, prefill }] }
 CvRequest     { job_id, skip_roles: [experience id], focus: [skill] (at most 3; empty takes the first three matched),
                 confirmed: [int] (indexes of the key responsibilities the person confirmed) }
@@ -62,9 +63,17 @@ cannot be written is `failed`; the web app offers to try again.
 The requirements to write around are `must_have` then `nice_to_have`. The key responsibilities asked about are the
 job's first four `responsibilities`. A job without a `product` is "products" in the summary.
 
-A skill counts as covered (not asked again, and matched) when it is in the profile's `skills`, in the `tools` of any
-role or project, or in the `skills` of any highlight, ignoring case. The score weighs a must-have twice a
-nice-to-have.
+The person's skills are the profile's `skills`, the `tools` of every role and project, and the `skills` of every
+highlight and note. A requirement is matched against them through `services/cv/internal/cvdoc/skillmap.json` (the web
+app holds an identical copy, checked by a test):
+
+- covered when the person has it under any of its names ("Argo CD", "ArgoCD") or has a tool that proves it
+  (GitHub Actions proves CI/CD, Docker proves Containers, Terraform proves Infrastructure as Code);
+- related when they have a close equivalent from the same family (FluxCD for Argo CD, AWS for GCP). Related
+  requirements are not asked as gaps; the CV names them only beside the equivalent, as transferable;
+- missing otherwise.
+
+The score weighs a must-have twice a nice-to-have, and a related requirement half.
 
 ## Writing
 
@@ -103,3 +112,10 @@ cites the facts it rests on. The code keeps a sentence only when:
 A sentence that fails is replaced with the rules' rewrite of the fact it cites, or dropped. A role or project
 Claude leaves out keeps the rules' bullets. Name, contact, dates, companies, education and the profile version
 always come from the profile. The ATS checks run on the final text.
+
+## Files
+
+The PDF is the CV as HTML (`internal/render/html.go`) printed by Gotenberg's Chromium on A4 (`GOTENBERG_URL`).
+The DOCX is written by the service (`internal/render/docx.go`), with Word's own Title, Heading 1, Heading 2 and List
+Bullet styles. Both are one column with standard headings, real text, and no tables, images or text boxes, in the
+order of the web app's CV paper.

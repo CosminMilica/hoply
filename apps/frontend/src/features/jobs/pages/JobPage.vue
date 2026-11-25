@@ -52,7 +52,7 @@ function toggleSave() {
             <ScoreTile :score="match.score" />
             <span class="text-[15px] leading-snug font-bold">{{ match.verdict }}</span>
           </div>
-          <KeywordChips :matched="match.matched" :missing="match.missing" size="md" />
+          <KeywordChips :matched="match.matched" :related="match.related" :missing="match.missing" size="md" />
         </div>
         <div class="order-last flex flex-col gap-2.5 min-[900px]:order-none">
           <UButton :to="{ name: 'hoply-prep', params: { id: job.id } }" :label="prepareLabel" size="lg" block class="justify-center" />

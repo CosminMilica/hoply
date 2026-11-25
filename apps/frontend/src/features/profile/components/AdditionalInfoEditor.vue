@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import type { Profile } from '../api/profile.schema'
 import { useProfileMutations } from '../composables/useProfile'
+import NotesList from './NotesList.vue'
 
 const MAX = 10
 const props = defineProps<{ profile: Profile }>()
@@ -16,6 +17,9 @@ function add() {
 }
 function remove(index: number) {
   patch.mutate({ additional_info: props.profile.additional_info.filter((_, at) => at !== index) })
+}
+function removeNote(index: number) {
+  patch.mutate({ notes: props.profile.notes.filter((_, at) => at !== index) })
 }
 </script>
 
@@ -33,4 +37,5 @@ function remove(index: number) {
     </UFormField>
     <UButton type="submit" color="neutral" label="Add" class="px-[18px]" />
   </form>
+  <NotesList :notes="profile.notes" of="your notes" :pending="patch.isPending.value" @remove="removeNote" />
 </template>

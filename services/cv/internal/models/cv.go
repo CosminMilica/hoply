@@ -151,6 +151,13 @@ type Gap struct {
 	Example string `json:"example"`
 }
 
+// Close is a requirement the person has not used but knows a close equivalent of.
+type Close struct {
+	Skill string   `json:"skill"`
+	Via   []string `json:"via"`
+	Note  string   `json:"note"`
+}
+
 type Responsibility struct {
 	Index    int    `json:"index"`
 	Text     string `json:"text"`
@@ -164,5 +171,6 @@ type PrepQuestions struct {
 	BaseScore        int              `json:"base_score"`
 	Covered          []string         `json:"covered"`
 	Gaps             []Gap            `json:"gaps"`
+	Related          []Close          `json:"related"`
 	Responsibilities []Responsibility `json:"responsibilities"`
 }

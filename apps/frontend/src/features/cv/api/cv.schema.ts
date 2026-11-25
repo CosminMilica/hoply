@@ -80,6 +80,8 @@ export const prepQuestionsSchema = z.object({
   base_score: z.number(),
   covered: z.array(z.string()),
   gaps: z.array(z.object({ skill: z.string(), ask: z.string(), example: z.string() })),
+  /** Requirements the person has not used but knows a close equivalent of: the CV mentions them as transferable. */
+  related: z.array(z.object({ skill: z.string(), via: z.array(z.string()), note: z.string() })).default([]),
   responsibilities: z.array(z.object({
     index: z.number().int().nonnegative(),
     text: z.string(),

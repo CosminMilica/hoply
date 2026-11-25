@@ -1,7 +1,9 @@
 package routes
 
 import (
+	"mime"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -57,6 +59,23 @@ func registerCvs(router chi.Router, cvs *services.CvService) {
 			return err
 		}
 		return writeJSON(w, http.StatusOK, cv)
+	}))
+	router.Get("/{id}/file", handle(func(w http.ResponseWriter, r *http.Request) error {
+		id, err := pathUUID(r, "id")
+		if err != nil {
+			return err
+		}
+		query := r.URL.Query()
+		file, err := cvs.File(r.Context(), requestIdentity(r), id, query.Get("format"), query.Get("version"))
+		if err != nil {
+			return err
+		}
+		w.Header().Set("Content-Type", file.ContentType)
+		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": file.Name}))
+		w.Header().Set("Content-Length", strconv.Itoa(len(file.Body)))
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(file.Body)
+		return err
 	}))
 	router.Delete("/{id}", handle(func(w http.ResponseWriter, r *http.Request) error {
 		id, err := pathUUID(r, "id")

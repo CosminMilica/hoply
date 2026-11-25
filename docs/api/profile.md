@@ -38,17 +38,18 @@ Profile            { id, name, headline, about, email, phone, github, linkedin,
                      city, country, work_modes, open_to_relocation,
                      work_authorization, work_authorization_region, notice_period_weeks, available_from,
                      target_roles, target_seniority, employment_types, salary_min, salary_currency, salary_period,
-                     additional_info: [string],
+                     additional_info: [string], notes: [Note],
                      skills: [string], experience: [Experience], projects: [Project], education: [Education],
                      certifications: [Certification], languages: [Language], created_at, updated_at }
-ProfilePatch       every Profile field above from name to additional_info, each optional: only the fields sent change;
+ProfilePatch       every Profile field above from name to notes, each optional: only the fields sent change;
                    an array replaces the stored one; null clears notice_period_weeks or salary_min
 Bullet             { text, result, skills: [string] }
+Note               { text, skills: [string] }
 Experience         { id, role, company, location, employment_type, industry, team_size, people_managed,
-                     start, end, tools: [string], bullets: [Bullet] }
-ExperienceInput    Experience without id
-Project            { id, name, role, url, start, end, tools: [string], bullets: [Bullet] }
-ProjectInput       Project without id
+                     start, end, tools: [string], bullets: [Bullet], notes: [Note] }
+ExperienceInput    Experience without id; `notes` left out keeps the stored notes
+Project            { id, name, role, url, start, end, tools: [string], bullets: [Bullet], notes: [Note] }
+ProjectInput       Project without id; `notes` left out keeps the stored notes
 Education          { id, level, field, degree, school, start_year, end_year }
 EducationInput     Education without id
 Certification      { id, name, issuer, issued, expires, credential_id, url }
@@ -92,6 +93,7 @@ Strings are never null: an unset string is `""`, an unset array is `[]`. `notice
 | `level` (education) | one of `high_school`, `associate`, `bachelor`, `master`, `doctorate`, `other` |
 | `tools`, `Bullet.skills` | same cleaning as `skills`; `tools` at most 30, `Bullet.skills` at most 10 |
 | `bullets` | at most 10; entries with an empty `text` dropped; `text` at most 300, `result` at most 200 characters |
+| `notes` | at most 30; entries with an empty `text` dropped; `text` at most 1000 characters; `Note.skills` cleaned as `skills`, at most 10 |
 | `level` (language) | one of `A1`, `A2`, `B1`, `B2`, `C1`, `C2`, `Native` |
 
 `Bullet.result` is the measurable outcome ("cut release time from 2 hours to 15 minutes"); `Bullet.skills` tags the
@@ -110,3 +112,10 @@ first. `education`, `certifications` and `languages` keep the order they were ad
 | experience `bullets: [string]` | `[{ text, result: "", skills: [] }]` |
 | education `degree` | kept as `degree`; `level` guessed from it (`BSc`/`Bachelor`/`Licen` → `bachelor`, `MSc`/`Master` → `master`, `PhD`/`Doctor` → `doctorate`, otherwise `other`); `field` empty |
 | education `years` ("2016 – 2020") | `start_year`, `end_year` from the first and last four-digit numbers, else empty |
+
+## Notes
+
+Highlights (`bullets`) are the person's own CV lines. Notes are what they tell Prepare your CV about a role, a
+project (`experience[].notes`, `projects[].notes`) or themselves (`notes`), in their own words and as long as they
+like. The cv service gives both to Claude, which writes each CV's bullets from them; a note is never printed as it is.
+The skills of a note count as skills the person shows.

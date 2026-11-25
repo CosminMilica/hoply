@@ -54,6 +54,24 @@ describe('editing a role', () => {
     expect(text()).toContain('managed 2 people')
   })
 
+  it('shows the notes Prepare your CV saved and removes one', async () => {
+    const { profile } = useServices()
+    profile.experience[0]!.notes = [{ text: 'i ran the CI for 40 services', skills: ['CI/CD'] }]
+    profile.notes = [{ text: 'I like calm on-call weeks', skills: [] }]
+    await mountPage(ProfilePage)
+    expect(text()).toContain('Your notes for CVs')
+    expect(text()).toContain('i ran the CI for 40 services')
+    await click(button('Remove note 1 of DevOps Engineer'))
+    await settle()
+    expect(profile.experience[0]!.notes).toEqual([])
+    expect(profile.experience[0]!.bullets).toHaveLength(4)
+    await click(sectionToggle('Additional information'))
+    expect(text()).toContain('I like calm on-call weeks')
+    await click(button('Remove note 1 of your notes'))
+    await settle()
+    expect(profile.notes).toEqual([])
+  })
+
   it('clears the employment type and the counts', async () => {
     const { profile } = useServices()
     await mountPage(ProfilePage)

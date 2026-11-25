@@ -32,6 +32,7 @@ type Profile struct {
 	SalaryCurrency          string          `json:"salary_currency"`
 	SalaryPeriod            string          `json:"salary_period"`
 	AdditionalInfo          []string        `json:"additional_info"`
+	Notes                   []Note          `json:"notes"`
 	Skills                  []string        `json:"skills"`
 	Experience              []Experience    `json:"experience"`
 	Projects                []Project       `json:"projects"`
@@ -67,6 +68,7 @@ type ProfilePatch struct {
 	SalaryCurrency          *string  `json:"salary_currency"`
 	SalaryPeriod            *string  `json:"salary_period"`
 	AdditionalInfo          []string `json:"additional_info"`
+	Notes                   []Note   `json:"notes"`
 }
 
 // Empty reports whether the patch changes nothing.
@@ -82,7 +84,7 @@ func (p ProfilePatch) Empty() bool {
 			return false
 		}
 	}
-	return p.OpenToRelocation == nil && !p.NoticePeriodWeeks.Set && !p.SalaryMin.Set
+	return p.Notes == nil && p.OpenToRelocation == nil && !p.NoticePeriodWeeks.Set && !p.SalaryMin.Set
 }
 
 // Nullable is a patch field where an absent key, null and a value differ.
@@ -114,6 +116,14 @@ type Bullet struct {
 	Skills []string `json:"skills"`
 }
 
+// Note is something the person said about a role, a project or themselves, in
+// their own words, with the skills it shows. CVs are written from notes, never
+// printed from them.
+type Note struct {
+	Text   string   `json:"text"`
+	Skills []string `json:"skills"`
+}
+
 type ExperienceInput struct {
 	Role           string   `json:"role"`
 	Company        string   `json:"company"`
@@ -126,6 +136,7 @@ type ExperienceInput struct {
 	End            string   `json:"end"`
 	Tools          []string `json:"tools"`
 	Bullets        []Bullet `json:"bullets"`
+	Notes          []Note   `json:"notes"`
 }
 
 type Experience struct {
@@ -141,6 +152,7 @@ type ProjectInput struct {
 	End     string   `json:"end"`
 	Tools   []string `json:"tools"`
 	Bullets []Bullet `json:"bullets"`
+	Notes   []Note   `json:"notes"`
 }
 
 type Project struct {

@@ -115,7 +115,7 @@ function onUp() {
             </li>
           </ul>
         </div>
-        <KeywordChips :matched="current.matched.slice(0, 4)" :missing="current.missing.slice(0, 3)" />
+        <KeywordChips :matched="current.matched.slice(0, 4)" :related="current.related.slice(0, 2)" :missing="current.missing.slice(0, 3)" />
         <span class="mt-auto text-[13px] font-bold text-ink-500">
           <span class="pointer-fine:hidden">Swipe right to save, left to skip, up to tailor your CV. Tap for details.</span>
           <span class="hidden pointer-fine:inline">Drag the card or use the buttons below. Click for details.</span>

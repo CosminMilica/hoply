@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
-import type { Profile } from '../api/profile.schema'
+import { withoutId, type Profile, type Project } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
 import { useProfileMutations } from '../composables/useProfile'
 import { monthRange } from '../format'
 import BulletList from './BulletList.vue'
 import EntryActions from './EntryActions.vue'
+import NotesList from './NotesList.vue'
 import ProjectForm from './ProjectForm.vue'
 
 defineProps<{ profile: Profile }>()
 const { projects } = useProfileMutations()
+
+function removeNote(project: Project, index: number) {
+  projects.update.mutate({ id: project.id, body: { ...withoutId(project), notes: project.notes.filter((_, at) => at !== index) } as Omit<Project, 'id'> as never })
+}
 const editor = useEntryEditor(projects)
 </script>
 
@@ -39,6 +44,7 @@ const editor = useEntryEditor(projects)
           <li v-for="tool in project.tools" :key="tool" class="rounded-lg border border-ink-700 bg-elevated px-2.5 py-1 text-[13px] font-bold">{{ tool }}</li>
         </ul>
       </template>
+      <NotesList :notes="project.notes" :of="project.name" :pending="projects.update.isPending.value" @remove="index => removeNote(project, index)" />
       <EntryActions :name="project.name" what="project" :pending="projects.remove.isPending.value" @edit="editor.open(project.id)" @remove="projects.remove.mutate(project.id)" />
     </template>
   </div>

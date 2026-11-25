@@ -2,6 +2,7 @@ package unit_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -154,9 +155,9 @@ func TestQuestionsDoNotAskAboutSkillsInToolsOrHighlights(t *testing.T) {
 	for _, gap := range questions.Gaps {
 		skills = append(skills, gap.Skill)
 	}
-	equal(t, skills, []string{"Infrastructure as Code", "RBAC"})
+	equal(t, skills, []string{"RBAC"})
 	equal(t, strings.Contains(strings.Join(questions.Covered, ","), "Snowflake"), true)
-	equal(t, questions.BaseScore, 78)
+	equal(t, questions.BaseScore, 89)
 }
 
 func TestQuestionsSkipEmptyResponsibilitiesAndUseAGenericExample(t *testing.T) {
@@ -180,7 +181,7 @@ func TestMatchWeighsMustHavesTwiceNiceToHaves(t *testing.T) {
 
 func TestWriteKeepsTheHeadlineAndPutsTheTitleInTheSummary(t *testing.T) {
 	cv := cvdoc.Write(sampleProfile(t), engineJob(t, 0), request(), now)
-	equal(t, cv.Tailored.Headline, "DevOps Engineer | SQL, Git, CI/CD")
+	equal(t, cv.Tailored.Headline, "DevOps Engineer")
 	equal(t, cv.Profile.Headline, "DevOps Engineer")
 	equal(t, cv.Tailored.Summary, "DevOps Engineer with 6 years of experience, strongest in SQL, Git and CI/CD. "+
 		"I like reliable systems, clear documentation and calm on-call weeks. "+
@@ -228,7 +229,7 @@ func TestWriteUsesTheFactsRememberedInTheProfile(t *testing.T) {
 	equal(t, cv.Tailored.Additional, []string{"HashiCorp Terraform Associate, 2025."})
 	equal(t, cv.Profile.Additional, []string{"HashiCorp Terraform Associate, 2025."})
 	equal(t, checkStartingWith(t, cv.Ats.Checks, "Job responsibilities"), models.AtsCheck{OK: true, Label: "Job responsibilities mirrored: 2 of 4", Hint: "Describe them in Prepare your CV."})
-	equal(t, checkStartingWith(t, cv.Ats.Checks, "Keywords from the job").Label, "Keywords from the job: 7 of 9")
+	equal(t, checkStartingWith(t, cv.Ats.Checks, "Keywords from the job").Label, "Keywords from the job: 8 of 9")
 }
 
 func TestWriteLeavesOutSkippedRolesAndFollowsTheFocus(t *testing.T) {
@@ -238,7 +239,8 @@ func TestWriteLeavesOutSkippedRolesAndFollowsTheFocus(t *testing.T) {
 	}), now)
 	equal(t, len(cv.Tailored.Experience), 1)
 	equal(t, len(cv.Profile.Experience), 2)
-	equal(t, cv.Tailored.Headline, "DevOps Engineer | Python")
+	equal(t, cv.Tailored.Headline, "DevOps Engineer")
+	equal(t, strings.Contains(cv.Tailored.Summary, "strongest in Python."), true)
 }
 
 func TestWriteKeepsSevenBulletsOnTheFirstRoleAndThreeOnTheOthers(t *testing.T) {
@@ -293,7 +295,7 @@ func TestAtsChecksPassACompleteCVAndFailUndatedRoles(t *testing.T) {
 		Skills: job.Keywords, Experience: []models.RoleSection{{Role: "r", Bullets: []string{"Built 3 things."}}},
 	}
 	confirmed := request(func(r *models.CvRequest) { r.Confirmed = []int{1} })
-	for _, check := range cvdoc.AtsChecks(document, job, sampleProfile(t), confirmed) {
+	for _, check := range cvdoc.AtsChecks(document, job, sampleProfile(t), confirmed, now) {
 		if !check.OK {
 			t.Fatalf("failed: %s", check.Label)
 		}
@@ -301,7 +303,7 @@ func TestAtsChecksPassACompleteCVAndFailUndatedRoles(t *testing.T) {
 	undated := sampleProfile(t)
 	undated.Experience = undated.Experience[:1]
 	undated.Experience[0].Start = ""
-	for _, check := range cvdoc.AtsChecks(document, job, undated, confirmed) {
+	for _, check := range cvdoc.AtsChecks(document, job, undated, confirmed, now) {
 		if !check.OK {
 			equal(t, check.Label, "Dates with month and year")
 			return
@@ -342,4 +344,91 @@ func checkStartingWith(t *testing.T, checks []models.AtsCheck, prefix string) mo
 	}
 	t.Fatalf("no check starts with %q", prefix)
 	return models.AtsCheck{}
+}
+
+func TestAtsChecksAcceptPresentTenseVerbsAndPunctuatedTitles(t *testing.T) {
+	job := catalogJob(t, 0)
+	job.Title = "DevOps Engineer- Senior Associate- Public Sector"
+	job.Responsibilities = nil
+	read := cvdoc.ReadJob(job)
+	document := models.CvDocument{
+		Summary:    "Applying as DevOps Engineer (Senior Associate, Public Sector) with " + strings.Join(read.Keywords, ", ") + ".",
+		Skills:     read.Keywords,
+		Experience: []models.RoleSection{{Role: "r", Bullets: []string{"Run 3 clusters.", "Keeps 2 backups.", "Operate the VPN.", "Wrote docs.", "Mitigates attacks."}}},
+	}
+	for _, check := range cvdoc.AtsChecks(document, read, sampleProfile(t), request(), now) {
+		if !check.OK {
+			t.Errorf("failed: %s", check.Label)
+		}
+	}
+	document.Experience[0].Bullets = append(document.Experience[0].Bullets, "The VPN was set up.")
+	if check := checkStartingWith(t, cvdoc.AtsChecks(document, read, sampleProfile(t), request(), now), "Every bullet"); check.OK {
+		t.Fatal("a bullet without a verb fails")
+	}
+	equal(t, checkStartingWith(t, cvdoc.AtsChecks(document, read, sampleProfile(t), request(), now), "Job responsibilities").Label, "Job responsibilities mirrored: 0 of 0")
+}
+
+func TestOnePageIsEstimatedInLines(t *testing.T) {
+	short := models.CvDocument{Summary: "Short.", Skills: []string{"Go"}, Experience: []models.RoleSection{{Role: "r", Meta: "m", Bullets: []string{"Built it."}}},
+		Projects: []models.ProjectSection{{Name: "p", Bullets: []string{"Ran it."}}}, Education: []models.EducationLine{{Degree: "BSc"}},
+		Certifications: []string{"CKA"}, Languages: "English (C1)", Additional: []string{"Speaks."}}
+	equal(t, cvdoc.EstimatedLines(short), 2+2+2+4+3+2+2+2+2)
+	long := short
+	long.Experience = []models.RoleSection{{Role: "r", Meta: "m", Bullets: []string{strings.Repeat("x", 4000)}}}
+	equal(t, cvdoc.EstimatedLines(long) > cvdoc.PageLines, true)
+	if check := checkStartingWith(t, cvdoc.AtsChecks(long, engineJob(t, 0), sampleProfile(t), request(), now), "Fits on one page"); check.OK {
+		t.Fatal("a long CV does not fit")
+	}
+}
+
+func TestExperiencedPeopleGetTwoPages(t *testing.T) {
+	profile := sampleProfile(t)
+	equal(t, cvdoc.PageLimit(profile, now), 1)
+	profile.Experience[1].Start = "2016-01"
+	equal(t, cvdoc.PageLimit(profile, now), 2)
+	long := models.CvDocument{Summary: "x", Experience: []models.RoleSection{{Role: "r", Bullets: make([]string, 70)}}}
+	for i := range long.Experience[0].Bullets {
+		long.Experience[0].Bullets[i] = "Built it."
+	}
+	check := checkStartingWith(t, cvdoc.AtsChecks(long, engineJob(t, 0), profile, request(), now), "Fits on")
+	equal(t, check.Label, "Fits on two pages")
+	equal(t, check.OK, true)
+}
+
+func TestTailoredSkillsStopAtTwentyButKeepEveryMatch(t *testing.T) {
+	profile := sampleProfile(t)
+	for i := range 30 {
+		profile.Skills = append(profile.Skills, fmt.Sprintf("Skill%d", i))
+	}
+	cv := cvdoc.Write(profile, engineJob(t, 0), request(), now)
+	equal(t, len(cv.Tailored.Skills), cvdoc.MaxSkills)
+	equal(t, cv.Tailored.Skills[:5], []string{"SQL", "Git", "CI/CD", "Monitoring", "Python"})
+	equal(t, len(cv.Profile.Skills), len(profile.Skills))
+}
+
+func TestMatchKnowsOtherNamesUmbrellasAndCloseTools(t *testing.T) {
+	job := catalogJob(t, 0)
+	job.MustHave = []string{"CI/CD", "Containers", "Git", "ArgoCD", "GCP", "GraphQL", "k8s"}
+	job.NiceToHave = []string{"Redis"}
+	match := cvdoc.MatchJob(cvdoc.ReadJob(job), []string{"GitHub Actions", "Docker", "FluxCD", "AWS", "Kubernetes", "Valkey"})
+	equal(t, match.Matched, []string{"CI/CD", "Containers", "Git", "k8s"})
+	equal(t, match.Related, []cvdoc.Related{{Skill: "ArgoCD", Via: []string{"FluxCD"}}, {Skill: "GCP", Via: []string{"AWS"}}, {Skill: "Redis", Via: []string{"Valkey"}}})
+	equal(t, match.Missing, []string{"GraphQL"})
+	// 4 matched must-haves (16) + 2 related must-haves (2 + 2) + a related nice-to-have (1), of 30.
+	equal(t, match.Score, 70)
+	equal(t, cvdoc.MatchJob(cvdoc.ReadJob(job), []string{"Argo CD"}).Matched, []string{"CI/CD", "ArgoCD"})
+}
+
+func TestSkillMapCopiesAreIdentical(t *testing.T) {
+	ours, err := os.ReadFile("../../internal/cvdoc/skillmap.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	theirs, err := os.ReadFile("../../../../apps/frontend/src/features/jobs/skillmap.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(ours) != string(theirs) {
+		t.Fatal("apps/frontend/src/features/jobs/skillmap.json must be a copy of services/cv/internal/cvdoc/skillmap.json")
+	}
 }

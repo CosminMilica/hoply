@@ -29,8 +29,8 @@ func ExampleFor(skill string) string {
 }
 
 // Questions is what Prepare your CV asks: the job's keywords the profile does
-// not show yet (in its skills, its tools or a highlight that proves one), and
-// the job's key responsibilities.
+// not show yet (in its skills, its tools, a highlight or a note that proves one),
+// the ones it shows only a close equivalent of, and the job's key responsibilities.
 func Questions(job Job, profile models.Profile) models.PrepQuestions {
 	match := MatchJob(job, KnownSkills(profile))
 	gaps := make([]models.Gap, 0, len(match.Missing))
@@ -39,6 +39,14 @@ func Questions(job Job, profile models.Profile) models.PrepQuestions {
 			Skill:   skill,
 			Ask:     "Have you used " + skill + "? Tell us where and what you did. Numbers help: how many, how much, how fast.",
 			Example: "e.g. " + ExampleFor(skill),
+		})
+	}
+	related := make([]models.Close, 0, len(match.Related))
+	for _, item := range match.Related {
+		related = append(related, models.Close{
+			Skill: item.Skill,
+			Via:   item.Via,
+			Note:  "You use " + JoinList(item.Via) + ", which is close to " + item.Skill + ". Your CV says so, without claiming " + item.Skill + " itself.",
 		})
 	}
 	responsibilities := []models.Responsibility{}
@@ -57,6 +65,7 @@ func Questions(job Job, profile models.Profile) models.PrepQuestions {
 		BaseScore:        match.Score,
 		Covered:          match.Matched,
 		Gaps:             gaps,
+		Related:          related,
 		Responsibilities: responsibilities,
 	}
 }

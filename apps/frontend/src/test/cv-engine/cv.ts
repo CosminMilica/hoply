@@ -63,7 +63,7 @@ export function buildDocument(profile: Profile, job: Job, request: CvRequest, ta
       `Looking to join ${job.company} as ${job.title} and work on its ${job.product}.`,
     ].filter(Boolean).join(' ')
   }
-  const headline = tailored && top.length ? `${profile.headline} | ${top.join(', ')}` : profile.headline
+  const headline = profile.headline
   const matchedLow = matched.map(lc)
   const skills = tailored ? [...matched, ...profile.skills.filter(skill => !matchedLow.includes(lc(skill)))] : profile.skills
 

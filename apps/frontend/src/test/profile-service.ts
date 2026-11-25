@@ -29,6 +29,7 @@ export function sampleProfile(overrides: Partial<Profile> = {}): Profile {
     salary_currency: '',
     salary_period: '',
     additional_info: [],
+    notes: [],
     skills: ['Python', 'SQL', 'Git', 'Linux', 'Docker', 'CI/CD', 'Bash', 'Monitoring'],
     experience: [
       {
@@ -41,6 +42,7 @@ export function sampleProfile(overrides: Partial<Profile> = {}): Profile {
           bullet('Monitored services and responded to incidents on call.'),
           bullet('Wrote SQL queries and reports for the data team.'),
         ],
+        notes: [],
       },
       {
         id: 'r2', role: 'Junior system administrator', company: 'Bonbon Labs', location: 'Iași', employment_type: '', industry: '',
@@ -51,6 +53,7 @@ export function sampleProfile(overrides: Partial<Profile> = {}): Profile {
           bullet('Set up backups and checked that they ran every night.', 'restored every test backup within an hour'),
           bullet('Fixed issues reported by users and kept a log of recurring problems.'),
         ],
+        notes: [],
       },
     ],
     projects: [],

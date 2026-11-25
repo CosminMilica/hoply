@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
-import { EMPLOYMENT_TYPES, type Profile } from '../api/profile.schema'
+import { EMPLOYMENT_TYPES, withoutId, type Experience, type Profile } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
 import { useProfileMutations } from '../composables/useProfile'
 import { monthRange, plural } from '../format'
 import BulletList from './BulletList.vue'
 import EntryActions from './EntryActions.vue'
 import ExperienceForm from './ExperienceForm.vue'
+import NotesList from './NotesList.vue'
 
 const props = defineProps<{ profile: Profile }>()
 const { experience } = useProfileMutations()
+
+function removeNote(role: Experience, index: number) {
+  experience.update.mutate({ id: role.id, body: { ...withoutId(role), notes: role.notes.filter((_, at) => at !== index) } as Omit<Experience, 'id'> as never })
+}
 const editor = useEntryEditor(experience)
 const expanded = ref<Record<string, boolean>>(props.profile.experience[0] ? { [props.profile.experience[0].id]: true } : {})
 
@@ -64,6 +69,7 @@ const details = (role: Profile['experience'][number]) => [
               <li v-for="tool in role.tools" :key="tool" class="rounded-lg border border-ink-700 bg-elevated px-2.5 py-1 text-[13px] font-bold">{{ tool }}</li>
             </ul>
           </template>
+          <NotesList :notes="role.notes" :of="role.role" :pending="experience.update.isPending.value" @remove="index => removeNote(role, index)" />
           <p v-if="!role.bullets.length && !role.tools.length" class="m-0 text-[13px] font-medium text-muted">
             No highlights yet. Edit the role to add what you did.
           </p>
