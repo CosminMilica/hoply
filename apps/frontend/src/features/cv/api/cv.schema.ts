@@ -98,3 +98,24 @@ export const prepQuestionsSchema = z.object({
 })
 
 export type PrepQuestions = z.infer<typeof prepQuestionsSchema>
+
+export const probeQuestionSchema = z.object({
+  theme: z.string(),
+  question: z.string(),
+  why: z.string(),
+  example: z.string(),
+  /** The fact or the role the question is about, as the person wrote it; empty for the person as a whole. */
+  about: z.string(),
+  /** Where the answer goes: `experience:<id>`, `projects:<id>` or `other`. */
+  place: z.string(),
+})
+
+export type ProbeQuestion = z.infer<typeof probeQuestionSchema>
+
+/** What Claude asks to make the CV stronger for one job: ready, still being asked for, or unavailable. */
+export const probeSchema = z.object({
+  status: z.enum(['ready', 'pending', 'unavailable']),
+  questions: z.array(probeQuestionSchema),
+})
+
+export type Probe = z.infer<typeof probeSchema>

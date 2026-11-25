@@ -3,6 +3,7 @@ package unit_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -388,5 +389,118 @@ func TestCvRepositoryFailuresSurface(t *testing.T) {
 		if status, body := testutil.Do(t, handler, tc.method, tc.path, tc.payload); status != http.StatusServiceUnavailable {
 			t.Errorf("%s %s: %d %v", tc.method, tc.path, status, body)
 		}
+	}
+}
+
+// memoryProbes is an in-memory Probes store.
+type memoryProbes struct {
+	mu    sync.Mutex
+	kept  map[string]repositories.StoredProbe
+	saves int
+}
+
+func (m *memoryProbes) Probe(_ context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*repositories.StoredProbe, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if probe, ok := m.kept[ownerKey(ident)+jobID.String()]; ok {
+		return &probe, nil
+	}
+	return nil, nil
+}
+
+func (m *memoryProbes) SaveProbe(_ context.Context, ident identity.IdentityContext, jobID uuid.UUID, probe repositories.StoredProbe) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.saves++
+	probe.UpdatedAt = time.Now()
+	m.kept[ownerKey(ident)+jobID.String()] = probe
+	return nil
+}
+
+// fakeProber answers with its questions, or fails.
+type fakeProber struct {
+	mu        sync.Mutex
+	calls     int
+	fail      bool
+	available bool
+	release   chan struct{}
+}
+
+func (f *fakeProber) Questions(context.Context, models.Job, models.Profile) ([]models.ProbeQuestion, error) {
+	if f.release != nil {
+		<-f.release
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.calls++
+	if f.fail {
+		return nil, errors.New("no")
+	}
+	return []models.ProbeQuestion{{Theme: "CI/CD", Question: "How many services?", Place: "experience:r1"}}, nil
+}
+
+func (f *fakeProber) Available() bool { return f.available }
+
+func TestProbeIsAskedInTheBackgroundAndKeptForTheFacts(t *testing.T) {
+	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t), printer: &fakePrinter{}}
+	store := &memoryProbes{kept: map[string]repositories.StoredProbe{}}
+	prober := &fakeProber{available: true, release: make(chan struct{})}
+	service := services.NewCvService(h.repo, h.sources, h.printer, func() {}).WithProbes(store, prober)
+	settled := make(chan struct{}, 4)
+	service.OnProbeSettled(func() { settled <- struct{}{} })
+	router := chi.NewRouter()
+	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: service, Writer: writer.New(nil)})
+	dev := identity.Dev()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		router.ServeHTTP(w, r.WithContext(identity.WithContext(r.Context(), dev)))
+	})
+	path := "/api/v1/jobs/" + jobID + "/probe"
+
+	for range 2 {
+		if status, body := testutil.Do(t, handler, http.MethodGet, path, nil); status != http.StatusOK || body["status"] != "pending" {
+			t.Fatalf("pending while asked: %d %v", status, body)
+		}
+	}
+	close(prober.release)
+	<-settled
+	status, body := testutil.Do(t, handler, http.MethodGet, path, nil)
+	if status != http.StatusOK || body["status"] != "ready" || len(body["questions"].([]any)) != 1 {
+		t.Fatalf("ready: %d %v", status, body)
+	}
+	equal(t, prober.calls, 1)
+
+	h.sources.profile.Experience[0].Notes = []models.Note{{Text: "Used by 40 services"}}
+	if _, body := testutil.Do(t, handler, http.MethodGet, path, nil); body["status"] != "pending" {
+		t.Fatalf("new facts are asked about again: %v", body)
+	}
+	<-settled
+	equal(t, prober.calls, 2)
+
+	prober.fail = true
+	h.sources.profile.Experience[0].Notes = nil
+	testutil.Do(t, handler, http.MethodGet, path, nil)
+	<-settled
+	if _, body := testutil.Do(t, handler, http.MethodGet, path, nil); body["status"] != "unavailable" {
+		t.Fatalf("a failure is unavailable for a while: %v", body)
+	}
+	equal(t, prober.calls, 3)
+
+	prober.available = false
+	h.sources.profile.Skills = append(h.sources.profile.Skills, "Go")
+	if _, body := testutil.Do(t, handler, http.MethodGet, path, nil); body["status"] != "unavailable" {
+		t.Fatalf("Claude unavailable: %v", body)
+	}
+	if status, _ := testutil.Do(t, handler, http.MethodGet, "/api/v1/jobs/"+uuid.NewString()+"/probe", nil); status != http.StatusNotFound {
+		t.Fatalf("unknown job: %d", status)
+	}
+	if status, _ := testutil.Do(t, handler, http.MethodGet, "/api/v1/jobs/nope/probe", nil); status != http.StatusUnprocessableEntity {
+		t.Fatalf("bad id: %d", status)
+	}
+}
+
+func TestProbeIsUnavailableWithoutAProber(t *testing.T) {
+	_, handler := newCvHarness(t)
+	if _, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/jobs/"+jobID+"/probe", nil); body["status"] != "unavailable" {
+		t.Fatalf("no prober: %v", body)
 	}
 }

@@ -5,13 +5,17 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
 	"cv/internal/apperrors"
 	"cv/internal/cvdoc"
 	"cv/internal/data/repositories"
+	"cv/internal/grounding"
 	"cv/internal/identity"
 	"cv/internal/models"
 	"cv/internal/render"
@@ -36,6 +40,125 @@ type CvService struct {
 	sources Sources
 	printer Printer
 	queued  func()
+
+	probes  repositories.Probes
+	prober  Prober
+	mu      sync.Mutex
+	asking  map[string]bool
+	settled func()
+}
+
+// Prober asks Claude for the questions of Prepare your CV; *writer.Writer is one.
+type Prober interface {
+	Questions(ctx context.Context, job models.Job, profile models.Profile) ([]models.ProbeQuestion, error)
+	Available() bool
+}
+
+// ProbeTimeout is the longest asking for one job's questions may take.
+const ProbeTimeout = 5 * time.Minute
+
+// WithProbes lets the service ask Claude for each job's questions and keep them.
+func (s *CvService) WithProbes(store repositories.Probes, prober Prober) *CvService {
+	s.probes, s.prober, s.asking = store, prober, map[string]bool{}
+	return s
+}
+
+// Probe is the questions Claude asks for the job: kept ones when they were asked
+// for the profile's facts as they are now, else pending while they are asked for
+// in the background. Unavailable when Claude cannot be asked.
+func (s *CvService) Probe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*models.Probe, error) {
+	if err := requireSubject(ident); err != nil {
+		return nil, err
+	}
+	job, _, err := s.sources.Job(ctx, jobID)
+	if err != nil {
+		return nil, err
+	}
+	profile, _, err := s.sources.Profile(ctx)
+	if err != nil {
+		return nil, err
+	}
+	unavailable := &models.Probe{Status: models.ProbeUnavailable, Questions: []models.ProbeQuestion{}}
+	if s.probes == nil || s.prober == nil {
+		return unavailable, nil
+	}
+	fingerprint := grounding.Build(profile, cvdoc.ReadJob(job), models.CvRequest{}, time.Now()).Fingerprint()
+	stored, err := s.probes.Probe(ctx, ident, jobID)
+	if err != nil {
+		return nil, err
+	}
+	key := ident.TenantID.String() + "/" + ident.Subject + "/" + jobID.String()
+	if stored != nil && stored.Fingerprint == fingerprint {
+		switch {
+		case stored.Status == models.ProbeReady:
+			return &models.Probe{Status: models.ProbeReady, Questions: stored.Questions}, nil
+		case s.isAsking(key):
+			return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}, nil
+		case stored.Status == models.ProbeUnavailable && time.Since(stored.UpdatedAt) < ProbeTimeout:
+			return unavailable, nil
+		}
+	}
+	if !s.prober.Available() {
+		return unavailable, nil
+	}
+	if !s.startAsking(key) {
+		return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}, nil
+	}
+	pending := repositories.StoredProbe{Fingerprint: fingerprint, Status: models.ProbePending}
+	if err := s.probes.SaveProbe(ctx, ident, jobID, pending); err != nil {
+		s.doneAsking(key)
+		return nil, err
+	}
+	go s.ask(ident, key, jobID, fingerprint, job, profile)
+	return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}, nil
+}
+
+func (s *CvService) ask(ident identity.IdentityContext, key string, jobID uuid.UUID, fingerprint string, job models.Job, profile models.Profile) {
+	defer s.doneAsking(key)
+	ctx, cancel := context.WithTimeout(context.Background(), ProbeTimeout)
+	defer cancel()
+	probe := repositories.StoredProbe{Fingerprint: fingerprint, Status: models.ProbeReady}
+	questions, err := s.prober.Questions(ctx, job, profile)
+	if err != nil {
+		probe.Status = models.ProbeUnavailable
+	}
+	probe.Questions = questions
+	if err := s.probes.SaveProbe(context.Background(), ident, jobID, probe); err != nil {
+		slog.Error("probe not kept", "job_id", jobID, "error", err)
+	}
+}
+
+func (s *CvService) isAsking(key string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.asking[key]
+}
+
+func (s *CvService) startAsking(key string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.asking[key] {
+		return false
+	}
+	s.asking[key] = true
+	return true
+}
+
+func (s *CvService) doneAsking(key string) {
+	s.mu.Lock()
+	delete(s.asking, key)
+	settled := s.settled
+	s.mu.Unlock()
+	if settled != nil {
+		settled()
+	}
+}
+
+// OnProbeSettled calls fn each time a job's questions are kept; tests wait on it.
+func (s *CvService) OnProbeSettled(fn func()) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settled = fn
 }
 
 // NewCvService takes queued, called after a CV is queued to wake the worker.

@@ -214,3 +214,36 @@ func TestWriterStopsAtAUsageLimitWhileAnalyzing(t *testing.T) {
 	equal(t, by.RulesReason, "usage_limit")
 	equal(t, model.calls, 1)
 }
+
+var probeOutput = json.RawMessage(`{"questions":[{"target":"E1.B1","theme":"CI/CD","question":"How many services use your pipelines?","why":"Scale.","example":"<number>"}]}`)
+
+func TestWriterAsksForQuestionsFromTheJobsAnalysis(t *testing.T) {
+	store := &memoryAnalyses{kept: map[uuid.UUID]json.RawMessage{}}
+	model := &fakeModel{replies: []modelReply{{output: analysisOutput}, {output: probeOutput}}}
+	w := writer.New(model).KeepAnalyses(store)
+	questions, err := w.Questions(context.Background(), catalogJob(t, 0), sampleProfile(t))
+	if err != nil || len(questions) != 1 || questions[0].Place != "experience:r1" {
+		t.Fatalf("questions: %+v %v", questions, err)
+	}
+	equal(t, strings.Contains(model.last.System, "career coach"), true)
+	equal(t, store.saved, 1)
+	equal(t, w.Available(), true)
+
+	if _, err := writer.New(nil).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("without Claude: %v", err)
+	}
+	equal(t, writer.New(nil).Available(), false)
+	failing := &fakeModel{replies: []modelReply{{output: analysisOutput}, {output: json.RawMessage(`[]`)}}}
+	if _, err := writer.New(failing).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("unreadable twice: %v", err)
+	}
+	equal(t, failing.calls, 3)
+	limited := &fakeModel{replies: []modelReply{{output: analysisOutput}, {err: &claude.LimitError{Until: time.Now().Add(time.Hour)}}}}
+	if _, err := writer.New(limited).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("usage limit: %v", err)
+	}
+	noLogin := &fakeModel{replies: []modelReply{{err: claude.ErrLoginNeeded}}}
+	if _, err := writer.New(noLogin).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("login needed: %v", err)
+	}
+}

@@ -56,7 +56,7 @@ func TestCatalogueNumbersTheFactsOfTheRolesKept(t *testing.T) {
 	equal(t, c.Facts["Y"].Text, "6 years of experience")
 	equal(t, c.Facts["C1"].Text, "CKA, CNCF")
 	equal(t, c.Roles, []grounding.Entry{{ID: "E1", Title: "Junior system administrator at Bonbon Labs", Current: false,
-		Tools: []string{"Linux", "Bash", "Monitoring"}, Facts: []string{"E1", "E1.B1", "E1.B2", "E1.B3"}}})
+		Tools: []string{"Linux", "Bash", "Monitoring"}, Facts: []string{"E1", "E1.B1", "E1.B2", "E1.B3"}, Ref: "experience:r2"}})
 	equal(t, c.Missing, []string{"Snowflake", "Terraform", "Infrastructure as Code", "RBAC"})
 	equal(t, c.Company, "Capgemini Romania")
 }
@@ -262,4 +262,45 @@ func TestEquivalentsClaudeFindsAreKeptOnlyForMissingRequirementsAndKnownTools(t 
 	equal(t, c.Missing, []string{"Snowflake", "Terraform", "Infrastructure as Code", "RBAC"})
 	equal(t, extended.Check(grounding.Sentence{Text: "Managed access control on Linux hosts.", Facts: []string{"E1.B1"}}, "E1"), "")
 	equal(t, extended.Check(grounding.Sentence{Text: "Set up RBAC on Linux.", Facts: []string{"E1.B1"}}, "E1"), "names RBAC, which the person knows only through Linux")
+}
+
+func TestProbeQuestionsSayWhatTheyAreAboutAndWhereAnswersGo(t *testing.T) {
+	profile := richProfile(t)
+	c := grounding.Build(profile, engineJob(t, 0), request(), now)
+	questions, err := c.ParseProbe(json.RawMessage(`{"questions":[
+		{"target":"E1.B1","theme":"CI/CD","question":"How many services use your pipelines?","why":"Scale.","example":"<number> services"},
+		{"target":"P1","theme":"Containers","question":"What runs in your lab?","why":"Depth.","example":"<what>"},
+		{"target":"","theme":"Learning","question":"Tell us about something you learned fast.","why":"Trait.","example":"<story>"},
+		{"target":"E9.B9","theme":"x","question":"About nothing we know?","why":"","example":""},
+		{"target":"E1","theme":"x","question":"  ","why":"","example":""}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	equal(t, len(questions), 4)
+	equal(t, questions[0], models.ProbeQuestion{Theme: "CI/CD", Question: "How many services use your pipelines?", Why: "Scale.",
+		Example: "<number> services", About: "Built and maintained deployment pipelines for internal services.", Place: "experience:r1"})
+	equal(t, questions[1].About, "Home lab")
+	equal(t, questions[1].Place, "projects:p1")
+	equal(t, questions[2].Place, "other")
+	equal(t, questions[3].Place, "other")
+	if _, err := c.ParseProbe(json.RawMessage(`[]`)); err == nil {
+		t.Fatal("an answer is an object")
+	}
+
+	var message map[string]any
+	if err := json.Unmarshal([]byte(c.ProbePrompt(&grounding.Analysis{Role: "Run CI"})), &message); err != nil {
+		t.Fatal(err)
+	}
+	equal(t, message["analysis"].(map[string]any)["role"], "Run CI")
+	equal(t, len(message["facts"].([]any)), len(c.Order))
+	equal(t, strings.Contains(grounding.ProbeSystem, "career coach"), true)
+	var schema map[string]any
+	if err := json.Unmarshal([]byte(grounding.ProbeSchema()), &schema); err != nil {
+		t.Fatal(err)
+	}
+
+	before := c.Fingerprint()
+	equal(t, grounding.Build(profile, engineJob(t, 0), request(), now).Fingerprint(), before)
+	profile.Experience[0].Notes = []models.Note{{Text: "Used by 40 services"}}
+	equal(t, grounding.Build(profile, engineJob(t, 0), request(), now).Fingerprint() == before, false)
 }

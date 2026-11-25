@@ -1,5 +1,5 @@
 import { getApiClient } from '@/shared/api/client'
-import { cvListSchema, cvSchema, prepQuestionsSchema, type CvRequest } from './cv.schema'
+import { cvListSchema, cvSchema, prepQuestionsSchema, probeSchema, type CvRequest } from './cv.schema'
 
 const BASE = '/api/cv/v1'
 
@@ -8,6 +8,10 @@ export const cvApi = {
     return prepQuestionsSchema.parse(
       await getApiClient().get(`${BASE}/jobs/${encodeURIComponent(jobId)}/questions`).json(),
     )
+  },
+  /** Claude's questions for the job, asked in the background: poll while `pending`. */
+  async probe(jobId: string) {
+    return probeSchema.parse(await getApiClient().get(`${BASE}/jobs/${encodeURIComponent(jobId)}/probe`).json())
   },
   /** Queues a CV; it is written asynchronously (follow it with `get`). */
   async generate(body: CvRequest) {

@@ -58,13 +58,13 @@ Then write the CV from the plan:
   - Read each bullet aloud. If it sounds like a list of tasks, a job description or a keyword was attached to it,
     rewrite it.
 
-  Forced, then natural (another person's CV, for the style only):
+  Forced, then natural (other people's CVs, for the style only):
   - Forced: "Run Kafka streaming (Kafka, Flink, Schema Registry); handle data quality management and led migrations."
     Natural: "Run the Kafka and Flink pipelines that feed every product dashboard, moving 40 jobs off a legacy scheduler."
-  - Forced: "Provision GCP with Terraform using reusable modules; operate Airflow, dbt and Looker."
-    Natural: "Built the team's GCP setup in Terraform from reusable modules, so new data projects start from code."
-  - Forced: "Leverage observability best practices (Datadog, PagerDuty, Sentry) to drive incident management."
-    Natural: "Set up the alerts and on-call rota that let the team catch failed loads before analysts do."
+  - Forced: "Leverage omnichannel campaign management (HubSpot, Meta Ads, GA4) to drive stakeholder engagement."
+    Natural: "Rebuilt the onboarding email sequence in HubSpot, lifting trial-to-paid conversion from 4% to 6%."
+  - Forced: "Responsible for month-end close processes; handle reconciliation management and audit readiness."
+    Natural: "Ran the month-end close for 3 entities and cut it from 9 working days to 5."
 - Earlier roles and projects are reframed for this job too: say what in them matters here (a security tool for a
   job that asks for security work, a Helm layout for a job that runs Helm), and leave out a project that adds
   nothing. At most 2 projects, up to 2 bullets each.

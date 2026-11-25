@@ -14,7 +14,7 @@ import type { CvStatus } from '../api/cv.schema'
 import GeneratingSteps from '../components/GeneratingSteps.vue'
 import RolePicker from '../components/RolePicker.vue'
 import StatusTag from '../components/StatusTag.vue'
-import { useCvProgress, useCvQuestionsQuery, useGenerateCv } from '../composables/useCv'
+import { useCvProbeQuery, useCvProgress, useCvQuestionsQuery, useGenerateCv } from '../composables/useCv'
 import { usePrep } from '../composables/usePrep'
 
 const props = defineProps<{ id: string }>()
@@ -25,11 +25,13 @@ const router = useRouter()
 const job = useJobQuery(() => props.id)
 const profile = useProfileQuery()
 const questions = useCvQuestionsQuery(() => props.id)
+const probe = useCvProbeQuery(() => props.id)
+const asked = computed(() => (probe.data.value?.status === 'ready' ? probe.data.value.questions : []))
 const { setSkills } = useProfileMutations()
 const { statuses } = useApplicationStatuses()
 const { setStatus } = useApplicationMutations()
 const generateCv = useGenerateCv()
-const prep = usePrep({ job: () => job.data.value, profile: () => profile.data.value, questions: () => questions.data.value })
+const prep = usePrep({ job: () => job.data.value, profile: () => profile.data.value, questions: () => questions.data.value, probe: () => asked.value })
 
 const ready = computed(() => job.data.value && profile.data.value && questions.data.value)
 const failed = computed(() => job.isError.value || profile.isError.value || questions.isError.value)
@@ -145,6 +147,47 @@ function addToProfile(skill: string) {
           </ul>
         </section>
 
+        <section v-if="probe.data.value?.status === 'pending'" class="flex flex-col gap-2" aria-live="polite" data-test="probe-pending">
+          <SectionLabel>Make your CV stronger for this job</SectionLabel>
+          <p class="m-0 text-[13px] font-medium text-muted">Reading the job and your profile to find what is worth asking…</p>
+          <USkeleton class="h-20 w-full rounded-[10px]" />
+        </section>
+        <section v-else-if="asked.length" class="flex flex-col gap-2.5">
+          <SectionLabel>Make your CV stronger for this job</SectionLabel>
+          <p class="m-0 text-[13px] leading-snug font-medium text-muted">What this job cares about that your profile does not say yet. Answer in your own words; we write the CV from it.</p>
+          <div v-for="(item, index) in asked" :key="index" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="probe">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-extrabold tracking-wider text-hoply-300 uppercase">{{ item.theme }}</span>
+              <StatusTag v-if="prep.state.probes[index]?.status === 'added'" label="Added" tone="added" />
+              <StatusTag v-else-if="prep.state.probes[index]" label="Skipped" tone="muted" />
+            </div>
+            <p v-if="item.about" class="m-0 border-s-2 border-ink-600 ps-2.5 text-[13px] leading-snug font-medium text-muted">{{ item.about }}</p>
+            <h3 class="m-0 text-[15px] leading-snug font-bold">{{ item.question }}</h3>
+            <template v-if="!prep.state.probes[index]">
+              <p v-if="item.why" class="m-0 text-[13px] leading-snug font-medium text-muted">{{ item.why }}</p>
+              <UTextarea
+                :model-value="prep.draft(`p:${index}`)"
+                :aria-label="item.question"
+                :placeholder="item.example"
+                :rows="2"
+                class="w-full"
+                @update:model-value="(value: string) => prep.setDraft(`p:${index}`, String(value))"
+              />
+              <div class="flex items-center gap-2.5">
+                <UButton label="Add to my CV" :disabled="!prep.canAdd(`p:${index}`)" :loading="prep.state.saving[`p:${index}`]" @click="prep.answerProbe(index, item)" />
+                <UButton label="Skip" color="neutral" variant="outline" @click="prep.skipProbe(index)" />
+              </div>
+            </template>
+            <template v-else-if="prep.state.probes[index]!.status === 'added'">
+              <p class="m-0 text-sm leading-snug font-medium">{{ addedText(prep.state.probes[index]!) }}</p>
+              <p class="m-0 text-[13px] font-medium text-muted">Saved in your profile under {{ prep.whereLabel(addedPlace(prep.state.probes[index]!)) }}</p>
+              <UButton label="Change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="prep.state.saving[`p:${index}`]" @click="prep.undoProbe(index)" />
+            </template>
+            <UButton v-else label="Change my mind" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" @click="prep.undoProbe(index)" />
+            <p v-if="prep.state.errors[`p:${index}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`p:${index}`] }}</p>
+          </div>
+        </section>
+
         <section v-if="questions.data.value.related.length" class="flex flex-col gap-2.5">
           <SectionLabel>Close to what you know</SectionLabel>
           <div v-for="close in questions.data.value.related" :key="close.skill" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="close">
@@ -216,7 +259,7 @@ function addToProfile(skill: string) {
           </div>
         </section>
 
-        <section class="flex flex-col gap-2.5">
+        <section v-if="!asked.length" class="flex flex-col gap-2.5">
           <SectionLabel>What this job will ask you to do</SectionLabel>
           <div v-for="claim in questions.data.value.responsibilities" :key="claim.index" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="claim">
             <h3 class="m-0 text-sm leading-snug font-bold">{{ claim.question }}</h3>

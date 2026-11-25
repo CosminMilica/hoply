@@ -252,3 +252,29 @@ func TestJobAnalysesAreKeptPerJob(t *testing.T) {
 		t.Fatal("a closed pool fails")
 	}
 }
+
+func TestProbesAreKeptPerPersonAndJob(t *testing.T) {
+	_, pool := application(t, isolatedSchema(t))
+	ctx := context.Background()
+	repo := repositories.NewPgCvRepository(pool).WithScope(bindTenant(pool))
+	me := identity.New(uuid.New(), uuid.NewString())
+	other := identity.New(uuid.New(), uuid.NewString())
+	job := uuid.New()
+	if probe, err := repo.Probe(ctx, me, job); err != nil || probe != nil {
+		t.Fatalf("none yet: %+v %v", probe, err)
+	}
+	if err := repo.SaveProbe(ctx, me, job, repositories.StoredProbe{Fingerprint: "a", Status: models.ProbePending}); err != nil {
+		t.Fatal(err)
+	}
+	questions := []models.ProbeQuestion{{Theme: "CI/CD", Question: "How many?", Place: "other"}}
+	if err := repo.SaveProbe(ctx, me, job, repositories.StoredProbe{Fingerprint: "a", Status: models.ProbeReady, Questions: questions}); err != nil {
+		t.Fatal(err)
+	}
+	probe, err := repo.Probe(ctx, me, job)
+	if err != nil || probe.Status != models.ProbeReady || probe.Fingerprint != "a" || probe.Questions[0].Question != "How many?" || probe.UpdatedAt.IsZero() {
+		t.Fatalf("kept: %+v %v", probe, err)
+	}
+	if probe, err := repo.Probe(ctx, other, job); err != nil || probe != nil {
+		t.Fatalf("another person's: %+v %v", probe, err)
+	}
+}

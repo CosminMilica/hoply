@@ -33,7 +33,8 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 // newHandler builds the HTTP handler. Middlewares run in list order: the
 // first entry is the outermost. queued is called after a CV is queued.
-func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter routes.WriterStatus, printer services.Printer, queued func()) http.Handler {
+func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter routes.WriterStatus, printer services.Printer,
+	queued func(), prober services.Prober) http.Handler {
 	useErrorPort()
 	router := chi.NewRouter()
 	middlewares := []middleware.Middleware{
@@ -67,7 +68,7 @@ func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources
 	routes.Register(router, routes.Deps{
 		Pool:   pool,
 		DB:     pool,
-		Cvs:    services.NewCvService(cvs, sources, printer, queued),
+		Cvs:    services.NewCvService(cvs, sources, printer, queued).WithProbes(cvs, prober),
 		Writer: cvWriter,
 		Info:   routes.Info{Title: cfg.App.Name, Version: cfg.App.Version, Description: Description},
 	})
@@ -92,7 +93,7 @@ func Build(cfg *config.Config, pool *pgxpool.Pool) Service {
 func BuildWith(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter *writer.Writer, printer services.Printer) Service {
 	store := repositories.NewPgCvRepository(pool)
 	queue := worker.New(store, cvWriter.KeepAnalyses(store), WorkerPoll)
-	return Service{Handler: newHandler(cfg, pool, sources, cvWriter, printer, queue.Wake), Worker: queue}
+	return Service{Handler: newHandler(cfg, pool, sources, cvWriter, printer, queue.Wake, cvWriter), Worker: queue}
 }
 
 // WorkerPoll is how often the worker looks at the queue when nothing woke it.

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { cvRequestSchema, type Cv } from '@/features/cv/api/cv.schema'
+import { cvRequestSchema, type Cv, type Probe } from '@/features/cv/api/cv.schema'
 import { jobSchema } from '@/features/jobs/api/jobs.schema'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { generateCv } from './cv-engine/cv'
@@ -20,6 +20,8 @@ interface CvBackendOptions {
   writing?: number
   /** Every CV fails instead of being written. */
   failing?: boolean
+  /** Claude's questions for every job; unavailable by default. */
+  probe?: Probe
 }
 
 const problem = (status: number, code: string, message: string, field?: string): Answer =>
@@ -31,7 +33,12 @@ const unwritten = { highlights: null, profile: null, tailored: null, ats: null, 
  * The cv service in memory, by docs/api/cv.md, writing with the web app's former rules engine (src/test/cv-engine).
  * A CV is queued, then answers `writing` for `writing` reads, then `ready` (or `failed`).
  */
-export function createCvBackend(sources: CvSources, { now = () => new Date('2026-11-25T10:00:00Z'), writing = 0, failing = false }: CvBackendOptions = {}) {
+export function createCvBackend(sources: CvSources, {
+  now = () => new Date('2026-11-25T10:00:00Z'),
+  writing = 0,
+  failing = false,
+  probe = { status: 'unavailable', questions: [] },
+}: CvBackendOptions = {}) {
   const cvs: { cv: Cv, pending: number }[] = []
   let sequence = 0
   const view = (entry: { cv: Cv, pending: number }): Cv => {
@@ -51,6 +58,9 @@ export function createCvBackend(sources: CvSources, { now = () => new Date('2026
       const profile = sources.profile()
       if (!profile) return problem(503, 'DEPENDENCY_UNAVAILABLE', 'profile is unavailable')
       return { status: 200, body: prepQuestions(job, profile) }
+    },
+    probe(jobId: string): Answer {
+      return readJob(jobId) ? { status: 200, body: probe } : problem(404, 'NOT_FOUND', 'Job not found')
     },
     create(body: unknown): Answer {
       const parsed = cvRequestSchema.safeParse(body)
@@ -97,6 +107,7 @@ export function cvServiceHandlers(sources: CvSources, options: CvBackendOptions 
     backend,
     handlers: [
       http.get('*/api/cv/v1/jobs/:jobId/questions', ({ params }) => reply(backend.questions(String(params.jobId)))),
+      http.get('*/api/cv/v1/jobs/:jobId/probe', ({ params }) => reply(backend.probe(String(params.jobId)))),
       http.post('*/api/cv/v1/cvs', async ({ request }) => reply(backend.create(await request.json().catch(() => null)))),
       http.get('*/api/cv/v1/cvs', ({ request }) => reply(backend.list(new URL(request.url).searchParams.get('job_id')))),
       http.get('*/api/cv/v1/cvs/:id', ({ params }) => reply(backend.get(String(params.id)))),

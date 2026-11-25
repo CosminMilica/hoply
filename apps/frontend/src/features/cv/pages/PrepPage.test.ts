@@ -177,6 +177,37 @@ describe('PrepPage', () => {
     expect(close().textContent).toContain('Added')
   })
 
+  it('asks Claude’s questions first, saves an answer as a note of its role, and drops the rules’ duties', async () => {
+    const { profile } = useServices(undefined, { probe: { status: 'ready', questions: [{
+      theme: 'CI/CD', question: 'How many services use your pipelines?', why: 'Scale makes the CI/CD work concrete.',
+      example: 'Used by <number> services', about: 'Built and maintained deployment pipelines for internal services.', place: 'experience:r1',
+    }] } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    const asked = () => document.querySelector<HTMLElement>('[data-test="probe"]')!
+    expect(asked().textContent).toContain('How many services use your pipelines?')
+    expect(asked().textContent).toContain('Built and maintained deployment pipelines for internal services.')
+    expect(text()).not.toContain('What this job will ask you to do')
+    expect(text()).toContain('0 of 5 questions answered')
+    await type(input('How many services use your pipelines?'), 'Used by 40 services across 3 teams')
+    await click(within(asked(), 'Add to my CV'))
+    expect(profile.experience[0]!.notes).toEqual([{ text: 'Used by 40 services across 3 teams', skills: [] }])
+    expect(asked().textContent).toContain('Saved in your profile under DevOps Engineer at Verde Cloud')
+    expect(text()).toContain('1 of 5 questions answered')
+    await click(within(asked(), 'Change'))
+    expect(profile.experience[0]!.notes).toEqual([])
+    await click(within(asked(), 'Skip'))
+    expect(asked().textContent).toContain('Skipped')
+    await click(within(asked(), 'Change my mind'))
+    expect(asked().textContent).toContain('Add to my CV')
+  })
+
+  it('says it is still reading while Claude’s questions are asked for', async () => {
+    useServices(undefined, { probe: { status: 'pending', questions: [] } })
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    expect(document.querySelector('[data-test="probe-pending"]')!.textContent).toContain('Reading the job and your profile')
+    expect(text()).toContain('What this job will ask you to do')
+  })
+
   it('keeps an applied job applied and goes back to the form when generation fails', async () => {
     const { applications } = useServices()
     applications.track(seedId(2), 'applied')

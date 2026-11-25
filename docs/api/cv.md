@@ -15,6 +15,7 @@ else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 | Method | Path (service side) | Body | Response |
 | --- | --- | --- | --- |
 | GET | `/api/v1/jobs/{job_id}/questions` | | 200 `PrepQuestions`; 404 unknown job; 503 profile or jobs unavailable |
+| GET | `/api/v1/jobs/{job_id}/probe` | | 200 `Probe`; 404 unknown job; 503 profile or jobs unavailable |
 | POST | `/api/v1/cvs` | `CvRequest` | 202 `Cv` with `status: queued`; 404 unknown job; 422 invalid body; 503 profile or jobs unavailable |
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
 | GET | `/api/v1/cvs/{id}` | | 200 `Cv`; 404 |
@@ -37,6 +38,7 @@ Cv            { id, job_id, status, created_at, updated_at, job_title, company, 
                 ats: { passed, total, checks: [{ ok, label, hint }] } | null, preview: { from, to } | null,
                 written_by: "claude" | "rules" | null, model, refused, rules_reason, limit_until | null }
 WriterStatus  { writer: "claude" | "rules", model, state, limit_until | null }
+Probe         { status: "ready" | "pending" | "unavailable", questions: [{ theme, question, why, example, about, place }] }
 CvDocument    { name, headline, contact: [string], links: [string], summary, skills: [string],
                 experience: [{ role, meta, bullets: [string] }], projects: [{ name, meta, bullets: [string] }],
                 education: [{ degree, meta }], certifications: [string], languages, additional: [string] }
@@ -120,3 +122,14 @@ The PDF is the CV as HTML (`internal/render/html.go`) printed by Gotenberg's Chr
 The DOCX is written by the service (`internal/render/docx.go`), with Word's own Title, Heading 1, Heading 2 and List
 Bullet styles. Both are one column with standard headings, real text, and no tables, images or text boxes, in the
 order of the web app's CV paper.
+
+## Claude's questions
+
+`GET /jobs/{job_id}/probe` returns what Claude would ask to make the CV stronger for the job: questions about the
+person's facts that best prove the job's priorities but lack a result or scale, about priorities the facts barely
+touch, and about the traits the ad stresses (`prompts/probe-system.md`). The first call starts asking in the
+background and answers `pending`; the web app asks again every two seconds until `ready`. The questions are kept per
+person and job for the facts as they were, and asked again when the facts change. `unavailable` means Claude cannot
+be asked now (no token, a usage limit, a failure); it is tried again after five minutes. `about` is the fact or role
+the question is about, `place` where an answer goes (`experience:<id>`, `projects:<id>` or `other`); the web app saves
+answers as notes there.

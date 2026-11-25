@@ -299,6 +299,12 @@ page shows the positioning, the priorities and how strongly they are proven, and
 mirrored-responsibilities check counts the analysis's real duties that a kept sentence proves. Final run: ATS 11,
 10, 11 of 12, one page each, nothing refused, 87–115 s per CV (two Claude calls, three for a new job).
 
+**Better material: Claude asks the questions** (done, 2026-11-25). The quality ceiling was the facts: few results
+or numbers. Prepare your CV now opens with Claude's questions for the job (`GET /jobs/{id}/probe`): the facts that
+best prove its priorities but lack a result or scale, the priorities the facts barely touch, the traits the ad
+stresses. Answers become notes of the role they are about. Asked in the background in 9–12 s, kept per person and job
+for the facts as they were. Next: requirements from the analysis (B), an evaluation set with a judge (C).
+
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.
 2. Measure the refusal rate and score the CVs against a short checklist, at effort `medium` and `high`.

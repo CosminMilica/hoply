@@ -178,6 +178,33 @@ type Gap struct {
 	Example string `json:"example"`
 }
 
+// ProbeQuestion is a question Claude asks to make a CV stronger for one job:
+// about one of the person's facts, a role or project, or the person.
+type ProbeQuestion struct {
+	Theme    string `json:"theme"`
+	Question string `json:"question"`
+	Why      string `json:"why"`
+	Example  string `json:"example"`
+	// About is the fact or the role the question is about, as the person wrote it; empty for the person as a whole.
+	About string `json:"about"`
+	// Place is where the answer goes: "experience:<id>", "projects:<id>" or "other" (the person's own notes).
+	Place string `json:"place"`
+}
+
+// Probe states of a job's questions.
+const (
+	ProbeReady       = "ready"
+	ProbePending     = "pending"
+	ProbeUnavailable = "unavailable"
+)
+
+// Probe is the questions for one job: ready, still being asked for, or
+// unavailable (Claude cannot answer now; Prepare your CV goes on without them).
+type Probe struct {
+	Status    string          `json:"status"`
+	Questions []ProbeQuestion `json:"questions"`
+}
+
 // Close is a requirement the person has not used but knows a close equivalent of.
 type Close struct {
 	Skill string   `json:"skill"`

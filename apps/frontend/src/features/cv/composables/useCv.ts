@@ -7,6 +7,22 @@ export const cvKeys = {
   questions: (jobId: string) => ['cv', 'questions', jobId] as const,
   forJob: (jobId: string) => ['cv', 'job', jobId] as const,
   one: (id: string) => ['cv', 'one', id] as const,
+  probe: (jobId: string) => ['cv', 'probe', jobId] as const,
+}
+
+/** How often questions still being asked for are asked for again. */
+export const PROBE_POLL_MS = 2000
+
+/** Claude's questions for the job, followed while they are being asked for. */
+export function useCvProbeQuery(jobId: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: computed(() => cvKeys.probe(toValue(jobId))),
+    queryFn: () => cvApi.probe(toValue(jobId)),
+    enabled: computed(() => Boolean(toValue(jobId))),
+    staleTime: Infinity,
+    refetchOnMount: 'always',
+    refetchInterval: current => (current.state.data?.status === 'pending' ? PROBE_POLL_MS : false),
+  })
 }
 
 /** How often a CV being written is asked for again. */

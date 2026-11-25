@@ -6,7 +6,7 @@ import { withoutId, type Bullet, type Experience, type Note, type Profile, type 
 import { useProfileMutations } from '@/features/profile/composables/useProfile'
 import { monthRange } from '@/features/profile/format'
 import { bulletLine, knownSkills } from '@/features/profile/skills'
-import type { CvRequest, PrepQuestions } from '../api/cv.schema'
+import type { CvRequest, PrepQuestions, ProbeQuestion } from '../api/cv.schema'
 
 export const OTHER = 'other'
 const MIN_ANSWER = 10
@@ -31,6 +31,8 @@ interface PrepInputs {
   job: MaybeRefOrGetter<Job | undefined>
   profile: MaybeRefOrGetter<Profile | undefined>
   questions: MaybeRefOrGetter<PrepQuestions | undefined>
+  /** Claude's questions for the job, once ready. */
+  probe?: MaybeRefOrGetter<ProbeQuestion[] | undefined>
 }
 
 /**
@@ -39,7 +41,7 @@ interface PrepInputs {
  * information. What stays with this CV is the roles to feature, the skills up front and the
  * responsibilities confirmed.
  */
-export function usePrep({ job, profile, questions }: PrepInputs) {
+export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   const mutations = useProfileMutations()
   const state = reactive({
     skip: {} as Record<string, boolean>,
@@ -48,6 +50,7 @@ export function usePrep({ job, profile, questions }: PrepInputs) {
     places: {} as Record<string, Place>,
     gaps: {} as Record<string, GapAnswer>,
     claims: {} as Record<number, ClaimAnswer>,
+    probes: {} as Record<number, GapAnswer>,
     saving: {} as Record<string, boolean>,
     errors: {} as Record<string, string | undefined>,
   })
@@ -165,6 +168,31 @@ export function usePrep({ job, profile, questions }: PrepInputs) {
     })
   }
 
+  /** An answer to one of Claude's questions becomes a note of the role or project it is about. */
+  async function answerProbe(index: number, question: ProbeQuestion) {
+    const key = `p:${index}`
+    if (!canAdd(key)) return
+    const text = draft(key).trim()
+    await saving(key, async () => {
+      const remembered = await remember(question.place, text, keywordsIn(text, keywords.value))
+      state.probes[index] = { status: 'added', remembered }
+    })
+  }
+  function skipProbe(index: number) {
+    state.probes[index] = { status: 'skipped' }
+  }
+  async function undoProbe(index: number) {
+    const answer = state.probes[index]
+    if (answer?.status !== 'added') {
+      delete state.probes[index]
+      return
+    }
+    await saving(`p:${index}`, async () => {
+      await forget(answer.remembered)
+      delete state.probes[index]
+    })
+  }
+
   async function claimYes(index: number) {
     const key = `c:${index}`
     if (!canAdd(key)) return
@@ -212,9 +240,12 @@ export function usePrep({ job, profile, questions }: PrepInputs) {
   const matchLabel = computed(() => (match.value.score !== baseScore.value ? `${baseScore.value}% → ${match.value.score}%` : `${match.value.score}%`))
   const progress = computed(() => {
     const gaps = toValue(questions)?.gaps ?? []
-    const claims = toValue(questions)?.responsibilities ?? []
+    const asked = toValue(probe) ?? []
+    // Claude's questions cover the job's responsibilities; the rules' questions about them are asked only without Claude.
+    const claims = asked.length ? [] : (toValue(questions)?.responsibilities ?? [])
     const answered = gaps.filter(gap => state.gaps[gap.skill]).length + claims.filter(claim => state.claims[claim.index]).length
-    return `${answered} of ${gaps.length + claims.length} questions answered`
+      + asked.filter((_, index) => state.probes[index]).length
+    return `${answered} of ${gaps.length + claims.length + asked.length} questions answered`
   })
 
   // The highlights to strengthen are chosen once, so that a saved result does not move them.
@@ -296,6 +327,9 @@ export function usePrep({ job, profile, questions }: PrepInputs) {
     addGap,
     skipGap,
     undoGap,
+    answerProbe,
+    skipProbe,
+    undoProbe,
     claimYes,
     claimNo,
     claimPick,

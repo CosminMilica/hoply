@@ -69,6 +69,20 @@ type Analyses interface {
 	SaveAnalysis(ctx context.Context, jobID uuid.UUID, analysis json.RawMessage, model string) error
 }
 
+// StoredProbe is a job's questions as kept.
+type StoredProbe struct {
+	Fingerprint string
+	Status      string
+	Questions   []models.ProbeQuestion
+	UpdatedAt   time.Time
+}
+
+// Probes keeps the questions Prepare your CV asks for each of a person's jobs.
+type Probes interface {
+	Probe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*StoredProbe, error)
+	SaveProbe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID, probe StoredProbe) error
+}
+
 // MaxAttempts is how many times the worker takes a CV before it gives up.
 const MaxAttempts = 3
 
@@ -278,4 +292,32 @@ func (r *PgCvRepository) Analysis(ctx context.Context, jobID uuid.UUID) (json.Ra
 func (r *PgCvRepository) SaveAnalysis(ctx context.Context, jobID uuid.UUID, analysis json.RawMessage, model string) error {
 	return r.update(ctx, `INSERT INTO job_analyses (job_id, analysis, model) VALUES ($1, $2, $3)
 ON CONFLICT (job_id) DO UPDATE SET analysis = EXCLUDED.analysis, model = EXCLUDED.model, created_at = NOW()`, jobID, analysis, model)
+}
+
+func (r *PgCvRepository) Probe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*StoredProbe, error) {
+	var found *StoredProbe
+	err := r.run(ctx, ident, func(db DBTX) error {
+		var probe StoredProbe
+		err := db.QueryRow(ctx, "SELECT fingerprint, status, questions, updated_at FROM probes WHERE "+owner+" AND job_id = $3",
+			ident.TenantID, ident.Subject, jobID).Scan(&probe.Fingerprint, &probe.Status, &probe.Questions, &probe.UpdatedAt)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		found = &probe
+		return err
+	})
+	return found, err
+}
+
+func (r *PgCvRepository) SaveProbe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID, probe StoredProbe) error {
+	if probe.Questions == nil {
+		probe.Questions = []models.ProbeQuestion{}
+	}
+	return r.run(ctx, ident, func(db DBTX) error {
+		_, err := db.Exec(ctx, `INSERT INTO probes (customer_id, subject, job_id, fingerprint, status, questions)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (customer_id, subject, job_id) DO UPDATE SET fingerprint = EXCLUDED.fingerprint, status = EXCLUDED.status,
+questions = EXCLUDED.questions, updated_at = NOW()`, ident.TenantID, ident.Subject, jobID, probe.Fingerprint, probe.Status, probe.Questions)
+		return err
+	})
 }

@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "questions"
+  ],
+  "properties": {
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "theme",
+          "question",
+          "why",
+          "example"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "example": {
+            "type": "string"
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 5
+    }
+  }
+}

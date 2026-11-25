@@ -34,6 +34,8 @@ type Entry struct {
 	Current bool     `json:"current,omitempty"`
 	Tools   []string `json:"tools"`
 	Facts   []string `json:"facts"`
+	// Ref is the entry in the profile: "experience:<id>" or "projects:<id>".
+	Ref string `json:"-"`
 }
 
 // Catalogue is what Claude may write from.
@@ -84,7 +86,7 @@ func Build(profile models.Profile, job cvdoc.Job, request models.CvRequest, now 
 		n++
 		id := fmt.Sprintf("E%d", n)
 		entry := Entry{ID: id, Title: strings.Join(keep(role.Role, role.Company), " at "), Current: strings.TrimSpace(role.End) == "",
-			Tools: nonNil(role.Tools), Facts: []string{}}
+			Tools: nonNil(role.Tools), Facts: []string{}, Ref: "experience:" + role.ID}
 		add(id, roleFact(role), id, role.Tools)
 		entry.Facts = append(entry.Facts, id)
 		entry.Facts = append(entry.Facts, addEntryFacts(add, c.Facts, id, role.Tools, role.Bullets, role.Notes)...)
@@ -92,7 +94,7 @@ func Build(profile models.Profile, job cvdoc.Job, request models.CvRequest, now 
 	}
 	for k, project := range profile.Projects {
 		id := fmt.Sprintf("P%d", k+1)
-		entry := Entry{ID: id, Title: project.Name, Tools: nonNil(project.Tools), Facts: []string{}}
+		entry := Entry{ID: id, Title: project.Name, Tools: nonNil(project.Tools), Facts: []string{}, Ref: "projects:" + project.ID}
 		add(id, strings.Join(keep(project.Name, project.Role, project.URL, cvdoc.CvDates(project.Start, project.End)), ", "), id, project.Tools)
 		entry.Facts = append(entry.Facts, id)
 		entry.Facts = append(entry.Facts, addEntryFacts(add, c.Facts, id, project.Tools, project.Bullets, project.Notes)...)
