@@ -57,6 +57,13 @@ export const cvSchema = z.object({
   ats: atsSchema.nullable(),
   /** The first highlight before and after the rewrite, from the checking step on. */
   preview: previewSchema.nullable(),
+  /** How Claude tailored it: the angle, the job's priorities and how strongly the person's facts prove each, the review's changes. */
+  tailoring: z.object({
+    positioning: z.string(),
+    priorities: z.array(z.object({ theme: z.string(), strength: z.enum(['direct', 'partial', 'transferable', 'none']) })),
+    close: z.array(z.object({ skill: z.string(), via: z.array(z.string()) })).default([]),
+    changes: z.array(z.string()),
+  }).nullable().default(null),
   /** Who wrote it, once it is ready: Claude, or the rules engine (and then `rules_reason` says why). */
   written_by: z.enum(['claude', 'rules']).nullable(),
   model: z.string(),

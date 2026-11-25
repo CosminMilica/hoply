@@ -2,12 +2,110 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "plan",
     "summary",
     "roles",
     "projects",
     "skills"
   ],
   "properties": {
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positioning",
+        "evidence",
+        "responsibilities",
+        "equivalents"
+      ],
+      "properties": {
+        "positioning": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "theme",
+              "facts",
+              "strength"
+            ],
+            "properties": {
+              "theme": {
+                "type": "string"
+              },
+              "facts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "strength": {
+                "type": "string",
+                "enum": [
+                  "direct",
+                  "partial",
+                  "transferable",
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "facts"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "facts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "equivalents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "skill",
+              "via",
+              "why"
+            ],
+            "properties": {
+              "skill": {
+                "type": "string"
+              },
+              "via": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "summary": {
       "type": "array",
       "items": {
@@ -53,7 +151,8 @@
               "additionalProperties": false,
               "required": [
                 "text",
-                "facts"
+                "facts",
+                "serves"
               ],
               "properties": {
                 "text": {
@@ -65,6 +164,9 @@
                     "type": "string"
                   },
                   "minItems": 1
+                },
+                "serves": {
+                  "type": "string"
                 }
               }
             }
@@ -92,7 +194,8 @@
               "additionalProperties": false,
               "required": [
                 "text",
-                "facts"
+                "facts",
+                "serves"
               ],
               "properties": {
                 "text": {
@@ -104,6 +207,9 @@
                     "type": "string"
                   },
                   "minItems": 1
+                },
+                "serves": {
+                  "type": "string"
                 }
               }
             }

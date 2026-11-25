@@ -81,6 +81,30 @@ type Written struct {
 	Profile    CvDocument `json:"profile"`
 	Tailored   CvDocument `json:"tailored"`
 	Ats        Ats        `json:"ats"`
+	Tailoring  *Tailoring `json:"tailoring,omitempty"`
+}
+
+// TailoredPriority is a priority of the job and how strongly the CV proves it.
+type TailoredPriority struct {
+	Theme    string `json:"theme"`
+	Strength string `json:"strength"`
+}
+
+// Tailoring is how Claude tailored a CV: the angle it took, the job's
+// priorities and how strongly the person's facts prove each, and what the review
+// changed.
+type Tailoring struct {
+	Positioning string             `json:"positioning"`
+	Priorities  []TailoredPriority `json:"priorities"`
+	// Close are the requirements the CV names as carried over from the person's equivalent tools.
+	Close   []CloseSkill `json:"close"`
+	Changes []string     `json:"changes"`
+}
+
+// CloseSkill is a requirement the person knows an equivalent of.
+type CloseSkill struct {
+	Skill string   `json:"skill"`
+	Via   []string `json:"via"`
 }
 
 // Writers of a CV.
@@ -133,6 +157,8 @@ type Cv struct {
 	Tailored   *CvDocument `json:"tailored"`
 	Ats        *Ats        `json:"ats"`
 	Preview    *Preview    `json:"preview"`
+	// Tailoring is set when Claude wrote the CV.
+	Tailoring *Tailoring `json:"tailoring"`
 	// WrittenBy is "claude" or "rules" once the CV is ready, nil before.
 	WrittenBy   *string    `json:"written_by"`
 	Model       string     `json:"model"`

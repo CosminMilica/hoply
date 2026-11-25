@@ -38,6 +38,14 @@ type Writer struct {
 	mu           sync.Mutex
 	limitedUntil time.Time
 	loginNeeded  bool
+
+	analyses repositories.Analyses
+}
+
+// KeepAnalyses keeps each job's analysis in store, so it is read once per job.
+func (w *Writer) KeepAnalyses(store repositories.Analyses) *Writer {
+	w.analyses = store
+	return w
 }
 
 // New writes with claude, or only with the rules when claude is nil.
@@ -54,7 +62,9 @@ func FromEnv() *Writer {
 	return New(nil)
 }
 
-// Write writes the CV of task. It fails only when ctx ends, so a CV is never
+// Write writes the CV of task in three steps: what the job needs (read once per
+// job and kept), a plan and a draft from the person's facts, and a hiring
+// manager's review of the draft. It fails only when ctx ends, so a CV is never
 // finished with the rules because the service is stopping.
 func (w *Writer) Write(ctx context.Context, task *repositories.Task) (models.Written, models.Authorship, error) {
 	job := cvdoc.ReadJob(task.Job)
@@ -69,48 +79,149 @@ func (w *Writer) Write(ctx context.Context, task *repositories.Task) (models.Wri
 		return byRules(models.UsageLimit, &until)
 	}
 	catalogue := grounding.Build(task.Profile, job, task.Request, task.CreatedAt)
-	request := claude.Request{
-		System: grounding.System,
-		Schema: grounding.Schema(),
-		Prompt: catalogue.Prompt(job, task.Request, catalogue.Known),
+
+	analysis, stop := w.analyze(ctx, task, job)
+	if stop != nil {
+		return byRules(stop.reason, stop.until)
 	}
-	for attempt := 1; attempt <= Attempts; attempt++ {
-		raw, err := w.claude.Run(ctx, request)
-		var limit *claude.LimitError
-		switch {
-		case ctx.Err() != nil:
-			return byRules(models.ClaudeFailed, nil)
-		case errors.Is(err, claude.ErrNoToken):
-			return byRules(models.NoToken, nil)
-		case errors.Is(err, claude.ErrLoginNeeded):
-			w.setLoginNeeded(true)
-			return byRules(models.LoginNeeded, nil)
-		case errors.As(err, &limit):
-			w.setLimit(limit.Until)
-			return byRules(models.UsageLimit, &limit.Until)
-		case err != nil:
-			slog.Warn("claude run failed", "cv_id", task.ID, "attempt", attempt, "error", err)
+	var draft *grounding.Answer
+	for attempt := 1; attempt <= Attempts && draft == nil; attempt++ {
+		raw, stop := w.run(ctx, task, "write", claude.Request{
+			System: grounding.System, Schema: grounding.Schema(), Prompt: catalogue.Prompt(job, task.Request, catalogue.Known, analysis),
+		})
+		if stop != nil {
+			return byRules(stop.reason, stop.until)
+		}
+		if raw == nil {
 			continue
 		}
 		answer, err := grounding.ParseAnswer(raw)
 		if err != nil {
-			slog.Warn("claude answer unreadable", "cv_id", task.ID, "attempt", attempt, "error", err)
+			slog.Warn("claude answer unreadable", "cv_id", task.ID, "step", "write", "attempt", attempt, "error", err)
 			continue
 		}
-		w.setLoginNeeded(false)
-		tailored, refusals := catalogue.Assemble(answer, job, rules.Tailored)
-		for _, reason := range refusals {
-			slog.Info("claude sentence refused", "cv_id", task.ID, "reason", reason)
-		}
-		written := models.Written{
-			Highlights: rules.Highlights,
-			Profile:    rules.Profile,
-			Tailored:   tailored,
-			Ats:        cvdoc.Score(cvdoc.AtsChecks(tailored, job, task.Profile, task.Request, task.CreatedAt)),
-		}
-		return written, models.Authorship{WrittenBy: models.WrittenByClaude, Model: w.claude.Model(), Refused: len(refusals)}, nil
+		draft = &answer
 	}
-	return byRules(models.ClaudeFailed, nil)
+	if draft == nil {
+		return byRules(models.ClaudeFailed, nil)
+	}
+	final := *draft
+	if reviewed := w.review(ctx, task, job, catalogue, analysis, *draft); reviewed != nil {
+		final = *reviewed
+	}
+
+	catalogue = catalogue.WithEquivalents(final.Plan.Equivalents)
+	tailored, refusals := catalogue.Assemble(final, job, rules.Tailored)
+	for _, reason := range refusals {
+		slog.Info("claude sentence refused", "cv_id", task.ID, "reason", reason)
+	}
+	atsJob, atsRequest := job, task.Request
+	if analysis != nil && len(analysis.Responsibilities) > 0 {
+		atsJob.KeyResponsibilities = analysis.Indexes()
+		atsRequest.Confirmed = append(append([]int{}, task.Request.Confirmed...), catalogue.Mirrored(final, atsJob.KeyResponsibilities)...)
+	}
+	written := models.Written{
+		Highlights: rules.Highlights,
+		Profile:    rules.Profile,
+		Tailored:   tailored,
+		Ats:        cvdoc.Score(cvdoc.AtsChecks(tailored, atsJob, task.Profile, atsRequest, task.CreatedAt)),
+		Tailoring:  tailoring(final, catalogue.Related),
+	}
+	return written, models.Authorship{WrittenBy: models.WrittenByClaude, Model: w.claude.Model(), Refused: len(refusals)}, nil
+}
+
+// stop is why Claude cannot write now: the rules write the CV, for reason.
+type stop struct {
+	reason string
+	until  *time.Time
+}
+
+// run asks Claude once. It returns the output; nil and no stop for a failure
+// worth retrying; or a stop when Claude cannot write now.
+func (w *Writer) run(ctx context.Context, task *repositories.Task, step string, request claude.Request) (json.RawMessage, *stop) {
+	raw, err := w.claude.Run(ctx, request)
+	var limit *claude.LimitError
+	switch {
+	case ctx.Err() != nil:
+		return nil, &stop{reason: models.ClaudeFailed}
+	case errors.Is(err, claude.ErrNoToken):
+		return nil, &stop{reason: models.NoToken}
+	case errors.Is(err, claude.ErrLoginNeeded):
+		w.setLoginNeeded(true)
+		return nil, &stop{reason: models.LoginNeeded}
+	case errors.As(err, &limit):
+		w.setLimit(limit.Until)
+		return nil, &stop{reason: models.UsageLimit, until: &limit.Until}
+	case err != nil:
+		slog.Warn("claude run failed", "cv_id", task.ID, "step", step, "error", err)
+		return nil, nil
+	}
+	w.setLoginNeeded(false)
+	return raw, nil
+}
+
+// analyze is what the job needs: kept from an earlier CV for the job, or read
+// now and kept. Without one the CV is still written, from the job alone.
+func (w *Writer) analyze(ctx context.Context, task *repositories.Task, job cvdoc.Job) (*grounding.Analysis, *stop) {
+	if w.analyses != nil {
+		if raw, err := w.analyses.Analysis(ctx, task.Job.ID); err == nil && raw != nil {
+			if analysis, err := grounding.ParseAnalysis(raw, job); err == nil {
+				return &analysis, nil
+			}
+		}
+	}
+	raw, stop := w.run(ctx, task, "analyze", claude.Request{
+		System: grounding.AnalyzeSystem, Schema: grounding.AnalyzeSchema(), Prompt: grounding.AnalysisPrompt(job),
+	})
+	if stop != nil || raw == nil {
+		return nil, stop
+	}
+	analysis, err := grounding.ParseAnalysis(raw, job)
+	if err != nil {
+		slog.Warn("claude analysis unreadable", "cv_id", task.ID, "error", err)
+		return nil, nil
+	}
+	if w.analyses != nil {
+		if err := w.analyses.SaveAnalysis(ctx, task.Job.ID, raw, w.claude.Model()); err != nil {
+			slog.Warn("job analysis not kept", "job_id", task.Job.ID, "error", err)
+		}
+	}
+	return &analysis, nil
+}
+
+// review is the draft improved by a hiring manager's reading; nil keeps the draft.
+func (w *Writer) review(ctx context.Context, task *repositories.Task, job cvdoc.Job, catalogue grounding.Catalogue,
+	analysis *grounding.Analysis, draft grounding.Answer) *grounding.Answer {
+	raw, stop := w.run(ctx, task, "review", claude.Request{
+		System: grounding.ReviewSystem, Schema: grounding.ReviewSchema(),
+		Prompt: catalogue.ReviewPrompt(job, task.Request, catalogue.Known, analysis, draft),
+	})
+	if stop != nil || raw == nil {
+		return nil
+	}
+	reviewed, err := grounding.ParseAnswer(raw)
+	if err != nil || len(reviewed.Summary) == 0 {
+		slog.Warn("claude review unreadable", "cv_id", task.ID, "error", err)
+		return nil
+	}
+	return &reviewed
+}
+
+// tailoring is what the CV page shows about how the CV was tailored.
+func tailoring(answer grounding.Answer, related []cvdoc.Related) *models.Tailoring {
+	priorities := []models.TailoredPriority{}
+	for _, evidence := range answer.Plan.Evidence {
+		priorities = append(priorities, models.TailoredPriority{Theme: evidence.Theme, Strength: evidence.Strength})
+	}
+	changes := answer.Changes
+	if changes == nil {
+		changes = []string{}
+	}
+	close := []models.CloseSkill{}
+	for _, item := range related {
+		close = append(close, models.CloseSkill{Skill: item.Skill, Via: item.Via})
+	}
+	return &models.Tailoring{Positioning: answer.Plan.Positioning, Priorities: priorities, Close: close, Changes: changes}
 }
 
 // Status is how the service writes CVs now.

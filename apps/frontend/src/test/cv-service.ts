@@ -25,7 +25,7 @@ interface CvBackendOptions {
 const problem = (status: number, code: string, message: string, field?: string): Answer =>
   ({ status, body: { error: { code, message, type: 'Error', context: field ? { field } : {} } } })
 
-const unwritten = { highlights: null, profile: null, tailored: null, ats: null, preview: null, written_by: null, model: '', refused: 0, rules_reason: '' as const, limit_until: null }
+const unwritten = { highlights: null, profile: null, tailored: null, ats: null, preview: null, tailoring: null, written_by: null, model: '', refused: 0, rules_reason: '' as const, limit_until: null }
 
 /**
  * The cv service in memory, by docs/api/cv.md, writing with the web app's former rules engine (src/test/cv-engine).

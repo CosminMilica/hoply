@@ -90,7 +90,8 @@ func Build(cfg *config.Config, pool *pgxpool.Pool) Service {
 
 // BuildWith wires the service on the given sources, writer and PDF printer.
 func BuildWith(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter *writer.Writer, printer services.Printer) Service {
-	queue := worker.New(repositories.NewPgCvRepository(pool), cvWriter, WorkerPoll)
+	store := repositories.NewPgCvRepository(pool)
+	queue := worker.New(store, cvWriter.KeepAnalyses(store), WorkerPoll)
 	return Service{Handler: newHandler(cfg, pool, sources, cvWriter, printer, queue.Wake), Worker: queue}
 }
 

@@ -187,6 +187,7 @@ export function generateCv(profile: Profile, job: Job, request: CvRequest, now: 
     tailored: tailored.document,
     ats: { passed: checks.filter(item => item.ok).length, total: checks.length, checks },
     preview: rewritePreview(snapshot, job, request),
+    tailoring: null,
     written_by: 'rules',
     model: '',
     refused: 0,

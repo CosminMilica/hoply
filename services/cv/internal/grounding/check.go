@@ -3,6 +3,7 @@ package grounding
 import (
 	"encoding/json"
 	"regexp"
+	"slices"
 	"strings"
 
 	"cv/internal/cvdoc"
@@ -12,10 +13,12 @@ import (
 // MaxSentence is the longest sentence a CV takes, as the profile's highlights.
 const MaxSentence = 300
 
-// Sentence is one sentence Claude wrote, with the facts it rests on.
+// Sentence is one sentence Claude wrote, with the facts it rests on and, for a
+// bullet, the priority it serves.
 type Sentence struct {
-	Text  string   `json:"text"`
-	Facts []string `json:"facts"`
+	Text   string   `json:"text"`
+	Facts  []string `json:"facts"`
+	Serves string   `json:"serves,omitempty"`
 }
 
 // Section is what Claude wrote for one role or project.
@@ -24,12 +27,44 @@ type Section struct {
 	Bullets []Sentence `json:"bullets"`
 }
 
-// Answer is Claude's answer, as prompts/cv-output.schema.json describes it.
+// Evidence is the facts that prove a priority, and how strongly.
+type Evidence struct {
+	Theme    string   `json:"theme"`
+	Facts    []string `json:"facts"`
+	Strength string   `json:"strength"`
+}
+
+// Done is a responsibility of the job that the facts show the person has done.
+type Done struct {
+	Index int      `json:"index"`
+	Facts []string `json:"facts"`
+}
+
+// Equivalent is a missing requirement that one of the person's skills does the
+// same job as, in Claude's reading.
+type Equivalent struct {
+	Skill string   `json:"skill"`
+	Via   []string `json:"via"`
+	Why   string   `json:"why"`
+}
+
+// Plan is how Claude means to tailor the CV.
+type Plan struct {
+	Positioning      string       `json:"positioning"`
+	Evidence         []Evidence   `json:"evidence"`
+	Responsibilities []Done       `json:"responsibilities"`
+	Equivalents      []Equivalent `json:"equivalents"`
+}
+
+// Answer is Claude's answer, as prompts/cv-output.schema.json describes it;
+// the review adds Changes.
 type Answer struct {
+	Plan     Plan       `json:"plan"`
 	Summary  []Sentence `json:"summary"`
 	Roles    []Section  `json:"roles"`
 	Projects []Section  `json:"projects"`
 	Skills   []string   `json:"skills"`
+	Changes  []string   `json:"changes,omitempty"`
 }
 
 // ParseAnswer reads Claude's structured output.
@@ -250,4 +285,70 @@ func contains(items []string, value string) bool {
 		}
 	}
 	return false
+}
+
+// Mirrored is the job's real responsibilities (duties) that the answer shows the
+// person has done: those its plan backs with facts that a sentence passing
+// Check also cites.
+func (c Catalogue) Mirrored(answer Answer, duties []int) []int {
+	cited := map[string]bool{}
+	add := func(sentences []Sentence, owner string) {
+		for _, sentence := range sentences {
+			if c.Check(sentence, owner) == "" {
+				for _, id := range sentence.Facts {
+					cited[id] = true
+				}
+			}
+		}
+	}
+	add(answer.Summary, "")
+	for _, section := range answer.Roles {
+		add(section.Bullets, section.ID)
+	}
+	for _, section := range answer.Projects {
+		add(section.Bullets, section.ID)
+	}
+	mirrored := []int{}
+	for _, done := range answer.Plan.Responsibilities {
+		if !slices.Contains(duties, done.Index) || slices.Contains(mirrored, done.Index) {
+			continue
+		}
+		for _, id := range done.Facts {
+			if cited[id] {
+				mirrored = append(mirrored, done.Index)
+				break
+			}
+		}
+	}
+	return mirrored
+}
+
+// WithEquivalents is the catalogue with the equivalents Claude found moved from
+// Missing to Related. One is kept only when its requirement was missing and
+// every tool it names is one of the person's skills; the person's spelling is used.
+func (c Catalogue) WithEquivalents(equivalents []Equivalent) Catalogue {
+	extended := c
+	extended.Missing = append([]string{}, c.Missing...)
+	extended.Related = append([]cvdoc.Related{}, c.Related...)
+	for _, equivalent := range equivalents {
+		at := slices.IndexFunc(extended.Missing, func(skill string) bool { return strings.EqualFold(skill, strings.TrimSpace(equivalent.Skill)) })
+		if at < 0 || len(equivalent.Via) == 0 {
+			continue
+		}
+		via := []string{}
+		for _, tool := range equivalent.Via {
+			known := slices.IndexFunc(c.Known, func(skill string) bool { return strings.EqualFold(strings.TrimSpace(skill), strings.TrimSpace(tool)) })
+			if known < 0 {
+				via = nil
+				break
+			}
+			via = append(via, c.Known[known])
+		}
+		if via == nil {
+			continue
+		}
+		extended.Related = append(extended.Related, cvdoc.Related{Skill: extended.Missing[at], Via: via})
+		extended.Missing = slices.Delete(extended.Missing, at, at+1)
+	}
+	return extended
 }

@@ -46,17 +46,28 @@ type promptJob struct {
 
 type promptMessage struct {
 	PageLimit int       `json:"page_limit"`
+	Analysis  *Analysis `json:"analysis,omitempty"`
 	Job       promptJob `json:"job"`
 	Focus     []string  `json:"focus"`
 	Skills    []string  `json:"skills"`
 	Roles     []Entry   `json:"roles"`
 	Projects  []Entry   `json:"projects"`
 	Facts     []Fact    `json:"facts"`
+	Draft     *Answer   `json:"draft,omitempty"`
 }
 
-// Prompt is the message: the job (as data), the person's choices and the
-// numbered facts.
-func (c Catalogue) Prompt(job cvdoc.Job, request models.CvRequest, skills []string) string {
+// Prompt is the message: the analysis of the job (nil without one), the job (as
+// data), the person's choices and the numbered facts.
+func (c Catalogue) Prompt(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis) string {
+	return c.message(job, request, skills, analysis, nil)
+}
+
+// ReviewPrompt is the review's message: Prompt's, with the draft to improve.
+func (c Catalogue) ReviewPrompt(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis, draft Answer) string {
+	return c.message(job, request, skills, analysis, &draft)
+}
+
+func (c Catalogue) message(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis, draft *Answer) string {
 	confirmed := []string{}
 	for _, index := range request.Confirmed {
 		if index >= 0 && index < len(job.Responsibilities) {
@@ -69,6 +80,8 @@ func (c Catalogue) Prompt(job cvdoc.Job, request models.CvRequest, skills []stri
 	}
 	message := promptMessage{
 		PageLimit: c.PageLimit,
+		Analysis:  analysis,
+		Draft:     draft,
 		Job: promptJob{
 			Title: job.Title, Company: job.Company, Level: job.Level, YearsRequired: job.YearsRequired, Product: job.Product,
 			About: job.About, AboutCompany: job.AboutCompany,

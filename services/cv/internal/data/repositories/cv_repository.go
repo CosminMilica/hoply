@@ -63,6 +63,12 @@ type Queue interface {
 	Recover(ctx context.Context) error
 }
 
+// Analyses keeps each job's analysis, so it is read once per job.
+type Analyses interface {
+	Analysis(ctx context.Context, jobID uuid.UUID) (json.RawMessage, error)
+	SaveAnalysis(ctx context.Context, jobID uuid.UUID, analysis json.RawMessage, model string) error
+}
+
 // MaxAttempts is how many times the worker takes a CV before it gives up.
 const MaxAttempts = 3
 
@@ -251,6 +257,25 @@ func scanCv(row pgx.CollectableRow) (models.Cv, error) {
 		cv.Profile = &written.Profile
 		cv.Tailored = &written.Tailored
 		cv.Ats = &written.Ats
+		cv.Tailoring = written.Tailoring
 	}
 	return cv, nil
+}
+
+// Analysis is the job's stored analysis; nil when there is none.
+func (r *PgCvRepository) Analysis(ctx context.Context, jobID uuid.UUID) (json.RawMessage, error) {
+	var analysis json.RawMessage
+	err := r.pool.QueryRow(ctx, "SELECT analysis FROM job_analyses WHERE job_id = $1", jobID).Scan(&analysis)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, apperrors.FromDatabase(err)
+	}
+	return analysis, nil
+}
+
+func (r *PgCvRepository) SaveAnalysis(ctx context.Context, jobID uuid.UUID, analysis json.RawMessage, model string) error {
+	return r.update(ctx, `INSERT INTO job_analyses (job_id, analysis, model) VALUES ($1, $2, $3)
+ON CONFLICT (job_id) DO UPDATE SET analysis = EXCLUDED.analysis, model = EXCLUDED.model, created_at = NOW()`, jobID, analysis, model)
 }

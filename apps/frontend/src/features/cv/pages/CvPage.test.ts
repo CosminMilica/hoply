@@ -72,6 +72,26 @@ describe('CvPage', () => {
     expect(text()).toContain('No CV yet')
   })
 
+  it('says how Claude tailored the CV', async () => {
+    const { cvs } = useServices()
+    await cvApi.generate(request)
+    cvs.cvs[0]!.cv.tailoring = {
+      positioning: 'The engineer who automates delivery',
+      priorities: [{ theme: 'CI/CD', strength: 'direct' }, { theme: 'GitOps', strength: 'transferable' }],
+      close: [{ skill: 'Argo CD', via: ['FluxCD'] }],
+      changes: ['Led with the pipelines'],
+    }
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    const card = document.querySelector('[data-test="tailoring"]')!
+    expect(card.textContent).toContain('The engineer who automates delivery')
+    expect(card.textContent).toContain('CI/CDProven')
+    expect(card.textContent).toContain('GitOpsTransferable')
+    expect(card.textContent).toContain('Led with the pipelines')
+    expect(card.textContent).toContain('Argo CD (from FluxCD)')
+    await click(button('Your profile'))
+    expect(document.querySelector('[data-test="tailoring"]')).toBeNull()
+  })
+
   it('has nothing to show before a CV is made', async () => {
     useServices()
     await mountPage(CvPage, { at: `/jobs/${seedId(2)}/cv`, props: { id: seedId(2) } })

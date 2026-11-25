@@ -432,3 +432,32 @@ func TestSkillMapCopiesAreIdentical(t *testing.T) {
 		t.Fatal("apps/frontend/src/features/jobs/skillmap.json must be a copy of services/cv/internal/cvdoc/skillmap.json")
 	}
 }
+
+func TestTitleCheckLooksForTheRoleWithoutItsLevel(t *testing.T) {
+	read := func(title string) cvdoc.Job {
+		job := catalogJob(t, 0)
+		job.Title = title
+		return cvdoc.ReadJob(job)
+	}
+	title := func(document models.CvDocument, job cvdoc.Job) bool {
+		return checkStartingWith(t, cvdoc.AtsChecks(document, job, sampleProfile(t), request(), now), "Target job title").OK
+	}
+	devops := models.CvDocument{Headline: "DevOps Engineer", Summary: "Runs EKS."}
+	equal(t, title(devops, read("DevOps Engineer- Senior Associate- Public Sector")), true)
+	equal(t, title(devops, read("Senior DevOps Engineer (Platform)")), true)
+	equal(t, title(devops, read("Senior / Staff Fullstack Engineer")), false)
+	equal(t, title(models.CvDocument{Summary: "A fullstack engineer who ships."}, read("Senior / Staff Fullstack Engineer")), true)
+}
+
+func TestVerbCheckFailsOnlyOnStartsThatAreNotActions(t *testing.T) {
+	verbs := func(bullets ...string) bool {
+		document := models.CvDocument{Experience: []models.RoleSection{{Role: "r", Bullets: bullets}}}
+		return checkStartingWith(t, cvdoc.AtsChecks(document, engineJob(t, 0), sampleProfile(t), request(), now), "Every bullet").OK
+	}
+	equal(t, verbs("Store secrets in Vault.", "Harden hosts.", "Built it.", "Ran it.", "Spearheaded it."), true)
+	for _, bad := range []string{"Responsible for servers.", "Monitoring with Grafana.", "The VPN was set up.", "Helped the team.", "I fixed it."} {
+		if verbs(bad) {
+			t.Errorf("%q does not start with an action", bad)
+		}
+	}
+}

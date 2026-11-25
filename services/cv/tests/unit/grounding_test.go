@@ -151,7 +151,7 @@ func TestAssembleKeepsSixBulletsOnTheFirstRoleAndThreeOnTheOthers(t *testing.T) 
 func TestPromptHoldsTheJobAsDataAndTheNumberedFacts(t *testing.T) {
 	c, job := catalogue(t, func(r *models.CvRequest) { r.Confirmed = []int{1, 99} })
 	var message map[string]any
-	if err := json.Unmarshal([]byte(c.Prompt(job, request(func(r *models.CvRequest) { r.Confirmed = []int{1, 99} }), []string{"SQL"})), &message); err != nil {
+	if err := json.Unmarshal([]byte(c.Prompt(job, request(func(r *models.CvRequest) { r.Confirmed = []int{1, 99} }), []string{"SQL"}, nil)), &message); err != nil {
 		t.Fatal(err)
 	}
 	jobPart := message["job"].(map[string]any)
@@ -183,7 +183,7 @@ func TestNotesAreFactsAndShowSkills(t *testing.T) {
 	equal(t, c.Roles[0].Facts[len(c.Roles[0].Facts)-1], "E1.N1")
 	equal(t, c.Missing, []string{"Snowflake"})
 	equal(t, c.Check(grounding.Sentence{Text: "Set up Terraform for 3 environments.", Facts: []string{"E1.N1"}}, "E1"), "")
-	equal(t, strings.Contains(grounding.System, "Notes are never copied"), true)
+	equal(t, strings.Contains(grounding.System, "raw material, often"), true)
 }
 
 func TestCloseEquivalentsAreNamedOnlyBesideWhatThePersonHas(t *testing.T) {
@@ -202,9 +202,65 @@ func TestCloseEquivalentsAreNamedOnlyBesideWhatThePersonHas(t *testing.T) {
 	equal(t, questions.Related[0].Skill, "Argo CD")
 	equal(t, questions.Related[0].Note, "You use FluxCD, which is close to Argo CD. Your CV says so, without claiming Argo CD itself.")
 	var message map[string]any
-	if err := json.Unmarshal([]byte(c.Prompt(read, request(), c.Known)), &message); err != nil {
+	if err := json.Unmarshal([]byte(c.Prompt(read, request(), c.Known, nil)), &message); err != nil {
 		t.Fatal(err)
 	}
 	equal(t, message["job"].(map[string]any)["related"], []any{map[string]any{"skill": "Argo CD", "via": []any{"FluxCD"}}})
-	equal(t, strings.Contains(grounding.System, "transfers directly to Argo CD"), true)
+	equal(t, strings.Contains(grounding.System, "as experience that carries over"), true)
+}
+
+func TestMirroredCountsDutiesThePlanBacksWithCitedFacts(t *testing.T) {
+	c, _ := catalogue(t)
+	answer := grounding.Answer{
+		Plan: grounding.Plan{Responsibilities: []grounding.Done{
+			{Index: 0, Facts: []string{"E1.B1"}}, {Index: 1, Facts: []string{"E1.B2"}}, {Index: 7, Facts: []string{"E1.B1"}}, {Index: 0, Facts: []string{"E1.B1"}},
+		}},
+		Roles: []grounding.Section{{ID: "E1", Bullets: []grounding.Sentence{
+			{Text: "Built CI/CD pipelines.", Facts: []string{"E1.B1"}},
+			{Text: "Built 99 things.", Facts: []string{"E1.B2"}},
+		}}},
+	}
+	equal(t, c.Mirrored(answer, []int{0, 1, 2}), []int{0})
+}
+
+func TestAnalysisReadsTheAdAndKeepsOnlyRealDuties(t *testing.T) {
+	job := engineJob(t, 0)
+	var message map[string]any
+	if err := json.Unmarshal([]byte(grounding.AnalysisPrompt(job)), &message); err != nil {
+		t.Fatal(err)
+	}
+	equal(t, message["title"], "Snowflake Administrator DevOps")
+	equal(t, len(message["lines"].([]any)), len(job.Responsibilities))
+	analysis, err := grounding.ParseAnalysis(json.RawMessage(`{"role":"r","priorities":[{"theme":"IaC"}],
+		"responsibilities":[{"index":3,"theme":"IaC"},{"index":99,"theme":"x"},{"index":3,"theme":"dup"},{"index":0,"theme":"Snowflake"}]}`), job)
+	if err != nil {
+		t.Fatal(err)
+	}
+	equal(t, analysis.Indexes(), []int{3, 0})
+	if _, err := grounding.ParseAnalysis(json.RawMessage(`[]`), job); err == nil {
+		t.Fatal("an analysis is an object")
+	}
+	for _, schema := range []string{grounding.AnalyzeSchema(), grounding.ReviewSchema()} {
+		var parsed map[string]any
+		if err := json.Unmarshal([]byte(schema), &parsed); err != nil {
+			t.Fatal(err)
+		}
+	}
+	equal(t, strings.Contains(grounding.ReviewSystem, "hiring manager"), true)
+	equal(t, strings.Contains(grounding.AnalyzeSystem, "priorities"), true)
+}
+
+func TestEquivalentsClaudeFindsAreKeptOnlyForMissingRequirementsAndKnownTools(t *testing.T) {
+	c, _ := catalogue(t)
+	extended := c.WithEquivalents([]grounding.Equivalent{
+		{Skill: "rbac", Via: []string{"linux"}, Why: "access control"},
+		{Skill: "Snowflake", Via: []string{"Oracle"}, Why: "not the person's skill"},
+		{Skill: "SQL", Via: []string{"Python"}, Why: "not missing"},
+		{Skill: "Terraform", Via: nil},
+	})
+	equal(t, extended.Related, []cvdoc.Related{{Skill: "RBAC", Via: []string{"Linux"}}})
+	equal(t, extended.Missing, []string{"Snowflake", "Terraform", "Infrastructure as Code"})
+	equal(t, c.Missing, []string{"Snowflake", "Terraform", "Infrastructure as Code", "RBAC"})
+	equal(t, extended.Check(grounding.Sentence{Text: "Hardened Linux hosts, ready for RBAC work.", Facts: []string{"E1.B1"}}, "E1"), "")
+	equal(t, extended.Check(grounding.Sentence{Text: "Set up RBAC.", Facts: []string{"E1.B1"}}, "E1"), "names RBAC without Linux, the close equivalent the person has")
 }

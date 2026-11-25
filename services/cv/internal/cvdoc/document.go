@@ -299,26 +299,25 @@ const MaxSkills = 20
 // (internal/render), measured on rendered CVs.
 const PageLines = 50
 
-// isActionVerb reports whether a bullet's first word is an action verb, past or present ("Built", "Run", "Keeps").
+// notVerbs are first words that show a bullet does not start with an action.
+var notVerbs = []string{"a", "an", "the", "i", "my", "me", "we", "our", "he", "she", "they", "it", "this", "that", "these",
+	"responsible", "duties", "duty", "tasks", "task", "member", "part", "involved", "various", "experience", "knowledge",
+	"strong", "excellent", "good", "great", "successful", "successfully", "worked", "work", "helped", "help", "assisted",
+	"participated", "was", "were", "is", "are", "been", "being", "had", "have", "has", "team", "role", "in", "on",
+	"for", "with", "as", "to", "of", "from", "by", "and", "or"}
+
+// isActionVerb reports whether a bullet's first word is an action verb: any
+// word but the ones a bullet should not start with ("The", "Responsible",
+// "Helped") and -ing forms ("Monitoring").
 func isActionVerb(word string) bool {
 	word = lc(word)
-	if pastTense.MatchString(word) || slices.Contains(actionVerbs, word) {
-		return true
+	if word == "" || slices.Contains(notVerbs, word) {
+		return false
 	}
-	for _, form := range []string{word, strings.TrimSuffix(word, "s"), strings.TrimSuffix(word, "es")} {
-		if _, ok := past[form]; ok {
-			return true
-		}
-		if slices.Contains(actionVerbs, form) {
-			return true
-		}
+	if strings.HasSuffix(word, "ing") && !slices.Contains(actionVerbs, word) {
+		return false
 	}
-	for _, verb := range past {
-		if verb == word {
-			return true
-		}
-	}
-	return false
+	return true
 }
 
 // words is text as lower-case words, punctuation dropped: "DevOps Engineer- Senior" is "devops engineer senior".
@@ -329,6 +328,27 @@ func words(text string) string {
 // charsPerLine is about how many characters a line of the exported CV holds
 // (internal/render: A4, 14 mm margins, 10 pt), measured on rendered CVs.
 const charsPerLine = 110
+
+// levelWords are the parts of a job title that say its level, not its role.
+var levelWords = []string{"senior", "sr", "staff", "lead", "principal", "junior", "jr", "mid", "middle", "associate",
+	"intern", "trainee", "head", "chief", "level", "i", "ii", "iii", "iv"}
+
+// coreTitle is the role a job title names, in lower-case words, without its
+// level or what follows a separator: "Senior / Staff Fullstack Engineer" is
+// "fullstack engineer", "DevOps Engineer- Senior Associate- Public Sector" is
+// "devops engineer".
+func coreTitle(title string) string {
+	if at := regexp.MustCompile(`\s*(?:\s-|-\s|\(|,|\|)`).FindStringIndex(title); at != nil {
+		title = title[:at[0]]
+	}
+	kept := []string{}
+	for _, word := range strings.Fields(words(title)) {
+		if !slices.Contains(levelWords, word) {
+			kept = append(kept, word)
+		}
+	}
+	return strings.Join(kept, " ")
+}
 
 // lines is about how many lines text takes in the exported CV, width
 // characters to a line.
@@ -453,7 +473,8 @@ func AtsChecks(document models.CvDocument, job Job, profile models.Profile, requ
 		check(strings.TrimSpace(profile.City) != "" || strings.TrimSpace(profile.Country) != "",
 			"Location in the header", "Add your city and country in Profile."),
 		check(dated, "Dates with month and year", "Add the start month of each role in Profile."),
-		check(strings.Contains(" "+words(document.Summary)+" ", " "+words(job.Title)+" "), "Target job title “"+job.Title+"” in the summary", ""),
+		check(strings.Contains(" "+words(document.Headline+" "+document.Summary)+" ", " "+coreTitle(job.Title)+" "),
+			"Target job title “"+job.Title+"” in the summary", ""),
 		check(found == len(job.Keywords), fmt.Sprintf("Keywords from the job: %d of %d", found, len(job.Keywords)),
 			"The missing ones are not in your profile yet. Tell us about them in Prepare your CV."),
 		check(inContext >= (found*6+9)/10, fmt.Sprintf("Keywords used in sentences, not only listed: %d of %d", inContext, found),

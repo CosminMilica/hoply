@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 
 	"cv/internal/claude"
 	"cv/internal/models"
@@ -74,16 +77,16 @@ func TestWriterRetriesOnceThenUsesTheRules(t *testing.T) {
 	failing := &fakeModel{replies: []modelReply{{err: claude.ErrFailed}}}
 	_, by := writeWith(t, writer.New(failing))
 	equal(t, by, models.Authorship{WrittenBy: "rules", RulesReason: "claude_failed"})
-	equal(t, failing.calls, writer.Attempts)
+	equal(t, failing.calls, 1+writer.Attempts)
 
 	unreadable := &fakeModel{replies: []modelReply{{output: json.RawMessage(`[]`)}}}
 	_, by = writeWith(t, writer.New(unreadable))
 	equal(t, by.RulesReason, "claude_failed")
 
-	recovering := &fakeModel{replies: []modelReply{{err: claude.ErrFailed}, {output: syntheticOutput(t)}}}
+	recovering := &fakeModel{replies: []modelReply{{output: analysisOutput}, {err: claude.ErrFailed}, {output: syntheticOutput(t)}}}
 	_, by = writeWith(t, writer.New(recovering))
 	equal(t, by.WrittenBy, "claude")
-	equal(t, recovering.calls, 2)
+	equal(t, recovering.calls, 4)
 }
 
 func TestWriterUsesTheRulesWithoutAWorkingToken(t *testing.T) {
@@ -133,4 +136,81 @@ func TestWriterStatus(t *testing.T) {
 	t.Setenv("CV_WRITER", "claude-cli")
 	t.Setenv("CLAUDE_TOKEN_FILE", "")
 	equal(t, writer.FromEnv().Status(), models.WriterStatus{Writer: "claude", Model: claude.DefaultModel, State: "no_token"})
+}
+
+var analysisOutput = json.RawMessage(`{"role":"Run the Snowflake platform","context":"Consultancy","seniority":"senior",
+"priorities":[{"theme":"Infrastructure as Code","ad_words":["Terraform"],"why":"Manual setup"}],
+"responsibilities":[{"index":1,"theme":"Infrastructure as Code"},{"index":3,"theme":"Infrastructure as Code"}],"traits":[],"terms":["Terraform"]}`)
+
+// memoryAnalyses is an in-memory Analyses store.
+type memoryAnalyses struct {
+	kept  map[uuid.UUID]json.RawMessage
+	saved int
+	fail  error
+}
+
+func (m *memoryAnalyses) Analysis(_ context.Context, jobID uuid.UUID) (json.RawMessage, error) {
+	return m.kept[jobID], m.fail
+}
+
+func (m *memoryAnalyses) SaveAnalysis(_ context.Context, jobID uuid.UUID, analysis json.RawMessage, _ string) error {
+	m.saved++
+	m.kept[jobID] = analysis
+	return m.fail
+}
+
+func reviewedOutput(t *testing.T) json.RawMessage {
+	t.Helper()
+	var answer map[string]any
+	if err := json.Unmarshal(syntheticOutput(t), &answer); err != nil {
+		t.Fatal(err)
+	}
+	answer["summary"] = []any{map[string]any{"text": "DevOps Engineer who automates CI/CD pipelines with Git and Python.", "facts": []any{"S1", "E1.B1"}}}
+	answer["plan"] = map[string]any{"positioning": "The automation engineer", "evidence": []any{
+		map[string]any{"theme": "Infrastructure as Code", "facts": []any{"E1.B1"}, "strength": "partial"}},
+		"responsibilities": []any{map[string]any{"index": 1, "facts": []any{"E1.B1"}}}}
+	answer["changes"] = []any{"Led with the pipelines"}
+	raw, _ := json.Marshal(answer)
+	return raw
+}
+
+func TestWriterAnalyzesOnceWritesAndReviews(t *testing.T) {
+	store := &memoryAnalyses{kept: map[uuid.UUID]json.RawMessage{}}
+	model := &fakeModel{replies: []modelReply{{output: analysisOutput}, {output: syntheticOutput(t)}, {output: reviewedOutput(t)}}}
+	w := writer.New(model).KeepAnalyses(store)
+	written, by := writeWith(t, w)
+	equal(t, model.calls, 3)
+	equal(t, store.saved, 1)
+	equal(t, by.WrittenBy, "claude")
+	equal(t, written.Tailored.Summary, "DevOps Engineer who automates CI/CD pipelines with Git and Python.")
+	equal(t, written.Tailoring, &models.Tailoring{Positioning: "The automation engineer",
+		Priorities: []models.TailoredPriority{{Theme: "Infrastructure as Code", Strength: "partial"}}, Close: []models.CloseSkill{},
+		Changes: []string{"Led with the pipelines"}})
+	equal(t, checkStartingWith(t, written.Ats.Checks, "Job responsibilities").Label, "Job responsibilities mirrored: 1 of 2")
+
+	again := &fakeModel{replies: []modelReply{{output: syntheticOutput(t)}, {output: reviewedOutput(t)}}}
+	writeWith(t, writer.New(again).KeepAnalyses(store))
+	equal(t, again.calls, 2)
+	equal(t, strings.Contains(again.last.Prompt, `"draft"`), true)
+	equal(t, strings.Contains(again.last.System, "hiring manager"), true)
+}
+
+func TestWriterKeepsTheDraftWhenTheReviewFails(t *testing.T) {
+	model := &fakeModel{replies: []modelReply{{output: analysisOutput}, {output: syntheticOutput(t)}, {err: claude.ErrFailed}}}
+	written, by := writeWith(t, writer.New(model).KeepAnalyses(&memoryAnalyses{kept: map[uuid.UUID]json.RawMessage{}, fail: errors.New("down")}))
+	equal(t, by.WrittenBy, "claude")
+	equal(t, written.Tailored.Experience[0].Bullets[0], "Developed and maintained CI/CD pipelines for internal services with Git.")
+
+	unreadable := &fakeModel{replies: []modelReply{{output: json.RawMessage(`[]`)}, {output: syntheticOutput(t)}, {output: json.RawMessage(`{"summary":[]}`)}}}
+	_, by = writeWith(t, writer.New(unreadable))
+	equal(t, by.WrittenBy, "claude")
+	equal(t, unreadable.calls, 3)
+}
+
+func TestWriterStopsAtAUsageLimitWhileAnalyzing(t *testing.T) {
+	until := time.Now().Add(time.Hour).UTC().Truncate(time.Second)
+	model := &fakeModel{replies: []modelReply{{err: &claude.LimitError{Until: until}}}}
+	_, by := writeWith(t, writer.New(model))
+	equal(t, by.RulesReason, "usage_limit")
+	equal(t, model.calls, 1)
 }

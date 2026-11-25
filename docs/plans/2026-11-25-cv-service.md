@@ -291,6 +291,14 @@ What changed:
 What is left is the person's: the missing keywords are skills the profile does not show, and mirrored
 responsibilities need answers in Prepare your CV.
 
+**Deeper tailoring** (done, 2026-11-25): the owner found the CV only added keywords. A CV is now written in three
+Claude steps: an analysis of the job ad (role, context, ranked priorities, real responsibilities, traits, terms),
+kept per job in `job_analyses`; a plan (evidence per priority, responsibilities already done, equivalents for
+missing tools, positioning) and the CV written from it; a hiring manager's review that rewrites the draft. The CV
+page shows the positioning, the priorities and how strongly they are proven, and what the review changed. The
+mirrored-responsibilities check counts the analysis's real duties that a kept sentence proves. Final run: ATS 11,
+10, 11 of 12, one page each, nothing refused, 87–115 s per CV (two Claude calls, three for a new job).
+
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.
 2. Measure the refusal rate and score the CVs against a short checklist, at effort `medium` and `high`.

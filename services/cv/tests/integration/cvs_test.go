@@ -230,3 +230,25 @@ func TestServiceWritesACvThroughTheWorker(t *testing.T) {
 		t.Fatalf("questions: %d %v", status, questions)
 	}
 }
+
+func TestJobAnalysesAreKeptPerJob(t *testing.T) {
+	_, pool := application(t, isolatedSchema(t))
+	ctx := context.Background()
+	repo := repositories.NewPgCvRepository(pool)
+	job := uuid.New()
+	if raw, err := repo.Analysis(ctx, job); err != nil || raw != nil {
+		t.Fatalf("no analysis yet: %s %v", raw, err)
+	}
+	for _, role := range []string{"first", "second"} {
+		if err := repo.SaveAnalysis(ctx, job, json.RawMessage(`{"role":"`+role+`"}`), "claude-sonnet-5-5"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if raw, err := repo.Analysis(ctx, job); err != nil || string(raw) != `{"role": "second"}` {
+		t.Fatalf("the latest analysis: %s %v", raw, err)
+	}
+	pool.Close()
+	if _, err := repo.Analysis(ctx, job); err == nil {
+		t.Fatal("a closed pool fails")
+	}
+}

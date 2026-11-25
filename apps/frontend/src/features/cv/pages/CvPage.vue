@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
 import AtsCard from '../components/AtsCard.vue'
 import CvPaper from '../components/CvPaper.vue'
+import TailoringCard from '../components/TailoringCard.vue'
 import { authorshipLine } from '../authorship'
 import { useLatestCvQuery } from '../composables/useCv'
 
@@ -52,6 +53,7 @@ const fileUrl = (format: 'pdf' | 'docx') =>
           />
         </div>
         <AtsCard v-if="mode === 'tailored'" :ats="cv.ats" class="order-3" @improve="router.push({ name: 'hoply-prep', params: { id } })" />
+        <TailoringCard v-if="mode === 'tailored' && cv.tailoring" :tailoring="cv.tailoring" class="order-3" />
         <div class="order-6 flex flex-col gap-2.5">
           <div class="flex gap-2">
             <UButton :to="fileUrl('pdf')" external download label="Download PDF" size="lg" class="flex-1 justify-center" />
