@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="264" height="72" viewBox="0 0 264 72" role="img" aria-label="hoply">
+  <rect x="4" y="4" width="64" height="64" rx="16" fill="#1F2124"/>
+  <circle cx="36" cy="27" r="11.5" fill="#2A4BFF"/>
+  <path d="M16.5 54.5q19.5-16 39 0" fill="none" stroke="#F2F1EC" stroke-width="6" stroke-linecap="round"/>
+  <text x="84" y="50" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#F2F1EC">hoply</text>
+</svg>
