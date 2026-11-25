@@ -126,6 +126,37 @@ describe('PrepPage', () => {
     expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready')
   })
 
+  it('waits on the service while the CV is still being written', async () => {
+    const { applications } = useServices(undefined, { writing: 6 })
+    applications.track(seedId(1), 'saved')
+    const { router } = await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    vi.useFakeTimers()
+    button('Generate CV · 56% match').click()
+    await vi.advanceTimersByTimeAsync(4600)
+    expect(text()).toContain('Tailoring your CV')
+    expect(text()).not.toContain('Rewritten for this job')
+    expect(router.currentRoute.value.name).not.toBe('hoply-cv')
+    await vi.advanceTimersByTimeAsync(3000)
+    vi.useRealTimers()
+    await settle()
+    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-cv', params: { id: seedId(1) } })
+    expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready')
+  })
+
+  it('goes back to the form and says so when the CV cannot be written', async () => {
+    const { applications } = useServices(undefined, { writing: 1, failing: true })
+    applications.track(seedId(1), 'saved')
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    vi.useFakeTimers()
+    button('Generate CV · 56% match').click()
+    await vi.advanceTimersByTimeAsync(2500)
+    vi.useRealTimers()
+    await settle()
+    expect(text()).toContain('Prepare your CV')
+    expect(text()).toContain('We could not write this CV. Try again.')
+    expect(applications.applications.get(seedId(1))?.status).toBe('saved')
+  })
+
   it('keeps an applied job applied and goes back to the form when generation fails', async () => {
     const { applications } = useServices()
     applications.track(seedId(2), 'applied')

@@ -1,0 +1,43 @@
+{
+  "id": "00000000-0000-4000-8000-0000000000aa",
+  "name": "Andrei Popescu",
+  "headline": "DevOps Engineer",
+  "about": "DevOps engineer who automates infrastructure and keeps services running. I like reliable systems, clear documentation and calm on-call weeks.",
+  "email": "andrei@example.com",
+  "phone": "+40 700 000 000",
+  "github": "github.com/andrei-popescu",
+  "linkedin": "linkedin.com/in/andrei-popescu",
+  "city": "Iași",
+  "country": "Romania",
+  "work_modes": ["remote", "hybrid"],
+  "open_to_relocation": false,
+  "additional_info": [],
+  "skills": ["Python", "SQL", "Git", "Linux", "Docker", "CI/CD", "Bash", "Monitoring"],
+  "experience": [
+    {
+      "id": "r1", "role": "DevOps Engineer", "company": "Verde Cloud", "location": "Iași", "start": "2022-03", "end": "",
+      "tools": ["Linux", "Docker", "CI/CD", "Python", "Git", "Monitoring", "SQL"],
+      "bullets": [
+        { "text": "Built and maintained deployment pipelines for internal services.", "result": "", "skills": [] },
+        { "text": "Automated server setup and configuration with scripts.", "result": "", "skills": [] },
+        { "text": "Monitored services and responded to incidents on call.", "result": "", "skills": [] },
+        { "text": "Wrote SQL queries and reports for the data team.", "result": "", "skills": [] }
+      ]
+    },
+    {
+      "id": "r2", "role": "Junior system administrator", "company": "Bonbon Labs", "location": "Iași", "start": "2020-09", "end": "2022-02",
+      "tools": ["Linux", "Bash", "Monitoring"],
+      "bullets": [
+        { "text": "Maintained servers and user accounts for a small office.", "result": "", "skills": [] },
+        { "text": "Set up backups and checked that they ran every night.", "result": "restored every test backup within an hour", "skills": [] },
+        { "text": "Fixed issues reported by users and kept a log of recurring problems.", "result": "", "skills": [] }
+      ]
+    }
+  ],
+  "projects": [],
+  "education": [
+    { "id": "e1", "level": "bachelor", "field": "Computer Science", "degree": "BSc Computer Science", "school": "University of Iași", "start_year": "2016", "end_year": "2020" }
+  ],
+  "certifications": [],
+  "languages": [{ "id": "l1", "name": "Romanian", "level": "Native" }, { "id": "l2", "name": "English", "level": "C1" }]
+}

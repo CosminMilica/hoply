@@ -1,0 +1,56 @@
+// Command migrate runs the embedded SQL migrations:
+//
+//	migrate [up|down|status|version]
+//
+// up (the default) applies every pending migration, down rolls back the most
+// recently applied one, status prints each migration's state and version
+// prints the highest applied version. It exits 2 on an invalid command line
+// and 1 when configuration, the database or the command fails.
+package main
+
+import (
+	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"cv/internal/app"
+	"cv/internal/config"
+	"cv/internal/db"
+	"cv/migrations"
+)
+
+func main() {
+	os.Exit(run(os.Args[1:]))
+}
+
+func run(args []string) int {
+	slog.SetDefault(app.Logger("info", false))
+	command, err := migrations.ParseCommand(args)
+	if err != nil {
+		slog.Error("invalid migrate command", "error", err)
+		return 2
+	}
+	cfg, err := config.Load(config.LoadOptions{})
+	if err != nil {
+		slog.Error("configuration error", "error", err)
+		return 1
+	}
+	slog.SetDefault(app.Logger(cfg.Logging.Level, cfg.Logging.Pretty))
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	migrator, err := migrations.Open(db.URL(cfg.DB.URL), migrations.Embedded())
+	if err != nil {
+		slog.Error("database configuration error", "error", err)
+		return 1
+	}
+	defer migrator.Close()
+	if err := migrations.Run(ctx, migrator, command, os.Stdout); err != nil {
+		slog.Error("migration failed", "command", command, "error", err)
+		return 1
+	}
+	return 0
+}

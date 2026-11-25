@@ -1,0 +1,14 @@
+# Changes here will be overwritten by forge / Copier on regenerate.
+# To re-render this subtree, run `copier update` from its directory
+# or `forge update` from the project root.
+_src_path: /Users/milicacosmin-sergiu/.cache/hoply/forge-b806466a801b0067/lib/python3.13/site-packages/forge/templates/services/go-service-template
+db_name: cv
+entity_plural: cvs
+go_version: '1.27'
+include_error_envelope: true
+include_platform_auth: false
+project_description: 'Hoply: job search with a CV tailored to each job'
+project_name: cv
+project_slug: cv
+project_title: Cv
+server_port: 5040

@@ -191,6 +191,68 @@ services:
         condition: service_completed_successfully
     networks:
       - app-network
+  # ── Migrations for cv ──
+  cv-migrate:
+    build:
+      context: ./services/cv
+      dockerfile: Dockerfile
+      # Multi-stage Dockerfiles reference the platform's weld-* SDK
+      # source tree via ``COPY --from=packages`` and the workspace root
+      # (workspace package.json + lockfile) via ``COPY --from=project_root``.
+      # ``additional_contexts`` binds those build-context names to the
+      # on-disk ``./packages/`` directory and the project root (sibling /
+      # parent of the compose file). The ``packages`` context is only declared
+      # when a project-root ``packages/`` tree actually ships (the platform-auth
+      # SDK fragments) — BuildKit FAILS the build on a declared-but-missing
+      # context dir, and forge-core comes from the main context, not here.
+      additional_contexts:
+        project_root: .
+    environment:
+      ENV: development
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/cv"
+    command: ["/app/migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ── cv ──
+  cv:
+    build:
+      context: ./services/cv
+      dockerfile: Dockerfile
+      # See the cv-migrate build above — same rationale (the
+      # ``packages`` context is only declared when a project-root packages/ ships).
+      additional_contexts:
+        project_root: .
+    # Direct host:container port so the matrix-nightly lane-C smoke
+    # contract — and any local ``curl http://localhost:5040`` —
+    # can reach the backend without going through Traefik. The Traefik
+    # entry above remains for the production-shape ``app.localhost``
+    # route; this is the dev/test stack so exposing both is fine.
+    ports:
+      - "5040:5040"
+    environment:
+      ENV: development
+      PORT: "5040"
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/cv"
+      APP__SECURITY__AUTH__ENABLED: "false"
+      PROFILE_SERVICE_URL: "http://profile:5010"
+      JOBS_SERVICE_URL: "http://jobs:5020"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cv.rule=Host(`app.localhost`) && PathPrefix(`/api/cv`)"
+      - "traefik.http.routers.cv.entrypoints=web"
+      - "traefik.http.middlewares.cv-rewrite.replacepathregex.regex=^/api/cv/(.*)"
+      - "traefik.http.middlewares.cv-rewrite.replacepathregex.replacement=/api/$$1"
+      - "traefik.http.routers.cv.middlewares=cv-rewrite"
+      - "traefik.http.services.cv.loadbalancer.server.port=5040"
+    depends_on:
+      cv-migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
 
   # ── Database ──
   # ``pgvector/pgvector:pg16`` is a superset of stock ``postgres:16``
@@ -240,6 +302,7 @@ services:
       - profile
       - jobs
       - applications
+      - cv
     networks:
       - app-network
 
@@ -292,6 +355,7 @@ services:
       - profile
       - jobs
       - applications
+      - cv
     profiles:
       - test
 

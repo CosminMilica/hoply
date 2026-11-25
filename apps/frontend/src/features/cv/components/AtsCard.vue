@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import ProgressBar from '@/features/common/components/ProgressBar.vue'
-import type { Cv } from '../api/cv.schema'
+import type { ReadyCv } from '../api/cv.schema'
 
-defineProps<{ ats: Cv['ats'] }>()
+defineProps<{ ats: ReadyCv['ats'] }>()
 defineEmits<{ improve: [] }>()
 </script>
 

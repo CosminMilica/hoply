@@ -94,6 +94,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api\/applications/, '/api'),
       },
+      '/api/cv': {
+        target: 'http://localhost:5040',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/api\/cv/, '/api'),
+      },
     },
   },
   test: {

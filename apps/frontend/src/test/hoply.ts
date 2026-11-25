@@ -6,9 +6,7 @@ import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-rout
 import UApp from '@nuxt/ui/components/App.vue'
 import { server } from '@/shared/mocks/node'
 import { applicationsServiceHandlers } from './applications-service'
-import { createCvHandlers } from '@/features/cv/mocks/handlers'
-import { jobSchema } from '@/features/jobs/api/jobs.schema'
-import { toEngineJob } from '@/features/cv/mocks/engine/job'
+import { cvServiceHandlers } from './cv-service'
 import { jobsServiceHandlers } from './jobs-service'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { profileServiceHandlers, sampleProfile } from './profile-service'
@@ -31,25 +29,17 @@ export function testRouter(pages: Partial<Record<string, Component>> = {}) {
   return createRouter({ history: createMemoryHistory(), routes })
 }
 
-/** Every service the app talks to, in memory: the profile and jobs ones as tests' own, the mocked ones as the app runs them. */
-export function useServices(profile: Profile = sampleProfile()) {
+/** Every service the app talks to, in memory; the cv service reads the profile and the jobs from the other two. */
+export function useServices(profile: Profile = sampleProfile(), cvOptions: Parameters<typeof cvServiceHandlers>[1] = {}) {
   const profileService = profileServiceHandlers(profile)
   const jobsService = jobsServiceHandlers()
   const applicationsService = applicationsServiceHandlers()
-  server.use(
-    ...profileService.handlers,
-    ...jobsService.handlers,
-    ...applicationsService.handlers,
-    ...createCvHandlers({
-      loadProfile: async () => structuredClone(profileService.profile),
-      loadJob: async (_, id) => {
-        const job = jobsService.backend.jobs.find(item => item.id === id)
-        return job ? toEngineJob(jobSchema.parse(job)) : null
-      },
-      now: () => new Date('2026-11-25T10:00:00Z'),
-    }),
-  )
-  return { profile: profileService.profile, applications: applicationsService.backend, jobs: jobsService.backend }
+  const cvService = cvServiceHandlers({
+    profile: () => profileService.profile,
+    job: id => jobsService.backend.jobs.find(item => item.id === id),
+  }, cvOptions)
+  server.use(...profileService.handlers, ...jobsService.handlers, ...applicationsService.handlers, ...cvService.handlers)
+  return { profile: profileService.profile, applications: applicationsService.backend, jobs: jobsService.backend, cvs: cvService.backend }
 }
 
 interface MountOptions {

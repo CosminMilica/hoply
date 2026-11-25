@@ -63,6 +63,13 @@ describe('CvPage', () => {
     expect(text()).not.toContain('_CV_Capgemini')
   })
 
+  it('shows only a CV that is ready', async () => {
+    useServices(undefined, { writing: 5 })
+    await cvApi.generate(request)
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    expect(text()).toContain('No CV yet')
+  })
+
   it('has nothing to show before a CV is made', async () => {
     useServices()
     await mountPage(CvPage, { at: `/jobs/${seedId(2)}/cv`, props: { id: seedId(2) } })

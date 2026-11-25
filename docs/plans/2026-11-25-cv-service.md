@@ -1,6 +1,6 @@
 # Plan: the cv service
 
-Status: decided, 2026-11-25. Next: phase 0.
+Status: phases 0 and 1 done, 2026-11-25. Next: phase 2.
 
 The last mocked part of Hoply becomes a real service: it prepares the questions for a job, writes a CV tailored to that
 job with Claude, checks it, and exports PDF and DOCX. Claude is reached the way `work/reviewer` does it: the Claude Code
@@ -31,14 +31,14 @@ CLI in print mode, authenticated with a subscription token, no API key.
 
 ```text
 services/cv/                    Go, added with forge like jobs and applications
-  internal/questions/           gaps and responsibility questions for a job (ported from the mock)
-  internal/cvdoc/               the CV document: build from profile + job + options (rules), the ATS checks
+  internal/cvdoc/               the rules engine: questions, both CV versions, ATS checks (phase 1)
+  internal/upstream/            reads the profile and the job from their services (phase 1)
+  internal/worker/              one worker in the process; the queue is the cvs table, FOR UPDATE SKIP LOCKED (phase 1)
   internal/writer/              Writer interface; claudecli (subscription), rules (no model); apiwriter later
   internal/grounding/           fact catalogue, citation and claim checks
   internal/render/              HTML template (PDF via Gotenberg), DOCX writer
-  internal/queue/               generation queue in Postgres (FOR UPDATE SKIP LOCKED), one worker
   prompts/                      system prompt and JSON schema, versioned
-libs/go/skills/                 the skills dictionary shared by jobs and cv (moved out of jobs)
+libs/go/skills/                 the skills dictionary shared by jobs and cv (moved out of jobs, phase 2)
 deploy/compose/secrets/         claude_oauth_token (gitignored), mounted as a compose secret
 ```
 
@@ -82,8 +82,10 @@ The mock's contract (`docs/api/mocked.md`) stays, with generation made asynchron
 | GET | `/api/v1/cvs/{id}/file?format=pdf\|docx` | the file, `Content-Disposition` with `file_name` |
 | DELETE | `/api/v1/cvs/{id}` | 204 |
 
-`Cv` gains `status`, `step` (for the Generating screen), `written_by` (`claude` or `rules`), `model`, `limit_until`
-(when Claude was unavailable) and `refused` (count of sentences the checks replaced).
+Phase 1 added `status` and `updated_at` to `Cv`. The written parts are `null` until the CV is ready, and the
+snapshot of the profile stays in the database only. The Generating screen derives its step from `status`. Phase 2
+adds `written_by` (`claude` or `rules`), `model`, `limit_until` (when Claude was unavailable) and `refused` (how
+many sentences the checks replaced).
 
 ## 4. Grounding: how invented facts are kept out
 
@@ -206,25 +208,27 @@ wording from the ad, so a Romanian ad leaves the person's bullets as they are. A
      of the repo. Both Vite env files hold public values only and are now tracked.
 3. AGENTS.md says to run forge only through the script.
 
-**Phase 1. Service on rules**
-1. Add the `cv` backend (port 5040, feature `cvs`) in `deploy/forge/stack.yaml` and `.forge/quality.json`, then run
-   `scripts/forge.sh --update`. Undo the known side effects (lock files, `items` files, `tests/e2e/_tasks`).
-2. Move the skills dictionary and its matcher from `services/jobs/internal/extract` to `libs/go/skills`; jobs imports
-   it with no change in behaviour (its tests stay green).
-3. Write `docs/api/cv.md`: §3 plus the shapes from `docs/api/mocked.md`.
-4. Clients for profile and jobs (`internal/upstream`): read with the caller's identity; a failure becomes 502.
-5. Port `features/cv/mocks/engine` to Go (`internal/questions`, `internal/cvdoc`, `internal/writer/rules`) together
-   with its tests, case for case.
-6. Migration 00100: tables `cvs` (request, snapshots, both documents, ATS result, status, step, timestamps) and
-   `cv_jobs` (the queue). One worker in the process takes a row with `FOR UPDATE SKIP LOCKED`; rows left in `writing`
-   at startup go back to `queued`.
-7. Handlers for every endpoint in §3 except `/file`.
-8. Web app: the cv client follows the new contract (202, poll `GET /cvs/{id}` every second until `ready` or `failed`);
-   the Generating screen shows `step`; drop `features/cv/mocks` and its line in `custom/mocks/handlers.ts`; add the
-   `/api/cv` proxy in `vite.config.ts`. `docs/api/mocked.md` says nothing is mocked.
-9. Compose: create the `cv` database in `deploy/compose/init-db.sh`; on the running stack, `CREATE DATABASE cv` by hand.
+**Phase 1. Service on rules** (done)
+1. `cv` backend on port 5040 through `scripts/forge.sh --update`; the known side effects undone.
+2. `docs/api/cv.md`.
+3. `internal/upstream`: profile and jobs over HTTP (`PROFILE_SERVICE_URL`, `JOBS_SERVICE_URL`); an unknown job
+   is 404, a failing service 503.
+4. `internal/cvdoc`: the web app's engine ported to Go, with its tests case for case (`tests/unit/cvdoc_test.go`).
+5. Migration 00100: one `cvs` table that is also the queue. `Recover` at startup puts CVs left in `writing` or
+   `checking` back in the queue, or fails them after 3 attempts.
+6. The routes of §3 except `/file`.
+7. Web app: generation is asynchronous (POST, then poll every second). The Generating screen shows the lower of
+   its animation and the service's status. The CV page shows the newest ready CV. The MSW mock is gone. The old TS
+   engine is the tests' in-memory cv service (`src/test/cv-service.ts`).
+8. Compose passes the services' URLs to cv; `init-db.sh` creates the `cv` database.
+
+Deviations from the plan: the queue is the `cvs` table instead of a second table; there is no `step` field;
+the skills dictionary moves in phase 2, where the grounding checks need it, because the rules engine works on
+the job's requirements alone.
 
 **Phase 2. Claude**
+0. Move the skills dictionary from `services/jobs/internal/extract` to `libs/go/skills`; jobs imports it with no
+   change in behaviour.
 1. `prompts/cv-system.md` and `prompts/cv-output.schema.json` (§4.2), embedded in the binary.
 2. `internal/grounding`: the fact catalogue and the checks in §4.3, with table tests for each rule.
 3. `internal/writer/claudecli`: §5.1–5.3. Tests run against a fake `claude` script that returns recorded envelopes:

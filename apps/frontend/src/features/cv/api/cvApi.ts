@@ -9,8 +9,12 @@ export const cvApi = {
       await getApiClient().get(`${BASE}/jobs/${encodeURIComponent(jobId)}/questions`).json(),
     )
   },
+  /** Queues a CV; it is written asynchronously (follow it with `get`). */
   async generate(body: CvRequest) {
     return cvSchema.parse(await getApiClient().post(`${BASE}/cvs`, { json: body }).json())
+  },
+  async get(id: string) {
+    return cvSchema.parse(await getApiClient().get(`${BASE}/cvs/${encodeURIComponent(id)}`).json())
   },
   /** The CVs made for a job, newest first. */
   async forJob(jobId: string) {

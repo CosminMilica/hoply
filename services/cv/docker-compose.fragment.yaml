@@ -1,0 +1,50 @@
+# docker-compose fragment for the cv Go service. Mirrors the
+# Python, Node and Rust templates so platform-level orchestration is uniform
+# across language backends.
+
+services:
+  cv-migrate:
+    build:
+      context: ./services/cv
+      dockerfile: Dockerfile
+      additional_contexts:
+        project_root: .
+        packages: ./packages
+    environment:
+      ENV: development
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/cv"
+    command: ["/app/migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [app-network]
+
+  cv:
+    build:
+      context: ./services/cv
+      dockerfile: Dockerfile
+      additional_contexts:
+        project_root: .
+        packages: ./packages
+    ports:
+      - "5040:5040"
+    environment:
+      # The dev stack overrides the image's ENV=production so the startup auth
+      # guard does not abort boot without GATEKEEPER_ISSUER/SERVICE_AUDIENCE.
+      ENV: development
+      PORT: "5040"
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/cv"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy:4318"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cv.rule=Host(`app.localhost`) && PathPrefix(`/api/cv`)"
+      - "traefik.http.routers.cv.middlewares=cv-rewrite"
+      - "traefik.http.middlewares.cv-rewrite.replacepathregex.regex=^/api/cv/(.*)"
+      - "traefik.http.middlewares.cv-rewrite.replacepathregex.replacement=/api/$$1"
+      - "traefik.http.services.cv.loadbalancer.server.port=5040"
+    depends_on:
+      cv-migrate:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    networks: [app-network]

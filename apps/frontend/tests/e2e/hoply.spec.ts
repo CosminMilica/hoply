@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { saveCoverage } from './coverage';
 import { mockApplicationsService } from './applications';
+import { mockCvService } from './cv';
 import { mockJobsService } from './jobs';
 import { mockProfileService } from './profile';
 
@@ -36,7 +37,8 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   const profile = await mockProfileService(page);
-  await mockJobsService(page);
+  const jobs = await mockJobsService(page);
+  await mockCvService(page, profile, jobs);
   await mockApplicationsService(page);
   await page.goto('/jobs');
   await expect(page.getByRole('heading', { name: 'Finding jobs is coming soon' })).toBeVisible();
@@ -137,11 +139,12 @@ test('a job read from pasted text after its link needed a login, then prepared',
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 860 });
-  await mockProfileService(page);
+  const profile = await mockProfileService(page);
   const jobs = await mockJobsService(page);
+  await mockCvService(page, profile, jobs);
   await mockApplicationsService(page);
   await page.goto('/saved');
-  await page.getByRole('link', { name: 'Add a job', exact: true }).click();
+  await page.getByRole('link', { name: 'Add a job', exact: true }).first().click();
   await expect(page.locator('[data-shell="tabs"]').getByRole('link', { name: /Saved/ })).toHaveAttribute('aria-current', 'page');
   await page.getByLabel('Link to the job ad').fill('https://www.linkedin.com/jobs/view/42');
   await page.getByRole('button', { name: 'Read the job' }).click();

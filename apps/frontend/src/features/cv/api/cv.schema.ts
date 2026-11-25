@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { profileSchema } from '@/features/profile/api/profile.schema'
 
 export const cvRequestSchema = z.object({
   job_id: z.string(),
@@ -36,23 +35,36 @@ export const atsCheckSchema = z.object({ ok: z.boolean(), label: z.string(), hin
 
 export type AtsCheck = z.infer<typeof atsCheckSchema>
 
+export const CV_STATUSES = ['queued', 'writing', 'checking', 'ready', 'failed'] as const
+export type CvStatus = (typeof CV_STATUSES)[number]
+
+const atsSchema = z.object({ passed: z.number(), total: z.number(), checks: z.array(atsCheckSchema) })
+const previewSchema = z.object({ from: z.string(), to: z.string() })
+
+/** A CV as the cv service returns it: written asynchronously, so the written parts are null until it is ready. */
 export const cvSchema = z.object({
   id: z.string(),
   job_id: z.string(),
+  status: z.enum(CV_STATUSES),
   created_at: z.string(),
+  updated_at: z.string(),
   job_title: z.string(),
   company: z.string(),
   file_name: z.string(),
-  highlights: z.array(z.string()),
-  profile: cvDocumentSchema,
-  tailored: cvDocumentSchema,
-  ats: z.object({ passed: z.number(), total: z.number(), checks: z.array(atsCheckSchema) }),
-  preview: z.object({ from: z.string(), to: z.string() }).nullable(),
-  /** The profile the CV was made from, as it was then. */
-  snapshot: profileSchema,
+  highlights: z.array(z.string()).nullable(),
+  profile: cvDocumentSchema.nullable(),
+  tailored: cvDocumentSchema.nullable(),
+  ats: atsSchema.nullable(),
+  /** The first highlight before and after the rewrite, from the checking step on. */
+  preview: previewSchema.nullable(),
 })
 
 export type Cv = z.infer<typeof cvSchema>
+
+/** A CV whose writing has finished. */
+export type ReadyCv = Cv & { status: 'ready', highlights: string[], profile: CvDocument, tailored: CvDocument, ats: NonNullable<Cv['ats']> }
+
+export const isReady = (cv: Cv | null | undefined): cv is ReadyCv => cv?.status === 'ready'
 
 export const cvListSchema = z.object({ items: z.array(cvSchema) })
 

@@ -10,11 +10,11 @@ import { useJobQuery } from '@/features/jobs/composables/useJobs'
 import { requirementsOf } from '@/features/jobs/match'
 import { cleanList } from '@/features/profile/api/profile.schema'
 import { useProfileMutations, useProfileQuery } from '@/features/profile/composables/useProfile'
-import type { Cv } from '../api/cv.schema'
+import type { CvStatus } from '../api/cv.schema'
 import GeneratingSteps from '../components/GeneratingSteps.vue'
 import RolePicker from '../components/RolePicker.vue'
 import StatusTag from '../components/StatusTag.vue'
-import { useCvQuestionsQuery, useGenerateCv } from '../composables/useCv'
+import { useCvProgress, useCvQuestionsQuery, useGenerateCv } from '../composables/useCv'
 import { usePrep } from '../composables/usePrep'
 
 const props = defineProps<{ id: string }>()
@@ -38,38 +38,56 @@ const skills = computed(() => (profile.data.value?.skills ?? []).map(skill => sk
 const generating = ref(false)
 const step = ref(0)
 const elapsed = ref(false)
-const result = ref<Cv | null>(null)
+const cvId = ref<string | null>(null)
+const writeFailed = ref(false)
+const progress = useCvProgress(cvId)
 let timers: number[] = []
+
+/** How far the service has got: queued, then written, then checked. */
+const SERVER_STEP: Record<CvStatus, number> = { queued: 0, writing: 2, checking: 3, ready: 4, failed: 0 }
+const cv = computed(() => (cvId.value ? progress.data.value : undefined))
+const shownStep = computed(() => Math.min(step.value, cv.value ? SERVER_STEP[cv.value.status] : 0))
 
 function clearTimers() {
   timers.forEach(timer => window.clearTimeout(timer))
   timers = []
 }
 
+function stop() {
+  clearTimers()
+  generating.value = false
+  cvId.value = null
+}
+
 function generate() {
   clearTimers()
   generating.value = true
+  writeFailed.value = false
   step.value = 0
   elapsed.value = false
-  result.value = null
+  cvId.value = null
   timers = [
     ...STEP_AT.map((ms, index) => window.setTimeout(() => { step.value = index + 1 }, ms)),
     window.setTimeout(() => { elapsed.value = true }, DONE_AT),
   ]
   generateCv.mutate(prep.toRequest(props.id), {
-    onSuccess: (cv) => {
-      result.value = cv
-      setStatus.mutate({ jobId: props.id, status: statuses.value.get(props.id) === 'applied' ? 'applied' : 'cv_ready' })
-    },
-    onError: () => {
-      clearTimers()
-      generating.value = false
-    },
+    onSuccess: (queued) => { cvId.value = queued.id },
+    onError: stop,
   })
 }
 
-watch([elapsed, result], ([done, cv]) => {
-  if (done && cv) router.replace({ name: 'hoply-cv', params: { id: props.id } })
+watch(() => cv.value?.status, (status) => {
+  if (status === 'ready') {
+    setStatus.mutate({ jobId: props.id, status: statuses.value.get(props.id) === 'applied' ? 'applied' : 'cv_ready' })
+  }
+})
+watch(() => cv.value?.status === 'failed' || (Boolean(cvId.value) && progress.isError.value), (failed) => {
+  if (!failed) return
+  stop()
+  writeFailed.value = true
+})
+watch([elapsed, () => cv.value?.status], ([done, status]) => {
+  if (done && status === 'ready') router.replace({ name: 'hoply-cv', params: { id: props.id } })
 })
 onBeforeUnmount(clearTimers)
 
@@ -85,13 +103,13 @@ function addToProfile(skill: string) {
 <template>
   <GeneratingSteps
     v-if="generating && job.data.value"
-    :step="step"
+    :step="shownStep"
     :title="job.data.value.title"
     :company="job.data.value.company"
     :keywords="requirementsOf(job.data.value)"
     :matched="prep.matched.value"
-    :preview="result?.preview"
-    :highlights="result?.highlights ?? []"
+    :preview="cv?.preview"
+    :highlights="prep.matched.value"
   />
   <div v-else class="mx-auto w-full max-w-[1080px]">
     <UAlert v-if="failed" color="error" variant="subtle" title="We could not prepare this CV" description="Check that your profile loads, then try again." />
@@ -115,6 +133,7 @@ function addToProfile(skill: string) {
         </div>
         <div class="order-last flex flex-col gap-2 min-[900px]:order-none">
           <UButton :label="`Generate CV · ${prep.score.value}% match`" size="lg" block class="justify-center" :loading="generateCv.isPending.value" @click="generate" />
+          <p v-if="writeFailed" role="alert" class="m-0 text-sm font-bold text-error">We could not write this CV. Try again.</p>
         </div>
       </aside>
 
