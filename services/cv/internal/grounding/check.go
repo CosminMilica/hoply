@@ -43,9 +43,10 @@ type Done struct {
 // Equivalent is a missing requirement that one of the person's skills does the
 // same job as, in Claude's reading.
 type Equivalent struct {
-	Skill string   `json:"skill"`
-	Via   []string `json:"via"`
-	Why   string   `json:"why"`
+	Skill    string   `json:"skill"`
+	Via      []string `json:"via"`
+	Category string   `json:"category"`
+	Why      string   `json:"why"`
 }
 
 // Plan is how Claude means to tailor the CV.
@@ -114,15 +115,8 @@ func (c Catalogue) Check(sentence Sentence, owner string) string {
 		}
 	}
 	for _, close := range c.Related {
-		if !cvdoc.HasWord(text, close.Skill) {
-			continue
-		}
-		named := false
-		for _, via := range close.Via {
-			named = named || cvdoc.HasWord(text, via)
-		}
-		if !named {
-			return "names " + close.Skill + " without " + cvdoc.JoinList(close.Via) + ", the close equivalent the person has"
+		if cvdoc.HasWord(text, close.Skill) {
+			return "names " + close.Skill + ", which the person knows only through " + cvdoc.JoinList(close.Via)
 		}
 	}
 	if owner != "" && c.Company != "" && cvdoc.HasWord(text, c.Company) {
@@ -324,7 +318,7 @@ func (c Catalogue) Mirrored(answer Answer, duties []int) []int {
 }
 
 // WithEquivalents is the catalogue with the equivalents Claude found moved from
-// Missing to Related. One is kept only when its requirement was missing and
+// Missing to Related (still never named; their category may be). One is kept only when its requirement was missing and
 // every tool it names is one of the person's skills; the person's spelling is used.
 func (c Catalogue) WithEquivalents(equivalents []Equivalent) Catalogue {
 	extended := c
@@ -347,7 +341,7 @@ func (c Catalogue) WithEquivalents(equivalents []Equivalent) Catalogue {
 		if via == nil {
 			continue
 		}
-		extended.Related = append(extended.Related, cvdoc.Related{Skill: extended.Missing[at], Via: via})
+		extended.Related = append(extended.Related, cvdoc.Related{Skill: extended.Missing[at], Via: via, Category: strings.TrimSpace(equivalent.Category)})
 		extended.Missing = slices.Delete(extended.Missing, at, at+1)
 	}
 	return extended

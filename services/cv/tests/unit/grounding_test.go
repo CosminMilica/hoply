@@ -186,27 +186,26 @@ func TestNotesAreFactsAndShowSkills(t *testing.T) {
 	equal(t, strings.Contains(grounding.System, "raw material, often"), true)
 }
 
-func TestCloseEquivalentsAreNamedOnlyBesideWhatThePersonHas(t *testing.T) {
+func TestCloseToolsAreNeverNamedOnlyTheirCategory(t *testing.T) {
 	profile := sampleProfile(t)
 	profile.Experience[0].Tools = append(profile.Experience[0].Tools, "FluxCD")
 	job := catalogJob(t, 0)
 	job.MustHave = append(job.MustHave, "Argo CD")
 	read := cvdoc.ReadJob(job)
 	c := grounding.Build(profile, read, request(), now)
-	equal(t, c.Related, []cvdoc.Related{{Skill: "Argo CD", Via: []string{"FluxCD"}}})
-	equal(t, c.Check(grounding.Sentence{Text: "Deployed services with FluxCD, an approach that transfers to Argo CD.", Facts: []string{"E1.B1"}}, "E1"), "")
-	equal(t, c.Check(grounding.Sentence{Text: "Deployed services with Argo CD.", Facts: []string{"E1.B1"}}, "E1"),
-		"names Argo CD without FluxCD, the close equivalent the person has")
+	equal(t, c.Related, []cvdoc.Related{{Skill: "Argo CD", Via: []string{"FluxCD"}, Category: "GitOps"}})
+	equal(t, c.Check(grounding.Sentence{Text: "Delivered services through GitOps with FluxCD.", Facts: []string{"E1.B1"}}, "E1"), "")
+	equal(t, c.Check(grounding.Sentence{Text: "Deployed with FluxCD, which carries over to Argo CD.", Facts: []string{"E1.B1"}}, "E1"),
+		"names Argo CD, which the person knows only through FluxCD")
 
 	questions := cvdoc.Questions(read, profile)
-	equal(t, questions.Related[0].Skill, "Argo CD")
-	equal(t, questions.Related[0].Note, "You use FluxCD, which is close to Argo CD. Your CV says so, without claiming Argo CD itself.")
+	equal(t, questions.Related[0].Note, "You use FluxCD, a GitOps tool like Argo CD. Your CV shows your GitOps experience, without naming Argo CD.")
 	var message map[string]any
 	if err := json.Unmarshal([]byte(c.Prompt(read, request(), c.Known, nil)), &message); err != nil {
 		t.Fatal(err)
 	}
-	equal(t, message["job"].(map[string]any)["related"], []any{map[string]any{"skill": "Argo CD", "via": []any{"FluxCD"}}})
-	equal(t, strings.Contains(grounding.System, "as experience that carries over"), true)
+	equal(t, message["job"].(map[string]any)["related"], []any{map[string]any{"skill": "Argo CD", "via": []any{"FluxCD"}, "category": "GitOps"}})
+	equal(t, strings.Contains(grounding.System, `"GitOps delivery with FluxCD"`), true)
 }
 
 func TestMirroredCountsDutiesThePlanBacksWithCitedFacts(t *testing.T) {
@@ -253,14 +252,14 @@ func TestAnalysisReadsTheAdAndKeepsOnlyRealDuties(t *testing.T) {
 func TestEquivalentsClaudeFindsAreKeptOnlyForMissingRequirementsAndKnownTools(t *testing.T) {
 	c, _ := catalogue(t)
 	extended := c.WithEquivalents([]grounding.Equivalent{
-		{Skill: "rbac", Via: []string{"linux"}, Why: "access control"},
+		{Skill: "rbac", Via: []string{"linux"}, Category: "access control", Why: "same kind"},
 		{Skill: "Snowflake", Via: []string{"Oracle"}, Why: "not the person's skill"},
 		{Skill: "SQL", Via: []string{"Python"}, Why: "not missing"},
 		{Skill: "Terraform", Via: nil},
 	})
-	equal(t, extended.Related, []cvdoc.Related{{Skill: "RBAC", Via: []string{"Linux"}}})
+	equal(t, extended.Related, []cvdoc.Related{{Skill: "RBAC", Via: []string{"Linux"}, Category: "access control"}})
 	equal(t, extended.Missing, []string{"Snowflake", "Terraform", "Infrastructure as Code"})
 	equal(t, c.Missing, []string{"Snowflake", "Terraform", "Infrastructure as Code", "RBAC"})
-	equal(t, extended.Check(grounding.Sentence{Text: "Hardened Linux hosts, ready for RBAC work.", Facts: []string{"E1.B1"}}, "E1"), "")
-	equal(t, extended.Check(grounding.Sentence{Text: "Set up RBAC.", Facts: []string{"E1.B1"}}, "E1"), "names RBAC without Linux, the close equivalent the person has")
+	equal(t, extended.Check(grounding.Sentence{Text: "Managed access control on Linux hosts.", Facts: []string{"E1.B1"}}, "E1"), "")
+	equal(t, extended.Check(grounding.Sentence{Text: "Set up RBAC on Linux.", Facts: []string{"E1.B1"}}, "E1"), "names RBAC, which the person knows only through Linux")
 }

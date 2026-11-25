@@ -17,7 +17,11 @@ describe('matchJob', () => {
     const job = { must_have: ['CI/CD', 'Containers', 'Git', 'ArgoCD', 'GCP', 'GraphQL', 'k8s'], nice_to_have: ['Redis'] }
     const match = matchJob(job, ['GitHub Actions', 'Docker', 'FluxCD', 'AWS', 'Kubernetes', 'Valkey'])
     expect(match.matched).toEqual(['CI/CD', 'Containers', 'Git', 'k8s'])
-    expect(match.related).toEqual([{ skill: 'ArgoCD', via: ['FluxCD'] }, { skill: 'GCP', via: ['AWS'] }, { skill: 'Redis', via: ['Valkey'] }])
+    expect(match.related).toEqual([
+      { skill: 'ArgoCD', via: ['FluxCD'], category: 'GitOps' },
+      { skill: 'GCP', via: ['AWS'], category: 'cloud infrastructure' },
+      { skill: 'Redis', via: ['Valkey'], category: 'in-memory caching' },
+    ])
     expect(match.missing).toEqual(['GraphQL'])
     expect(match.score).toBe(70)
     expect(matchJob(job, ['Argo CD']).matched).toEqual(['CI/CD', 'ArgoCD'])

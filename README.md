@@ -27,7 +27,7 @@ one-page CV around it, in the company's own words. It never invents a skill, a n
 | --- | --- |
 | **Profile** | Everything a recruiter or a screening system asks for: roles with highlights and results, projects, education, certifications, languages, work preferences. |
 | **Add a job** | Paste a link or the ad's text. Hoply reads it, from the public APIs of Greenhouse, Lever, Ashby, SmartRecruiters and Workable, from structured data, or from the page itself, and finds the requirements, the responsibilities, the place and the level. |
-| **Match** | Every requirement is matched, close or missing. Matching understands other names and umbrella terms: GitHub Actions proves CI/CD. It also knows close tools: FluxCD is close to Argo CD. |
+| **Match** | Every requirement is matched, close or missing. Matching understands other names and umbrella terms (GitHub Actions proves CI/CD) and tools of the same kind (FluxCD and Argo CD are both GitOps). |
 | **Prepare your CV** | Asks only what the job needs and your profile does not show yet. Your answers become notes that the CV is written from. |
 | **Tailored CV** | Claude analyzes the job, plans the evidence for each of its priorities, writes the CV and then reviews it as the hiring manager. Every sentence cites the facts it rests on, and code checks them. |
 | **ATS check** | Twelve checks a screening system cares about: keywords in sentences, mirrored responsibilities, action verbs, numbers, dates, length. |
@@ -50,8 +50,8 @@ flowchart LR
 ```
 
 A sentence is thrown away when it names a number its facts do not hold, a requirement you do not have, or the
-company you are applying to as your employer. A close tool may appear only beside the one you use, as experience
-that carries over ("FluxCD GitOps carries over to Argo CD"), and never in the skills list. Without Claude, a rules
+company you are applying to as your employer. A tool you have not used is never named: when the job asks for Argo
+CD and you use FluxCD, the CV shows the kind of work instead ("GitOps delivery with FluxCD"). Without Claude, a rules
 engine writes the CV, and the page says so. The rules behind the prompts, and their sources, are in
 [docs/cv-writing.md](docs/cv-writing.md).
 

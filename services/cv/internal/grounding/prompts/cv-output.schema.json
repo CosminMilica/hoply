@@ -85,6 +85,7 @@
             "required": [
               "skill",
               "via",
+              "category",
               "why"
             ],
             "properties": {
@@ -97,6 +98,9 @@
                   "type": "string"
                 },
                 "minItems": 1
+              },
+              "category": {
+                "type": "string"
               },
               "why": {
                 "type": "string"

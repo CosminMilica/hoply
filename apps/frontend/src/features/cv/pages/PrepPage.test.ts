@@ -168,7 +168,7 @@ describe('PrepPage', () => {
     jobs.jobs[0]!.must_have.push('Argo CD')
     await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     const close = () => card('[data-test="close"]', 'Argo CD')
-    expect(close().textContent).toContain('You use FluxCD, which is close to Argo CD.')
+    expect(close().textContent).toContain('You use FluxCD, a GitOps tool like Argo CD. Your CV shows your GitOps experience, without naming Argo CD.')
     expect(close().textContent).toContain('Close')
     expect([...document.querySelectorAll('[data-test="gap"]')].some(gap => gap.textContent?.includes('Argo CD'))).toBe(false)
     await type(input('Your experience with Argo CD'), 'Ran Argo CD for a side project')

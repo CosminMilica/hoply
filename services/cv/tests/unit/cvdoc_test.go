@@ -412,7 +412,8 @@ func TestMatchKnowsOtherNamesUmbrellasAndCloseTools(t *testing.T) {
 	job.NiceToHave = []string{"Redis"}
 	match := cvdoc.MatchJob(cvdoc.ReadJob(job), []string{"GitHub Actions", "Docker", "FluxCD", "AWS", "Kubernetes", "Valkey"})
 	equal(t, match.Matched, []string{"CI/CD", "Containers", "Git", "k8s"})
-	equal(t, match.Related, []cvdoc.Related{{Skill: "ArgoCD", Via: []string{"FluxCD"}}, {Skill: "GCP", Via: []string{"AWS"}}, {Skill: "Redis", Via: []string{"Valkey"}}})
+	equal(t, match.Related, []cvdoc.Related{{Skill: "ArgoCD", Via: []string{"FluxCD"}, Category: "GitOps"},
+		{Skill: "GCP", Via: []string{"AWS"}, Category: "cloud infrastructure"}, {Skill: "Redis", Via: []string{"Valkey"}, Category: "in-memory caching"}})
 	equal(t, match.Missing, []string{"GraphQL"})
 	// 4 matched must-haves (16) + 2 related must-haves (2 + 2) + a related nice-to-have (1), of 30.
 	equal(t, match.Score, 70)

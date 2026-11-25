@@ -52,6 +52,9 @@ func ReadJob(job models.Job) Job {
 type Related struct {
 	Skill string   `json:"skill"`
 	Via   []string `json:"via"`
+	// Category is what the two have in common ("GitOps" for Argo CD and FluxCD):
+	// the CV names it beside the person's tool, and never the requirement itself.
+	Category string `json:"category"`
 }
 
 // Match is how the job's requirements line up with a set of skills.
@@ -90,12 +93,12 @@ func MatchJob(job Job, skills []string) Match {
 	total, got := 0, 0
 	for _, item := range job.Keywords {
 		total += weight(item)
-		switch via := closeTo(item, have); {
+		switch via, category := closeTo(item, have); {
 		case covered(item, have):
 			match.Matched = append(match.Matched, item)
 			got += weight(item)
 		case len(via) > 0:
-			match.Related = append(match.Related, Related{Skill: item, Via: via})
+			match.Related = append(match.Related, Related{Skill: item, Via: via, Category: category})
 			got += weight(item) / 2
 		default:
 			match.Missing = append(match.Missing, item)
@@ -163,7 +166,10 @@ var skillMapJSON []byte
 var skillMap = func() (m struct {
 	Same   [][]string          `json:"same"`
 	Covers map[string][]string `json:"covers"`
-	Close  [][]string          `json:"close"`
+	Close  []struct {
+		Category string   `json:"category"`
+		Tools    []string `json:"tools"`
+	} `json:"close"`
 }) {
 	if err := json.Unmarshal(skillMapJSON, &m); err != nil {
 		panic(err)
@@ -174,8 +180,14 @@ var skillMap = func() (m struct {
 var (
 	sameKey  = map[string]string{}
 	coverBy  = map[string][]string{}
-	families = [][]string{}
+	families = []family{}
 )
+
+// family is tools of one kind and the name of that kind.
+type family struct {
+	category string
+	keys     []string
+}
 
 func init() {
 	for _, group := range skillMap.Same {
@@ -190,12 +202,12 @@ func init() {
 		}
 		coverBy[skillKey(umbrella)] = keys
 	}
-	for _, family := range skillMap.Close {
-		keys := make([]string, len(family))
-		for i, tool := range family {
+	for _, group := range skillMap.Close {
+		keys := make([]string, len(group.Tools))
+		for i, tool := range group.Tools {
 			keys[i] = skillKey(tool)
 		}
-		families = append(families, keys)
+		families = append(families, family{category: group.Category, keys: keys})
 	}
 }
 
@@ -229,19 +241,23 @@ func covered(requirement string, have map[string]string) bool {
 	return false
 }
 
-// closeTo is the person's skills, in their spelling, that are interchangeable with the requirement.
-func closeTo(requirement string, have map[string]string) []string {
+// closeTo is the person's skills, in their spelling, that are interchangeable
+// with the requirement, and the kind of tool they share.
+func closeTo(requirement string, have map[string]string) ([]string, string) {
 	key := skillKey(requirement)
-	via := []string{}
-	for _, family := range families {
-		if !slices.Contains(family, key) {
+	via, category := []string{}, ""
+	for _, group := range families {
+		if !slices.Contains(group.keys, key) {
 			continue
 		}
-		for _, member := range family {
+		for _, member := range group.keys {
 			if skill, ok := have[member]; ok && member != key && !slices.Contains(via, skill) {
 				via = append(via, skill)
+				if category == "" {
+					category = group.category
+				}
 			}
 		}
 	}
-	return via
+	return via, category
 }

@@ -9,6 +9,8 @@ type Requirements = Pick<Job, 'must_have' | 'nice_to_have'>
 export interface RelatedSkill {
   skill: string
   via: string[]
+  /** The kind of tool both are ("GitOps" for Argo CD and FluxCD): the CV names it, never the skill itself. */
+  category: string
 }
 
 export interface JobMatch {
@@ -34,7 +36,7 @@ for (const group of skillMap.same) {
 /** One key per skill, whatever name it goes by. */
 const skillKey = (name: string) => sameKey.get(fold(name)) ?? fold(name)
 const coverBy = new Map(Object.entries(skillMap.covers).map(([umbrella, tools]) => [skillKey(umbrella), tools.map(skillKey)]))
-const families = skillMap.close.map(family => family.map(skillKey))
+const families = skillMap.close.map(family => ({ category: family.category, keys: family.tools.map(skillKey) }))
 
 /**
  * How the job's requirements line up with a set of skills (skillmap.json, the cv service's copy): a requirement
@@ -59,14 +61,16 @@ export function matchJob(job: Requirements, skills: string[]): JobMatch {
     const key = skillKey(item)
     total += weight(item)
     const covered = have.has(key) || (coverBy.get(key) ?? []).some(tool => have.has(tool))
-    const via = [...new Set(families.filter(family => family.includes(key))
-      .flatMap(family => family.filter(member => member !== key && have.has(member)).map(member => have.get(member)!)))]
+    const close = families.filter(family => family.keys.includes(key))
+      .map(family => ({ category: family.category, via: family.keys.filter(member => member !== key && have.has(member)).map(member => have.get(member)!) }))
+      .filter(family => family.via.length)
+    const via = [...new Set(close.flatMap(family => family.via))]
     if (covered) {
       matched.push(item)
       got += weight(item)
     }
     else if (via.length) {
-      related.push({ skill: item, via })
+      related.push({ skill: item, via, category: close[0]!.category })
       got += weight(item) / 2
     }
     else {

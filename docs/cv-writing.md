@@ -7,7 +7,8 @@ The rules behind the prompt (`services/cv/internal/grounding/prompts/cv-system.m
 | --- | --- | --- |
 | Write only from the person's facts; every sentence cites them; numbers, skills and companies are checked | checks | Hoply's own rule: a CV with invented skills fails the first interview |
 | Notes are raw material, rewritten and combined with highlights, never printed as they are | prompt | the owner, 2026-11-25 |
-| A tool proves its umbrella term (GitHub Actions proves CI/CD); a close tool is named only beside the one the person has, as transferable ("FluxCD, a GitOps approach that transfers to Argo CD"), never in the skills list | `skillmap.json`, prompt, checks | the owner, 2026-11-25 |
+| A tool proves its umbrella term (GitHub Actions proves CI/CD). A tool the person has not used is never named; the CV shows the kind of work beside the person's own tool instead ("GitOps delivery with FluxCD" for a job that asks for Argo CD) | `skillmap.json`, prompt, checks | the owner, 2026-11-25 |
+| One idea per bullet, in the person's own words adapted where it fits; no glued clauses, tool lists or forced terms | prompt | the owner, 2026-11-25 |
 | Each bullet: what was done, how, and so what (result, scale, who it served) | prompt | [5] |
 | Active, specific verbs; no pronouns; no "responsible for"; "express, not impress" | prompt | [1] |
 | Quantify with the person's own numbers, never added ones | prompt, checks | [1], [5] |

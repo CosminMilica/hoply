@@ -46,7 +46,8 @@ func Questions(job Job, profile models.Profile) models.PrepQuestions {
 		related = append(related, models.Close{
 			Skill: item.Skill,
 			Via:   item.Via,
-			Note:  "You use " + JoinList(item.Via) + ", which is close to " + item.Skill + ". Your CV says so, without claiming " + item.Skill + " itself.",
+			Note: "You use " + JoinList(item.Via) + ", a " + item.Category + " tool like " + item.Skill + ". Your CV shows your " +
+				item.Category + " experience, without naming " + item.Skill + ".",
 		})
 	}
 	responsibilities := []models.Responsibility{}

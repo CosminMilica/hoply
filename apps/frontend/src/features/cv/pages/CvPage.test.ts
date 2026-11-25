@@ -78,7 +78,7 @@ describe('CvPage', () => {
     cvs.cvs[0]!.cv.tailoring = {
       positioning: 'The engineer who automates delivery',
       priorities: [{ theme: 'CI/CD', strength: 'direct' }, { theme: 'GitOps', strength: 'transferable' }],
-      close: [{ skill: 'Argo CD', via: ['FluxCD'] }],
+      close: [{ skill: 'Argo CD', via: ['FluxCD'], category: 'GitOps' }],
       changes: ['Led with the pipelines'],
     }
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
@@ -87,7 +87,7 @@ describe('CvPage', () => {
     expect(card.textContent).toContain('CI/CDProven')
     expect(card.textContent).toContain('GitOpsTransferable')
     expect(card.textContent).toContain('Led with the pipelines')
-    expect(card.textContent).toContain('Argo CD (from FluxCD)')
+    expect(card.textContent).toContain('Argo CD as GitOps experience with FluxCD')
     await click(button('Your profile'))
     expect(document.querySelector('[data-test="tailoring"]')).toBeNull()
   })

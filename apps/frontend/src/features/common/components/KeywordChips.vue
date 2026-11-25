@@ -22,9 +22,9 @@ withDefaults(defineProps<{ matched?: string[], related?: RelatedSkill[], missing
       v-for="item in related"
       :key="`r-${item.skill}`"
       class="rounded-lg border-[1.5px] border-dashed border-hoply-700 px-2.5 py-1 font-bold text-hoply-300"
-      :title="`Close to ${item.via.join(', ')}`"
+      :title="`${item.category}: you use ${item.via.join(', ')}`"
     >
-      {{ item.skill }}<span class="sr-only"> (close to {{ item.via.join(', ') }})</span>
+      {{ item.skill }}<span class="sr-only"> ({{ item.category }}: you use {{ item.via.join(', ') }})</span>
     </li>
     <li
       v-for="keyword in missing"

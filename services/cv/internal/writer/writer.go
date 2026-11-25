@@ -219,7 +219,7 @@ func tailoring(answer grounding.Answer, related []cvdoc.Related) *models.Tailori
 	}
 	close := []models.CloseSkill{}
 	for _, item := range related {
-		close = append(close, models.CloseSkill{Skill: item.Skill, Via: item.Via})
+		close = append(close, models.CloseSkill{Skill: item.Skill, Via: item.Via, Category: item.Category})
 	}
 	return &models.Tailoring{Positioning: answer.Plan.Positioning, Priorities: priorities, Close: close, Changes: changes}
 }

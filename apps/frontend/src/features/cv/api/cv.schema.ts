@@ -61,7 +61,7 @@ export const cvSchema = z.object({
   tailoring: z.object({
     positioning: z.string(),
     priorities: z.array(z.object({ theme: z.string(), strength: z.enum(['direct', 'partial', 'transferable', 'none']) })),
-    close: z.array(z.object({ skill: z.string(), via: z.array(z.string()) })).default([]),
+    close: z.array(z.object({ skill: z.string(), via: z.array(z.string()), category: z.string().default('') })).default([]),
     changes: z.array(z.string()),
   }).nullable().default(null),
   /** Who wrote it, once it is ready: Claude, or the rules engine (and then `rules_reason` says why). */

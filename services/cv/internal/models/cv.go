@@ -96,15 +96,16 @@ type TailoredPriority struct {
 type Tailoring struct {
 	Positioning string             `json:"positioning"`
 	Priorities  []TailoredPriority `json:"priorities"`
-	// Close are the requirements the CV names as carried over from the person's equivalent tools.
+	// Close are the requirements the person knows an equivalent of; the CV shows their category instead.
 	Close   []CloseSkill `json:"close"`
 	Changes []string     `json:"changes"`
 }
 
 // CloseSkill is a requirement the person knows an equivalent of.
 type CloseSkill struct {
-	Skill string   `json:"skill"`
-	Via   []string `json:"via"`
+	Skill    string   `json:"skill"`
+	Via      []string `json:"via"`
+	Category string   `json:"category"`
 }
 
 // Writers of a CV.

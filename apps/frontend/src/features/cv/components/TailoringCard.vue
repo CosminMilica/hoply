@@ -23,7 +23,7 @@ const STRENGTH: Record<string, { label: string, tone: string }> = {
       </li>
     </ul>
     <p v-if="tailoring.close.length" class="m-0 text-[13px] leading-snug font-medium text-muted">
-      Named as carried over from what you use: {{ tailoring.close.map(item => `${item.skill} (from ${item.via.join(', ')})`).join(', ') }}.
+      Not named in the CV, shown through the kind of work instead: {{ tailoring.close.map(item => `${item.skill} as ${item.category || 'related'} experience with ${item.via.join(', ')}`).join('; ') }}.
     </p>
     <details v-if="tailoring.changes.length" class="text-[13px] font-medium text-muted">
       <summary class="cursor-pointer font-bold text-toned">What the review changed</summary>

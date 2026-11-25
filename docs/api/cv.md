@@ -69,8 +69,8 @@ app holds an identical copy, checked by a test):
 
 - covered when the person has it under any of its names ("Argo CD", "ArgoCD") or has a tool that proves it
   (GitHub Actions proves CI/CD, Docker proves Containers, Terraform proves Infrastructure as Code);
-- related when they have a close equivalent from the same family (FluxCD for Argo CD, AWS for GCP). Related
-  requirements are not asked as gaps; the CV names them only beside the equivalent, as transferable;
+- related when they have a tool of the same kind (FluxCD for Argo CD: both GitOps). Related requirements are not
+  asked as gaps, and the CV never names them: it shows their kind ("GitOps delivery with FluxCD");
 - missing otherwise.
 
 The score weighs a must-have twice a nice-to-have, and a related requirement half.
@@ -105,7 +105,8 @@ cites the facts it rests on. The code keeps a sentence only when:
 
 - it cites facts that exist and, for a bullet, belong to that role or project;
 - every number in it appears in the facts it cites;
-- it names none of the job's requirements the profile does not show;
+- it names none of the job's requirements the profile does not show, nor a tool the person knows only an
+  equivalent of;
 - a bullet does not name the company being applied to;
 - it is at most 300 characters.
 
