@@ -31,3 +31,8 @@ technology recommendations and capability validation.
 
 Preserve the user's Git identity. Do not add Claude or other AI co-author
 trailers or assistant attribution to commits and pull requests.
+
+## Running forge in this repo
+
+Run forge only through `scripts/forge.sh` (for example `scripts/forge.sh --quality test --project-path .`). It
+installs the build pinned in `.forge/quality.json` once per pin, outside the repo, under `~/.cache/hoply/`.

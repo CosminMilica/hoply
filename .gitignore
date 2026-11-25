@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+# The web app's Vite settings: public values only, needed for MSW in dev and the e2e suite.
+!apps/frontend/.env
+!apps/frontend/.env.development
 *.pem
 *.key
 credentials.json
@@ -47,3 +50,4 @@ postgres-data/
 
 .forge/coverage/
 *.forge-merge
+
