@@ -1,4 +1,6 @@
 # --- Secrets / env ---
+deploy/compose/secrets/*
+!deploy/compose/secrets/.gitkeep
 .env
 .env.*
 !.env.example

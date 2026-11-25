@@ -7,7 +7,8 @@ validation errors. No login yet: every request runs as the dev identity, which o
 The service asks the questions for a job and writes CVs tailored to it. It reads the profile from the profile service
 (`GET /api/v1/profiles/me`) and the job from the jobs service (`GET /api/v1/jobs/{id}`), and keeps a snapshot of both
 in each CV, so later edits never change a CV already made. Writing is asynchronous: a CV is queued, written by a worker
-in the service, then checked. Today the writer is the rules engine (`docs/plans/2026-11-25-cv-service.md`, §6).
+in the service, then checked. The worker writes with Claude when the service is connected (`docs/claude-setup.md`),
+else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 
 ## Endpoints
 
@@ -18,6 +19,7 @@ in the service, then checked. Today the writer is the rules engine (`docs/plans/
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
 | GET | `/api/v1/cvs/{id}` | | 200 `Cv`; 404 |
 | DELETE | `/api/v1/cvs/{id}` | | 204; 404 |
+| GET | `/api/v1/writer` | | 200 `WriterStatus` |
 
 `{job_id}`, `{id}`, `job_id` and `CvRequest.job_id` must be UUIDs (422 with `context.field` otherwise). Every CV
 belongs to the caller; another person's CVs are never visible or changed.
@@ -31,7 +33,9 @@ CvRequest     { job_id, skip_roles: [experience id], focus: [skill] (at most 3; 
                 confirmed: [int] (indexes of the key responsibilities the person confirmed) }
 Cv            { id, job_id, status, created_at, updated_at, job_title, company, file_name,
                 highlights: [skill] | null, profile: CvDocument | null, tailored: CvDocument | null,
-                ats: { passed, total, checks: [{ ok, label, hint }] } | null, preview: { from, to } | null }
+                ats: { passed, total, checks: [{ ok, label, hint }] } | null, preview: { from, to } | null,
+                written_by: "claude" | "rules" | null, model, refused, rules_reason, limit_until | null }
+WriterStatus  { writer: "claude" | "rules", model, state, limit_until | null }
 CvDocument    { name, headline, contact: [string], links: [string], summary, skills: [string],
                 experience: [{ role, meta, bullets: [string] }], projects: [{ name, meta, bullets: [string] }],
                 education: [{ degree, meta }], certifications: [string], languages, additional: [string] }
@@ -42,6 +46,12 @@ CvDocument    { name, headline, contact: [string], links: [string], summary, ski
 | `status` | `queued`, `writing`, `checking`, `ready` or `failed` |
 | `highlights`, `profile`, `tailored`, `ats` | set when `status` is `ready`; `null` before |
 | `preview` | the first highlight of the first role kept, before and after the rewrite; set from `checking` on, `null` when no role has a highlight |
+| `written_by` | who wrote the tailored version, once `ready`. The profile version is always the rules' |
+| `model` | the Claude model, when `written_by` is `claude` |
+| `refused` | how many of Claude's sentences the checks replaced with the rules' rewrite of the facts they cited |
+| `rules_reason` | why the rules wrote it: `off`, `no_token`, `login_needed`, `usage_limit` or `claude_failed`; empty for Claude |
+| `limit_until` | with `usage_limit`: when Claude is available again |
+| `WriterStatus.state` | `ok`, `off`, `no_token`, `login_needed` or `usage_limit` (`docs/claude-setup.md`) |
 | `file_name` | `<Name>_CV_<Company>.pdf`, every run of characters other than letters and digits replaced by `_`; `CV_<Company>.pdf` without a name |
 
 A CV left in `writing` or `checking` when the service stops goes back to `queued` when it starts again. A CV that
@@ -77,3 +87,19 @@ title, else its level and field. The contact line carries the city and country.
 Twelve checks run on the tailored version: layout and headings, email and phone, location, month-and-year dates on
 every role kept, the job title in the summary, the job's keywords present and used in sentences, responsibilities
 mirrored, action verbs, results with numbers, and length.
+
+## Written by Claude
+
+Claude gets the job as data and the profile as numbered facts (`E1.B2` is the second highlight of the first role
+kept). It returns the summary, the bullets of each role and project and the order of the skills. Every sentence
+cites the facts it rests on. The code keeps a sentence only when:
+
+- it cites facts that exist and, for a bullet, belong to that role or project;
+- every number in it appears in the facts it cites;
+- it names none of the job's requirements the profile does not show;
+- a bullet does not name the company being applied to;
+- it is at most 300 characters.
+
+A sentence that fails is replaced with the rules' rewrite of the fact it cites, or dropped. A role or project
+Claude leaves out keeps the rules' bullets. Name, contact, dates, companies, education and the profile version
+always come from the profile. The ATS checks run on the final text.

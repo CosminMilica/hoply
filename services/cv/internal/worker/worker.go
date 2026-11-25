@@ -8,19 +8,25 @@ import (
 
 	"cv/internal/cvdoc"
 	"cv/internal/data/repositories"
+	"cv/internal/models"
 )
 
-// Worker takes queued CVs and writes them with the rules engine, as of the
-// moment each was asked for.
+// Writer writes one CV; it fails only when ctx ends.
+type Writer interface {
+	Write(ctx context.Context, task *repositories.Task) (models.Written, models.Authorship, error)
+}
+
+// Worker takes queued CVs and writes them, as of the moment each was asked for.
 type Worker struct {
-	queue repositories.Queue
-	wake  chan struct{}
-	poll  time.Duration
+	queue  repositories.Queue
+	writer Writer
+	wake   chan struct{}
+	poll   time.Duration
 }
 
 // New polls the queue every poll interval, and at once when Wake is called.
-func New(queue repositories.Queue, poll time.Duration) *Worker {
-	return &Worker{queue: queue, wake: make(chan struct{}, 1), poll: poll}
+func New(queue repositories.Queue, writer Writer, poll time.Duration) *Worker {
+	return &Worker{queue: queue, writer: writer, wake: make(chan struct{}, 1), poll: poll}
 }
 
 // Wake makes a waiting worker look at the queue now; it never blocks.
@@ -51,7 +57,8 @@ func (w *Worker) Run(ctx context.Context) {
 	}
 }
 
-// Next writes the oldest queued CV and reports whether there was one.
+// Next writes the oldest queued CV and reports whether there was one. A CV
+// interrupted by ctx ending stays where it is, for Recover to queue again.
 func (w *Worker) Next(ctx context.Context) bool {
 	task, err := w.queue.Claim(ctx)
 	if err != nil {
@@ -63,19 +70,23 @@ func (w *Worker) Next(ctx context.Context) bool {
 	if task == nil {
 		return false
 	}
-	if err := w.write(ctx, task); err != nil {
+	if err := w.write(ctx, task); err != nil && ctx.Err() == nil {
 		slog.Error("cv writing failed", "cv_id", task.ID, "error", err)
 		if err := w.queue.Fail(ctx, task.ID); err != nil {
 			slog.Error("cv could not be marked failed", "cv_id", task.ID, "error", err)
 		}
 	}
-	return true
+	return ctx.Err() == nil
 }
 
 func (w *Worker) write(ctx context.Context, task *repositories.Task) error {
-	job := cvdoc.ReadJob(task.Job)
-	if err := w.queue.Checking(ctx, task.ID, cvdoc.RewritePreview(task.Profile, job, task.Request)); err != nil {
+	written, by, err := w.writer.Write(ctx, task)
+	if err != nil {
 		return err
 	}
-	return w.queue.Complete(ctx, task.ID, cvdoc.Write(task.Profile, job, task.Request, task.CreatedAt))
+	preview := cvdoc.RewritePreview(task.Profile, cvdoc.ReadJob(task.Job), task.Request)
+	if err := w.queue.Checking(ctx, task.ID, preview); err != nil {
+		return err
+	}
+	return w.queue.Complete(ctx, task.ID, written, by)
 }

@@ -240,6 +240,14 @@ services:
       APP__SECURITY__AUTH__ENABLED: "false"
       PROFILE_SERVICE_URL: "http://profile:5010"
       JOBS_SERVICE_URL: "http://jobs:5020"
+      # Claude through the owner's subscription token (docs/claude-setup.md). Without the token file the
+      # rules engine writes every CV.
+      CV_WRITER: "claude-cli"
+      CLAUDE_TOKEN_FILE: "/run/secrets/hoply/claude_oauth_token"
+      CV_MODEL: "claude-sonnet-5-5"
+      CV_EFFORT: "high"
+    volumes:
+      - ./deploy/compose/secrets:/run/secrets/hoply:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.cv.rule=Host(`app.localhost`) && PathPrefix(`/api/cv`)"

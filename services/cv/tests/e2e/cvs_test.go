@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"testing"
@@ -43,12 +44,12 @@ func sourcesServer(t *testing.T) string {
 }
 
 // startServer runs the service binary against databaseURL, reading the profile
-// and the jobs from sources, and returns the /api/v1 base url.
-func startServer(t *testing.T, databaseURL, sources string) string {
+// and the jobs from sources, with extra environment, and returns the /api/v1 base url.
+func startServer(t *testing.T, databaseURL, sources string, extra ...string) string {
 	t.Helper()
 	port := freePort(t)
-	server := command(t, "server", append(serverEnv(t), "ENV=testing", "PORT="+strconv.Itoa(port),
-		"DATABASE_URL="+databaseURL, "PROFILE_SERVICE_URL="+sources, "JOBS_SERVICE_URL="+sources)...)
+	server := command(t, "server", append(append(serverEnv(t), "ENV=testing", "PORT="+strconv.Itoa(port),
+		"DATABASE_URL="+databaseURL, "PROFILE_SERVICE_URL="+sources, "JOBS_SERVICE_URL="+sources), extra...)...)
 	if err := server.Start(); err != nil {
 		t.Fatal(err)
 	}
@@ -97,6 +98,49 @@ func call(t *testing.T, method, url string, payload any) (int, map[string]any) {
 	return response.StatusCode, decoded
 }
 
+// waitReady asks for the CV until it is ready or failed.
+func waitReady(t *testing.T, url string) map[string]any {
+	t.Helper()
+	var cv map[string]any
+	for range 200 {
+		_, cv = call(t, http.MethodGet, url, nil)
+		if cv["status"] == "ready" || cv["status"] == "failed" {
+			break
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+	return cv
+}
+
+func TestCvWrittenByClaudeEndToEnd(t *testing.T) {
+	dir := t.TempDir()
+	envelope, err := filepath.Abs("../testdata/claude/success.synthetic.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := filepath.Join(dir, "claude")
+	if err := os.WriteFile(script, []byte("#!/bin/sh\ncat > /dev/null\ncat '"+envelope+"'\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	token := filepath.Join(dir, "claude_oauth_token")
+	if err := os.WriteFile(token, []byte("sk-ant-oat01-test"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	schema := testutil.NewSchema(t)
+	migrateBinaryOK(t, schema.URL)
+	base := startServer(t, schema.URL, sourcesServer(t), "CV_WRITER=claude-cli", "CLAUDE_BIN="+script, "CLAUDE_TOKEN_FILE="+token)
+
+	if _, writer := call(t, http.MethodGet, base+"/writer", nil); writer["writer"] != "claude" || writer["state"] != "ok" {
+		t.Fatalf("GET /writer: %v", writer)
+	}
+	_, queued := call(t, http.MethodPost, base+"/cvs", map[string]any{"job_id": jobID})
+	cv := waitReady(t, base+"/cvs/"+queued["id"].(string))
+	tailored, _ := cv["tailored"].(map[string]any)
+	if cv["written_by"] != "claude" || cv["model"] != "claude-sonnet-5-5" || tailored["summary"] == nil {
+		t.Fatalf("written by Claude: %v", cv)
+	}
+}
+
 func TestCvContractEndToEnd(t *testing.T) {
 	schema := testutil.NewSchema(t)
 	migrateBinaryOK(t, schema.URL)
@@ -111,16 +155,10 @@ func TestCvContractEndToEnd(t *testing.T) {
 		t.Fatalf("POST /cvs: %d %v", status, queued)
 	}
 	cv := base + "/cvs/" + queued["id"].(string)
-	var ready map[string]any
-	for range 200 {
-		_, ready = call(t, http.MethodGet, cv, nil)
-		if ready["status"] == "ready" || ready["status"] == "failed" {
-			break
-		}
-		time.Sleep(25 * time.Millisecond)
-	}
+	ready := waitReady(t, cv)
 	tailored, _ := ready["tailored"].(map[string]any)
-	if ready["status"] != "ready" || tailored["headline"] != "DevOps Engineer | SQL, Git, CI/CD" {
+	if ready["status"] != "ready" || tailored["headline"] != "DevOps Engineer | SQL, Git, CI/CD" || ready["written_by"] != "rules" ||
+		ready["rules_reason"] != "off" {
 		t.Fatalf("the worker in the binary writes it: %v", ready)
 	}
 	if _, list := call(t, http.MethodGet, base+"/cvs?job_id="+jobID, nil); len(list["items"].([]any)) != 1 {

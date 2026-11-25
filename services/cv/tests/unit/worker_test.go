@@ -16,6 +16,7 @@ import (
 	"cv/internal/models"
 	"cv/internal/upstream"
 	"cv/internal/worker"
+	"cv/internal/writer"
 )
 
 // memoryQueue records what the worker does with its tasks.
@@ -25,6 +26,7 @@ type memoryQueue struct {
 	steps       []string
 	preview     *models.Preview
 	written     *models.Written
+	by          models.Authorship
 	recovered   int
 	claimErr    error
 	checkingErr error
@@ -61,11 +63,12 @@ func (q *memoryQueue) Checking(_ context.Context, _ uuid.UUID, preview *models.P
 	return q.checkingErr
 }
 
-func (q *memoryQueue) Complete(_ context.Context, _ uuid.UUID, written models.Written) error {
+func (q *memoryQueue) Complete(_ context.Context, _ uuid.UUID, written models.Written, by models.Authorship) error {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	q.steps = append(q.steps, "ready")
 	q.written = &written
+	q.by = by
 	return nil
 }
 
@@ -90,13 +93,14 @@ func task(t *testing.T) *repositories.Task {
 
 func TestWorkerWritesAQueuedCVAsOfWhenItWasAskedFor(t *testing.T) {
 	queue := &memoryQueue{tasks: []*repositories.Task{task(t)}}
-	w := worker.New(queue, time.Hour)
+	w := worker.New(queue, writer.New(nil), time.Hour)
 	if !w.Next(context.Background()) {
 		t.Fatal("a queued CV is written")
 	}
 	equal(t, queue.steps, []string{"writing", "checking", "ready"})
 	equal(t, queue.preview.From, "Built and maintained deployment pipelines for internal services.")
 	equal(t, queue.written.Tailored.Summary[:42], "DevOps Engineer with 5 years of experience")
+	equal(t, queue.by, models.Authorship{WrittenBy: "rules", RulesReason: "off"})
 	if w.Next(context.Background()) {
 		t.Fatal("an empty queue has nothing to write")
 	}
@@ -104,7 +108,7 @@ func TestWorkerWritesAQueuedCVAsOfWhenItWasAskedFor(t *testing.T) {
 
 func TestWorkerFailsACVItCannotWrite(t *testing.T) {
 	queue := &memoryQueue{tasks: []*repositories.Task{task(t)}, checkingErr: errors.New("gone"), failErr: errors.New("still gone")}
-	if !worker.New(queue, time.Hour).Next(context.Background()) {
+	if !worker.New(queue, writer.New(nil), time.Hour).Next(context.Background()) {
 		t.Fatal("the CV was taken")
 	}
 	equal(t, queue.steps, []string{"writing", "checking", "failed"})
@@ -112,14 +116,14 @@ func TestWorkerFailsACVItCannotWrite(t *testing.T) {
 
 func TestWorkerStopsOnAClaimError(t *testing.T) {
 	queue := &memoryQueue{claimErr: apperrors.New(apperrors.DatabaseUnavailable, "down")}
-	if worker.New(queue, time.Hour).Next(context.Background()) {
+	if worker.New(queue, writer.New(nil), time.Hour).Next(context.Background()) {
 		t.Fatal("nothing is written when the queue is down")
 	}
 }
 
 func TestWorkerRunRecoversThenWritesWhatItIsWokenFor(t *testing.T) {
 	queue := &memoryQueue{drained: make(chan struct{}, 1)}
-	w := worker.New(queue, time.Hour)
+	w := worker.New(queue, writer.New(nil), time.Hour)
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
@@ -145,7 +149,7 @@ func TestWorkerRunPollsAndSurvivesARecoveryError(t *testing.T) {
 	queue := &memoryQueue{claimErr: errors.New("down")}
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
-	worker.New(queue, 5*time.Millisecond).Run(ctx)
+	worker.New(queue, writer.New(nil), 5*time.Millisecond).Run(ctx)
 	equal(t, queue.recovered, 1)
 }
 

@@ -83,6 +83,40 @@ type Written struct {
 	Ats        Ats        `json:"ats"`
 }
 
+// Writers of a CV.
+const (
+	WrittenByClaude = "claude"
+	WrittenByRules  = "rules"
+)
+
+// Why the rules wrote a CV instead of Claude.
+const (
+	RulesOff     = "off"           // the service is set to write with the rules
+	NoToken      = "no_token"      // no Claude token is installed
+	LoginNeeded  = "login_needed"  // the token is expired or revoked
+	UsageLimit   = "usage_limit"   // the subscription's usage limit was reached
+	ClaudeFailed = "claude_failed" // Claude failed twice or answered something unusable
+)
+
+// WriterStatus is how the service writes CVs now (GET /api/v1/writer).
+type WriterStatus struct {
+	// Writer is "claude" when the service is set to write with Claude, else "rules".
+	Writer string `json:"writer"`
+	Model  string `json:"model"`
+	// State is "ok", "off", "no_token", "login_needed" or "usage_limit".
+	State      string     `json:"state"`
+	LimitUntil *time.Time `json:"limit_until"`
+}
+
+// Authorship is who wrote a CV and how it went.
+type Authorship struct {
+	WrittenBy   string     `json:"written_by"`
+	Model       string     `json:"model"`
+	Refused     int        `json:"refused"`
+	RulesReason string     `json:"rules_reason"`
+	LimitUntil  *time.Time `json:"limit_until"`
+}
+
 // Cv is a CV as the API returns it. The written parts are nil until the CV is
 // ready; Preview is set from the checking step on.
 type Cv struct {
@@ -99,6 +133,12 @@ type Cv struct {
 	Tailored   *CvDocument `json:"tailored"`
 	Ats        *Ats        `json:"ats"`
 	Preview    *Preview    `json:"preview"`
+	// WrittenBy is "claude" or "rules" once the CV is ready, nil before.
+	WrittenBy   *string    `json:"written_by"`
+	Model       string     `json:"model"`
+	Refused     int        `json:"refused"`
+	RulesReason string     `json:"rules_reason"`
+	LimitUntil  *time.Time `json:"limit_until"`
 }
 
 type CvList struct {

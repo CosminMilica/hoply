@@ -26,11 +26,19 @@ RUN if [ ! -f go.sum ]; then go mod tidy; fi \
        done
 
 # --- Runtime Stage ---
-FROM alpine:3.22
+# Node, because the service runs the Claude Code CLI to write CVs (docs/claude-setup.md).
+FROM node:26-slim
 
-RUN apk add --no-cache ca-certificates curl \
-    && addgroup -g 10001 appuser \
-    && adduser -D -u 10001 -G appuser -s /sbin/nologin appuser
+# Pinned; bump deliberately: the service reads the CLI's flags and result format.
+ARG CLAUDE_CODE_VERSION=2.1.322
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g --no-fund --no-audit "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
+    && npm cache clean --force \
+    && groupadd -g 10001 appuser \
+    && useradd -u 10001 -g appuser -M -s /usr/sbin/nologin appuser
+ENV DISABLE_AUTOUPDATER=1
 
 WORKDIR /app
 COPY --from=builder /out/ /app/

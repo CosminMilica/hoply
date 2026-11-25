@@ -19,6 +19,7 @@ import (
 	"cv/internal/models"
 	"cv/internal/routes"
 	"cv/internal/services"
+	"cv/internal/writer"
 	"cv/tests/testutil"
 )
 
@@ -141,7 +142,7 @@ type cvHarness struct {
 
 func (h *cvHarness) handler(ident *identity.IdentityContext) http.Handler {
 	router := chi.NewRouter()
-	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: services.NewCvService(h.repo, h.sources, func() { h.queued++ })})
+	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: services.NewCvService(h.repo, h.sources, func() { h.queued++ }), Writer: writer.New(nil)})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ident != nil {
 			r = r.WithContext(identity.WithContext(r.Context(), *ident))
@@ -224,6 +225,14 @@ func TestCvsThroughRoutes(t *testing.T) {
 	}
 	if status, body := testutil.Do(t, handler, http.MethodGet, cvsPath+"/"+id, nil); status != http.StatusNotFound || testutil.ErrorCode(body) != "NOT_FOUND" {
 		t.Fatalf("get deleted: %d %v", status, body)
+	}
+}
+
+func TestWriterStatusThroughRoutes(t *testing.T) {
+	_, handler := newCvHarness(t)
+	status, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/writer", nil)
+	if status != http.StatusOK || body["writer"] != "rules" || body["state"] != "off" {
+		t.Fatalf("writer: %d %v", status, body)
 	}
 }
 

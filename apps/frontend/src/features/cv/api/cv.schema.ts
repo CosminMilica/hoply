@@ -57,6 +57,13 @@ export const cvSchema = z.object({
   ats: atsSchema.nullable(),
   /** The first highlight before and after the rewrite, from the checking step on. */
   preview: previewSchema.nullable(),
+  /** Who wrote it, once it is ready: Claude, or the rules engine (and then `rules_reason` says why). */
+  written_by: z.enum(['claude', 'rules']).nullable(),
+  model: z.string(),
+  /** How many of Claude's sentences the checks replaced. */
+  refused: z.number().int(),
+  rules_reason: z.enum(['', 'off', 'no_token', 'login_needed', 'usage_limit', 'claude_failed']),
+  limit_until: z.string().nullable(),
 })
 
 export type Cv = z.infer<typeof cvSchema>

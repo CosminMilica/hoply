@@ -20,6 +20,7 @@ describe('CvPage', () => {
     await cvApi.generate(request)
     const { router } = await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     expect(text()).toContain('For Snowflake Administrator DevOps at Capgemini Romania')
+    expect(document.querySelector('[data-test="written-by"]')!.textContent).toBe('Written without AI. The service is set to write with rules.')
     expect(button('Tailored').getAttribute('aria-pressed')).toBe('true')
     expect(text()).toContain('ATS check')
     expect(text()).toContain('DevOps Engineer | SQL, Git, CI/CD')

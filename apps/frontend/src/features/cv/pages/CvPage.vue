@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
 import AtsCard from '../components/AtsCard.vue'
 import CvPaper from '../components/CvPaper.vue'
+import { authorshipLine } from '../authorship'
 import { useLatestCvQuery } from '../composables/useCv'
 
 const props = defineProps<{ id: string }>()
@@ -39,6 +40,7 @@ function download() {
         <div class="order-1 -mt-2.5 flex flex-col gap-1">
           <h1 class="m-0 text-[26px] leading-tight font-extrabold tracking-tight">Your CV is ready</h1>
           <p class="m-0 text-[15px] font-medium text-muted">For {{ cv.job_title }} at {{ cv.company }}</p>
+          <p class="m-0 text-[13px] font-medium text-dimmed" data-test="written-by">{{ authorshipLine(cv) }}</p>
         </div>
         <div class="order-2 flex gap-1.5 rounded-[10px] bg-accented p-1" role="group" aria-label="Version">
           <UButton

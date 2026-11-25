@@ -116,8 +116,8 @@ func KnownSkills(profile models.Profile) []string {
 
 var trailingDots = regexp.MustCompile(`[.]+$`)
 
-// bulletLine is a highlight as one line: its text, then its result.
-func bulletLine(bullet models.Bullet) string {
+// BulletLine is a highlight as one line: its text, then its result.
+func BulletLine(bullet models.Bullet) string {
 	result := strings.TrimSpace(bullet.Result)
 	if result == "" {
 		return bullet.Text

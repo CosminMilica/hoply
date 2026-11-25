@@ -17,6 +17,7 @@ import (
 	"cv/internal/services"
 	"cv/internal/upstream"
 	"cv/internal/worker"
+	"cv/internal/writer"
 	// FORGE:MIDDLEWARE_IMPORTS
 )
 
@@ -31,7 +32,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 // newHandler builds the HTTP handler. Middlewares run in list order: the
 // first entry is the outermost. queued is called after a CV is queued.
-func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, queued func()) http.Handler {
+func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter routes.WriterStatus, queued func()) http.Handler {
 	useErrorPort()
 	router := chi.NewRouter()
 	middlewares := []middleware.Middleware{
@@ -63,10 +64,11 @@ func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources
 	cvs := repositories.NewPgCvRepository(pool)
 	// FORGE:REPOSITORY_SCOPE
 	routes.Register(router, routes.Deps{
-		Pool: pool,
-		DB:   pool,
-		Cvs:  services.NewCvService(cvs, sources, queued),
-		Info: routes.Info{Title: cfg.App.Name, Version: cfg.App.Version, Description: Description},
+		Pool:   pool,
+		DB:     pool,
+		Cvs:    services.NewCvService(cvs, sources, queued),
+		Writer: cvWriter,
+		Info:   routes.Info{Title: cfg.App.Name, Version: cfg.App.Version, Description: Description},
 	})
 	return router
 }
@@ -79,15 +81,16 @@ type Service struct {
 }
 
 // Build wires the API and the worker, reading the profile and the jobs from
-// the services PROFILE_SERVICE_URL and JOBS_SERVICE_URL name.
+// the services PROFILE_SERVICE_URL and JOBS_SERVICE_URL name, and writing as
+// CV_WRITER says (writer.FromEnv).
 func Build(cfg *config.Config, pool *pgxpool.Pool) Service {
-	return BuildWith(cfg, pool, upstream.FromEnv())
+	return BuildWith(cfg, pool, upstream.FromEnv(), writer.FromEnv())
 }
 
-// BuildWith wires the service on the given sources.
-func BuildWith(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources) Service {
-	writer := worker.New(repositories.NewPgCvRepository(pool), WorkerPoll)
-	return Service{Handler: newHandler(cfg, pool, sources, writer.Wake), Worker: writer}
+// BuildWith wires the service on the given sources and writer.
+func BuildWith(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter *writer.Writer) Service {
+	queue := worker.New(repositories.NewPgCvRepository(pool), cvWriter, WorkerPoll)
+	return Service{Handler: newHandler(cfg, pool, sources, cvWriter, queue.Wake), Worker: queue}
 }
 
 // WorkerPoll is how often the worker looks at the queue when nothing woke it.

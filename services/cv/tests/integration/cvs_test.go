@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -15,6 +16,7 @@ import (
 	"cv/internal/data/repositories"
 	"cv/internal/identity"
 	"cv/internal/models"
+	"cv/internal/writer"
 	"cv/tests/testutil"
 )
 
@@ -149,11 +151,14 @@ func TestQueueTakesTheOldestAndRecoversWhatAStoppedWorkerLeft(t *testing.T) {
 		t.Fatalf("checking: %+v", cv)
 	}
 	written := models.Written{Highlights: []string{"SQL"}, Tailored: models.CvDocument{Summary: "Tailored."}, Ats: models.Ats{Passed: 1, Total: 2}}
-	if err := repo.Complete(ctx, claimed.ID, written); err != nil {
+	until := time.Date(2026, 11, 25, 18, 0, 0, 0, time.UTC)
+	by := models.Authorship{WrittenBy: "claude", Model: "claude-sonnet-5-5", Refused: 2, RulesReason: "", LimitUntil: &until}
+	if err := repo.Complete(ctx, claimed.ID, written, by); err != nil {
 		t.Fatal(err)
 	}
 	ready, _ := repo.Get(ctx, me, claimed.ID)
-	if ready.Status != models.StatusReady || ready.Tailored.Summary != "Tailored." || ready.Ats.Total != 2 || ready.Highlights[0] != "SQL" || ready.Profile == nil {
+	if ready.Status != models.StatusReady || ready.Tailored.Summary != "Tailored." || ready.Ats.Total != 2 || ready.Highlights[0] != "SQL" || ready.Profile == nil ||
+		*ready.WrittenBy != "claude" || ready.Model != "claude-sonnet-5-5" || ready.Refused != 2 || !ready.LimitUntil.Equal(until) {
 		t.Fatalf("ready: %+v", ready)
 	}
 
@@ -204,7 +209,7 @@ func TestQueueFailuresSurface(t *testing.T) {
 func TestServiceWritesACvThroughTheWorker(t *testing.T) {
 	_, pool := application(t, isolatedSchema(t))
 	cfg := config.Defaults()
-	service := app.BuildWith(&cfg, pool, newSeedSources(t))
+	service := app.BuildWith(&cfg, pool, newSeedSources(t), writer.New(nil))
 	status, cv := testutil.Do(t, service.Handler, http.MethodPost, "/api/v1/cvs", map[string]any{"job_id": jobID, "confirmed": []int{0}})
 	if status != http.StatusAccepted || cv["status"] != "queued" {
 		t.Fatalf("queued: %d %v", status, cv)

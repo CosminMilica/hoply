@@ -113,7 +113,7 @@ func buildDocument(profile models.Profile, job Job, request models.CvRequest, ta
 		used := map[string]bool{}
 		ranked := make([]rankedBullet, 0, len(bullets))
 		for index, bullet := range bullets {
-			text := CleanFact(bulletLine(bullet), "")
+			text := CleanFact(BulletLine(bullet), "")
 			if tailored {
 				text = RewriteBullet(text, index, RewriteContext{Job: job, Matched: matched, Tools: tools, Used: used})
 			}
@@ -393,7 +393,7 @@ func RewritePreview(profile models.Profile, job Job, request models.CvRequest) *
 		if slices.Contains(request.SkipRoles, role.ID) || len(role.Bullets) == 0 {
 			continue
 		}
-		from := CleanFact(bulletLine(role.Bullets[0]), "")
+		from := CleanFact(BulletLine(role.Bullets[0]), "")
 		to := RewriteBullet(from, 0, RewriteContext{Job: job, Matched: matched, Tools: role.Tools, Used: map[string]bool{}})
 		return &models.Preview{From: from, To: to}
 	}
@@ -417,17 +417,21 @@ func FileName(name, company string) string {
 func Write(profile models.Profile, job Job, request models.CvRequest, now time.Time) models.Written {
 	plain := buildDocument(profile, job, request, false, now)
 	tailored := buildDocument(profile, job, request, true, now)
-	checks := AtsChecks(tailored.document, job, profile, request)
+	return models.Written{
+		Highlights: tailored.matched,
+		Profile:    plain.document,
+		Tailored:   tailored.document,
+		Ats:        Score(AtsChecks(tailored.document, job, profile, request)),
+	}
+}
+
+// Score counts the checks that pass.
+func Score(checks []models.AtsCheck) models.Ats {
 	passed := 0
 	for _, check := range checks {
 		if check.OK {
 			passed++
 		}
 	}
-	return models.Written{
-		Highlights: tailored.matched,
-		Profile:    plain.document,
-		Tailored:   tailored.document,
-		Ats:        models.Ats{Passed: passed, Total: len(checks), Checks: checks},
-	}
+	return models.Ats{Passed: passed, Total: len(checks), Checks: checks}
 }

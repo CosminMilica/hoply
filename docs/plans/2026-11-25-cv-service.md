@@ -1,6 +1,6 @@
 # Plan: the cv service
 
-Status: phases 0 and 1 done, 2026-11-25. Next: phase 2.
+Status: phases 0 and 1 done; phase 2 built, its live run waits for the token, 2026-11-25. Next: phase 3.
 
 The last mocked part of Hoply becomes a real service: it prepares the questions for a job, writes a CV tailored to that
 job with Claude, checks it, and exports PDF and DOCX. Claude is reached the way `work/reviewer` does it: the Claude Code
@@ -112,7 +112,7 @@ many sentences the checks replaced).
 ```text
 claude -p --output-format json --json-schema <schema>
        --model <CV_MODEL> --effort <CV_EFFORT>
-       --tools "" --disallowedTools "*" --strict-mcp-config
+       --tools "" --strict-mcp-config
        --no-session-persistence --system-prompt-file prompts/cv-system.md --max-turns 3
 ```
 
@@ -226,23 +226,31 @@ Deviations from the plan: the queue is the `cvs` table instead of a second table
 the skills dictionary moves in phase 2, where the grounding checks need it, because the rules engine works on
 the job's requirements alone.
 
-**Phase 2. Claude**
-0. Move the skills dictionary from `services/jobs/internal/extract` to `libs/go/skills`; jobs imports it with no
-   change in behaviour.
-1. `prompts/cv-system.md` and `prompts/cv-output.schema.json` (§4.2), embedded in the binary.
-2. `internal/grounding`: the fact catalogue and the checks in §4.3, with table tests for each rule.
-3. `internal/writer/claudecli`: §5.1–5.3. Tests run against a fake `claude` script that returns recorded envelopes:
-   success, `is_error`, expired token, usage limit with reset time, timeout, invalid JSON.
-4. The worker picks the writer from configuration and falls back to rules (§6); `written_by`, `refused`,
-   `limit_until` are set.
-5. The image: Node slim with `@anthropic-ai/claude-code` pinned, the token as the compose secret
-   `claude_oauth_token`, read from `/run/secrets/`.
-6. Health: `claude` shows `ok`, `no token`, `login needed` or `limited until <time>`.
-7. `docs/claude-setup.md`: run `claude setup-token`, store the token in `deploy/compose/secrets/claude_oauth_token`
-   with mode 0600, restart cv, and renew it before it expires (about a year).
-8. The CV page shows "Written by Claude" or "Written without AI" and the reason.
-9. One live run on the owner's profile and a saved job. Record its envelope as a fixture, with the personal data
-   replaced.
+**Phase 2. Claude** (built; the live run waits for the owner's token)
+1. `internal/claude`: the CLI runner (§5.1–5.3), with the CLI's own envelopes for "not logged in" and an invalid
+   token recorded from 2.1.322 in `tests/testdata/claude/`, and synthetic ones for success and a usage limit.
+2. `internal/grounding`: the fact catalogue, the prompt and schema (`internal/grounding/prompts/`), the checks
+   (§4.3) and the assembly that puts the rules in place of a refused sentence.
+3. `internal/writer`: Claude, one retry, then the rules; it remembers a usage limit and a dead login.
+4. `cvs` gains `written_by`, `model`, `refused`, `rules_reason`, `limit_until` (migration 00101); the CV page
+   says who wrote it and why.
+5. `GET /api/v1/writer` reports `ok`, `off`, `no_token`, `login_needed` or `usage_limit`.
+6. Image on `node:26-slim` with `@anthropic-ai/claude-code@2.1.322`. Compose mounts
+   `deploy/compose/secrets/` (gitignored) at `/run/secrets/hoply/`.
+7. `docs/claude-setup.md`.
+8. Left: one live run on the owner's profile, its envelope recorded (personal data replaced).
+
+Deviations from the plan:
+- The skills dictionary stays in jobs. The skill check refuses the job's requirements that the profile does not
+  show, which is the claim that matters, so the cv service does not need the whole dictionary.
+- No `--disallowedTools "*"`: `--json-schema` answers through the CLI's own StructuredOutput tool, which the
+  denylist blocks (the first live run got no structured output). `--tools ""` already removes every built-in tool.
+- 2.1.322 has no `--system-prompt-file` or `--max-turns`, so the system prompt goes in `--system-prompt`. With
+  no tools there is only one turn.
+- The token comes from a mounted directory, not a compose file secret, so a missing token does not stop
+  `docker compose up`.
+- The organisation check covers only the company being applied to. Finding other organisation names needs more
+  than rules; phase 4 measures whether it matters.
 
 **Phase 3. Export**
 1. Gotenberg in compose (pinned image, internal network only).

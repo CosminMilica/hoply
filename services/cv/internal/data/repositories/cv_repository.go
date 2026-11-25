@@ -56,7 +56,7 @@ type Queue interface {
 	// Claim moves the oldest queued CV to writing and returns it; nil when none is queued.
 	Claim(ctx context.Context) (*Task, error)
 	Checking(ctx context.Context, id uuid.UUID, preview *models.Preview) error
-	Complete(ctx context.Context, id uuid.UUID, written models.Written) error
+	Complete(ctx context.Context, id uuid.UUID, written models.Written, by models.Authorship) error
 	Fail(ctx context.Context, id uuid.UUID) error
 	// Recover puts the CVs a stopped worker left in writing or checking back in
 	// the queue, or fails those already tried MaxAttempts times.
@@ -67,7 +67,7 @@ type Queue interface {
 const MaxAttempts = 3
 
 const (
-	cvColumns = "id, job_id, status, created_at, updated_at, job_title, company, file_name, preview, written"
+	cvColumns = "id, job_id, status, created_at, updated_at, job_title, company, file_name, preview, written, written_by, model, refused, rules_reason, limit_until"
 	// owner matches the $1 tenant and $2 subject.
 	owner = "customer_id = $1 AND subject = $2"
 )
@@ -208,8 +208,9 @@ func (r *PgCvRepository) Checking(ctx context.Context, id uuid.UUID, preview *mo
 	return r.update(ctx, "UPDATE cvs SET status = 'checking', preview = $2, updated_at = NOW() WHERE id = $1", id, preview)
 }
 
-func (r *PgCvRepository) Complete(ctx context.Context, id uuid.UUID, written models.Written) error {
-	return r.update(ctx, "UPDATE cvs SET status = 'ready', written = $2, updated_at = NOW() WHERE id = $1", id, written)
+func (r *PgCvRepository) Complete(ctx context.Context, id uuid.UUID, written models.Written, by models.Authorship) error {
+	return r.update(ctx, `UPDATE cvs SET status = 'ready', written = $2, written_by = $3, model = $4, refused = $5, rules_reason = $6,
+limit_until = $7, updated_at = NOW() WHERE id = $1`, id, written, by.WrittenBy, by.Model, by.Refused, by.RulesReason, by.LimitUntil)
 }
 
 func (r *PgCvRepository) Fail(ctx context.Context, id uuid.UUID) error {
@@ -242,7 +243,7 @@ func scanCv(row pgx.CollectableRow) (models.Cv, error) {
 		written *models.Written
 	)
 	if err := row.Scan(&cv.ID, &cv.JobID, &cv.Status, &cv.CreatedAt, &cv.UpdatedAt, &cv.JobTitle, &cv.Company,
-		&cv.FileName, &cv.Preview, &written); err != nil {
+		&cv.FileName, &cv.Preview, &written, &cv.WrittenBy, &cv.Model, &cv.Refused, &cv.RulesReason, &cv.LimitUntil); err != nil {
 		return cv, err
 	}
 	if written != nil {

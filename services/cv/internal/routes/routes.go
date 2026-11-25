@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"cv/internal/apperrors"
+	"cv/internal/models"
 	"cv/internal/services"
 	// FORGE:ROUTES_IMPORTS
 )
@@ -27,13 +28,19 @@ type Info struct {
 	Description string `json:"description"`
 }
 
+// WriterStatus says how the service writes CVs now.
+type WriterStatus interface {
+	Status() models.WriterStatus
+}
+
 // Deps are the collaborators the routes use. Pool is nil in tests that do
 // not touch the database.
 type Deps struct {
-	Pool *pgxpool.Pool
-	DB   Pinger
-	Cvs  *services.CvService
-	Info Info
+	Pool   *pgxpool.Pool
+	DB     Pinger
+	Cvs    *services.CvService
+	Writer WriterStatus
+	Info   Info
 }
 
 // Register mounts every route on router.
@@ -46,6 +53,9 @@ func Register(router chi.Router, deps Deps) {
 		api.Route("/health", func(health chi.Router) { registerHealth(health, deps.DB) })
 		api.Route("/jobs", func(router chi.Router) { registerQuestions(router, deps.Cvs) })
 		api.Route("/cvs", func(router chi.Router) { registerCvs(router, deps.Cvs) })
+		api.Get("/writer", handle(func(w http.ResponseWriter, _ *http.Request) error {
+			return writeJSON(w, http.StatusOK, deps.Writer.Status())
+		}))
 		// FORGE:BEGIN enhanced_health:ROUTES_REGISTRATION fp:770d7b6d
 		registerDeepHealth(api)
 		// FORGE:END enhanced_health:ROUTES_REGISTRATION
