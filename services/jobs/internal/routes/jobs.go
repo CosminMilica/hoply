@@ -58,6 +58,21 @@ func registerJobs(router chi.Router, jobs *services.JobService) {
 		}
 		return writeJSON(w, http.StatusOK, job)
 	}))
+	router.Put("/{id}/requirements", handle(func(w http.ResponseWriter, r *http.Request) error {
+		id, err := pathID(r)
+		if err != nil {
+			return err
+		}
+		var body models.RequirementsInput
+		if err := decode(r, &body); err != nil {
+			return err
+		}
+		job, err := jobs.SetRequirements(r.Context(), requestIdentity(r), id, body)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, job)
+	}))
 	router.Delete("/{id}", handle(func(w http.ResponseWriter, r *http.Request) error {
 		id, err := pathID(r)
 		if err != nil {

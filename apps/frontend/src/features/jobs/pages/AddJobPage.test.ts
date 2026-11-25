@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
@@ -25,7 +25,7 @@ afterEach(() => {
 
 describe('AddJobPage', () => {
   it('reads a link, lets the person fix it, and saves it to their jobs', async () => {
-    const { jobs, applications } = useServices()
+    const { jobs, applications, cvs } = useServices()
     const { router } = await mountPage(AddJobPage, { at: '/jobs/add?from=saved' })
     expect(button('Link').getAttribute('aria-selected')).toBe('true')
     await readLink('https://careers.northwind.example/jobs/platform-engineer')
@@ -60,6 +60,7 @@ describe('AddJobPage', () => {
       url: 'https://careers.northwind.example/jobs/platform-engineer',
     })
     expect(saved.must_have).not.toContain('kubernetes')
+    await vi.waitFor(() => expect(cvs.analyses).toEqual([saved.id]))
     expect(applications.applications.get(saved.id)?.status).toBe('saved')
     expect(router.currentRoute.value.name).toBe('hoply-saved')
   })

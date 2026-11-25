@@ -53,6 +53,7 @@ function toggleSave() {
             <span class="text-[15px] leading-snug font-bold">{{ match.verdict }}</span>
           </div>
           <KeywordChips :matched="match.matched" :related="match.related" :missing="match.missing" size="md" />
+          <p v-if="job.requirements_from === 'analysis'" data-test="requirements-from" class="m-0 text-xs text-muted">Requirements as Claude read them from the ad.</p>
         </div>
         <div class="order-last flex flex-col gap-2.5 min-[900px]:order-none">
           <UButton :to="{ name: 'hoply-prep', params: { id: job.id } }" :label="prepareLabel" size="lg" block class="justify-center" />

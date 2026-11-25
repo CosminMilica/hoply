@@ -86,7 +86,8 @@ type Service struct {
 // the services PROFILE_SERVICE_URL and JOBS_SERVICE_URL name, and writing as
 // CV_WRITER says (writer.FromEnv).
 func Build(cfg *config.Config, pool *pgxpool.Pool) Service {
-	return BuildWith(cfg, pool, upstream.FromEnv(), writer.FromEnv(), render.GotenbergFromEnv())
+	sources := upstream.FromEnv()
+	return BuildWith(cfg, pool, sources, writer.FromEnv().KeepRequirements(sources), render.GotenbergFromEnv())
 }
 
 // BuildWith wires the service on the given sources, writer and PDF printer.

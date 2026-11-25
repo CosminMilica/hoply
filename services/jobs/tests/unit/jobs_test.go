@@ -96,6 +96,25 @@ func (m *memoryJobs) Create(_ context.Context, ident identity.IdentityContext, d
 	return &job, nil
 }
 
+func (m *memoryJobs) SetRequirements(_ context.Context, ident identity.IdentityContext, id uuid.UUID, data models.RequirementsInput) (*models.Job, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.fail != nil {
+		return nil, m.fail
+	}
+	if o, owned := m.owners[id]; !owned || o != owner(ident) {
+		return nil, nil
+	}
+	for i := range m.jobs {
+		if m.jobs[i].ID == id {
+			m.jobs[i].MustHave, m.jobs[i].NiceToHave, m.jobs[i].RequirementsFrom = data.MustHave, data.NiceToHave, "analysis"
+			job := m.jobs[i]
+			return &job, nil
+		}
+	}
+	return nil, nil
+}
+
 func (m *memoryJobs) Delete(_ context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -432,5 +451,42 @@ func TestJobRepositoryFailuresSurface(t *testing.T) {
 		if status, body := testutil.Do(t, handler, tc.method, tc.path, tc.payload); status != http.StatusServiceUnavailable {
 			t.Errorf("%s %s: %d %v", tc.method, tc.path, status, body)
 		}
+	}
+}
+
+func TestRequirementsFromTheAnalysisThroughRoutes(t *testing.T) {
+	repo := newMemoryJobs()
+	handler := devJobs(repo, &fakeReader{})
+	_, created := testutil.Do(t, handler, http.MethodPost, jobsPath, validJob())
+	path := jobsPath + "/" + created["id"].(string) + "/requirements"
+	status, job := testutil.Do(t, handler, http.MethodPut, path, map[string]any{"must_have": []string{" Kubernetes ", "kubernetes", "AWS"}, "nice_to_have": []string{"NestJS", "aws"}})
+	if status != http.StatusOK || fmt.Sprint(job["must_have"]) != "[Kubernetes AWS]" || fmt.Sprint(job["nice_to_have"]) != "[NestJS]" ||
+		job["requirements_from"] != "analysis" {
+		t.Fatalf("set: %d %v", status, job)
+	}
+	for _, tc := range []struct {
+		path    string
+		payload any
+		status  int
+	}{
+		{jobsPath + "/" + uuid.NewString() + "/requirements", map[string]any{}, http.StatusNotFound},
+		{jobsPath + "/nope/requirements", map[string]any{}, http.StatusNotFound},
+		{path, map[string]any{"must_have": []string{strings.Repeat("x", 200)}}, http.StatusUnprocessableEntity},
+		{path, "{", http.StatusUnprocessableEntity},
+	} {
+		if status, body := testutil.Do(t, handler, http.MethodPut, tc.path, tc.payload); status != tc.status {
+			t.Errorf("%s %v: %d %v", tc.path, tc.payload, status, body)
+		}
+	}
+	stranger := jobsHandler(repo, &fakeReader{}, &identity.IdentityContext{TenantID: uuid.New(), Subject: "someone"})
+	if status, _ := testutil.Do(t, stranger, http.MethodPut, path, map[string]any{}); status != http.StatusNotFound {
+		t.Fatalf("another person's job: %d", status)
+	}
+	if status, _ := testutil.Do(t, jobsHandler(repo, &fakeReader{}, nil), http.MethodPut, path, map[string]any{}); status != http.StatusUnauthorized {
+		t.Fatalf("without identity: %d", status)
+	}
+	repo.fail = apperrors.New(apperrors.DatabaseUnavailable, "down")
+	if status, _ := testutil.Do(t, handler, http.MethodPut, path, map[string]any{}); status != http.StatusServiceUnavailable {
+		t.Fatalf("database down: %d", status)
 	}
 }

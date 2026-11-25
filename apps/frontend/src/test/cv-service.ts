@@ -40,6 +40,7 @@ export function createCvBackend(sources: CvSources, {
   probe = { status: 'unavailable', questions: [] },
 }: CvBackendOptions = {}) {
   const cvs: { cv: Cv, pending: number }[] = []
+  const analyses: string[] = []
   let sequence = 0
   const view = (entry: { cv: Cv, pending: number }): Cv => {
     if (entry.pending > 0) return { ...entry.cv, ...unwritten, status: 'writing' }
@@ -58,6 +59,12 @@ export function createCvBackend(sources: CvSources, {
       const profile = sources.profile()
       if (!profile) return problem(503, 'DEPENDENCY_UNAVAILABLE', 'profile is unavailable')
       return { status: 200, body: prepQuestions(job, profile) }
+    },
+    analyses,
+    analyze(jobId: string): Answer {
+      if (!readJob(jobId)) return problem(404, 'NOT_FOUND', 'Job not found')
+      analyses.push(jobId)
+      return { status: 202, body: { status: probe.status === 'unavailable' ? 'unavailable' : 'pending' } }
     },
     probe(jobId: string): Answer {
       return readJob(jobId) ? { status: 200, body: probe } : problem(404, 'NOT_FOUND', 'Job not found')
@@ -107,6 +114,7 @@ export function cvServiceHandlers(sources: CvSources, options: CvBackendOptions 
     backend,
     handlers: [
       http.get('*/api/cv/v1/jobs/:jobId/questions', ({ params }) => reply(backend.questions(String(params.jobId)))),
+      http.post('*/api/cv/v1/jobs/:jobId/analysis', ({ params }) => reply(backend.analyze(String(params.jobId)))),
       http.get('*/api/cv/v1/jobs/:jobId/probe', ({ params }) => reply(backend.probe(String(params.jobId)))),
       http.post('*/api/cv/v1/cvs', async ({ request }) => reply(backend.create(await request.json().catch(() => null)))),
       http.get('*/api/cv/v1/cvs', ({ request }) => reply(backend.list(new URL(request.url).searchParams.get('job_id')))),

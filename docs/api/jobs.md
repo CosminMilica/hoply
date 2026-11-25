@@ -16,6 +16,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 | GET | `/api/v1/jobs/{id}` | | 200 `Job` |
 | POST | `/api/v1/jobs/read` | `{ url }` or `{ text, title?, company?, url? }` | 200 `JobDraft` |
 | POST | `/api/v1/jobs` | `JobInput` | 201 `Job` |
+| PUT | `/api/v1/jobs/{id}/requirements` | `{ must_have, nice_to_have }` | 200 `Job` |
 | DELETE | `/api/v1/jobs/{id}` | | 204 |
 
 - `GET /jobs` returns the catalog plus the caller's own jobs (`added_by_me: true`), newest first; other people's added
@@ -24,6 +25,8 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
   `city` is set; `country` matches the country; `area` may repeat; `level` is one of the level values.
 - `GET /jobs/{id}` and `DELETE /jobs/{id}`: an unknown id, a non-UUID id or another person's job is 404; deleting a
   catalog job is 404 too.
+- `PUT /jobs/{id}/requirements` replaces the requirements of the caller's own job with the cv service's analysis of
+  the ad, cleaned by the same rules as `POST /jobs`, and sets `requirements_from: analysis`. Any other job is 404.
 - `POST /jobs/read` saves nothing. It returns what the rules read, for the person to check and edit.
 
 ## Shapes
@@ -32,7 +35,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 Job       { id, title, company, city, country, work_mode, level, years_required,
             must_have: [string], nice_to_have: [string], responsibilities: [string],
             about, about_company, product, perks: [string], areas: [string],
-            url, source, read_from, sample, added_by_me, created_at }
+            url, source, read_from, requirements_from, sample, added_by_me, created_at }
 JobInput  { title, company, city, country, work_mode, level, years_required, must_have, nice_to_have,
             responsibilities, about, url, source, read_from }
 JobDraft  JobInput + { host }
@@ -45,6 +48,7 @@ JobDraft  JobInput + { host }
 | `years_required` | `null` or 0–40 |
 | `source` | `catalog`, `link`, `text` |
 | `read_from` | `ats_api` (the job board's public API, see below), `json_ld` (the page's schema.org `JobPosting`), `page_text` (the page's main text), `text` (pasted), `""` for catalog jobs |
+| `requirements_from` | `rules` (read when the job was added) or `analysis` (Claude's reading of the ad, through the cv service) |
 | `host` | the link's host name, or `""` |
 
 Strings are never null (`""` when unset), arrays never null (`[]`).

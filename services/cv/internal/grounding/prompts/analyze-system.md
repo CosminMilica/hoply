@@ -14,6 +14,12 @@ Return:
   with the `theme` it belongs to. Leave out headers, perks, process steps and wishes about the person.
 - `traits`: what the ad asks of the person beyond tools (how they learn, own work, communicate), at most 4, each in
   the ad's words.
+- `requirements`: the skills the ad asks for, the way a person lists them on a CV: tools, technologies,
+  languages, methods, certifications, each once, in the ad's spelling and its usual short name ("Kubernetes", not
+  "Kubernetes (EKS) clusters"). `importance` is `must` when the ad requires it or lists it as what they look for,
+  `nice` when it is a plus, preferred, a bonus, or only part of the stack they use or are interested in. Not
+  practices or qualities ("security best practices", "ownership", "SRE mindset"), not the field itself ("DevOps"),
+  not the company's product, not perks. At most 20, the most important first.
 - `terms`: the 10 to 20 terms a screening system would look for, in the ad's spelling (if it writes "ArgoCD", write
   "ArgoCD").
 - `seniority`: what the ad expects about level and years, in one sentence.

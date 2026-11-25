@@ -303,7 +303,12 @@ mirrored-responsibilities check counts the analysis's real duties that a kept se
 or numbers. Prepare your CV now opens with Claude's questions for the job (`GET /jobs/{id}/probe`): the facts that
 best prove its priorities but lack a result or scale, the priorities the facts barely touch, the traits the ad
 stresses. Answers become notes of the role they are about. Asked in the background in 9–12 s, kept per person and job
-for the facts as they were. Next: requirements from the analysis (B), an evaluation set with a judge (C).
+for the facts as they were.
+
+**Requirements from the analysis** (done, 2026-11-25). The rules read requirements by keyword, so practices
+("Security", "SRE"), the field itself and the stack's extras landed in `must_have`. The analysis now reads them, `must`
+or `nice`, and writes them back to the job; the web app starts it when a job is added. Next: an evaluation set with a
+judge (C).
 
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.

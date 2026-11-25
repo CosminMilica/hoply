@@ -48,10 +48,40 @@ type CvService struct {
 	settled func()
 }
 
-// Prober asks Claude for the questions of Prepare your CV; *writer.Writer is one.
+// Prober asks Claude for the questions of Prepare your CV and reads job ads;
+// *writer.Writer is one.
 type Prober interface {
 	Questions(ctx context.Context, job models.Job, profile models.Profile) ([]models.ProbeQuestion, error)
+	Analyze(ctx context.Context, job models.Job) error
 	Available() bool
+}
+
+// Analyze starts reading the job's ad in the background, so its requirements are
+// Claude's by the time the person prepares a CV. It answers pending, or
+// unavailable when Claude cannot be asked.
+func (s *CvService) Analyze(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*models.Probe, error) {
+	if err := requireSubject(ident); err != nil {
+		return nil, err
+	}
+	job, _, err := s.sources.Job(ctx, jobID)
+	if err != nil {
+		return nil, err
+	}
+	if s.prober == nil || !s.prober.Available() {
+		return &models.Probe{Status: models.ProbeUnavailable, Questions: []models.ProbeQuestion{}}, nil
+	}
+	key := "analysis/" + jobID.String()
+	if s.startAsking(key) {
+		go func() {
+			defer s.doneAsking(key)
+			ctx, cancel := context.WithTimeout(context.Background(), ProbeTimeout)
+			defer cancel()
+			if err := s.prober.Analyze(ctx, job); err != nil {
+				slog.Warn("job not analyzed", "job_id", jobID, "error", err)
+			}
+		}()
+	}
+	return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}, nil
 }
 
 // ProbeTimeout is the longest asking for one job's questions may take.

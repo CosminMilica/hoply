@@ -4,8 +4,10 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"strings"
 
 	"cv/internal/cvdoc"
+	"cv/internal/models"
 )
 
 // AnalyzeSystem is the system prompt of the job analysis.
@@ -51,15 +53,22 @@ type Duty struct {
 	Theme string `json:"theme"`
 }
 
+// Requirement is a skill the ad asks for, as Claude reads it.
+type Requirement struct {
+	Name       string `json:"name"`
+	Importance string `json:"importance"`
+}
+
 // Analysis is what a job ad says the company needs (prompts/analyze-system.md).
 type Analysis struct {
-	Role             string     `json:"role"`
-	Context          string     `json:"context"`
-	Priorities       []Priority `json:"priorities"`
-	Responsibilities []Duty     `json:"responsibilities"`
-	Traits           []string   `json:"traits"`
-	Terms            []string   `json:"terms"`
-	Seniority        string     `json:"seniority"`
+	Requirements     []Requirement `json:"requirements"`
+	Role             string        `json:"role"`
+	Context          string        `json:"context"`
+	Priorities       []Priority    `json:"priorities"`
+	Responsibilities []Duty        `json:"responsibilities"`
+	Traits           []string      `json:"traits"`
+	Terms            []string      `json:"terms"`
+	Seniority        string        `json:"seniority"`
 }
 
 type analysisLine struct {
@@ -121,4 +130,36 @@ func (a Analysis) Indexes() []int {
 		indexes = append(indexes, duty.Index)
 	}
 	return indexes
+}
+
+// Split is the analysis's requirements as must-haves and nice-to-haves, each
+// named once; ok is false when the analysis read none.
+func (a Analysis) Split() (must, nice []string, ok bool) {
+	must, nice = []string{}, []string{}
+	seen := map[string]bool{}
+	for _, requirement := range a.Requirements {
+		name := strings.TrimSpace(requirement.Name)
+		key := strings.ToLower(name)
+		if name == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+		if requirement.Importance == "nice" {
+			nice = append(nice, name)
+		} else {
+			must = append(must, name)
+		}
+	}
+	return must, nice, len(must)+len(nice) > 0
+}
+
+// Apply is the job with the analysis's requirements in place of the rules' ones.
+func (a *Analysis) Apply(job models.Job) models.Job {
+	if a == nil {
+		return job
+	}
+	if must, nice, ok := a.Split(); ok {
+		job.MustHave, job.NiceToHave = must, nice
+	}
+	return job
 }

@@ -140,7 +140,8 @@ func TestWriterStatus(t *testing.T) {
 
 var analysisOutput = json.RawMessage(`{"role":"Run the Snowflake platform","context":"Consultancy","seniority":"senior",
 "priorities":[{"theme":"Infrastructure as Code","ad_words":["Terraform"],"why":"Manual setup"}],
-"responsibilities":[{"index":1,"theme":"Infrastructure as Code"},{"index":3,"theme":"Infrastructure as Code"}],"traits":[],"terms":["Terraform"]}`)
+"responsibilities":[{"index":1,"theme":"Infrastructure as Code"},{"index":3,"theme":"Infrastructure as Code"}],"traits":[],"terms":["Terraform"],
+"requirements":[{"name":"Terraform","importance":"must"},{"name":"Python","importance":"nice"},{"name":"terraform","importance":"nice"}]}`)
 
 // memoryAnalyses is an in-memory Analyses store.
 type memoryAnalyses struct {
@@ -244,6 +245,59 @@ func TestWriterAsksForQuestionsFromTheJobsAnalysis(t *testing.T) {
 	}
 	noLogin := &fakeModel{replies: []modelReply{{err: claude.ErrLoginNeeded}}}
 	if _, err := writer.New(noLogin).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("login needed: %v", err)
+	}
+}
+
+// memoryRequirements records what the writer sends back to the jobs service.
+type memoryRequirements struct {
+	must, nice []string
+	sent       int
+	fail       error
+}
+
+func (m *memoryRequirements) SetRequirements(_ context.Context, _ uuid.UUID, must, nice []string) error {
+	m.sent++
+	m.must, m.nice = must, nice
+	return m.fail
+}
+
+func TestWriterWritesFromTheRequirementsTheAnalysisRead(t *testing.T) {
+	store := &memoryAnalyses{kept: map[uuid.UUID]json.RawMessage{}}
+	jobs := &memoryRequirements{}
+	model := &fakeModel{replies: []modelReply{{output: analysisOutput}, {output: syntheticOutput(t)}, {output: reviewedOutput(t)}}}
+	written, _ := writeWith(t, writer.New(model).KeepAnalyses(store).KeepRequirements(jobs))
+	equal(t, jobs.sent, 1)
+	equal(t, jobs.must, []string{"Terraform"})
+	equal(t, jobs.nice, []string{"Python"})
+	equal(t, checkStartingWith(t, written.Ats.Checks, "Keywords from the job").Label, "Keywords from the job: 1 of 2")
+
+	stale := &memoryAnalyses{kept: map[uuid.UUID]json.RawMessage{}}
+	for id := range store.kept {
+		stale.kept[id] = json.RawMessage(`{"role":"old","priorities":[],"responsibilities":[]}`)
+	}
+	again := &fakeModel{replies: []modelReply{{output: analysisOutput}, {output: syntheticOutput(t)}, {output: reviewedOutput(t)}}}
+	writeWith(t, writer.New(again).KeepAnalyses(stale).KeepRequirements(&memoryRequirements{fail: errors.New("down")}))
+	equal(t, again.calls, 3)
+	equal(t, stale.saved, 1)
+}
+
+func TestWriterAnalyzesAJobOnItsOwn(t *testing.T) {
+	jobs := &memoryRequirements{}
+	model := &fakeModel{replies: []modelReply{{output: analysisOutput}}}
+	if err := writer.New(model).KeepRequirements(jobs).Analyze(context.Background(), catalogJob(t, 0)); err != nil {
+		t.Fatal(err)
+	}
+	equal(t, jobs.must, []string{"Terraform"})
+	if err := writer.New(nil).Analyze(context.Background(), catalogJob(t, 0)); !errors.Is(err, writer.ErrNoAnalysis) {
+		t.Fatalf("without Claude: %v", err)
+	}
+	unreadable := &fakeModel{replies: []modelReply{{output: json.RawMessage(`[]`)}}}
+	if err := writer.New(unreadable).Analyze(context.Background(), catalogJob(t, 0)); !errors.Is(err, writer.ErrNoAnalysis) {
+		t.Fatalf("unreadable: %v", err)
+	}
+	failing := &fakeModel{replies: []modelReply{{err: claude.ErrLoginNeeded}}}
+	if err := writer.New(failing).Analyze(context.Background(), catalogJob(t, 0)); !errors.Is(err, writer.ErrNoAnalysis) {
 		t.Fatalf("login needed: %v", err)
 	}
 }

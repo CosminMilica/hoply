@@ -31,6 +31,8 @@ export const jobSchema = z.object({
   url: text,
   source: text,
   read_from: readFrom,
+  /** Whether the requirements are the rules' reading of the ad or Claude's. */
+  requirements_from: z.enum(['rules', 'analysis']).nullish().catch('rules').transform(value => value ?? 'rules'),
   sample: z.boolean().nullish().transform(value => value ?? false),
   added_by_me: z.boolean().nullish().transform(value => value ?? false),
   created_at: text,

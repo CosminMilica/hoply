@@ -57,6 +57,16 @@ describe('JobPage', () => {
     }
   })
 
+  it('says when Claude read the requirements', async () => {
+    const { jobs } = useServices()
+    await mountPage(JobPage, { at: `/jobs/${jobs.jobs[0]!.id}`, props: { id: jobs.jobs[0]!.id } })
+    expect(document.querySelector('[data-test="requirements-from"]')).toBeNull()
+    document.body.innerHTML = ''
+    jobs.jobs.unshift({ ...jobs.jobs[0]!, id: 'read', requirements_from: 'analysis' })
+    await mountPage(JobPage, { at: '/jobs/read', props: { id: 'read' } })
+    expect(document.querySelector('[data-test="requirements-from"]')!.textContent).toBe('Requirements as Claude read them from the ad.')
+  })
+
   it('says so for an unknown job', async () => {
     useServices()
     await mountPage(JobPage, { at: '/jobs/9', props: { id: '9' } })

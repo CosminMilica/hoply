@@ -27,6 +27,8 @@ type Job struct {
 	URL              string    `json:"url"`
 	Source           string    `json:"source"`
 	ReadFrom         string    `json:"read_from"`
+	// RequirementsFrom is "rules" or "analysis" (Claude's reading of the ad, written by the cv service).
+	RequirementsFrom string    `json:"requirements_from"`
 	Sample           bool      `json:"sample"`
 	AddedByMe        bool      `json:"added_by_me"`
 	CreatedAt        time.Time `json:"created_at"`
@@ -77,4 +79,10 @@ type JobFilter struct {
 type JobList struct {
 	Items []Job `json:"items"`
 	Total int   `json:"total"`
+}
+
+// RequirementsInput replaces a job's requirements with Claude's reading of its ad.
+type RequirementsInput struct {
+	MustHave   []string `json:"must_have"`
+	NiceToHave []string `json:"nice_to_have"`
 }

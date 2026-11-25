@@ -30,11 +30,12 @@ type JobRepository interface {
 	Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error)
 	Create(ctx context.Context, ident identity.IdentityContext, data models.JobInput) (*models.Job, error)
 	Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error)
+	SetRequirements(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, data models.RequirementsInput) (*models.Job, error)
 }
 
 const (
 	jobColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
-		"responsibilities, about, about_company, product, perks, areas, url, source, read_from, sample, " +
+		"responsibilities, about, about_company, product, perks, areas, url, source, read_from, requirements_from, sample, " +
 		"customer_id IS NOT NULL, created_at"
 	// visible keeps the catalog and the jobs of the $1 tenant and $2 subject.
 	visible = "(customer_id IS NULL OR (customer_id = $1 AND subject = $2))"
@@ -135,6 +136,14 @@ func (r *PgJobRepository) Create(ctx context.Context, ident identity.IdentityCon
 		nonNil(d.MustHave), nonNil(d.NiceToHave), nonNil(d.Responsibilities), d.About, d.URL, d.Source, d.ReadFrom)
 }
 
+// SetRequirements replaces the requirements of one of the caller's own jobs and
+// marks them as read by the analysis; nil when the caller has no such job.
+func (r *PgJobRepository) SetRequirements(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, d models.RequirementsInput) (*models.Job, error) {
+	return r.one(ctx, ident, "UPDATE jobs SET must_have = $4, nice_to_have = $5, requirements_from = 'analysis' "+
+		"WHERE id = $3 AND customer_id = $1 AND subject = $2 RETURNING "+jobColumns,
+		ident.TenantID, ident.Subject, id, nonNil(d.MustHave), nonNil(d.NiceToHave))
+}
+
 func (r *PgJobRepository) Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error) {
 	removed := false
 	err := r.run(ctx, ident, func(db DBTX) error {
@@ -182,7 +191,7 @@ func scanJob(row pgx.CollectableRow) (models.Job, error) {
 	var j models.Job
 	err := row.Scan(&j.ID, &j.Title, &j.Company, &j.City, &j.Country, &j.WorkMode, &j.Level, &j.YearsRequired,
 		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.About, &j.AboutCompany, &j.Product, &j.Perks, &j.Areas,
-		&j.URL, &j.Source, &j.ReadFrom, &j.Sample, &j.AddedByMe, &j.CreatedAt)
+		&j.URL, &j.Source, &j.ReadFrom, &j.RequirementsFrom, &j.Sample, &j.AddedByMe, &j.CreatedAt)
 	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Perks, &j.Areas} {
 		*list = nonNil(*list)
 	}

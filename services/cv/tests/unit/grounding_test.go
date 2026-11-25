@@ -304,3 +304,16 @@ func TestProbeQuestionsSayWhatTheyAreAboutAndWhereAnswersGo(t *testing.T) {
 	profile.Experience[0].Notes = []models.Note{{Text: "Used by 40 services"}}
 	equal(t, grounding.Build(profile, engineJob(t, 0), request(), now).Fingerprint() == before, false)
 }
+
+func TestAnalysisRequirementsReplaceTheRules(t *testing.T) {
+	analysis := grounding.Analysis{Requirements: []grounding.Requirement{
+		{Name: " Kubernetes ", Importance: "must"}, {Name: "NestJS", Importance: "nice"}, {Name: "kubernetes", Importance: "nice"}, {Name: " "}}}
+	job := analysis.Apply(models.Job{MustHave: []string{"Security"}, NiceToHave: []string{"SRE"}})
+	equal(t, job.MustHave, []string{"Kubernetes"})
+	equal(t, job.NiceToHave, []string{"NestJS"})
+	empty := grounding.Analysis{}
+	kept := empty.Apply(models.Job{MustHave: []string{"Security"}})
+	equal(t, kept.MustHave, []string{"Security"})
+	var none *grounding.Analysis
+	equal(t, none.Apply(models.Job{MustHave: []string{"Go"}}).MustHave, []string{"Go"})
+}

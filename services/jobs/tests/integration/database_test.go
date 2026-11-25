@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -14,6 +15,7 @@ import (
 	"jobs/internal/data/repositories"
 	"jobs/internal/db"
 	"jobs/internal/identity"
+	"jobs/internal/models"
 	"jobs/migrations"
 	"jobs/tests/testutil"
 )
@@ -68,5 +70,24 @@ func TestReadinessQueriesRealPostgres(t *testing.T) {
 func TestMigrationsRejectUnreachableDatabase(t *testing.T) {
 	if err := migrations.Up(context.Background(), "postgresql://postgres:postgres@127.0.0.1:1/none?connect_timeout=1"); err == nil {
 		t.Fatal("an unreachable database fails")
+	}
+}
+
+func TestRequirementsFromTheAnalysisAgainstPostgres(t *testing.T) {
+	_, pool := application(t, isolatedSchema(t))
+	ctx := context.Background()
+	repo := repositories.NewPgJobRepository(pool).WithScope(bindTenant(pool))
+	me := identity.New(uuid.New(), uuid.NewString())
+	job, err := repo.Create(ctx, me, models.JobInput{Title: "DevOps", Source: "text", ReadFrom: "text", MustHave: []string{"Security"}})
+	if err != nil || job.RequirementsFrom != "rules" {
+		t.Fatalf("a new job's requirements come from the rules: %+v %v", job, err)
+	}
+	set, err := repo.SetRequirements(ctx, me, job.ID, models.RequirementsInput{MustHave: []string{"Kubernetes"}, NiceToHave: []string{"NestJS"}})
+	if err != nil || set.RequirementsFrom != "analysis" || set.MustHave[0] != "Kubernetes" || set.NiceToHave[0] != "NestJS" {
+		t.Fatalf("set: %+v %v", set, err)
+	}
+	other := identity.New(uuid.New(), uuid.NewString())
+	if set, err := repo.SetRequirements(ctx, other, job.ID, models.RequirementsInput{}); err != nil || set != nil {
+		t.Fatalf("another person's job: %+v %v", set, err)
 	}
 }

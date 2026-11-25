@@ -8,7 +8,8 @@
     "responsibilities",
     "traits",
     "terms",
-    "seniority"
+    "seniority",
+    "requirements"
   ],
   "properties": {
     "role": {
@@ -81,6 +82,30 @@
     },
     "seniority": {
       "type": "string"
+    },
+    "requirements": {
+      "type": "array",
+      "maxItems": 25,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "importance"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "importance": {
+            "type": "string",
+            "enum": [
+              "must",
+              "nice"
+            ]
+          }
+        }
+      }
     }
   }
 }

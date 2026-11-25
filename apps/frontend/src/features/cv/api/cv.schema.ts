@@ -119,3 +119,6 @@ export const probeSchema = z.object({
 })
 
 export type Probe = z.infer<typeof probeSchema>
+
+/** Whether Claude started reading a job's ad. */
+export const analysisStartSchema = z.object({ status: z.enum(['pending', 'unavailable']) })

@@ -27,6 +27,17 @@ func registerQuestions(router chi.Router, cvs *services.CvService) {
 		}
 		return writeJSON(w, http.StatusOK, questions)
 	}))
+	router.Post("/{job_id}/analysis", handle(func(w http.ResponseWriter, r *http.Request) error {
+		jobID, err := pathUUID(r, "job_id")
+		if err != nil {
+			return err
+		}
+		started, err := cvs.Analyze(r.Context(), requestIdentity(r), jobID)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusAccepted, map[string]string{"status": started.Status})
+	}))
 	router.Get("/{job_id}/probe", handle(func(w http.ResponseWriter, r *http.Request) error {
 		jobID, err := pathUUID(r, "job_id")
 		if err != nil {

@@ -421,6 +421,7 @@ func (m *memoryProbes) SaveProbe(_ context.Context, ident identity.IdentityConte
 type fakeProber struct {
 	mu        sync.Mutex
 	calls     int
+	analyzed  int
 	fail      bool
 	available bool
 	release   chan struct{}
@@ -439,7 +440,66 @@ func (f *fakeProber) Questions(context.Context, models.Job, models.Profile) ([]m
 	return []models.ProbeQuestion{{Theme: "CI/CD", Question: "How many services?", Place: "experience:r1"}}, nil
 }
 
+func (f *fakeProber) Analyze(context.Context, models.Job) error {
+	if f.release != nil {
+		<-f.release
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.analyzed++
+	if f.fail {
+		return errors.New("no")
+	}
+	return nil
+}
+
 func (f *fakeProber) Available() bool { return f.available }
+
+func TestAnalysisStartsInTheBackground(t *testing.T) {
+	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t), printer: &fakePrinter{}}
+	prober := &fakeProber{available: true, release: make(chan struct{})}
+	service := services.NewCvService(h.repo, h.sources, h.printer, func() {}).WithProbes(&memoryProbes{kept: map[string]repositories.StoredProbe{}}, prober)
+	router := chi.NewRouter()
+	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: service, Writer: writer.New(nil)})
+	dev := identity.Dev()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		router.ServeHTTP(w, r.WithContext(identity.WithContext(r.Context(), dev)))
+	})
+	path := "/api/v1/jobs/" + jobID + "/analysis"
+	for range 2 {
+		if status, body := testutil.Do(t, handler, http.MethodPost, path, nil); status != http.StatusAccepted || body["status"] != "pending" {
+			t.Fatalf("started: %d %v", status, body)
+		}
+	}
+	close(prober.release)
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		prober.mu.Lock()
+		analyzed := prober.analyzed
+		prober.mu.Unlock()
+		if analyzed == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the analysis never ran")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	prober.available = false
+	if _, body := testutil.Do(t, handler, http.MethodPost, path, nil); body["status"] != "unavailable" {
+		t.Fatalf("Claude unavailable: %v", body)
+	}
+	if status, _ := testutil.Do(t, handler, http.MethodPost, "/api/v1/jobs/"+uuid.NewString()+"/analysis", nil); status != http.StatusNotFound {
+		t.Fatalf("unknown job: %d", status)
+	}
+	if status, _ := testutil.Do(t, handler, http.MethodPost, "/api/v1/jobs/nope/analysis", nil); status != http.StatusUnprocessableEntity {
+		t.Fatalf("bad id: %d", status)
+	}
+	_, plain := newCvHarness(t)
+	if _, body := testutil.Do(t, plain, http.MethodPost, path, nil); body["status"] != "unavailable" {
+		t.Fatalf("no prober: %v", body)
+	}
+}
 
 func TestProbeIsAskedInTheBackgroundAndKeptForTheFacts(t *testing.T) {
 	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t), printer: &fakePrinter{}}

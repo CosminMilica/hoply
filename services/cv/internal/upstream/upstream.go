@@ -3,6 +3,7 @@
 package upstream
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -102,4 +103,26 @@ func unavailable(dependency string, status int, cause error) error {
 	}
 	slog.Warn("dependency failed", "dependency", dependency, "error", cause)
 	return apperrors.NewDependencyUnavailable(dependency)
+}
+
+// SetRequirements replaces the job's requirements with the analysis's reading of its ad.
+func (c *Client) SetRequirements(ctx context.Context, id uuid.UUID, must, nice []string) error {
+	body, err := json.Marshal(map[string][]string{"must_have": must, "nice_to_have": nice})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.jobsURL+"/api/v1/jobs/"+id.String()+"/requirements", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("jobs answered %d", res.StatusCode)
+	}
+	return nil
 }

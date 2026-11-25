@@ -2,6 +2,7 @@ package unit_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -229,5 +230,33 @@ func TestUpstreamFromEnv(t *testing.T) {
 	profile, _, err := upstream.FromEnv().Profile(context.Background())
 	if err != nil || profile.Name != "From env" {
 		t.Fatalf("env profile: %+v %v", profile, err)
+	}
+}
+
+func TestUpstreamSetsTheJobsRequirements(t *testing.T) {
+	var got map[string][]string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut || r.URL.Path != "/api/v1/jobs/"+jobID+"/requirements" {
+			http.NotFound(w, r)
+			return
+		}
+		_ = json.NewDecoder(r.Body).Decode(&got)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+	client := upstream.New(server.URL, server.URL)
+	if err := client.SetRequirements(context.Background(), uuid.MustParse(jobID), []string{"Go"}, []string{"Rust"}); err != nil {
+		t.Fatal(err)
+	}
+	equal(t, got, map[string][]string{"must_have": {"Go"}, "nice_to_have": {"Rust"}})
+	if err := client.SetRequirements(context.Background(), uuid.New(), nil, nil); err == nil {
+		t.Fatal("an unknown job fails")
+	}
+	server.Close()
+	if err := client.SetRequirements(context.Background(), uuid.New(), nil, nil); err == nil {
+		t.Fatal("an unreachable service fails")
+	}
+	if err := upstream.New("", "http://bad host").SetRequirements(context.Background(), uuid.New(), nil, nil); err == nil {
+		t.Fatal("a bad URL fails")
 	}
 }

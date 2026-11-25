@@ -104,6 +104,29 @@ func (s *JobService) Create(ctx context.Context, ident identity.IdentityContext,
 	return s.repo.Create(ctx, ident, cleaned)
 }
 
+// SetRequirements replaces the requirements of one of the caller's jobs with
+// Claude's reading of its ad, cleaned as on create.
+func (s *JobService) SetRequirements(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, data models.RequirementsInput) (*models.Job, error) {
+	if err := requireSubject(ident); err != nil {
+		return nil, err
+	}
+	var c cleaner
+	seen := map[string]bool{}
+	c.list("must_have", &data.MustHave, extract.MaxSkills, maxSkill, seen)
+	c.list("nice_to_have", &data.NiceToHave, extract.MaxSkills, maxSkill, seen)
+	if c.err != nil {
+		return nil, c.err
+	}
+	job, err := s.repo.SetRequirements(ctx, ident, id, data)
+	if err != nil {
+		return nil, err
+	}
+	if job == nil {
+		return nil, apperrors.NewNotFound("Job", id.String())
+	}
+	return job, nil
+}
+
 // Delete removes the caller's own job; a catalog job or anyone else's is 404.
 func (s *JobService) Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) error {
 	if err := requireSubject(ident); err != nil {

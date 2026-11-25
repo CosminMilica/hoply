@@ -15,6 +15,7 @@ else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 | Method | Path (service side) | Body | Response |
 | --- | --- | --- | --- |
 | GET | `/api/v1/jobs/{job_id}/questions` | | 200 `PrepQuestions`; 404 unknown job; 503 profile or jobs unavailable |
+| POST | `/api/v1/jobs/{job_id}/analysis` | | 202 `{ status: pending \| unavailable }`; 404 unknown job; 503 jobs unavailable |
 | GET | `/api/v1/jobs/{job_id}/probe` | | 200 `Probe`; 404 unknown job; 503 profile or jobs unavailable |
 | POST | `/api/v1/cvs` | `CvRequest` | 202 `Cv` with `status: queued`; 404 unknown job; 422 invalid body; 503 profile or jobs unavailable |
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
@@ -62,7 +63,12 @@ cannot be written is `failed`; the web app offers to try again.
 
 ## Reading the job
 
-The requirements to write around are `must_have` then `nice_to_have`. The key responsibilities asked about are the
+The requirements to write around are `must_have` then `nice_to_have`. With Claude, they are the analysis's: it reads
+the skills the ad asks for as a person lists them on a CV, `must` or `nice` (a plus, preferred, or only part of the
+stack), and leaves out practices, qualities and the field itself. A new analysis writes them back to the job
+(`PUT /jobs/{id}/requirements` in the jobs service), so the match and Prepare your CV use them too. The web app asks
+for the analysis in the background when a job is added (`POST /jobs/{job_id}/analysis`); otherwise it runs with the
+first CV or the first questions. An analysis kept before it read requirements is read again. The key responsibilities asked about are the
 job's first four `responsibilities`. A job without a `product` is "products" in the summary.
 
 The person's skills are the profile's `skills`, the `tools` of every role and project, and the `skills` of every

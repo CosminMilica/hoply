@@ -19,6 +19,7 @@ export async function mockCvService(page: Page, profile: object, jobs: { jobs: {
     const method = request.method();
     const answer = kind === 'jobs' && rest === 'questions' ? backend.questions(id ?? '')
       : kind === 'jobs' && rest === 'probe' ? backend.probe(id ?? '')
+      : kind === 'jobs' && rest === 'analysis' ? backend.analyze(id ?? '')
       : method === 'POST' ? backend.create(request.postDataJSON())
         : method === 'DELETE' ? backend.remove(id ?? '')
           : id ? backend.get(id) : backend.list(url.searchParams.get('job_id'));

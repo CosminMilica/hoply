@@ -2,6 +2,7 @@ import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { jobsApi } from '../api/jobsApi'
 import type { Job, JobFilters } from '../api/jobs.schema'
+import { cvApi } from '@/features/cv/api/cvApi'
 
 export const jobKeys = {
   all: ['jobs'] as const,
@@ -34,6 +35,7 @@ export function useAddJob() {
       mutationFn: jobsApi.create,
       onError: () => {},
       onSuccess: (job: Job) => {
+        cvApi.analyze(job.id).catch(() => {})
         client.setQueryData(jobKeys.detail(job.id), job)
         return client.invalidateQueries({ queryKey: ['jobs', 'list'] })
       },
