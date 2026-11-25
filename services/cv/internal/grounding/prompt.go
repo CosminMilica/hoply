@@ -7,6 +7,7 @@ import (
 
 	"cv/internal/cvdoc"
 	"cv/internal/models"
+	"cv/internal/style"
 )
 
 // System is the system prompt.
@@ -45,29 +46,31 @@ type promptJob struct {
 }
 
 type promptMessage struct {
-	PageLimit int       `json:"page_limit"`
-	Analysis  *Analysis `json:"analysis,omitempty"`
-	Job       promptJob `json:"job"`
-	Focus     []string  `json:"focus"`
-	Skills    []string  `json:"skills"`
-	Roles     []Entry   `json:"roles"`
-	Projects  []Entry   `json:"projects"`
-	Facts     []Fact    `json:"facts"`
-	Draft     *Answer   `json:"draft,omitempty"`
+	PageLimit int             `json:"page_limit"`
+	Analysis  *Analysis       `json:"analysis,omitempty"`
+	Job       promptJob       `json:"job"`
+	Focus     []string        `json:"focus"`
+	Skills    []string        `json:"skills"`
+	Roles     []Entry         `json:"roles"`
+	Projects  []Entry         `json:"projects"`
+	Facts     []Fact          `json:"facts"`
+	Draft     *Answer         `json:"draft,omitempty"`
+	Style     []style.Finding `json:"style,omitempty"`
 }
 
 // Prompt is the message: the analysis of the job (nil without one), the job (as
 // data), the person's choices and the numbered facts.
 func (c Catalogue) Prompt(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis) string {
-	return c.message(job, request, skills, analysis, nil)
+	return c.message(job, request, skills, analysis, nil, nil)
 }
 
-// ReviewPrompt is the review's message: Prompt's, with the draft to improve.
-func (c Catalogue) ReviewPrompt(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis, draft Answer) string {
-	return c.message(job, request, skills, analysis, &draft)
+// ReviewPrompt is the review's message: Prompt's, with the draft to improve and
+// what reads as machine-made in it.
+func (c Catalogue) ReviewPrompt(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis, draft Answer, findings []style.Finding) string {
+	return c.message(job, request, skills, analysis, &draft, findings)
 }
 
-func (c Catalogue) message(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis, draft *Answer) string {
+func (c Catalogue) message(job cvdoc.Job, request models.CvRequest, skills []string, analysis *Analysis, draft *Answer, findings []style.Finding) string {
 	confirmed := []string{}
 	for _, index := range request.Confirmed {
 		if index >= 0 && index < len(job.Responsibilities) {
@@ -82,6 +85,7 @@ func (c Catalogue) message(job cvdoc.Job, request models.CvRequest, skills []str
 		PageLimit: c.PageLimit,
 		Analysis:  analysis,
 		Draft:     draft,
+		Style:     findings,
 		Job: promptJob{
 			Title: job.Title, Company: job.Company, Level: job.Level, YearsRequired: job.YearsRequired, Product: job.Product,
 			About: job.About, AboutCompany: job.AboutCompany,

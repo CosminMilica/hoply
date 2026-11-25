@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specific",
+    "human",
+    "evidence",
+    "relevance",
+    "readable",
+    "winner",
+    "why"
+  ],
+  "properties": {
+    "specific": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b",
+        "tie"
+      ]
+    },
+    "human": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b",
+        "tie"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b",
+        "tie"
+      ]
+    },
+    "relevance": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b",
+        "tie"
+      ]
+    },
+    "readable": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b",
+        "tie"
+      ]
+    },
+    "winner": {
+      "type": "string",
+      "enum": [
+        "a",
+        "b",
+        "tie"
+      ]
+    },
+    "why": {
+      "type": "string"
+    }
+  }
+}

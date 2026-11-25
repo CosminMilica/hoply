@@ -250,7 +250,7 @@ func (c Catalogue) skills(ordered, rules []string) []string {
 	skills := []string{}
 	for _, skill := range ordered {
 		for _, have := range c.Known {
-			if strings.EqualFold(strings.TrimSpace(skill), strings.TrimSpace(have)) && !contains(skills, have) {
+			if strings.EqualFold(strings.TrimSpace(skill), strings.TrimSpace(have)) && !sameAs(skills, have) {
 				skills = append(skills, have)
 			}
 		}
@@ -265,11 +265,16 @@ func (c Catalogue) skills(ordered, rules []string) []string {
 		}
 	}
 	for _, matched := range c.Matched {
-		if !contains(kept, matched) {
+		if !sameAs(kept, matched) {
 			kept = append(kept, matched)
 		}
 	}
 	return kept
+}
+
+// sameAs reports whether items hold the skill under any of its names.
+func sameAs(items []string, skill string) bool {
+	return slices.ContainsFunc(items, func(item string) bool { return cvdoc.SameSkill(item, skill) })
 }
 
 func contains(items []string, value string) bool {

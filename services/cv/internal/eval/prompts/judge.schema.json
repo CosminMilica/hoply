@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specific",
+    "human",
+    "evidence",
+    "relevance",
+    "readable",
+    "plastic",
+    "note"
+  ],
+  "properties": {
+    "specific": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "human": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "evidence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "relevance": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "readable": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "plastic": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    }
+  }
+}

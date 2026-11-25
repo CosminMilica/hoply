@@ -1,0 +1,62 @@
+{
+  "name": "marketing-content-manager",
+  "profile": {
+    "name": "Ioana Marin",
+    "headline": "Content Marketing Specialist",
+    "about": "I write and run content for B2B software companies: blogs, newsletters and the odd webinar. I care about pieces sales can actually use.",
+    "email": "ioana.marin@example.com",
+    "phone": "+40 700 000 101",
+    "linkedin": "linkedin.com/in/ioana-marin-example",
+    "city": "Cluj-Napoca",
+    "country": "Romania",
+    "work_modes": ["remote", "hybrid"],
+    "additional_info": ["Guest lecturer on content strategy at a local marketing course, twice"],
+    "skills": ["Content strategy", "Copywriting", "SEO", "HubSpot", "Google Analytics", "WordPress", "Email marketing", "Webinars"],
+    "experience": [
+      {
+        "id": "m1", "role": "Content Marketing Specialist", "company": "Ledgerly", "location": "Cluj-Napoca", "start": "2022-04", "end": "",
+        "tools": ["HubSpot", "WordPress", "Google Analytics", "Ahrefs", "Figma"],
+        "bullets": [
+          { "text": "Run the company blog and publish two articles a week.", "result": "organic traffic went from 8,000 to 31,000 visits a month in 18 months", "skills": ["SEO"] },
+          { "text": "Write the monthly customer newsletter.", "result": "open rate around 42%", "skills": ["Email marketing"] },
+          { "text": "Turned support tickets into how-to guides with the support team.", "result": "", "skills": [] },
+          { "text": "Organise a quarterly webinar with a customer and a product manager.", "result": "about 300 sign-ups each", "skills": ["Webinars"] }
+        ],
+        "notes": [
+          { "text": "Sales uses my comparison pages in demos; two of them are linked in the sales playbook", "skills": [] },
+          { "text": "I briefed and edited 4 freelance writers", "skills": [] }
+        ]
+      },
+      {
+        "id": "m2", "role": "Marketing Assistant", "company": "Brightpath Travel", "location": "Cluj-Napoca", "start": "2020-02", "end": "2022-03",
+        "tools": ["Mailchimp", "Canva", "Facebook Ads"],
+        "bullets": [
+          { "text": "Wrote destination pages and social posts.", "result": "", "skills": ["Copywriting"] },
+          { "text": "Kept the email list clean and sent the weekly offers email.", "result": "list grew to 25,000 subscribers", "skills": ["Email marketing"] }
+        ]
+      }
+    ],
+    "projects": [],
+    "education": [{ "id": "e1", "level": "bachelor", "field": "Communication", "degree": "BA Communication and Public Relations", "school": "Babeș-Bolyai University", "start_year": "2016", "end_year": "2019" }],
+    "certifications": [{ "id": "c1", "name": "Inbound Marketing", "issuer": "HubSpot Academy" }],
+    "languages": [{ "id": "l1", "name": "Romanian", "level": "Native" }, { "id": "l2", "name": "English", "level": "C1" }]
+  },
+  "job": {
+    "title": "Content Marketing Manager",
+    "company": "Northwind Analytics",
+    "city": "Remote", "country": "Europe", "work_mode": "remote", "level": "mid", "years_required": 3,
+    "about": "We are hiring a Content Marketing Manager to own our content engine: the blog, newsletters, case studies and the content our sales team uses in deals. You will set the editorial calendar, work with product marketing and sales, and report on what content brings pipeline.",
+    "about_company": "Northwind Analytics makes reporting software for mid-size retailers. We are a 120-person scale-up growing in the UK and Germany.",
+    "product": "retail reporting software",
+    "must_have": ["Content strategy", "SEO", "B2B SaaS", "Copywriting", "HubSpot", "Google Analytics"],
+    "nice_to_have": ["Webinars", "Case studies", "Managing freelancers"],
+    "responsibilities": [
+      "Own the editorial calendar across blog, newsletter and case studies",
+      "Grow organic traffic and the newsletter audience",
+      "Produce sales enablement content with the sales team",
+      "Brief and edit freelance writers",
+      "Report on how content contributes to pipeline"
+    ]
+  },
+  "request": { "job_id": "", "skip_roles": [], "focus": [], "confirmed": [] }
+}

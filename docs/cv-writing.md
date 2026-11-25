@@ -11,6 +11,10 @@ The rules behind the prompt (`services/cv/internal/grounding/prompts/cv-system.m
 | One idea per bullet, in the person's own words adapted where it fits; no glued clauses, tool lists or forced terms | prompt | the owner, 2026-11-25 |
 | Each bullet: what was done, how, and so what (result, scale, who it served) | prompt | [5] |
 | Active, specific verbs; no pronouns; no "responsible for"; "express, not impress" | prompt | [1] |
+| At most two tools in a bullet; the rest live in the skills list | prompt, `internal/style`, review | the eval, 2026-11-25 |
+| No participle tacked onto a sentence (", delivering…"), no stock words, varied bullet shapes and first words | prompt, `internal/style`, review | the eval, 2026-11-25 |
+| The summary is an angle, not "<title> with N years of experience" and not the bullets again | prompt, `internal/style`, review | the eval, 2026-11-25 |
+| Each skill named once, whatever its spelling | `skillmap.json`, code | the eval, 2026-11-25 |
 | Quantify with the person's own numbers, never added ones | prompt, checks | [1], [5] |
 | The job's terms, in the job's spelling, woven into real sentences; no keyword lists in bullets | prompt | [1], [2], [5] |
 | Every requirement the person has appears in at least one sentence | prompt, ATS check | [2], [4] |
@@ -19,6 +23,10 @@ The rules behind the prompt (`services/cv/internal/grounding/prompts/cv-system.m
 | Arial or Liberation Sans, 10 pt | export | [2] (10–12 pt) |
 | One page under eight years of experience, two from then on | `cvdoc.PageLimit` | [5] retires the one-page rule for experienced people; one page stays the norm early on |
 | DOCX and PDF both offered | export | [2] prefers DOCX; [1] says check that a PDF reads as text |
+
+Code lints every draft for these patterns (`internal/style`) and the review must fix each finding. The evaluation in
+`services/cv/eval` measured the change on five cases in three fields: findings per sentence 0.80 → 0.15, the judge's
+mean 3.60 → 3.88 (human 3.40 → 3.80), and a blind comparison preferred the new CVs in 4 cases, with 1 tie.
 
 The articles disagree on keyword use: [4] says screeners reward job-description terms, [5] that mechanical
 mirroring no longer works. Hoply uses the job's terms only where the person's facts support them.

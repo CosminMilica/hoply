@@ -311,8 +311,14 @@ or `nice`, and writes them back to the job; the web app starts it when a job is 
 
 **Cover letter and messages** (done, 2026-11-25). From a ready CV, on request: a cover letter, a LinkedIn note, a
 message for after applying and a follow-up, in one Claude call from the kept analysis, the CV and the facts, checked
-like the CV (`letters` table, `docs/api/cv.md`). Editable on the page and exported in the CV's template. Next: an
-evaluation set with a judge (C).
+like the CV (`letters` table, `docs/api/cv.md`). Editable on the page and exported in the CV's template.
+
+**Evaluation and less machine-made writing** (done, 2026-11-25). `services/cv/eval` writes a CV per case (two
+fictional people in other fields, committed; the owner's profile with saved jobs, local), lints it (`internal/style`)
+and has Opus score it and compare two runs blind. The owner found the CVs "plastic"; the baseline showed why: tool
+lists, trailing "-ing" clauses, a summary formula, duplicate skills. The prompts now forbid them and the review gets
+the lint of its draft. Findings per sentence 0.80 → 0.15, judge 3.60 → 3.88, blind comparison 4 wins and 1 tie. What
+is left is material: a job far from the person's facts (a fullstack role for a DevOps profile) stays weak (2.6).
 
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.

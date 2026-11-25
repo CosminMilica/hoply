@@ -19,6 +19,7 @@ import (
 	"cv/internal/data/repositories"
 	"cv/internal/grounding"
 	"cv/internal/models"
+	"cv/internal/style"
 )
 
 // Claude is the model the writer asks; *claude.Client is one.
@@ -124,7 +125,9 @@ func (w *Writer) Write(ctx context.Context, task *repositories.Task) (models.Wri
 		return byRules(models.ClaudeFailed, nil)
 	}
 	final := *draft
-	if reviewed := w.review(ctx, task, job, catalogue, analysis, *draft); reviewed != nil {
+	drafted, _ := catalogue.WithEquivalents(draft.Plan.Equivalents).Assemble(*draft, job, rules.Tailored)
+	findings := style.Lint(drafted, catalogue.Known).Findings
+	if reviewed := w.review(ctx, task, job, catalogue, analysis, *draft, findings); reviewed != nil {
 		final = *reviewed
 	}
 
@@ -215,10 +218,10 @@ func (w *Writer) analyze(ctx context.Context, logID string, jobID uuid.UUID, job
 
 // review is the draft improved by a hiring manager's reading; nil keeps the draft.
 func (w *Writer) review(ctx context.Context, task *repositories.Task, job cvdoc.Job, catalogue grounding.Catalogue,
-	analysis *grounding.Analysis, draft grounding.Answer) *grounding.Answer {
+	analysis *grounding.Analysis, draft grounding.Answer, findings []style.Finding) *grounding.Answer {
 	raw, stop := w.run(ctx, task.ID.String(), "review", claude.Request{
 		System: grounding.ReviewSystem, Schema: grounding.ReviewSchema(),
-		Prompt: catalogue.ReviewPrompt(job, task.Request, catalogue.Known, analysis, draft),
+		Prompt: catalogue.ReviewPrompt(job, task.Request, catalogue.Known, analysis, draft, findings),
 	})
 	if stop != nil || raw == nil {
 		return nil

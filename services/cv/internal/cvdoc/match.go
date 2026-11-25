@@ -261,3 +261,6 @@ func closeTo(requirement string, have map[string]string) ([]string, string) {
 	}
 	return via, category
 }
+
+// SameSkill reports whether two names are one skill ("Flux CD" and "FluxCD").
+func SameSkill(a, b string) bool { return skillKey(a) == skillKey(b) }
