@@ -292,7 +292,11 @@ func TestCvFilesThroughRoutes(t *testing.T) {
 	if !strings.Contains(h.printer.page, "<h2>Summary</h2>") {
 		t.Fatalf("the printer gets the page: %q", h.printer.page)
 	}
-	for _, tc := range []struct{ query, field string }{{"?format=txt", "format"}, {"", "format"}, {"?format=pdf&version=draft", "version"}} {
+	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, file+"?format=pdf&template=elegant", nil))
+	if !strings.Contains(h.printer.page, "Caladea") {
+		t.Fatal("the printer gets the chosen template")
+	}
+	for _, tc := range []struct{ query, field string }{{"?format=txt", "format"}, {"", "format"}, {"?format=pdf&version=draft", "version"}, {"?format=docx&template=fancy", "template"}} {
 		if status, body := testutil.Do(t, handler, http.MethodGet, file+tc.query, nil); status != http.StatusUnprocessableEntity || errorField(body) != tc.field {
 			t.Fatalf("%q: %d %v", tc.query, status, body)
 		}

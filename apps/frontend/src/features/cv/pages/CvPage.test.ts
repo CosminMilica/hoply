@@ -10,6 +10,7 @@ const request = { job_id: seedId(1), skip_roles: [], focus: [], confirmed: [] }
 
 afterEach(() => {
   document.body.innerHTML = ''
+  localStorage.clear()
   vi.restoreAllMocks()
 })
 
@@ -48,11 +49,44 @@ describe('CvPage', () => {
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     const id = cvs.cvs[0]!.cv.id
     const link = (name: string) => [...document.querySelectorAll('a')].find(element => element.textContent?.trim() === name)!
-    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=tailored`)
+    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=tailored&template=classic`)
     expect(link('Download PDF').hasAttribute('download')).toBe(true)
-    expect(link('DOCX').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=docx&version=tailored`)
+    expect(link('DOCX').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=docx&version=tailored&template=classic`)
     await click(button('Your profile'))
-    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=profile`)
+    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=profile&template=classic`)
+  })
+
+  it('shows and downloads the CV in the template the person picks, and remembers it', async () => {
+    const { cvs } = useServices()
+    await cvApi.generate(request)
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    const id = cvs.cvs[0]!.cv.id
+    const paper = () => document.querySelector('[data-print-root]')!
+    const link = (name: string) => [...document.querySelectorAll('a')].find(element => element.textContent?.trim() === name)!
+    expect(paper().getAttribute('data-template')).toBe('classic')
+    expect(button('Classic').getAttribute('aria-pressed')).toBe('true')
+    await click(button('Elegant'))
+    expect(paper().getAttribute('data-template')).toBe('elegant')
+    expect(link('DOCX').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=docx&version=tailored&template=elegant`)
+    await click(button('Modern'))
+    document.body.innerHTML = ''
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    expect(paper().getAttribute('data-template')).toBe('modern')
+    localStorage.setItem('hoply.cv.template', 'toString')
+    document.body.innerHTML = ''
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    expect(paper().getAttribute('data-template')).toBe('classic')
+  })
+
+  it('leaves out the sections the CV has nothing for', async () => {
+    useServices(sampleProfile({ languages: [], skills: [], certifications: [], education: [] }))
+    await cvApi.generate(request)
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    const headings = [...document.querySelectorAll('[data-print-root] h2')].map(element => element.textContent)
+    expect(headings).not.toContain('Languages')
+    expect(headings).not.toContain('Education')
+    expect(headings).not.toContain('Certifications')
+    expect(headings).toContain('Experience')
   })
 
   it('starts with the headline and keeps the plain file name without a name', async () => {

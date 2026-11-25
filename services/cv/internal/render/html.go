@@ -6,13 +6,13 @@ package render
 
 import (
 	"bytes"
-	"html/template"
+	htmltemplate "html/template"
 	"strings"
 
 	"cv/internal/models"
 )
 
-var page = template.Must(template.New("cv").Funcs(template.FuncMap{"join": strings.Join}).Parse(`<!doctype html>
+var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"join": strings.Join}).Parse(`<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -32,6 +32,7 @@ var page = template.Must(template.New("cv").Funcs(template.FuncMap{"join": strin
   li { margin: 0.5pt 0; }
   .meta { font-weight: 400; }
   .entry { break-inside: avoid; }
+{{- .CSS}}
 </style>
 </head>
 <body>
@@ -49,10 +50,12 @@ var page = template.Must(template.New("cv").Funcs(template.FuncMap{"join": strin
   <p class="line">{{join .Links " · "}}</p>
 {{- end}}
 </header>
+{{- if .Summary}}
 <section>
   <h2>Summary</h2>
   <p>{{.Summary}}</p>
 </section>
+{{- end}}
 {{- if .Skills}}
 <section>
   <h2>Skills</h2>
@@ -115,10 +118,13 @@ var page = template.Must(template.New("cv").Funcs(template.FuncMap{"join": strin
 </html>
 `))
 
-// HTML is the CV as a printable page.
-func HTML(document models.CvDocument) (string, error) {
+// HTML is the CV as a printable page in one of the Templates ("" is the default).
+func HTML(document models.CvDocument, template string) (string, error) {
 	var out bytes.Buffer
-	if err := page.Execute(&out, document); err != nil {
+	if err := page.Execute(&out, struct {
+		models.CvDocument
+		CSS htmltemplate.CSS
+	}{document, lookOf(template).css}); err != nil {
 		return "", err
 	}
 	return out.String(), nil

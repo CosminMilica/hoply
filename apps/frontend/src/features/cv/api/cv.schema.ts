@@ -122,3 +122,7 @@ export type Probe = z.infer<typeof probeSchema>
 
 /** Whether Claude started reading a job's ad. */
 export const analysisStartSchema = z.object({ status: z.enum(['pending', 'unavailable']) })
+
+/** The looks a CV is shown and exported in, the default first (render.Templates in the cv service). */
+export const CV_TEMPLATES = { classic: 'Classic', modern: 'Modern', elegant: 'Elegant' } as const
+export type CvTemplate = keyof typeof CV_TEMPLATES

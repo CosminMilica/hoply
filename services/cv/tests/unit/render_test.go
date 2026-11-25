@@ -26,7 +26,7 @@ func sampleDocument(t *testing.T) models.CvDocument {
 }
 
 func TestHTMLHasEverySectionInOneColumnAndEscapesText(t *testing.T) {
-	page, err := render.HTML(sampleDocument(t))
+	page, err := render.HTML(sampleDocument(t), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,18 +40,22 @@ func TestHTMLHasEverySectionInOneColumnAndEscapesText(t *testing.T) {
 	if strings.Contains(page, "<script>") || strings.Contains(page, "<table") || strings.Contains(page, "<img") {
 		t.Fatal("no script, table or image")
 	}
-	thin, err := render.HTML(models.CvDocument{Headline: "Engineer", Summary: "Short."})
+	thin, err := render.HTML(models.CvDocument{Headline: "Engineer"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(thin, `<p class="name">Engineer</p>`) || strings.Contains(thin, "<h2>Skills</h2>") || strings.Contains(thin, "<h2>Experience</h2>") ||
-		!strings.Contains(thin, "<title>CV</title>") {
+	if !strings.Contains(thin, `<p class="name">Engineer</p>`) || !strings.Contains(thin, "<title>CV</title>") {
 		t.Fatalf("a thin CV: %s", thin)
+	}
+	for _, empty := range []string{"Summary", "Skills", "Experience", "Projects", "Education", "Certifications", "Languages", "Additional information"} {
+		if strings.Contains(thin, "<h2>"+empty+"</h2>") {
+			t.Errorf("a section without data is left out: %s", empty)
+		}
 	}
 }
 
 func TestDOCXIsAWordDocumentWithTheCVText(t *testing.T) {
-	raw, err := render.DOCX(sampleDocument(t))
+	raw, err := render.DOCX(sampleDocument(t), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,9 +93,12 @@ func TestDOCXIsAWordDocumentWithTheCVText(t *testing.T) {
 			t.Errorf("document lacks %q", want)
 		}
 	}
-	thin, err := render.DOCX(models.CvDocument{Headline: "Engineer", Summary: "Short."})
+	thin, err := render.DOCX(models.CvDocument{Headline: "Engineer"}, "")
 	if err != nil || !bytes.HasPrefix(thin, []byte("PK")) {
 		t.Fatalf("a thin CV: %v", err)
+	}
+	if text := docxPart(t, thin, "word/document.xml"); strings.Contains(text, ">Summary<") {
+		t.Fatal("an empty summary is left out")
 	}
 }
 
@@ -150,4 +157,59 @@ func TestGotenbergFromEnv(t *testing.T) {
 	if render.GotenbergFromEnv() == nil {
 		t.Fatal("a default URL")
 	}
+}
+
+func docxPart(t *testing.T, raw []byte, name string) string {
+	t.Helper()
+	archive, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, file := range archive.File {
+		if file.Name == name {
+			reader, err := file.Open()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer reader.Close()
+			body, _ := io.ReadAll(reader)
+			return string(body)
+		}
+	}
+	t.Fatalf("missing part %s", name)
+	return ""
+}
+
+func TestEveryTemplateKeepsTheSameTextAndLooksItsOwn(t *testing.T) {
+	document := sampleDocument(t)
+	classic, _ := render.HTML(document, "")
+	for _, tc := range []struct{ template, css, font string }{
+		{"classic", "", "Arial"}, {"modern", "Carlito", "Calibri"}, {"elegant", "Caladea", "Cambria"},
+	} {
+		page, err := render.HTML(document, tc.template)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tc.css != "" && !strings.Contains(page, tc.css) {
+			t.Errorf("%s page lacks %s", tc.template, tc.css)
+		}
+		if body := page[strings.Index(page, "<body>"):]; body != classic[strings.Index(classic, "<body>"):] {
+			t.Errorf("%s changes the text, not only the look", tc.template)
+		}
+		raw, err := render.DOCX(document, tc.template)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if styles := docxPart(t, raw, "word/styles.xml"); !strings.Contains(styles, `w:ascii="`+tc.font+`"`) {
+			t.Errorf("%s DOCX is not in %s", tc.template, tc.font)
+		}
+	}
+	elegant, _ := render.DOCX(document, "elegant")
+	if !strings.Contains(docxPart(t, elegant, "word/styles.xml"), `<w:jc w:val="center"/>`) {
+		t.Error("the elegant header is centered")
+	}
+	equal(t, render.Known(""), true)
+	equal(t, render.Known("modern"), true)
+	equal(t, render.Known("fancy"), false)
+	equal(t, render.Templates, []string{"classic", "modern", "elegant"})
 }

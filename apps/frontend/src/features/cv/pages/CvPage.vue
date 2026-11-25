@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useLocalStorage } from '@vueuse/core'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
 import AtsCard from '../components/AtsCard.vue'
 import CvPaper from '../components/CvPaper.vue'
 import TailoringCard from '../components/TailoringCard.vue'
 import { authorshipLine } from '../authorship'
 import { useLatestCvQuery } from '../composables/useCv'
+import { CV_TEMPLATES, type CvTemplate } from '../api/cv.schema'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -14,13 +16,19 @@ const { data: cv, isPending } = useLatestCvQuery(() => props.id)
 const { statuses } = useApplicationStatuses()
 const { setStatus } = useApplicationMutations()
 const mode = ref<'profile' | 'tailored'>('tailored')
+const stored = useLocalStorage<string>('hoply.cv.template', 'classic')
+const template = computed<CvTemplate>({
+  get: () => (Object.hasOwn(CV_TEMPLATES, stored.value) ? stored.value as CvTemplate : 'classic'),
+  set: (value) => { stored.value = value },
+})
+const templates = Object.entries(CV_TEMPLATES) as [CvTemplate, string][]
 
 const applied = computed(() => statuses.value.get(props.id) === 'applied')
 const document = computed(() => (cv.value ? cv.value[mode.value] : null))
 
 /** The file of the version on screen, as the cv service renders it. */
 const fileUrl = (format: 'pdf' | 'docx') =>
-  cv.value ? `/api/cv/v1/cvs/${encodeURIComponent(cv.value.id)}/file?format=${format}&version=${mode.value}` : ''
+  cv.value ? `/api/cv/v1/cvs/${encodeURIComponent(cv.value.id)}/file?format=${format}&version=${mode.value}&template=${template.value}` : ''
 </script>
 
 <template>
@@ -52,6 +60,22 @@ const fileUrl = (format: 'pdf' | 'docx') =>
             @click="mode = option.id"
           />
         </div>
+        <div class="order-2 flex flex-col gap-1.5">
+          <span class="text-[13px] font-bold text-muted">Template</span>
+          <div class="flex gap-1.5 rounded-[10px] bg-accented p-1" role="group" aria-label="Template">
+            <UButton
+              v-for="[name, label] in templates"
+              :key="name"
+              :label="label"
+              :aria-pressed="template === name"
+              color="neutral"
+              :variant="template === name ? 'soft' : 'ghost'"
+              class="flex-1 justify-center text-[15px]"
+              :class="template === name ? 'bg-ink-700' : ''"
+              @click="template = name"
+            />
+          </div>
+        </div>
         <AtsCard v-if="mode === 'tailored'" :ats="cv.ats" class="order-3" @improve="router.push({ name: 'hoply-prep', params: { id } })" />
         <TailoringCard v-if="mode === 'tailored' && cv.tailoring" :tailoring="cv.tailoring" class="order-3" />
         <div class="order-6 flex flex-col gap-2.5">
@@ -73,10 +97,10 @@ const fileUrl = (format: 'pdf' | 'docx') =>
         </div>
       </div>
       <div class="contents min-[900px]:col-start-2 min-[900px]:row-start-1 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4">
-        <CvPaper class="order-4" :document="document" :highlights="mode === 'tailored' ? cv.highlights : []" />
+        <CvPaper class="order-4" :document="document" :template="template" :highlights="mode === 'tailored' ? cv.highlights : []" />
         <p v-if="mode === 'tailored'" class="order-5 m-0 text-[13px] leading-normal font-medium text-muted">
           <mark class="rounded-md bg-hoply-200 px-1.5 py-px font-extrabold text-hoply-950">Highlighted</mark>
-          words are only for you. The file we export is plain text with no colors, so any ATS can read it. Everything in it comes from your profile and your answers.
+          words are only for you. Every template exports real text in one column with standard headings, so any ATS can read it. Everything in it comes from your profile and your answers.
         </p>
       </div>
     </div>

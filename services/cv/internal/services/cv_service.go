@@ -203,10 +203,14 @@ type File struct {
 	Body        []byte
 }
 
-// File renders a ready CV's tailored or profile version as a PDF or a DOCX.
-func (s *CvService) File(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, format, version string) (*File, error) {
+// File renders a ready CV's tailored or profile version as a PDF or a DOCX, in
+// one of render.Templates.
+func (s *CvService) File(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, format, version, template string) (*File, error) {
 	if format != "pdf" && format != "docx" {
 		return nil, invalid("format", "'format' must be pdf or docx")
+	}
+	if !render.Known(template) {
+		return nil, invalid("template", "'template' must be one of "+strings.Join(render.Templates, ", "))
 	}
 	if version == "" {
 		version = "tailored"
@@ -227,13 +231,13 @@ func (s *CvService) File(ctx context.Context, ident identity.IdentityContext, id
 	}
 	name := strings.TrimSuffix(cv.FileName, ".pdf")
 	if format == "docx" {
-		body, err := render.DOCX(document)
+		body, err := render.DOCX(document, template)
 		if err != nil {
 			return nil, apperrors.NewInternal(err)
 		}
 		return &File{Name: name + ".docx", ContentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", Body: body}, nil
 	}
-	page, err := render.HTML(document)
+	page, err := render.HTML(document, template)
 	if err != nil {
 		return nil, apperrors.NewInternal(err)
 	}

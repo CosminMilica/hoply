@@ -20,7 +20,7 @@ else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 | POST | `/api/v1/cvs` | `CvRequest` | 202 `Cv` with `status: queued`; 404 unknown job; 422 invalid body; 503 profile or jobs unavailable |
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
 | GET | `/api/v1/cvs/{id}` | | 200 `Cv`; 404 |
-| GET | `/api/v1/cvs/{id}/file` | query `format` (`pdf` or `docx`), `version` (`tailored`, the default, or `profile`) | 200 the file as an attachment named `file_name` (`.docx` for DOCX); 409 not ready; 422 bad `format` or `version`; 503 PDF printer unavailable |
+| GET | `/api/v1/cvs/{id}/file` | query `format` (`pdf` or `docx`), `version` (`tailored`, the default, or `profile`), `template` (`classic`, the default, `modern` or `elegant`) | 200 the file as an attachment named `file_name` (`.docx` for DOCX); 409 not ready; 422 bad `format`, `version` or `template`; 503 PDF printer unavailable |
 | DELETE | `/api/v1/cvs/{id}` | | 204; 404 |
 | GET | `/api/v1/writer` | | 200 `WriterStatus` |
 
@@ -127,7 +127,17 @@ always come from the profile. The ATS checks run on the final text.
 The PDF is the CV as HTML (`internal/render/html.go`) printed by Gotenberg's Chromium on A4 (`GOTENBERG_URL`).
 The DOCX is written by the service (`internal/render/docx.go`), with Word's own Title, Heading 1, Heading 2 and List
 Bullet styles. Both are one column with standard headings, real text, and no tables, images or text boxes, in the
-order of the web app's CV paper.
+order of the web app's CV paper. A section with nothing in it is left out.
+
+The templates (`internal/render/templates.go`) change only type, color and alignment, never the text or its order:
+
+| Template | Look | PDF font | DOCX font |
+| --- | --- | --- | --- |
+| `classic` | black, uppercase headings over a rule | Liberation Sans (Arial) | Arial |
+| `modern` | blue name and headings, a bar beside each heading | Carlito (Calibri) | Calibri |
+| `elegant` | serif, centered header, headings between two thin rules | Caladea (Cambria) | Cambria |
+
+The web app shows the CV in the template the person picked and remembers it in the browser.
 
 ## Claude's questions
 

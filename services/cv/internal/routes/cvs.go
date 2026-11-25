@@ -88,7 +88,7 @@ func registerCvs(router chi.Router, cvs *services.CvService) {
 			return err
 		}
 		query := r.URL.Query()
-		file, err := cvs.File(r.Context(), requestIdentity(r), id, query.Get("format"), query.Get("version"))
+		file, err := cvs.File(r.Context(), requestIdentity(r), id, query.Get("format"), query.Get("version"), query.Get("template"))
 		if err != nil {
 			return err
 		}
