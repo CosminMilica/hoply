@@ -1,0 +1,2222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hoply</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#141516}
+button,input,textarea,select{font-family:inherit;color-scheme:dark}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid #F2F1EC;outline-offset:2px}
+@keyframes cuibPulse{0%,100%{opacity:.3}50%{opacity:1}}
+.cq{container-type:inline-size;width:100%}
+.app{width:100%;height:100vh;height:100dvh}
+.topbar{padding-top:calc(16px + env(safe-area-inset-top)) !important}
+.nav{padding-bottom:calc(10px + env(safe-area-inset-bottom)) !important}
+.deckControls{display:flex;align-items:center;justify-content:center;gap:14px;padding:2px 0}
+.hintMouse{display:none}
+@media (hover: hover) and (pointer: fine){.hintTouch{display:none}.hintMouse{display:inline}}
+.pCols,.pCol{display:contents}
+.split{display:flex;flex-direction:column;gap:16px}
+.splitBack{order:0}
+.splitHead{order:1}
+.splitAside{display:contents}
+.splitTop{order:2}
+.splitMain{display:flex;flex-direction:column;gap:16px;order:3}
+.splitBottom{order:4}
+.cardGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.cvWrap{display:flex;flex-direction:column;gap:16px}
+.cvSide,.cvMain{display:contents}
+@container (min-width: 600px){
+  .content{padding:16px 32px 32px 32px !important}
+  .content > *{width:100%;max-width:680px;margin-left:auto;margin-right:auto}
+  .content > .deckWrap{max-width:560px}
+  .cardGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container (min-width: 900px){
+  .app{display:grid !important;grid-template-columns:248px minmax(0,1fr);grid-template-rows:auto 1fr}
+  .topbar{grid-area:1 / 1;padding:28px 24px 14px 24px !important;background:#181A1C;border-right:1px solid #2A2D30}
+  .nav{grid-area:2 / 1;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;gap:4px;padding:6px 14px !important;background:#181A1C !important;border-top:none !important;border-right:1px solid #2A2D30}
+  .navbtn{flex:none !important;flex-direction:row !important;justify-content:flex-start !important;gap:12px !important;min-height:48px !important;padding:0 14px !important;font-size:15px !important}
+  .content{grid-area:1 / 2 / span 2;padding:32px 48px 48px 48px !important}
+  .content > *{width:100%;max-width:1080px;margin-left:auto;margin-right:auto}
+  .content > .narrow{max-width:620px}
+  .content > .deckWrap{max-width:560px}
+  .deckStage{max-height:700px}
+  .pCols{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:48px;align-items:start}
+  .pCol{display:flex !important;flex-direction:column}
+  .split{display:grid !important;grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"back back" "head aside" "main aside";column-gap:48px;row-gap:16px;align-items:start}
+  .splitBack{grid-area:back;justify-self:start}
+  .splitHead{grid-area:head}
+  .splitMain{grid-area:main}
+  .splitAside{display:flex !important;flex-direction:column;gap:16px;grid-area:aside;position:sticky;top:0}
+  .cardGrid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+  .profileCta{display:none !important}
+  .cvWrap{display:grid !important;grid-template-columns:380px minmax(0,1fr);column-gap:48px;align-items:start}
+  .cvSide{display:flex !important;flex-direction:column;gap:16px;grid-column:1;grid-row:1}
+  .cvMain{display:flex !important;flex-direction:column;gap:16px;grid-column:2;grid-row:1}
+}
+</style>
+</helmet>
+<div class="cq">
+<div class="app" style="box-sizing: border-box; display: flex; flex-direction: column; background: #141516; color: #F2F1EC; font-family: 'Nunito', system-ui, sans-serif; overflow: hidden">
+
+  <!-- top bar -->
+  <div class="topbar" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 6px 20px; flex-shrink: 0">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="9" r="6" fill="#2A4BFF"></circle><path d="M3 22q11-9 22 0" fill="none" stroke="#F2F1EC" stroke-width="3" stroke-linecap="round"></path></svg>
+      <span style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em">hoply</span>
+    </div>
+    <span style="font-size: 13px; font-weight: 700; color: #A5A39C">prototype</span>
+  </div>
+
+  <!-- content -->
+  <div class="content" style="flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 24px 16px; display: flex; flex-direction: column; gap: 16px">
+
+    <!-- ============ PROFILE ============ -->
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+
+        <div class="spanAll" style="background: #1F2123; border: 1px solid #34363A; color: #F2F1EC; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; align-items: center; gap: 14px">
+            <span style="width: 56px; height: 56px; flex-shrink: 0; border-radius: 14px; background: #2A4BFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #FFFFFF">AP</span>
+            <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+              <h1 style="margin: 0; font-size: 26px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em">Andrei Popescu</h1>
+              <span style="font-size: 14px; font-weight: 500; color: #C9C7BF">{{ headline }}</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #C9C7BF">Ready to tailor</span><span style="font-size: 22px; font-weight: 800; color: #8FA2FF">{{ profilePct }}</span></div>
+            <div style="height: 6px; border-radius: 999px; background: #34363A; overflow: hidden"><div style="height: 6px; border-radius: 999px; background: #5B77FF; width: {{ profileBar }}"></div></div>
+            <span style="font-size: 13px; line-height: 1.4; font-weight: 500; color: #C9C7BF">{{ profileHint }}</span>
+          </div>
+        </div>
+
+      <div class="pCols">
+      <div class="pCol">
+      <div style="border-top: 1.5px solid #3F4246; padding-top: 2px">
+        <button onClick="{{ tgAbout }}" aria-expanded="{{ openAbout }}" style="width: 100%; min-height: 52px; box-sizing: border-box; padding: 0; background: transparent; border: none; display: flex; align-items: center; gap: 10px; color: #F2F1EC; text-align: left">
+          <span style="width: 32px; height: 32px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg></span>
+          <span style="flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">About you</span>
+          <span style="font-size: 13px; font-weight: 700; color: #A5A39C">{{ sumAbout }}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{ chevAbout }}"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ openAbout }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 0 14px 0; display: flex; flex-direction: column; gap: 10px">
+            <label for="headline-input" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Headline</label>
+            <input id="headline-input" placeholder="Headline, e.g. Frontend developer" value="{{ headline }}" onChange="{{ onHeadline }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+            <label for="about-input" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">About you</label>
+            <textarea id="about-input" rows="3" value="{{ about }}" onChange="{{ onAbout }}" style="width: 100%; box-sizing: border-box; min-height: 84px; resize: none; padding: 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; line-height: 1.5; font-weight: 500"></textarea>
+            <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 500; color: #A5A39C"><span>Two or three lines is perfect.</span><span>{{ aboutCount }}</span></div>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="border-top: 1.5px solid #3F4246; padding-top: 2px">
+        <button onClick="{{ tgContact }}" aria-expanded="{{ openContact }}" style="width: 100%; min-height: 52px; box-sizing: border-box; padding: 0; background: transparent; border: none; display: flex; align-items: center; gap: 10px; color: #F2F1EC; text-align: left">
+          <span style="width: 32px; height: 32px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><circle cx="9" cy="11" r="2"></circle><path d="M6 16c.6-1.6 1.8-2.2 3-2.2s2.4.6 3 2.2M14 10h4M14 14h4"></path></svg></span>
+          <span style="flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Contact data</span>
+          <span style="font-size: 13px; font-weight: 700; color: #A5A39C">{{ sumContact }}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{ chevContact }}"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ openContact }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 0 14px 0; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="width: 36px; height: 36px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M4 7l8 6 8-6"></path></svg></span>
+              <input aria-label="Email" type="email" placeholder="you@email.com" value="{{ email }}" onChange="{{ onEmail }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="width: 36px; height: 36px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"></path></svg></span>
+              <input aria-label="Phone" type="tel" placeholder="+40 700 000 000" value="{{ phone }}" onChange="{{ onPhone }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="width: 36px; height: 36px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"></path></svg></span>
+              <input aria-label="GitHub" type="text" placeholder="github.com/username" value="{{ github }}" onChange="{{ onGithub }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="width: 36px; height: 36px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3A4 4 0 0011 18.7l1-1"></path></svg></span>
+              <input aria-label="LinkedIn" type="text" placeholder="linkedin.com/in/username" value="{{ linkedin }}" onChange="{{ onLinkedin }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="border-top: 1.5px solid #3F4246; padding-top: 2px">
+        <button onClick="{{ tgSkills }}" aria-expanded="{{ openSkills }}" style="width: 100%; min-height: 52px; box-sizing: border-box; padding: 0; background: transparent; border: none; display: flex; align-items: center; gap: 10px; color: #F2F1EC; text-align: left">
+          <span style="width: 32px; height: 32px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z"></path></svg></span>
+          <span style="flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Skills</span>
+          <span style="font-size: 13px; font-weight: 700; color: #A5A39C">{{ sumSkills }}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{ chevSkills }}"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ openSkills }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 0 14px 0; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; flex-wrap: wrap; margin: 0 -3px">
+              <sc-for list="{{ skillChips }}" as="k" hint-placeholder-count="6">
+                <button onClick="{{ k.remove }}" aria-label="{{ k.aria }}" style="min-height: 44px; padding: 0 3px; background: transparent; border: none; display: flex; align-items: center"><span style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; background: #2B2E31; color: #F2F1EC; font-size: 14px; font-weight: 800">{{ k.label }}<span style="opacity: 0.6; font-size: 15px" aria-hidden="true">×</span></span></button>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <input aria-label="Add a skill" placeholder="Add a skill, e.g. Next.js" value="{{ skillDraft }}" onChange="{{ onSkillDraft }}" onKeyDown="{{ onSkillKey }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+              <button onClick="{{ addSkill }}" style="min-height: 44px; padding: 0 18px; border: none; border-radius: 10px; background: #F2F1EC; color: #141516; font-size: 14px; font-weight: 800">Add</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      </div>
+      <div class="pCol">
+      <div style="border-top: 1.5px solid #3F4246; padding-top: 2px">
+        <button onClick="{{ tgExp }}" aria-expanded="{{ openExp }}" style="width: 100%; min-height: 52px; box-sizing: border-box; padding: 0; background: transparent; border: none; display: flex; align-items: center; gap: 10px; color: #F2F1EC; text-align: left">
+          <span style="width: 32px; height: 32px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"></rect><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18"></path></svg></span>
+          <span style="flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Experience</span>
+          <span style="font-size: 13px; font-weight: 700; color: #A5A39C">{{ sumExp }}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{ chevExp }}"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ openExp }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 0 14px 0; display: flex; flex-direction: column; gap: 10px">
+            <div style="background: #2B2E31; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.45; font-weight: 500; color: #D3D1CA">Keep it simple: what you did and which tools you used. For every job you apply to, we rewrite it with that job's keywords.</div>
+
+            <sc-for list="{{ experience }}" as="e" hint-placeholder-count="2">
+              <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 10px; padding: 4px 12px">
+                <button onClick="{{ e.toggle }}" aria-expanded="{{ e.open }}" style="width: 100%; text-align: left; min-height: 52px; background: transparent; border: none; padding: 0; display: flex; align-items: center; gap: 10px; color: #F2F1EC">
+                  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+                    <span style="font-size: 15px; font-weight: 800">{{ e.role }}</span>
+                    <span style="font-size: 13px; font-weight: 500; color: #A5A39C">{{ e.company }} · {{ e.dates }}</span>
+                  </span>
+                  <span style="font-size: 12px; font-weight: 800; color: #F2F1EC; background: #2B2E31; border-radius: 8px; padding: 4px 10px">{{ e.count }}</span>
+                </button>
+                <sc-if value="{{ e.open }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px 0">
+                    <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">What you did</span>
+                    <sc-for list="{{ e.bullets }}" as="b" hint-placeholder-count="3">
+                      <div style="display: flex; gap: 8px; font-size: 14px; line-height: 1.45; font-weight: 500"><span style="color: #F2F1EC; font-weight: 800" aria-hidden="true">·</span><span>{{ b.text }}</span></div>
+                    </sc-for>
+                    <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Tools you used</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                      <sc-for list="{{ e.toolChips }}" as="tl" hint-placeholder-count="3">
+                        <span style="padding: 4px 10px; border-radius: 8px; background: #1F2123; border: 1px solid #3F4246; font-size: 13px; font-weight: 700">{{ tl.label }}</span>
+                      </sc-for>
+                    </div>
+                    <sc-if value="{{ e.notConfirming }}" hint-placeholder-val="{{ true }}">
+                      <button onClick="{{ e.askRemove }}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; background: transparent; border: none; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Remove this role</button>
+                    </sc-if>
+                    <sc-if value="{{ e.confirming }}" hint-placeholder-val="{{ false }}">
+                      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                        <span style="font-size: 13px; font-weight: 700; color: #F2F1EC">Remove {{ e.role }}?</span>
+                        <button onClick="{{ e.remove }}" style="min-height: 44px; padding: 0 14px; border: none; border-radius: 10px; background: #FF5A36; color: #141516; font-size: 14px; font-weight: 800">Remove</button>
+                        <button onClick="{{ e.cancelRemove }}" style="min-height: 44px; padding: 0 14px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700">Keep it</button>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+
+            <sc-if value="{{ adding }}" hint-placeholder-val="{{ false }}">
+              <div style="border: 1.5px dashed #A9A79F; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+                <input aria-label="Role" placeholder="Role, e.g. Frontend developer" value="{{ dRole }}" onChange="{{ onDRole }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <input aria-label="Company" placeholder="Company" value="{{ dCompany }}" onChange="{{ onDCompany }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <div style="display: flex; gap: 8px">
+                  <input aria-label="From year" placeholder="From, e.g. 2022" value="{{ dStart }}" onChange="{{ onDStart }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                  <input aria-label="To year, leave empty if you still work there" placeholder="To (empty = now)" value="{{ dEnd }}" onChange="{{ onDEnd }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                </div>
+                <input aria-label="Tools you used, separated by commas" placeholder="Tools, e.g. React, SQL, Figma" value="{{ dTools }}" onChange="{{ onDTools }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <input aria-label="What you did" placeholder="What you did, keep it generic" value="{{ dBullet }}" onChange="{{ onDBullet }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <input aria-label="A result, ideally with a number" placeholder="A result, ideally with a number (optional)" value="{{ dResult }}" onChange="{{ onDResult }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <input aria-label="One more thing you did" placeholder="One more thing you did" value="{{ dBullet2 }}" onChange="{{ onDBullet2 }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <div style="display: flex; gap: 8px">
+                  <button onClick="{{ saveExp }}" style="flex: 1; min-height: 44px; border: none; border-radius: 10px; background: #F2F1EC; color: #141516; font-size: 14px; font-weight: 800">Save</button>
+                  <button onClick="{{ toggleAdding }}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700">Cancel</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ notAdding }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ toggleAdding }}" style="min-height: 44px; border: 1.5px dashed #A9A79F; border-radius: 10px; background: transparent; color: #D3D1CA; font-size: 14px; font-weight: 700">+ Add a role</button>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="border-top: 1.5px solid #3F4246; padding-top: 2px">
+        <button onClick="{{ tgEdu }}" aria-expanded="{{ openEdu }}" style="width: 100%; min-height: 52px; box-sizing: border-box; padding: 0; background: transparent; border: none; display: flex; align-items: center; gap: 10px; color: #F2F1EC; text-align: left">
+          <span style="width: 32px; height: 32px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"></path><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"></path></svg></span>
+          <span style="flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Education</span>
+          <span style="font-size: 13px; font-weight: 700; color: #A5A39C">{{ sumEdu }}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{ chevEdu }}"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ openEdu }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 0 14px 0; display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{ education }}" as="d" hint-placeholder-count="1">
+              <div style="display: flex; align-items: center; gap: 8px; background: #1F2123; border: 1px solid #34363A; border-radius: 10px; padding: 4px 4px 4px 12px">
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+                  <span style="font-size: 15px; font-weight: 800">{{ d.degree }}</span>
+                  <span style="font-size: 13px; font-weight: 500; color: #A5A39C">{{ d.meta }}</span>
+                </span>
+                <button onClick="{{ d.remove }}" aria-label="{{ d.aria }}" style="width: 44px; height: 44px; background: transparent; border: none; color: #A5A39C; font-size: 18px">×</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ addingEdu }}" hint-placeholder-val="{{ false }}">
+              <div style="border: 1.5px dashed #A9A79F; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+                <input aria-label="Degree" placeholder="Degree, e.g. BSc Computer Science" value="{{ eDeg }}" onChange="{{ onEDeg }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <input aria-label="School" placeholder="School" value="{{ eSchool }}" onChange="{{ onESchool }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <input aria-label="Years" placeholder="Years, e.g. 2016 – 2020" value="{{ eYears }}" onChange="{{ onEYears }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <div style="display: flex; gap: 8px">
+                  <button onClick="{{ saveEdu }}" style="flex: 1; min-height: 44px; border: none; border-radius: 10px; background: #F2F1EC; color: #141516; font-size: 14px; font-weight: 800">Save</button>
+                  <button onClick="{{ toggleEdu }}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700">Cancel</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ notAddingEdu }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ toggleEdu }}" style="min-height: 44px; border: 1.5px dashed #A9A79F; border-radius: 10px; background: transparent; color: #D3D1CA; font-size: 14px; font-weight: 700">+ Add education</button>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="border-top: 1.5px solid #3F4246; padding-top: 2px">
+        <button onClick="{{ tgLang }}" aria-expanded="{{ openLang }}" style="width: 100%; min-height: 52px; box-sizing: border-box; padding: 0; background: transparent; border: none; display: flex; align-items: center; gap: 10px; color: #F2F1EC; text-align: left">
+          <span style="width: 32px; height: 32px; border-radius: 8px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg></span>
+          <span style="flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Languages</span>
+          <span style="font-size: 13px; font-weight: 700; color: #A5A39C">{{ sumLang }}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: {{ chevLang }}"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ openLang }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 0 14px 0; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; flex-wrap: wrap; margin: 0 -3px">
+              <sc-for list="{{ langChips }}" as="k" hint-placeholder-count="2">
+                <button onClick="{{ k.remove }}" aria-label="{{ k.aria }}" style="min-height: 44px; padding: 0 3px; background: transparent; border: none; display: flex; align-items: center"><span style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; background: #2B2E31; color: #F2F1EC; font-size: 14px; font-weight: 800">{{ k.label }}<span style="opacity: 0.6; font-size: 15px" aria-hidden="true">×</span></span></button>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <input aria-label="Language" placeholder="Add a language" value="{{ langName }}" onChange="{{ onLangName }}" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+              <select aria-label="Level" value="{{ langLevel }}" onChange="{{ onLangLevel }}" style="min-height: 44px; padding: 0 8px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option><option value="Native">Native</option>
+              </select>
+              <button onClick="{{ addLang }}" style="min-height: 44px; padding: 0 18px; border: none; border-radius: 10px; background: #F2F1EC; color: #141516; font-size: 14px; font-weight: 800">Add</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      </div>
+      </div>
+
+        <button class="profileCta" onClick="{{ startSearch }}" style="min-height: 52px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">Find jobs</button>
+      </div>
+    </sc-if>
+
+    <!-- ============ FIND JOBS: FILTERS ============ -->
+    <sc-if value="{{ isFilters }}" hint-placeholder-val="{{ false }}">
+      <div class="narrow" style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Find jobs</h1>
+          <p style="margin: 0; font-size: 15px; line-height: 1.45; font-weight: 500; color: #A5A39C">Tell us what you are looking for, then swipe through the matches.</p>
+          <p style="margin: 6px 0 0 0; display: flex; align-items: flex-start; gap: 6px; font-size: 13px; line-height: 1.4; font-weight: 600; color: #C9C7BF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8FA2FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg><span>{{ marketNote }}</span></p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label for="q-input" style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">What</label>
+          <input id="q-input" placeholder="Job title, skill or company" value="{{ query }}" onChange="{{ onQuery }}" style="min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: 10px; border: 1px solid #34363A; background: #1F2123; color: #F2F1EC; font-size: 15px; font-weight: 500">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label for="loc-input2" style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Where</label>
+          <input id="loc-input2" placeholder="City or country" value="{{ locationValue }}" onChange="{{ onLocation }}" style="min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: 10px; border: 1px solid #34363A; background: #1F2123; color: #F2F1EC; font-size: 15px; font-weight: 500">
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{ cityChips }}" as="c" hint-placeholder-count="3">
+              <button onClick="{{ c.pick }}" aria-pressed="{{ c.pressed }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{ c.bg }}; color: {{ c.color }}; border: 1px solid {{ c.border }}">{{ c.label }}</button>
+            </sc-for>
+            <button onClick="{{ toggleRemote }}" aria-pressed="{{ openRemote }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{ remoteBg }}; color: {{ remoteColor }}; border: 1px solid {{ remoteBorder }}">{{ remoteLabel }}</button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Position area</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{ areaChips }}" as="a" hint-placeholder-count="7">
+              <button onClick="{{ a.pick }}" aria-pressed="{{ a.pressed }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{ a.bg }}; color: {{ a.color }}; border: 1px solid {{ a.border }}">{{ a.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Level</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{ levelChips }}" as="l" hint-placeholder-count="4">
+              <button onClick="{{ l.pick }}" aria-pressed="{{ l.pressed }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{ l.bg }}; color: {{ l.color }}; border: 1px solid {{ l.border }}">{{ l.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px">
+          <button onClick="{{ showJobs }}" disabled="{{ noneToShow }}" style="min-height: 56px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px; opacity: {{ showOpacity }}">{{ showLabel }}</button>
+          <button onClick="{{ clearFilters }}" style="min-height: 44px; border: none; background: transparent; color: #A5A39C; font-size: 14px; font-weight: 700; text-decoration: underline">Reset filters</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; color: #8E8C85; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase">
+          <span style="flex: 1; height: 1px; background: #34363A"></span>Already found a job?<span style="flex: 1; height: 1px; background: #34363A"></span>
+        </div>
+        <button onClick="{{ openAddJobs }}" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border: 1.5px dashed #4A4D52; border-radius: 14px; background: #1A1C1E; color: #F2F1EC; text-align: left">
+          <span style="width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; background: #2B2E31; color: #8FA2FF; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3A4 4 0 0011 18.7l1-1"></path></svg></span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 800">Add a job from a link or its text</span>
+            <span style="font-size: 13px; line-height: 1.4; font-weight: 500; color: #A5A39C">Seen it on LinkedIn, eJobs or a company site? Paste it here. We match it to your profile and you can tailor a CV for it.</span>
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5A39C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+    </sc-if>
+
+    <!-- ============ FIND JOBS: SWIPE DECK ============ -->
+    <sc-if value="{{ isDeck }}" hint-placeholder-val="{{ false }}">
+      <div class="deckWrap" style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+          <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+            <span style="font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ filterSummary }}</span>
+            <span style="font-size: 13px; font-weight: 500; color: #A5A39C">{{ resultsLabel }}</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-shrink: 0">
+            <button onClick="{{ openAddJobs }}" aria-label="Add a job" style="width: 44px; min-height: 44px; border-radius: 8px; border: 1.5px solid #3F4246; background: #1F2123; color: #F2F1EC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+            <button onClick="{{ editFilters }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1.5px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 800">Filters</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ hasCard }}" hint-placeholder-val="{{ true }}">
+          <div class="deckStage" style="position: relative; flex: 1; min-height: 360px">
+            <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ true }}">
+              <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #2B2E31; border: 1px solid #34363A; border-radius: 18px; transform: {{ backTransform }}"></div>
+            </sc-if>
+
+            <div onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerCancel="{{ onUp }}" style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; box-sizing: border-box; background: #1F2123; border: 1.5px solid #3F4246; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; cursor: grab; user-select: none; touch-action: none; transform: {{ cardTransform }}; transition: {{ cardTransition }}">
+
+              <span style="position: absolute; top: 18px; left: 18px; z-index: 2; padding: 6px 14px; border-radius: 12px; background: #2A4BFF; border: none; color: #FFFFFF; font-size: 16px; font-weight: 800; letter-spacing: 0.06em; transform: rotate(-8deg); pointer-events: none; opacity: {{ saveOpacity }}">SAVE</span>
+              <span style="position: absolute; top: 18px; right: 18px; z-index: 2; padding: 6px 14px; border-radius: 12px; background: #FF5A36; border: none; color: #141516; font-size: 16px; font-weight: 800; letter-spacing: 0.06em; transform: rotate(8deg); pointer-events: none; opacity: {{ skipOpacity }}">SKIP</span>
+              <span style="position: absolute; top: 18px; left: 50%; z-index: 2; padding: 6px 14px; border-radius: 12px; background: #2B2E31; border: 1.5px solid #8FA2FF; color: #8FA2FF; font-size: 16px; font-weight: 800; letter-spacing: 0.06em; transform: translateX(-50%); white-space: nowrap; pointer-events: none; opacity: {{ applyOpacity }}">TAILOR CV</span>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                <span style="font-size: 13px; font-weight: 700; color: #F2F1EC">{{ card.sourceLine }}</span>
+                <span style="width: 64px; height: 64px; flex-shrink: 0; border-radius: 12px; background: #18235E; color: #C7D2FF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 18px; font-weight: 800; line-height: 1">{{ card.score }}%</span><span style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase">match</span></span>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <h2 style="margin: 0; font-size: 28px; line-height: 1.12; font-weight: 800; letter-spacing: -0.02em">{{ card.title }}</h2>
+                <span style="font-size: 16px; font-weight: 500; color: #A5A39C">{{ card.company }} · {{ card.place }}</span>
+                <span style="font-size: 13px; font-weight: 700; color: #D3D1CA">{{ card.tagline }}</span>
+              </div>
+
+              <p style="margin: 0; font-size: 15px; line-height: 1.5; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden">{{ card.about }}</p>
+
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">What you will do</span>
+                <sc-for list="{{ card.dos }}" as="d" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 8px; font-size: 14px; line-height: 1.4; font-weight: 500"><span style="color: #F2F1EC; font-weight: 800" aria-hidden="true">·</span><span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{ d.text }}</span></div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{ card.matchedChips }}" as="m" hint-placeholder-count="3">
+                  <span style="padding: 6px 12px; border-radius: 8px; background: #18235E; color: #A9B8FF; font-size: 13px; font-weight: 700">{{ m.label }}</span>
+                </sc-for>
+                <sc-for list="{{ card.missingChips }}" as="m" hint-placeholder-count="2">
+                  <span style="padding: 5px 11px; border-radius: 8px; background: #1F2123; border: 1.5px solid #A9A79F; color: #D3D1CA; font-size: 13px; font-weight: 700">{{ m.label }}</span>
+                </sc-for>
+              </div>
+
+              <span style="margin-top: auto; font-size: 13px; font-weight: 700; color: #8E8C85"><span class="hintTouch">Swipe right to save, left to skip, up to tailor your CV. Tap for details.</span><span class="hintMouse">Drag the card or use the buttons below. Click for details.</span></span>
+            </div>
+
+            <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 0 6px 0 16px; border-radius: 10px; background: #34363A; color: #F2F1EC; font-size: 14px; font-weight: 700">
+                <span style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ toast }}</span>
+                <button onClick="{{ undo }}" style="min-height: 44px; padding: 0 14px; border: none; background: transparent; color: #8FA2FF; font-size: 14px; font-weight: 800">Undo</button>
+              </div>
+            </sc-if>
+          </div>
+
+          <div class="deckControls">
+            <button onClick="{{ skipNow }}" aria-label="Skip this job" style="width: 56px; height: 56px; border-radius: 50%; background: #1F2123; border: 1.5px solid #3F4246; color: #F2F1EC; display: flex; align-items: center; justify-content: center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+            </button>
+            <button onClick="{{ detailsNow }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1.5px solid #3F4246; background: transparent; font-size: 14px; font-weight: 800; color: #F2F1EC">Details</button>
+            <button onClick="{{ applyNow }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; border: none; background: #F2F1EC; font-size: 14px; font-weight: 800; color: #141516">Tailor CV</button>
+            <button onClick="{{ saveNow }}" aria-label="Save this job" style="width: 56px; height: 56px; border-radius: 50%; background: #2A4BFF; border: none; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-9-9.2C1.6 7 4 4 7 4c1.9 0 3.4 1 5 3 1.6-2 3.1-3 5-3 3 0 5.4 3 4 6.8-2 4.8-9 9.2-9 9.2z"></path></svg>
+            </button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ noCard }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 4px; background: #1F2123; border: 1px solid #34363A; border-radius: 18px; padding: 28px 22px; display: flex; flex-direction: column; gap: 10px">
+            <h2 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em">You are all caught up</h2>
+            <p style="margin: 0; font-size: 15px; line-height: 1.5; font-weight: 500; color: #A5A39C">No more jobs for these filters. Change them, or bring back the ones you skipped.</p>
+            <button onClick="{{ editFilters }}" style="margin-top: 6px; min-height: 52px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">Change filters</button>
+            <button onClick="{{ resetDeck }}" style="min-height: 48px; border: 1.5px solid #3F4246; border-radius: 12px; background: transparent; color: #F2F1EC; font-size: 16px; font-weight: 700; padding: 0 20px">Bring back skipped jobs</button>
+            <button onClick="{{ goProfile }}" style="min-height: 44px; border: none; background: transparent; color: #A5A39C; font-size: 14px; font-weight: 700; text-decoration: underline">See saved jobs in Profile</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ============ JOB DETAIL ============ -->
+    <sc-if value="{{ isJob }}" hint-placeholder-val="{{ false }}">
+      <div class="split">
+      <button class="splitBack" onClick="{{ backToJobs }}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: #D3D1CA">‹ Back</button>
+
+      <div class="splitHead" style="display: flex; flex-direction: column; gap: 6px; margin-top: -10px">
+        <h1 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">{{ job.title }}</h1>
+        <p style="margin: 0; font-size: 16px; color: #A5A39C; font-weight: 500">{{ job.company }} · {{ job.place }}</p>
+        <p style="margin: 0; font-size: 13px; color: #F2F1EC; font-weight: 700">{{ job.sourceLine }} · {{ job.tagline }}</p>
+        <sc-if value="{{ job.hasUrl }}" hint-placeholder-val="{{ false }}">
+          <a href="{{ job.url }}" target="_blank" rel="noopener" style="align-self: flex-start; font-size: 13px; font-weight: 700; color: #8FA2FF">View the original ad ↗</a>
+        </sc-if>
+      </div>
+
+      <div class="splitAside">
+      <div class="splitTop" style="background: #2B2E31; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span style="width: 56px; height: 56px; flex-shrink: 0; border-radius: 12px; background: #18235E; color: #C7D2FF; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">{{ job.score }}%</span>
+          <span style="font-size: 15px; line-height: 1.4; font-weight: 700; color: #F2F1EC">{{ job.verdict }}</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{ job.matchedChips }}" as="m" hint-placeholder-count="3">
+            <span style="padding: 6px 12px; border-radius: 8px; background: #18235E; color: #A9B8FF; font-size: 14px; font-weight: 700">{{ m.label }}</span>
+          </sc-for>
+          <sc-for list="{{ job.missingChips }}" as="m" hint-placeholder-count="2">
+            <span style="padding: 5px 11px; border-radius: 8px; background: #1F2123; border: 1.5px solid #A9A79F; color: #D3D1CA; font-size: 14px; font-weight: 700">{{ m.label }}</span>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="splitBottom" style="display: flex; flex-direction: column; gap: 10px">
+        <button onClick="{{ openPrep }}" style="min-height: 52px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">{{ applyLabel }}</button>
+        <sc-if value="{{ job.showSave }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ toggleSave }}" style="min-height: 48px; border: 1.5px solid #3F4246; border-radius: 12px; background: transparent; color: #F2F1EC; font-size: 16px; font-weight: 700; padding: 0 20px">{{ job.saveLabel }}</button>
+        </sc-if>
+      </div>
+      </div>
+
+      <div class="splitMain">
+      <sc-if value="{{ job.hasAbout }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">About the role</h2>
+        <p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500">{{ job.about }}</p>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ job.hasDos }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">What you will do</h2>
+        <sc-for list="{{ job.dos }}" as="d" hint-placeholder-count="3">
+          <div style="display: flex; gap: 10px; font-size: 16px; line-height: 1.5; font-weight: 500"><span style="color: #F2F1EC; font-weight: 800" aria-hidden="true">·</span><span>{{ d.text }}</span></div>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">What we look for</h2>
+        <sc-for list="{{ job.looks }}" as="d" hint-placeholder-count="3">
+          <div style="display: flex; gap: 10px; font-size: 16px; line-height: 1.5; font-weight: 500"><span style="color: #F2F1EC; font-weight: 800" aria-hidden="true">·</span><span>{{ d.text }}</span></div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ job.hasPerks }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Why people like it here</h2>
+        <sc-for list="{{ job.perks }}" as="d" hint-placeholder-count="3">
+          <div style="display: flex; gap: 10px; font-size: 16px; line-height: 1.5; font-weight: 500"><span style="color: #F2F1EC; font-weight: 800" aria-hidden="true">·</span><span>{{ d.text }}</span></div>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ job.hasAboutCompany }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">About {{ job.company }}</h2>
+        <p style="margin: 0; font-size: 15px; line-height: 1.55; font-weight: 500; color: #D3D1CA">{{ job.aboutCompany }}</p>
+      </div>
+      </sc-if>
+
+      </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ ADD A JOB ============ -->
+    <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+      <div class="narrow" style="display: flex; flex-direction: column; gap: 16px">
+        <button onClick="{{ leaveAdd }}" style="align-self: flex-start; min-height: 40px; padding: 0 4px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: #D3D1CA">‹ Back</button>
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: -8px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Add a job</h1>
+          <p style="margin: 0; font-size: 15px; line-height: 1.45; font-weight: 500; color: #A5A39C">Found a job somewhere else? Give us its link or paste its text. We read it, match it to your profile, and you can tailor a CV for it.</p>
+        </div>
+
+        <sc-if value="{{ addInput }}" hint-placeholder-val="{{ true }}">
+          <div role="tablist" aria-label="Add from" style="display: flex; gap: 4px; padding: 4px; background: #2B2E31; border-radius: 10px">
+            <button role="tab" aria-selected="{{ tabLinkOn }}" onClick="{{ pickLink }}" style="flex: 1; min-height: 38px; border: none; border-radius: 8px; font-size: 14px; font-weight: 800; background: {{ tabLinkBg }}; color: #F2F1EC; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3A4 4 0 0011 18.7l1-1"></path></svg>Link</button>
+            <button role="tab" aria-selected="{{ tabTextOn }}" onClick="{{ pickText }}" style="flex: 1; min-height: 38px; border: none; border-radius: 8px; font-size: 14px; font-weight: 800; background: {{ tabTextBg }}; color: #F2F1EC; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 9h14M5 14h14M5 19h9"></path></svg>Text</button>
+          </div>
+
+          <sc-if value="{{ tabLinkOn }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label for="add-url" style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Link to the job ad</label>
+              <input id="add-url" type="url" placeholder="https://" value="{{ addUrl }}" onChange="{{ onAddUrl }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+              <span style="font-size: 13px; line-height: 1.45; font-weight: 500; color: #A5A39C">Works with most job pages: company career sites, Greenhouse, Lever, Ashby, SmartRecruiters, eJobs. Pages behind a login, like LinkedIn, need the text instead.</span>
+              <sc-if value="{{ hasAddError }}" hint-placeholder-val="{{ false }}">
+                <span role="alert" style="font-size: 13px; font-weight: 700; color: #FF8A6E">{{ addError }}</span>
+              </sc-if>
+              <button onClick="{{ readLink }}" style="margin-top: 4px; min-height: 48px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 15px; font-weight: 800; padding: 0 20px">Read the job</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ tabTextOn }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label for="add-text" style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">The job ad</label>
+              <textarea id="add-text" rows="9" placeholder="Paste the whole ad: title, company, location, requirements and responsibilities. English or Romanian." value="{{ addText }}" onChange="{{ onAddText }}" style="width: 100%; box-sizing: border-box; min-height: 180px; resize: vertical; padding: 10px 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; line-height: 1.45; font-weight: 500"></textarea>
+              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <label for="add-title" style="font-size: 12px; font-weight: 700; color: #A5A39C">Job title (optional)</label>
+                  <input id="add-title" placeholder="We find it if empty" value="{{ addTitle }}" onChange="{{ onAddTitle }}" style="min-height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <label for="add-company" style="font-size: 12px; font-weight: 700; color: #A5A39C">Company (optional)</label>
+                  <input id="add-company" placeholder="We find it if empty" value="{{ addCompany }}" onChange="{{ onAddCompany }}" style="min-height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="add-link" style="font-size: 12px; font-weight: 700; color: #A5A39C">Link to the ad (optional, to find it again)</label>
+                <input id="add-link" type="url" placeholder="https://" value="{{ addLink }}" onChange="{{ onAddLink }}" style="min-height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+              </div>
+              <sc-if value="{{ hasAddError }}" hint-placeholder-val="{{ false }}">
+                <span role="alert" style="font-size: 13px; font-weight: 700; color: #FF8A6E">{{ addError }}</span>
+              </sc-if>
+              <button onClick="{{ readText }}" style="margin-top: 4px; min-height: 48px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 15px; font-weight: 800; padding: 0 20px">Read the job</button>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ addLoading }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="background: #1F2123; border: 1px solid #34363A; border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 14px">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #5B77FF; flex-shrink: 0; animation: cuibPulse 1s ease-in-out infinite"></span>
+            <span style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 15px; font-weight: 800">Reading the page</span>
+              <span style="font-size: 13px; font-weight: 500; color: #A5A39C">Looking for the job's title, company, location, requirements and responsibilities.</span>
+            </span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ addFailed }}" hint-placeholder-val="{{ false }}">
+          <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 style="margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.01em">We could not read this page</h2>
+            <p style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 500; color: #C9C7BF">{{ failReason }}</p>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+              <button onClick="{{ pasteInstead }}" style="min-height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #2A4BFF; color: #FFFFFF; font-size: 14px; font-weight: 800">Paste the text instead</button>
+              <button onClick="{{ tryAnother }}" style="min-height: 40px; padding: 0 4px; border: none; background: transparent; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Try another link</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ addPreview }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em">Check what we found</h2>
+              <span style="font-size: 13px; font-weight: 600; color: #A5A39C">{{ draft.source }}. Fix anything we got wrong.</span>
+            </div>
+
+            <div style="background: #2B2E31; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <span style="width: 56px; height: 56px; flex-shrink: 0; border-radius: 12px; background: #18235E; color: #C7D2FF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 17px; font-weight: 800; line-height: 1">{{ draft.score }}%</span><span style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase">match</span></span>
+                <span style="font-size: 14px; line-height: 1.4; font-weight: 700">{{ draft.verdict }}</span>
+              </div>
+              <sc-if value="{{ draft.hasKnockout }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: #3A2620; color: #FFD2C4; font-size: 13px; line-height: 1.45; font-weight: 600">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF8A6E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"></path></svg>
+                  <span>{{ draft.knockout }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ draft.hasYears }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; font-weight: 600; color: #D3D1CA">{{ draft.yearsLine }}</span>
+              </sc-if>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="d-title" style="font-size: 12px; font-weight: 700; color: #A5A39C">Job title</label>
+              <input id="d-title" value="{{ draft.title }}" onChange="{{ onDTitle }}" style="min-height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 15px; font-weight: 700">
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="d-company" style="font-size: 12px; font-weight: 700; color: #A5A39C">Company</label>
+                <input id="d-company" placeholder="Not found" value="{{ draft.company }}" onChange="{{ onDCompany }}" style="min-height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="d-city" style="font-size: 12px; font-weight: 700; color: #A5A39C">City</label>
+                <input id="d-city" placeholder="Not found" value="{{ draft.city }}" onChange="{{ onDCity }}" style="min-height: 40px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 14px">
+              <div role="group" aria-label="Work mode" style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-size: 12px; font-weight: 700; color: #A5A39C">Work mode</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                  <sc-for list="{{ draft.modeChips }}" as="m" hint-placeholder-count="3">
+                    <button onClick="{{ m.pick }}" aria-pressed="{{ m.pressed }}" style="min-height: 36px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ m.bg }}; color: {{ m.color }}; border: 1px solid {{ m.border }}">{{ m.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div role="group" aria-label="Level" style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-size: 12px; font-weight: 700; color: #A5A39C">Level</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                  <sc-for list="{{ draft.levelChips }}" as="l" hint-placeholder-count="4">
+                    <button onClick="{{ l.pick }}" aria-pressed="{{ l.pressed }}" style="min-height: 36px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ l.bg }}; color: {{ l.color }}; border: 1px solid {{ l.border }}">{{ l.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+                <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Requirements we found</span>
+                <span style="font-size: 12px; font-weight: 600; color: #A5A39C"><span style="display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: #5B77FF; margin-right: 5px"></span>in your profile</span>
+              </div>
+              <sc-if value="{{ draft.noReq }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; line-height: 1.45; font-weight: 500; color: #C9C7BF">We did not recognise any skills in this ad. Add the ones it asks for, so the match and your CV use them.</span>
+              </sc-if>
+              <sc-if value="{{ draft.hasMust }}" hint-placeholder-val="{{ true }}">
+                <span style="font-size: 12px; font-weight: 700; color: #D3D1CA">Must have</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                  <sc-for list="{{ draft.mustChips }}" as="k" hint-placeholder-count="5">
+                    <button onClick="{{ k.remove }}" aria-label="{{ k.aria }}" style="display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ k.bg }}; color: {{ k.color }}; border: 1.5px solid {{ k.border }}">{{ k.label }}<span aria-hidden="true" style="opacity: 0.6">×</span></button>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ draft.hasNice }}" hint-placeholder-val="{{ true }}">
+                <span style="font-size: 12px; font-weight: 700; color: #D3D1CA">Nice to have</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                  <sc-for list="{{ draft.niceChips }}" as="k" hint-placeholder-count="2">
+                    <button onClick="{{ k.remove }}" aria-label="{{ k.aria }}" style="display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ k.bg }}; color: {{ k.color }}; border: 1.5px dashed {{ k.border }}">{{ k.label }}<span aria-hidden="true" style="opacity: 0.6">×</span></button>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                <label for="d-req" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Add a requirement</label>
+                <input id="d-req" placeholder="Add a requirement, e.g. Kubernetes" value="{{ draftReq }}" onChange="{{ onDraftReq }}" style="flex: 1; min-width: 160px; min-height: 36px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 13px; font-weight: 500">
+                <button onClick="{{ addMust }}" style="min-height: 36px; padding: 0 12px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 13px; font-weight: 700">+ Must</button>
+                <button onClick="{{ addNice }}" style="min-height: 36px; padding: 0 12px; border: 1.5px dashed #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 13px; font-weight: 700">+ Nice</button>
+              </div>
+            </div>
+
+            <sc-if value="{{ draft.hasDos }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Responsibilities we found · {{ draft.dosCount }}</span>
+                <sc-for list="{{ draft.dos }}" as="d" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 8px; font-size: 14px; line-height: 1.45; font-weight: 500"><span aria-hidden="true" style="font-weight: 800">·</span><span>{{ d.text }}</span></div>
+                </sc-for>
+                <span style="font-size: 13px; font-weight: 500; color: #A5A39C">When you prepare your CV, we ask how you did these.</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ hasAddError }}" hint-placeholder-val="{{ false }}">
+              <span role="alert" style="font-size: 13px; font-weight: 700; color: #FF8A6E">{{ addError }}</span>
+            </sc-if>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <button onClick="{{ saveDraftTailor }}" style="min-height: 48px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 15px; font-weight: 800; padding: 0 20px">Save and prepare my CV</button>
+              <button onClick="{{ saveDraft }}" style="min-height: 44px; border: 1.5px solid #3F4246; border-radius: 12px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700; padding: 0 20px">Save to my jobs</button>
+            </div>
+            <p style="margin: 0; font-size: 12px; line-height: 1.45; font-weight: 500; color: #8E8C85">We read ads with rules and a skills dictionary, not with AI. AI is used only when we write your CV.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ============ SAVED JOBS ============ -->
+    <sc-if value="{{ isSaved }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+            <h1 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Saved jobs</h1>
+            <button onClick="{{ openAddSaved }}" style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add a job</button>
+          </div>
+          <p style="margin: 0; font-size: 15px; line-height: 1.45; font-weight: 500; color: #A5A39C">Pick the ones worth a CV, and we will tailor it for you.</p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <sc-for list="{{ savedTabs }}" as="tb" hint-placeholder-count="4">
+            <button onClick="{{ tb.pick }}" aria-pressed="{{ tb.pressed }}" style="min-height: 44px; padding: 0 14px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{ tb.bg }}; color: {{ tb.color }}; border: 1px solid {{ tb.border }}">{{ tb.label }}</button>
+          </sc-for>
+        </div>
+
+        <div class="cardGrid">
+        <sc-for list="{{ savedList }}" as="j" hint-placeholder-count="2">
+          <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 17px; font-weight: 800; line-height: 1.2">{{ j.title }}</span>
+                <span style="font-size: 14px; font-weight: 500; color: #A5A39C">{{ j.company }} · {{ j.place }}</span>
+              </span>
+              <span style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #18235E; color: #C7D2FF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800">{{ j.score }}%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+              <span style="padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; background: {{ j.badgeBg }}; color: {{ j.badgeColor }}">{{ j.status }}</span>
+              <span style="font-size: 13px; font-weight: 500; color: #A5A39C">{{ j.note }}</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center">
+              <button onClick="{{ j.primary }}" style="flex: 1; min-height: 44px; border: none; border-radius: 10px; background: #2A4BFF; color: #FFFFFF; font-size: 15px; font-weight: 800">{{ j.primaryLabel }}</button>
+              <button onClick="{{ j.details }}" style="min-height: 44px; padding: 0 14px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700">Details</button>
+            </div>
+            <sc-if value="{{ j.canApply }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ j.markApplied }}" style="min-height: 44px; border: none; border-radius: 10px; background: #2B2E31; color: #F2F1EC; font-size: 14px; font-weight: 800">I applied with this CV</button>
+            </sc-if>
+            <sc-if value="{{ j.canRemove }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ j.remove }}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Remove from saved</button>
+            </sc-if>
+          </div>
+        </sc-for>
+
+        </div>
+        <sc-if value="{{ noSaved }}" hint-placeholder-val="{{ false }}">
+          <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+            <p style="margin: 0; font-size: 15px; line-height: 1.5; font-weight: 500; color: #A5A39C">{{ noSavedText }}</p>
+            <button onClick="{{ startSearch }}" style="min-height: 52px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">Find jobs</button>
+            <button onClick="{{ openAddSaved }}" style="min-height: 44px; border: 1.5px solid #3F4246; border-radius: 12px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700; padding: 0 20px">Add a job from a link or text</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ============ PREPARE CV ============ -->
+    <sc-if value="{{ isPrep }}" hint-placeholder-val="{{ false }}">
+      <div class="split">
+        <button class="splitBack" onClick="{{ leavePrep }}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: #D3D1CA">‹ Back</button>
+
+        <div class="splitHead" style="display: flex; flex-direction: column; gap: 4px; margin-top: -10px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em">Prepare your CV</h1>
+          <p style="margin: 0; font-size: 15px; color: #A5A39C; font-weight: 500">{{ job.title }} · {{ job.company }}</p>
+        </div>
+
+        <div class="splitAside">
+        <div class="splitTop" style="background: #1F2123; border: 1px solid #34363A; color: #F2F1EC; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: baseline; justify-content: space-between">
+            <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #C9C7BF">Keyword match</span>
+            <span style="font-size: 24px; font-weight: 800; color: #8FA2FF">{{ matchFromTo }}</span>
+          </div>
+          <div style="height: 6px; border-radius: 999px; background: #34363A; overflow: hidden"><div style="height: 6px; border-radius: 999px; background: #5B77FF; width: {{ matchToBar }}"></div></div>
+          <span style="font-size: 13px; line-height: 1.45; font-weight: 500; color: #C9C7BF">The more real detail you give, the stronger the CV. We rewrite everything in this job’s words, but only from what you tell us.</span>
+          <span style="font-size: 13px; font-weight: 800; color: #F2F1EC">{{ prepProgress }}</span>
+        </div>
+        <div class="splitBottom" style="display: flex; flex-direction: column; gap: 8px">
+          <button onClick="{{ apply }}" style="min-height: 56px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">{{ generateLabel }}</button>
+        </div>
+        </div>
+
+        <div class="splitMain">
+
+        <sc-if value="{{ hasHave }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Already covered by your skills</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <sc-for list="{{ haveChips }}" as="h" hint-placeholder-count="4">
+                <span style="padding: 5px 10px; border-radius: 8px; background: #18235E; color: #A9B8FF; font-size: 13px; font-weight: 700">{{ h.label }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasGaps }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Fill the gaps</span>
+            <sc-for list="{{ gapRows }}" as="g" hint-placeholder-count="2">
+              <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 17px; font-weight: 800; letter-spacing: -0.01em">{{ g.label }}</span>
+                  <sc-if value="{{ g.isAsk }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #FF5A36; color: #141516">Missing</span></sc-if>
+                  <sc-if value="{{ g.isAdded }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #2A4BFF; color: #FFFFFF">Added</span></sc-if>
+                  <sc-if value="{{ g.isSkipped }}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #2B2E31; color: #F2F1EC">Skipped</span></sc-if>
+                </div>
+                <sc-if value="{{ g.isAsk }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size: 13px; line-height: 1.45; font-weight: 500; color: #A5A39C">{{ g.ask }}</span>
+                  <textarea aria-label="Your experience with {{ g.label }}" rows="3" placeholder="{{ g.placeholder }}" value="{{ g.draft }}" onChange="{{ g.onDraft }}" style="width: 100%; box-sizing: border-box; min-height: 76px; resize: none; padding: 10px 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; line-height: 1.45; font-weight: 500"></textarea>
+                  <div style="display: flex; flex-direction: column; gap: 6px">
+                    <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Where did you do this?</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                      <sc-for list="{{ g.roleChips }}" as="rc" hint-placeholder-count="3">
+                        <button onClick="{{ rc.pick }}" aria-pressed="{{ rc.pressed }}" style="min-height: 44px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ rc.bg }}; color: {{ rc.color }}; border: 1px solid {{ rc.border }}">{{ rc.label }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 10px; align-items: center">
+                    <button onClick="{{ g.onAdd }}" disabled="{{ g.cannotAdd }}" style="min-height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #2A4BFF; color: #FFFFFF; font-size: 14px; font-weight: 800; opacity: {{ g.addOpacity }}">Add to my CV</button>
+                    <button onClick="{{ g.onSkip }}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700">Skip</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ g.isAdded }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size: 14px; line-height: 1.45; font-weight: 500">{{ g.factText }}</span>
+                  <span style="font-size: 13px; font-weight: 500; color: #A5A39C">Goes under {{ g.whereLabel }}</span>
+                  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+                    <sc-if value="{{ g.canAddProfile }}" hint-placeholder-val="{{ false }}">
+                      <button onClick="{{ g.addToProfile }}" style="min-height: 44px; padding: 0 14px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 13px; font-weight: 700">Also add {{ g.label }} to my profile</button>
+                    </sc-if>
+                    <sc-if value="{{ g.inProfile }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 13px; font-weight: 700; color: #A9B8FF">In your profile skills</span>
+                    </sc-if>
+                    <button onClick="{{ g.onUndo }}" style="min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Change</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ g.isSkipped }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ g.onUndo }}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Change my mind</button>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">What this job will ask you to do</span>
+          <sc-for list="{{ claimRows }}" as="cr" hint-placeholder-count="3">
+            <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 14px; line-height: 1.4; font-weight: 700">{{ cr.q }}</span>
+              <sc-if value="{{ cr.isAsk }}" hint-placeholder-val="{{ false }}">
+                <textarea aria-label="What exactly did you do?" rows="3" placeholder="In your own words: what did you do, where, and what changed? Numbers help." value="{{ cr.draft }}" onChange="{{ cr.onDraft }}" style="width: 100%; box-sizing: border-box; min-height: 76px; resize: none; padding: 10px 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; line-height: 1.45; font-weight: 500"></textarea>
+                <sc-if value="{{ cr.canPrefill }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ cr.prefill }}" style="align-self: flex-start; min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #8FA2FF; font-size: 13px; font-weight: 700; text-decoration: underline">Start from the job’s wording, then make it yours</button>
+                </sc-if>
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Where did you do this?</span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                    <sc-for list="{{ cr.roleChips }}" as="rc" hint-placeholder-count="3">
+                      <button onClick="{{ rc.pick }}" aria-pressed="{{ rc.pressed }}" style="min-height: 44px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ rc.bg }}; color: {{ rc.color }}; border: 1px solid {{ rc.border }}">{{ rc.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+                  <button onClick="{{ cr.yes }}" disabled="{{ cr.cannotAdd }}" style="min-height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #2A4BFF; color: #FFFFFF; font-size: 14px; font-weight: 800; opacity: {{ cr.addOpacity }}">Add to my CV</button>
+                  <button onClick="{{ cr.no }}" style="min-height: 44px; padding: 0 16px; border: 1.5px solid #3F4246; border-radius: 10px; background: transparent; color: #F2F1EC; font-size: 14px; font-weight: 700">Not really</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ cr.isYes }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #2A4BFF; color: #FFFFFF">Added</span>
+                  <button onClick="{{ cr.undo }}" style="min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Change</button>
+                </div>
+                <span style="font-size: 14px; line-height: 1.45; font-weight: 500">{{ cr.mine }}</span>
+                <span style="font-size: 13px; font-weight: 500; color: #A5A39C">Goes under {{ cr.whereLabel }}</span>
+              </sc-if>
+              <sc-if value="{{ cr.isNo }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #2B2E31; color: #F2F1EC">Left out</span>
+                  <button onClick="{{ cr.undo }}" style="min-height: 44px; padding: 0 4px; border: none; background: transparent; color: #A5A39C; font-size: 13px; font-weight: 700; text-decoration: underline">Change</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ hasImpacts }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Make your bullets hit harder</span>
+            <span style="font-size: 13px; line-height: 1.45; font-weight: 500; color: #A5A39C">Screening favors results you can measure. What changed because of each of these? A number, a time saved, a cost, a count of people.</span>
+            <sc-for list="{{ impactRows }}" as="im" hint-placeholder-count="3">
+              <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+                <span style="font-size: 14px; line-height: 1.4; font-weight: 700">{{ im.bullet }}</span>
+                <input aria-label="What changed because of it" placeholder="e.g. cutting release time from 2 hours to 15 minutes" value="{{ im.value }}" onChange="{{ im.onChange }}" style="min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 500">
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Roles to feature</span>
+          <sc-for list="{{ prepRoles }}" as="r" hint-placeholder-count="2">
+            <button onClick="{{ r.toggle }}" aria-pressed="{{ r.pressed }}" style="text-align: left; min-height: 56px; background: #1F2123; border: 1px solid #34363A; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; color: #F2F1EC">
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+                <span style="font-size: 15px; font-weight: 800">{{ r.role }}</span>
+                <span style="font-size: 13px; font-weight: 500; color: #A5A39C">{{ r.meta }}</span>
+                <span style="font-size: 12px; font-weight: 700; color: #D3D1CA">{{ r.overlap }}</span>
+              </span>
+              <span style="padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; background: {{ r.bg }}; color: {{ r.color }}; border: 1.5px solid {{ r.border }}">{{ r.state }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ hasFocus }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Put these up front (up to 3)</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{ focusChips }}" as="f" hint-placeholder-count="3">
+                <button onClick="{{ f.toggle }}" aria-pressed="{{ f.pressed }}" style="min-height: 44px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 700; background: {{ f.bg }}; color: {{ f.color }}; border: 1px solid {{ f.border }}">{{ f.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label for="prep-note" style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.06em; text-transform: uppercase">Anything else that makes you a better fit?</label>
+          <span style="font-size: 13px; line-height: 1.45; font-weight: 500; color: #A5A39C">Certifications, side projects, awards, relocation. One per line. They go into an “Additional information” section.</span>
+          <textarea id="prep-note" rows="3" placeholder="e.g. HashiCorp Terraform Associate, 2025
+Built a home lab running 12 containers" value="{{ prepNote }}" onChange="{{ onPrepNote }}" style="width: 100%; box-sizing: border-box; min-height: 76px; resize: none; padding: 10px 12px; border-radius: 10px; border: 1px solid #3F4246; background: #1F2123; color: #F2F1EC; font-size: 14px; line-height: 1.45; font-weight: 500"></textarea>
+        </div>
+
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ GENERATING ============ -->
+    <sc-if value="{{ isGenerating }}" hint-placeholder-val="{{ false }}">
+      <div class="narrow" style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Tailoring your CV</h1>
+        <p style="margin: 0; font-size: 16px; color: #A5A39C; font-weight: 500">{{ job.title }} · {{ job.company }}</p>
+      </div>
+
+      <div style="height: 8px; border-radius: 999px; background: #3F4246; overflow: hidden">
+        <div style="height: 8px; border-radius: 999px; background: #5B77FF; width: {{ progressWidth }}"></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{ steps }}" as="p" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700">
+            <sc-if value="{{ p.isDone }}" hint-placeholder-val="{{ false }}">
+              <span style="width: 26px; height: 26px; border-radius: 50%; background: #2A4BFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></span>
+            </sc-if>
+            <sc-if value="{{ p.isNow }}" hint-placeholder-val="{{ false }}">
+              <span style="width: 26px; height: 26px; border-radius: 50%; background: #5B77FF; flex-shrink: 0; animation: cuibPulse 1s ease-in-out infinite"></span>
+            </sc-if>
+            <sc-if value="{{ p.isTodo }}" hint-placeholder-val="{{ false }}">
+              <span style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid #3F4246; box-sizing: border-box; flex-shrink: 0"></span>
+            </sc-if>
+            <span style="color: {{ p.color }}">{{ p.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ showKeywords }}" hint-placeholder-val="{{ false }}">
+        <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Keywords in the job description</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{ job.reqChips }}" as="r" hint-placeholder-count="4">
+              <span style="padding: 5px 11px; border-radius: 8px; font-size: 13px; font-weight: 700; background: {{ r.bg }}; color: {{ r.color }}; border: 1.5px solid {{ r.border }}">{{ r.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showRewrite }}" hint-placeholder-val="{{ false }}">
+        <div style="background: #1F2123; border: 1px solid #34363A; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">From your profile</span>
+          <p style="margin: 0; font-size: 14px; line-height: 1.5; font-weight: 500; color: #D3D1CA">{{ rewriteFrom }}</p>
+          <span style="margin-top: 6px; font-size: 12px; font-weight: 800; color: #A5A39C; letter-spacing: 0.04em; text-transform: uppercase">Rewritten for this job</span>
+          <p style="margin: 0; font-size: 14px; line-height: 1.5"><sc-for list="{{ rewriteParts }}" as="w"><span style="{{ w.style }}">{{ w.text }}</span></sc-for></p>
+        </div>
+      </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ============ CV ============ -->
+    <sc-if value="{{ isCv }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ noCv }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 24px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">No CV yet</h1>
+          <p style="margin: 0; font-size: 16px; line-height: 1.5; font-weight: 500; color: #A5A39C">Save a job, prepare your CV, and the tailored version shows up here.</p>
+          <button onClick="{{ startSearch }}" style="margin-top: 8px; min-height: 52px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">Find jobs</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasCv }}" hint-placeholder-val="{{ true }}">
+        <div class="cvWrap">
+          <div class="cvSide">
+        <button onClick="{{ goSaved }}" style="order: 0; align-self: flex-start; min-height: 44px; padding: 0 4px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: #D3D1CA">‹ Saved jobs</button>
+        <div style="order: 1; display: flex; flex-direction: column; gap: 4px; margin-top: -10px">
+          <h1 style="margin: 0; font-size: 26px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em">Your CV is ready</h1>
+          <p style="margin: 0; font-size: 15px; color: #A5A39C; font-weight: 500">For {{ cv.jobTitle }} at {{ cv.company }}</p>
+        </div>
+
+        <div style="order: 2; display: flex; gap: 6px; padding: 4px; background: #2B2E31; border-radius: 10px">
+          <button onClick="{{ showGeneric }}" style="flex: 1; min-height: 44px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; background: {{ genericBg }}; color: #F2F1EC">Your profile</button>
+          <button onClick="{{ showTailored }}" style="flex: 1; min-height: 44px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; background: {{ tailoredBg }}; color: #F2F1EC">Tailored</button>
+        </div>
+
+        <sc-if value="{{ isTailored }}" hint-placeholder-val="{{ true }}">
+          <div style="order: 3; background: #2B2E31; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between">
+              <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #D3D1CA">ATS check</span>
+              <span style="font-size: 20px; font-weight: 800">{{ cv.atsScore }}</span>
+            </div>
+            <div style="height: 8px; border-radius: 999px; background: #3F4246; overflow: hidden"><div style="height: 8px; border-radius: 999px; background: #5B77FF; width: {{ cv.atsBar }}"></div></div>
+            <sc-for list="{{ cv.atsRows }}" as="r" hint-placeholder-count="6">
+              <div style="display: flex; gap: 10px; align-items: flex-start">
+                <span style="width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; background: {{ r.bg }}; color: {{ r.color }}">{{ r.mark }}</span>
+                <span style="display: flex; flex-direction: column; gap: 1px">
+                  <span style="font-size: 13px; line-height: 1.4; font-weight: 700">{{ r.label }}</span>
+                  <sc-if value="{{ r.hasHint }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 12px; line-height: 1.4; font-weight: 500; color: #D3D1CA">{{ r.hint }}</span>
+                  </sc-if>
+                </span>
+              </div>
+            </sc-for>
+            <button onClick="{{ improveCv }}" style="min-height: 44px; border: none; border-radius: 10px; background: #1F2123; color: #F2F1EC; font-size: 14px; font-weight: 800; padding: 0 16px">Improve this CV</button>
+          </div>
+        </sc-if>
+
+        <div style="order: 6; display: flex; flex-direction: column; gap: 10px">
+          <button style="min-height: 52px; border: none; border-radius: 12px; background: #2A4BFF; color: #FFFFFF; font-size: 17px; font-weight: 800; padding: 0 20px">Download PDF</button>
+          <span style="font-size: 12px; font-weight: 500; color: #A5A39C; text-align: center">{{ cv.fileName }}</span>
+          <button onClick="{{ markApplied }}" style="min-height: 48px; border: 1.5px solid #3F4246; border-radius: 12px; background: {{ appliedBg }}; color: #F2F1EC; font-size: 16px; font-weight: 700; padding: 0 20px">{{ appliedLabel }}</button>
+        </div>
+          </div>
+          <div class="cvMain">
+        <!-- paper: plain, single column, standard headings (what an ATS reads) -->
+        <div style="order: 4; background: #FFFFFF; border: 1px solid #D8D6CE; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; font-family: Arial, Helvetica, sans-serif; font-size: 12.5px; line-height: 1.5; color: #111111">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 20px; font-weight: 700">Andrei Popescu</span>
+            <span style="font-size: 13px; font-weight: 700">{{ cv.headline }}</span>
+            <span>{{ cv.contactLine }}</span>
+            <span>{{ cv.linksLine }}</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #111111; padding-bottom: 2px">Summary</span>
+            <span><sc-for list="{{ cv.summaryParts }}" as="w"><span style="{{ w.style }}">{{ w.text }}</span></sc-for></span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #111111; padding-bottom: 2px">Skills</span>
+            <span><sc-for list="{{ cv.skillsParts }}" as="w"><span style="{{ w.style }}">{{ w.text }}</span></sc-for></span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #111111; padding-bottom: 2px">Experience</span>
+            <sc-for list="{{ cv.experience }}" as="e" hint-placeholder-count="2">
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <span style="font-weight: 700">{{ e.role }}</span>
+                <span>{{ e.meta }}</span>
+                <sc-for list="{{ e.bullets }}" as="b" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 8px"><span aria-hidden="true">•</span><span><sc-for list="{{ b.parts }}" as="w"><span style="{{ w.style }}">{{ w.text }}</span></sc-for></span></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #111111; padding-bottom: 2px">Education</span>
+            <sc-for list="{{ cv.education }}" as="d" hint-placeholder-count="1">
+              <div style="display: flex; flex-direction: column">
+                <span style="font-weight: 700">{{ d.degree }}</span>
+                <span>{{ d.meta }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #111111; padding-bottom: 2px">Languages</span>
+            <span>{{ cv.languages }}</span>
+          </div>
+
+          <sc-if value="{{ cv.hasAdditional }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid #111111; padding-bottom: 2px">Additional information</span>
+              <sc-for list="{{ cv.additional }}" as="a" hint-placeholder-count="1">
+                <div style="display: flex; gap: 8px"><span aria-hidden="true">•</span><span>{{ a.text }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ isTailored }}" hint-placeholder-val="{{ true }}">
+          <p style="order: 5; margin: 0; font-size: 13px; line-height: 1.5; font-weight: 500; color: #A5A39C"><span style="background: #C7D2FF; padding: 1px 6px; border-radius: 6px; font-weight: 800; color: #0B1440">Highlighted</span> words are only for you. The file we export is plain text with no colors, so any ATS can read it. Everything in it comes from your profile and your answers.</p>
+        </sc-if>
+
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+  </div>
+
+  <!-- bottom nav -->
+  <div class="nav" style="flex-shrink: 0; display: flex; background: #1F2123; border-top: 1px solid #34363A; padding: 6px 12px 10px 12px">
+    <button class="navbtn" onClick="{{ goProfile }}" aria-current="{{ curProfile }}" style="flex: 1; min-height: 52px; border-radius: 10px; background: {{ navBgProfile }}; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 800; color: {{ navProfile }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
+      Profile
+    </button>
+    <button class="navbtn" onClick="{{ goJobs }}" aria-current="{{ curJobs }}" style="flex: 1; min-height: 52px; border-radius: 10px; background: {{ navBgJobs }}; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 800; color: {{ navJobs }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+      Find jobs
+    </button>
+    <button class="navbtn" onClick="{{ goSaved }}" aria-current="{{ curSaved }}" style="flex: 1; min-height: 52px; border-radius: 10px; background: {{ navBgSaved }}; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 800; color: {{ navSaved }}">
+      <span style="position: relative; display: flex">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-9-9.2C1.6 7 4 4 7 4c1.9 0 3.4 1 5 3 1.6-2 3.1-3 5-3 3 0 5.4 3 4 6.8-2 4.8-9 9.2-9 9.2z"></path></svg>
+        <sc-if value="{{ hasSavedBadge }}" hint-placeholder-val="{{ false }}">
+          <span style="position: absolute; top: -6px; right: -10px; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 4px; border-radius: 8px; background: #2A4BFF; color: #FFFFFF; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ savedCount }}</span>
+        </sc-if>
+      </span>
+      Saved
+    </button>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+
+  defaults() {
+    return {
+      screen: 'profile', jobId: 1, query: '', source: 'All', skillDraft: '',
+      about: 'DevOps engineer who automates infrastructure and keeps services running. I like reliable systems, clear documentation and calm on-call weeks.',
+      skills: ['Python', 'SQL', 'Git', 'Linux', 'Docker', 'CI/CD', 'Bash', 'Monitoring'],
+      headline: 'DevOps Engineer',
+      experience: [
+        { id: 'r1', role: 'DevOps Engineer', company: 'Verde Cloud', location: 'Iași', start: '2022', end: '', tools: ['Linux', 'Docker', 'CI/CD', 'Python', 'Git', 'Monitoring', 'SQL'], bullets: [
+          'Built and maintained deployment pipelines for internal services.',
+          'Automated server setup and configuration with scripts.',
+          'Monitored services and responded to incidents on call.',
+          'Wrote SQL queries and reports for the data team.'
+        ] },
+        { id: 'r2', role: 'Junior system administrator', company: 'Bonbon Labs', location: 'Iași', start: '2020', end: '2022', tools: ['Linux', 'Bash', 'Monitoring'], bullets: [
+          'Maintained servers and user accounts for a small office.',
+          'Set up backups and checked that they ran every night.',
+          'Fixed issues reported by users and kept a log of recurring problems.'
+        ] }
+      ],
+      education: [{ degree: 'BSc Computer Science', school: 'University of Iași', years: '2016 – 2020' }],
+      languages: [{ name: 'Romanian', level: 'Native' }, { name: 'English', level: 'C1' }],
+      adding: false, dRole: '', dCompany: '', dStart: '', dEnd: '', dTools: '', dBullet: '', dBullet2: '', dResult: '',
+      addingEdu: false, eDeg: '', eSchool: '', eYears: '', langName: '', langLevel: 'B2',
+      tracked: {}, step: 0, cvJobId: null, cvMode: 'tailored',
+      location: '', openRemote: true,
+      stage: 'filters', areas: [], level: 'Any',
+      dragY: 0, savedTab: 'All', prep: { skip: {}, focus: null, note: '', base: 0, claims: {}, drafts: {}, gaps: {}, gapFacts: {}, claimText: {}, impacts: {}, factRole: {}, gapList: [] }, prepBack: 'job', jobFrom: 'jobs', cvOpts: {}, confirmRemove: null,
+      skipped: [], dragX: 0, dragging: false, snap: false, last: null,
+      city: 'Iași', country: 'Romania', workModes: ['remote', 'hybrid'], relocation: false,
+      added: [], addFrom: 'jobs', addTab: 'link', addPhase: 'input', addUrl: '', addText: '', addTitle: '', addCompany: '', addLink: '', addError: '', failReason: '', draft: null, draftReq: '',
+      email: 'andrei@example.com', phone: '+40 700 000 000', github: 'github.com/andrei-popescu', linkedin: 'linkedin.com/in/andrei-popescu',
+      open: { About: false, Contact: false, Skills: true, Exp: true, Edu: false, Lang: false }, expOpen: { r1: true }
+    };
+  }
+
+  st() { return Object.assign({}, this.defaults(), this.state || {}); }
+
+  allJobs() { return this.jobsData().concat(this.st().added || []); }
+
+  jobsData() {
+    return [
+      { id: 1, title: 'Snowflake Administrator DevOps', company: 'Capgemini Romania', place: 'Iași, on-site', source: 'LinkedIn', posted: 'posted by Undelucram.ro', sample: false, areas: ['DevOps', 'Data'], level: 'Senior',
+        product: 'enterprise Knowledge Platform on Snowflake', pitch: 'building, automating and operating the Snowflake foundations behind it',
+        about: 'As a Snowflake Administrator / DevOps Engineer, you will play a key role in building, automating, and operating the Snowflake foundations supporting an enterprise-scale Knowledge Platform. You will be responsible for enabling secure, scalable, and governed Knowledge Domains while ensuring platform reliability, operational excellence, and adherence to data governance standards. Working alongside architects, engineers, and business stakeholders, you will contribute to the standardization and industrialization of Snowflake platform operations.',
+        dos: ['Design and administer Snowflake databases, schemas, roles, warehouses, and access-control models supporting Knowledge Domains.', 'Automate provisioning, configuration, and deployment processes through Infrastructure as Code and CI/CD pipelines.', 'Implement and maintain governance, security, naming, tagging, and lifecycle-management standards.', 'Develop and maintain Terraform modules and reusable deployment templates.', 'Monitor platform usage, performance, reliability, security, and cost consumption.', 'Troubleshoot technical issues and provide expert guidance on Snowflake capabilities and best practices.', 'Support onboarding activities for new Knowledge Domains and platform consumers.', 'Create operational documentation, runbooks, and knowledge-base content.', 'Collaborate with cross-functional teams in Agile and international delivery environments.'],
+        claimIdx: [1, 3, 4, 7],
+        looks: ['Minimum 5 years of experience in Snowflake Administration, Data Platform Engineering, DevOps Engineering, or related disciplines.', 'Strong hands-on experience with Snowflake, including database administration, RBAC, security implementation, performance optimization, and cost management.', 'Advanced knowledge of SQL and Snowflake native capabilities.', 'Experience with Terraform, Infrastructure as Code, Git, and CI/CD automation practices.', 'Good understanding of cloud-based data platforms and enterprise-grade operational processes.', 'Experience with monitoring, observability, production support, and incident management.', 'Knowledge of security, governance, compliance, and access-management frameworks.', 'Python or scripting experience is considered an advantage.', 'Strong analytical and problem-solving capabilities.', 'Excellent communication skills in English and ability to work effectively with international teams.', 'Ability to work autonomously while maintaining a strong delivery focus.'],
+        perks: ['Diverse & Impactful Projects: Develop your expertise across a wide range of missions, technologies, and sectors, with meaningful autonomy and room for initiative.', 'Continuous Learning: Access comprehensive training platforms and recognized certifications.', 'Flexibility & Balance: Benefit from hybrid working policies that allow you to manage your time and work location effectively.'],
+        aboutCompany: 'Capgemini is an AI-powered global business and technology transformation partner, delivering tangible business value. We imagine the future of organizations and make it real with AI, technology and people. With our strong heritage of nearly 60 years, we are a responsible and diverse group of 420,000 team members in more than 50 countries. We deliver end-to-end services and solutions with our deep industry expertise and strong partner ecosystem, leveraging our capabilities across strategy, technology, design, engineering and business operations. The Group reported 2024 global revenues of €22.1 billion.',
+        req: ['Snowflake', 'SQL', 'Terraform', 'Infrastructure as Code', 'Git', 'CI/CD', 'RBAC', 'Monitoring', 'Python'] },
+      { id: 2, title: 'DevOps Engineer', company: 'Bitdefender', place: 'Bucharest, hybrid', source: 'Sample', posted: '', sample: true, areas: ['DevOps'], level: 'Mid',
+        product: 'cybersecurity services', pitch: 'keeping cloud infrastructure reliable and secure',
+        about: 'As a DevOps Engineer, you will help build and run the cloud infrastructure behind security services used by customers around the world. You will own deployment pipelines, improve reliability, and work with developers so that new features reach production safely and quickly. You will join a platform team that values automation, clear documentation, and calm incident response.',
+        dos: ['Design and maintain CI/CD pipelines for microservices.', 'Automate infrastructure provisioning with Terraform and Ansible.', 'Run and improve Kubernetes clusters on AWS.', 'Build monitoring, alerting and dashboards for production services.', 'Respond to incidents and lead blameless post-mortems.', 'Harden systems and apply security best practices across environments.', 'Write scripts in Python and Bash to remove manual work.', 'Create runbooks and documentation for the on-call team.', 'Collaborate with developers and security engineers in an Agile setup.'],
+        claimIdx: [0, 1, 3, 7],
+        looks: ['Minimum 3 years of experience in DevOps, SRE, or system engineering.', 'Strong hands-on experience with Linux administration.', 'Experience with Docker and Kubernetes in production.', 'Experience with CI/CD tools such as Jenkins or GitLab CI.', 'Experience with Terraform and Infrastructure as Code.', 'Good knowledge of AWS or another major cloud provider.', 'Experience with monitoring tools such as Prometheus and Grafana.', 'Python or Bash scripting skills.', 'Good understanding of networking and security fundamentals.', 'Good communication skills in English and the ability to work in international teams.'],
+        perks: ['Hybrid working: split your week between the office and home.', 'Learning budget: courses, books, and certifications.', 'Challenging problems: work on security services that people rely on.'],
+        aboutCompany: 'Bitdefender builds cybersecurity products and services. This is a sample listing written for the prototype, so the details are illustrative and it is not an actual opening.',
+        req: ['Kubernetes', 'Docker', 'CI/CD', 'Linux', 'Terraform', 'AWS', 'Python', 'Monitoring'] },
+      { id: 3, title: 'Software Engineer', company: 'Amazon', place: 'Bucharest, hybrid', source: 'Sample', posted: '', sample: true, areas: ['Backend'], level: 'Mid',
+        product: 'services that customers depend on every day', pitch: 'owning features from design review to production',
+        about: 'As a Software Engineer, you will design, build, and operate services that customers depend on every day. You will take ownership of features from design to production, write clean and well-tested code, and work with product managers and other engineers to solve ambiguous problems. You will join a team that values ownership, operational excellence, and continuous learning.',
+        dos: ['Design and build scalable, distributed services.', 'Write clean, well-tested code in Java or Python.', 'Own features from design review to production.', 'Participate in code reviews and design discussions.', 'Monitor your services and fix operational issues quickly.', 'Analyze and improve the performance of existing systems.', 'Work with product managers to turn requirements into technical designs.', 'Write technical documentation for the systems the team owns.', 'Mentor junior engineers and share what you learn.'],
+        claimIdx: [0, 2, 4, 7],
+        looks: ['Bachelor degree in Computer Science or a related field.', 'Minimum 3 years of professional software development experience.', 'Proficiency in at least one object-oriented language such as Java or Python.', 'Solid knowledge of data structures and algorithms.', 'Experience designing distributed systems and APIs.', 'Experience with SQL and relational databases.', 'Experience with Git and automated testing.', 'Familiarity with AWS services is an advantage.', 'Strong problem-solving skills and clear communication in English.'],
+        perks: ['Ownership: take real responsibility for what you build.', 'Growth: structured mentoring and clear career paths.', 'Flexibility: hybrid work and relocation support.'],
+        aboutCompany: 'Amazon is a large technology company. This is a sample listing written for the prototype, so the details are illustrative and it is not an actual opening.',
+        req: ['Java', 'Python', 'Algorithms', 'Distributed systems', 'SQL', 'Git', 'Testing', 'AWS'] },
+      { id: 4, title: 'System Administrator', company: 'Carpathia Systems', place: 'Cluj-Napoca, on-site', source: 'Sample', posted: '', sample: true, areas: ['Sysadmin'], level: 'Mid',
+        product: 'IT services', pitch: 'keeping servers, networks, and user environments secure and available',
+        about: 'As a System Administrator, you will keep the company’s servers, networks, and user environments secure, available, and well documented. You will be the first point of contact for infrastructure issues, plan upgrades and backups, and work with the helpdesk and engineering teams to improve how IT is run day to day.',
+        dos: ['Install and maintain Linux and Windows servers.', 'Manage user accounts, permissions, and Active Directory.', 'Monitor systems and respond to alerts.', 'Plan and test backups and disaster recovery procedures.', 'Apply security patches and updates on schedule.', 'Manage virtualization platforms and storage.', 'Automate routine tasks with Bash and PowerShell.', 'Document procedures and keep the asset inventory up to date.', 'Support colleagues and escalate complex issues to the right teams.'],
+        claimIdx: [0, 2, 3, 6],
+        looks: ['Minimum 3 years of experience as a system administrator.', 'Strong knowledge of Linux and Windows Server administration.', 'Experience with Active Directory and group policies.', 'Experience with virtualization such as VMware or Hyper-V.', 'Good understanding of networking: TCP/IP, DNS, DHCP, and VPN.', 'Experience with backup and recovery solutions.', 'Experience with monitoring tools such as Zabbix or Nagios.', 'Bash or PowerShell scripting is an advantage.', 'Good communication skills and a calm approach to incidents.'],
+        perks: ['A stable team and a predictable on-call rotation.', 'Training and certifications paid by the company.', 'Modern office with parking.'],
+        aboutCompany: 'Carpathia Systems is a fictional company created for this prototype. It stands in for a mid-size IT services firm, so this listing is a sample and not an actual opening.',
+        req: ['Linux', 'Windows Server', 'Active Directory', 'Networking', 'Backup', 'Monitoring', 'Virtualization', 'Bash'] }
+    ];
+  }
+
+  renderVals() {
+    const s = this.st();
+    const have = s.skills.map((x) => x.toLowerCase());
+    const MUTED = '#A5A39C';
+    const wrapText = (arr) => arr.map((x) => ({ text: x }));
+    const wrapLabel = (arr) => arr.map((x) => ({ label: x }));
+
+    const jobs = this.allJobs().map((j) => {
+      const matched = j.req.filter((r) => have.indexOf(r.toLowerCase()) >= 0);
+      const missing = j.req.filter((r) => have.indexOf(r.toLowerCase()) < 0);
+      const score = this.scoreFor(j, s.skills);
+      const status = s.tracked[j.id];
+      const verdict = score >= 80 ? 'Strong match. You already have most of what they ask for.'
+        : score >= 60 ? 'Good match, with a couple of things to pick up.'
+        : score >= 40 ? 'Partial match. Worth a try if the role excites you.'
+        : 'Light match, in a new direction for you.';
+      return Object.assign({}, j, {
+        matched: matched, missing: missing, score: score, status: status, verdict: verdict,
+        tagline: [j.areas.join(', '), j.level].filter(Boolean).join(' · '),
+        hasAbout: !!j.about, hasDos: j.dos.length > 0, hasPerks: (j.perks || []).length > 0, hasAboutCompany: !!j.aboutCompany, hasUrl: !!j.url,
+        matchedChips: wrapLabel(matched), missingChips: wrapLabel(missing),
+        reqChips: j.req.map((r) => {
+          const hit = have.indexOf(r.toLowerCase()) >= 0;
+          return { label: r, bg: hit ? '#18235E' : '#1F2123', color: hit ? '#A9B8FF' : '#D3D1CA', border: hit ? '#18235E' : '#3F4246' };
+        }),
+        dos: wrapText(j.dos), looks: wrapText(j.looks), perks: wrapText(j.perks || []),
+        sourceLine: j.added ? 'Added by you · ' + (j.from === 'link' ? 'from a link' : 'from pasted text') : j.sample ? 'Sample listing, not a real posting' : 'via ' + j.source + ' · ' + j.posted,
+        showSave: !status || status === 'Saved',
+        saveLabel: status === 'Saved' ? 'Saved · tap to remove' : 'Save for later'
+      });
+    }).sort((a, b) => b.score - a.score);
+
+    const job = jobs.find((j) => j.id === s.jobId) || jobs[0];
+
+    // ---- profile
+    const skillChips = s.skills.map((k) => ({
+      label: k, aria: 'Remove ' + k,
+      remove: () => this.setState({ skills: this.st().skills.filter((x) => x !== k) })
+    }));
+    const badge = (st) => st === 'Applied' ? { bg: '#18235E', color: '#A9B8FF' } : st === 'CV ready' ? { bg: '#2A4BFF', color: '#FFFFFF' } : { bg: '#2B2E31', color: '#D3D1CA' };
+    const trackedJobs = jobs.filter((j) => j.status).map((j) => ({
+      title: j.title, company: j.company, score: j.score, status: j.status,
+      badgeBg: badge(j.status).bg, badgeColor: badge(j.status).color,
+      open: () => this.setState({ jobId: j.id, screen: 'job', jobFrom: 'profile' })
+    }));
+
+    // ---- find jobs (swipe deck)
+    const q = s.query.trim().toLowerCase();
+    const loc = s.location.trim().toLowerCase();
+    const deck = jobs.filter((j) => {
+      if (j.status || s.skipped.indexOf(j.id) >= 0) return false;
+      const hay = (j.title + ' ' + j.company + ' ' + j.req.join(' ')).toLowerCase();
+      const isRemote = /remote/i.test(j.place);
+      const okLoc = !loc || j.place.toLowerCase().indexOf(loc) >= 0 || (s.openRemote && isRemote);
+      const okArea = s.areas.length === 0 || j.areas.some((a) => s.areas.indexOf(a) >= 0);
+      const okLevel = s.level === 'Any' || j.level === s.level;
+      return okLoc && okArea && okLevel && (!q || hay.indexOf(q) >= 0);
+    });
+    const cur = deck[0] || null;
+    const nextCard = deck[1] || null;
+    this.curId = cur ? cur.id : null;
+    const dx = s.dragX;
+    const dy = Math.min(0, s.dragY);
+    const vertical = Math.abs(dy) > Math.abs(dx);
+    const prog = Math.min(1, Math.max(Math.abs(dx), Math.abs(dy)) / 110);
+    const emptyCard = { title: '', company: '', place: '', source: '', posted: '', score: 0, about: '', matchedChips: [], missingChips: [], dos: [], sourceLine: '', tagline: '' };
+    const card = cur ? Object.assign({}, cur, { matchedChips: cur.matchedChips.slice(0, 4), missingChips: cur.missingChips.slice(0, 3), dos: cur.dos.slice(0, 3) }) : emptyCard;
+    const lastJob = s.last ? jobs.find((j) => j.id === s.last.id) : null;
+    const toast = s.last && lastJob ? (s.last.dir === 'right' ? 'Saved · ' : 'Skipped · ') + lastJob.title : '';
+
+    // ---- generating
+    const stepLabels = ['Reading the job and the company', 'Matching it with your profile', 'Rewriting summary, skills and experience', 'Checking the ATS format'];
+    const steps = stepLabels.map((label, i) => ({
+      label: label, isDone: s.step > i, isNow: s.step === i, isTodo: s.step < i,
+      color: s.step >= i ? '#F2F1EC' : '#8E8C85'
+    }));
+
+    // ---- tailoring engine (simulation of what the LLM does)
+    const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const HIT = 'background:#C7D2FF;font-weight:700;color:#0B1440;border-radius:3px;padding:0 2px';
+    const PLAIN = 'font-weight:400';
+    const parts = (text, kws) => {
+      if (!kws.length) return { list: [{ text: text, style: PLAIN }], hits: 0 };
+      const re = new RegExp('(' + kws.map(esc).join('|') + ')', 'gi');
+      const raw = text.split(re).map((t, i) => ({ text: t, hit: i % 2 === 1 })).filter((p) => p.text !== '');
+      return { list: raw.map((p) => ({ text: p.text, style: p.hit ? HIT : PLAIN })), hits: raw.filter((p) => p.hit).length };
+    };
+    const joinList = (arr) => arr.length <= 1 ? arr.join('') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+    const lc = (x) => String(x).toLowerCase();
+    const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+    const datesOf = (e) => e.start ? e.start + ' – ' + (e.end || 'now') : '';
+    const datesCv = (e) => e.start ? e.start + ' – ' + (e.end || 'Present') : '';
+    const hasWord = (txt, w) => new RegExp('\\b' + esc(w) + '\\b', 'i').test(txt);
+    const PAST = { build: 'built', ship: 'shipped', work: 'worked', review: 'reviewed', document: 'documented', add: 'added', write: 'wrote', design: 'designed', manage: 'managed', run: 'ran', watch: 'watched', own: 'owned', join: 'joined', keep: 'kept', clean: 'cleaned', fix: 'fixed', share: 'shared', maintain: 'maintained', create: 'created', develop: 'developed', improve: 'improved', check: 'checked', test: 'tested', administer: 'administered', automate: 'automated', implement: 'implemented', monitor: 'monitored', troubleshoot: 'troubleshot', support: 'supported', collaborate: 'collaborated', respond: 'responded', participate: 'participated', analyze: 'analyzed', mentor: 'mentored', turn: 'turned', install: 'installed', plan: 'planned', apply: 'applied', escalate: 'escalated', lead: 'led', harden: 'hardened' };
+    const pastOf = (w) => PAST[w.toLowerCase()] || w;
+    // "Build and ship features in our React web app." -> "built and shipped features in a React web app"
+    const pastPhrase = (line) => {
+      let x = line.replace(/[.]$/, '').replace(/\bour\b/gi, 'a').replace(/\byour\b/gi, 'the');
+      x = x.replace(/^(\w+)/, (m) => pastOf(m)).replace(/ and (\w+)/, (m, w) => ' and ' + pastOf(w));
+      return x.charAt(0).toLowerCase() + x.slice(1);
+    };
+    const VERB_GROUPS = [['built', 'developed', 'created', 'shipped'], ['fixed', 'resolved'], ['maintained', 'managed', 'ran', 'administered'], ['wrote', 'authored'], ['monitored', 'tracked']];
+    const TERMS = [['deployment pipelines', 'release pipelines', 'CI/CD pipelines'], ['servers', 'hosts', 'instances'], ['incidents', 'outages'], ['interface', 'UI', 'user interface'], ['platform', 'web app', 'application', 'app'], ['websites', 'web apps', 'sites']];
+    const jdLowOf = (jb) => lc(jb.title + ' ' + jb.about + ' ' + jb.dos.map((d) => d.text).join(' ') + ' ' + jb.looks.map((d) => d.text).join(' '));
+    // [first verb, second verb of the same JD line], in past tense: "Build and ship ..." -> ['built', 'shipped']
+    const verbPairsOf = (jb) => jb.dos.map((d) => { const ws = pastPhrase(d.text).split(' '); return [ws[0]].concat(ws[1] === 'and' && ws[2] ? [ws[2]] : []); });
+    // 1) use the job's own words, 2) use the job's verbs, 3) add the tools the person really used in that role
+    const AFF = { 'sql': /report|quer|data|dashboard/i, 'figma': /design|screen|page|flow/i, 'css': /style|page|screen|design|website|interface/i, 'react': /interface|ui|component|feature|app|screen|page|platform/i, 'typescript': /interface|ui|component|feature|app|screen|platform|api|service/i, 'javascript': /website|site|bug|feature|page|interface/i, 'node.js': /api|service|server|endpoint|quer/i, 'graphql': /api|endpoint/i, 'next.js': /page|app|interface|site/i, 'storybook': /component/i, 'testing': /test|check|bug/i, 'docker': /deploy|container|service|server/i, 'ci/cd': /pipeline|deploy|release/i, 'linux': /server|setup|config|host|account|system/i, 'python': /script|automat|report|data|tool|setup/i, 'git': /release|code|deploy|version|pipeline/i, 'bash': /script|automat|setup|server|backup/i, 'monitoring': /monitor|incident|alert|uptime|call/i, 'terraform': /provision|infrastructure|environment/i, 'kubernetes': /container|cluster|deploy/i, 'aws': /cloud|infrastructure|deploy|service/i };
+    const affOk = (k, text) => { const r = AFF[lc(k)]; return r ? r.test(text) : true; };
+    const rewriteBullet = (e, text, i, jb, used) => {
+      const jdLow = jdLowOf(jb);
+      let out = text;
+      TERMS.forEach((g) => {
+        const jdTerm = g.find((w) => hasWord(jdLow, w));
+        if (!jdTerm) return;
+        g.forEach((w) => { if (w !== jdTerm && hasWord(out, w) && !hasWord(out, jdTerm)) { out = out.replace(new RegExp('\\b' + esc(w) + '\\b', 'i'), jdTerm); } });
+      });
+      const m = out.match(/^(\w+)(\s[\s\S]*)$/);
+      if (m) {
+        const v = m[1].toLowerCase();
+        const grp = VERB_GROUPS.find((g) => g.indexOf(v) >= 0);
+        if (grp) {
+          const pair = verbPairsOf(jb).map((pr) => pr.filter((x) => grp.indexOf(x) >= 0)).find((pr) => pr.length > 0);
+          if (pair) {
+            const bulletHasAnd = out.split(' ')[1] === 'and';
+            const js = bulletHasAnd ? [pair[0]] : pair;
+            if (js[0] !== v) { out = cap(joinList(js)) + m[2]; }
+          }
+        }
+      }
+      if (used && used.__noTools) { return out; }
+      const NO_INJECT = ['monitoring', 'testing', 'networking', 'backup', 'virtualization', 'algorithms', 'distributed systems'];
+      const pool = jb.matched.filter((k) => NO_INJECT.indexOf(lc(k)) < 0 && e.tools.map(lc).indexOf(lc(k)) >= 0 && affOk(k, text) && lc(out).indexOf(lc(k)) < 0 && !(used && used[lc(k)]));
+      const mine = pool.slice(0, 2);
+      if (mine.length) { mine.forEach((k) => { if (used) { used[lc(k)] = true; } }); out = out.replace(/[.]$/, '') + (/ with /.test(out) || i % 2 === 0 ? ', using ' : ' with ') + joinList(mine) + '.'; }
+      return out;
+    };
+
+    const cleanFact = (txt, kw) => {
+      let x = String(txt || '').trim().replace(/\s+/g, ' ');
+      if (!x) return '';
+      x = x.charAt(0).toUpperCase() + x.slice(1);
+      x = x.replace(/[.]*$/, '');
+      if (kw && !hasWord(x, kw)) { x += ', using ' + kw; }
+      return x + '.';
+    };
+    const roleFor = (tools) => ({ tools: tools });
+
+    // preview on the generating screen: the person's own words if there are any, else their first bullet
+    const gf = s.prep.gapFacts || {};
+    const gfKeys = Object.keys(gf);
+    const incl0 = s.experience.filter((e) => !s.prep.skip[e.id]);
+    const e0 = incl0[0];
+    const b0 = e0 && e0.bullets.length ? e0.bullets[0] : '';
+    let rewriteFrom = b0;
+    let rewriteParts = [];
+    if (gfKeys.length) {
+      rewriteFrom = gf[gfKeys[0]];
+      rewriteParts = parts(rewriteBullet(roleFor([gfKeys[0]]), cleanFact(gf[gfKeys[0]], gfKeys[0]), 0, job, { __noTools: true }), job.matched).list;
+    } else if (b0) {
+      rewriteParts = parts(rewriteBullet(e0, b0, 0, job, {}), job.matched).list;
+    }
+
+    // ---- CV
+    const cvJob = jobs.find((j) => j.id === s.cvJobId);
+    const tailored = s.cvMode === 'tailored';
+    let cv = null;
+    if (cvJob) {
+      const opts = s.cvOpts[s.cvJobId] || { skip: {}, focus: null, note: '', claims: {}, claimText: {}, gapFacts: {}, impacts: {}, factRole: {} };
+      // the CV is built from the profile as it was when it was generated
+      const P = opts.snap || s;
+      const gapFacts = tailored ? (opts.gapFacts || {}) : {};
+      const cvSkills = P.skills.concat(Object.keys(gapFacts).filter((k) => P.skills.map(lc).indexOf(lc(k)) < 0));
+      const cvHave = cvSkills.map(lc);
+      const cvJ = Object.assign({}, cvJob, { matched: cvJob.req.filter((r) => cvHave.indexOf(lc(r)) >= 0) });
+      const kws = tailored ? cvJ.matched : [];
+      const roles = P.experience.filter((e) => tailored ? !(opts.skip || {})[e.id] : true);
+      const roleIds = roles.map((e) => e.id);
+      // what the person told us, rewritten in the job's words, placed under the role they picked
+      const facts = !tailored ? [] : Object.keys(gapFacts).map((k) => ({ key: 'g:' + k, kind: 'gap', text: rewriteBullet(roleFor([k]), cleanFact(gapFacts[k], k), 0, cvJ, { __noTools: true }) }))
+        .concat((cvJob.claimIdx || [0, 1, 2]).filter((k) => opts.claims && opts.claims[k] === true && opts.claimText && opts.claimText[k])
+          .map((k) => ({ key: 'c:' + k, kind: 'claim', text: rewriteBullet(roleFor([]), cleanFact(opts.claimText[k], null), 0, cvJ, { __noTools: true }) })));
+      const placeOf = (f) => {
+        const r = (opts.factRole || {})[f.key];
+        if (r && roleIds.indexOf(r) >= 0) return r;
+        return r === 'other' || !roleIds.length ? 'other' : roleIds[0];
+      };
+      const nClaims = facts.filter((f) => f.kind === 'claim').length;
+      const additional = (tailored ? String(opts.note || '').split('\n').map((x) => cleanFact(x, null)).filter(Boolean) : [])
+        .concat(facts.filter((f) => placeOf(f) === 'other').map((f) => f.text));
+
+      const top = opts.focus && opts.focus.length ? opts.focus.filter((k) => cvJ.matched.indexOf(k) >= 0) : cvJ.matched.slice(0, 3);
+      const startYears = P.experience.map((e) => parseInt(e.start, 10)).filter((y) => y > 1950);
+      const years = startYears.length ? new Date().getFullYear() - Math.min.apply(null, startYears) : 0;
+      const sentences = (P.about || '').split('.').map((x) => x.trim()).filter(Boolean);
+      let summary = P.about;
+      if (tailored) {
+        const s1 = (P.headline || 'Engineer') + ' with ' + (years ? years + ' years of experience' : 'hands-on experience') + (top.length ? ', strongest in ' + joinList(top) : '') + '.';
+        const s2 = sentences.length > 1 ? sentences[1] + '.' : '';
+        const s3 = 'Looking to join ' + cvJob.company + ' as ' + cvJob.title + ' and work on its ' + cvJob.product + '.';
+        summary = [s1, s2, s3].filter(Boolean).join(' ');
+      }
+      const headline = tailored ? P.headline + (top.length ? ' | ' + top.join(', ') : '') : P.headline;
+      const matchedLow = cvJ.matched.map(lc);
+      const skillList = tailored ? cvJ.matched.concat(cvSkills.filter((k) => matchedLow.indexOf(lc(k)) < 0)) : P.skills;
+      const skillsLine = skillList.join(', ');
+      const expOut = roles.map((e, ri) => {
+        const used = {};
+        const mine = facts.filter((f) => placeOf(f) === e.id);
+        let bl = e.bullets.map((b, i) => {
+          const imp = tailored && opts.impacts ? String(opts.impacts[e.id + '-' + i] || '').trim() : '';
+          const base = imp ? b.replace(/[.]$/, '') + ', ' + imp.charAt(0).toLowerCase() + imp.slice(1).replace(/[.]*$/, '') + '.' : b;
+          const txt = tailored ? rewriteBullet(e, base, i, cvJ, used) : base;
+          const pr = parts(txt, kws);
+          return { text: txt, parts: pr.list, hits: pr.hits, i: i };
+        });
+        if (tailored) {
+          bl = bl.sort((a, b) => (b.hits - a.hits) || ((/\d/.test(b.text) ? 1 : 0) - (/\d/.test(a.text) ? 1 : 0)) || (a.i - b.i));
+          const maxB = Math.max(2, (ri === 0 ? 7 : 3) - mine.length);
+          bl = bl.slice(0, maxB);
+          bl = mine.map((f) => { const pr = parts(f.text, kws); return { text: f.text, parts: pr.list, hits: pr.hits, i: -1 }; }).concat(bl);
+        }
+        return { role: e.role, meta: [e.company, e.location, datesCv(e)].filter(Boolean).join(' | '), bullets: bl };
+      });
+
+      // ATS check, computed from the final text
+      const allBullets = [].concat.apply([], expOut.map((r) => r.bullets.map((b) => b.text)));
+      const bodyText = [summary, skillsLine].concat(allBullets).join(' ');
+      const ctxText = [summary].concat(allBullets).join(' ');
+      const reqFound = cvJob.req.filter((k) => hasWord(bodyText, k));
+      const reqCtx = cvJob.req.filter((k) => hasWord(ctxText, k));
+      const firstWord = (b) => ((b.match(/^(\w+)/) || [''])[0]).toLowerCase();
+      const verbOk = allBullets.length > 0 && allBullets.every((b) => /ed$/.test(firstWord(b)) || ['built', 'wrote', 'made', 'ran', 'led', 'kept', 'set', 'took'].indexOf(firstWord(b)) >= 0);
+      const numCount = allBullets.filter((b) => /\d/.test(b)).length;
+      const chars = (summary + skillsLine + allBullets.join(' ')).length;
+      const nResp = (cvJob.claimIdx || [0, 1, 2]).length;
+      const checks = [
+        { ok: true, label: 'Single column, plain text, no tables or images' },
+        { ok: true, label: 'Standard headings: Summary, Skills, Experience, Education' },
+        { ok: !!(String(P.email || '').trim() && String(P.phone || '').trim()), label: 'Email and phone in the body, not in a header', hint: 'Add them in Profile.' },
+        { ok: hasWord(summary, cvJob.title), label: 'Target job title “' + cvJob.title + '” in the summary' },
+        { ok: reqFound.length === cvJob.req.length, label: 'Keywords from the job: ' + reqFound.length + ' of ' + cvJob.req.length, hint: 'The missing ones are not in your profile yet. Tell us about them in Prepare your CV.' },
+        { ok: reqCtx.length >= Math.ceil(reqFound.length * 0.6), label: 'Keywords used in sentences, not only listed: ' + reqCtx.length + ' of ' + reqFound.length, hint: 'List the tools you used for each role in Profile.' },
+        { ok: nClaims > 0, label: 'Job responsibilities mirrored: ' + nClaims + ' of ' + nResp, hint: 'Describe them in Prepare your CV.' },
+        { ok: verbOk, label: 'Every bullet starts with an action verb' },
+        { ok: numCount > 0, label: 'Results with numbers: ' + numCount + ' of ' + allBullets.length, hint: 'Add a number or result to your bullets in Prepare your CV.' },
+        { ok: chars < 3600, label: 'Fits on one page' }
+      ];
+      const passed = checks.filter((c) => c.ok).length;
+      cv = {
+        jobTitle: cvJob.title, company: cvJob.company, headline: headline,
+        contactLine: [P.email, P.phone].filter((x) => String(x || '').trim()).join(' · '),
+        linksLine: [P.github, P.linkedin].filter((x) => String(x || '').trim()).join(' · '),
+        summaryParts: parts(summary, kws).list, skillsParts: parts(skillsLine, kws).list,
+        experience: expOut,
+        education: P.education.map((d) => ({ degree: d.degree, meta: [d.school, d.years].filter(Boolean).join(' | ') })),
+        languages: P.languages.map((l) => l.name + ' (' + l.level + ')').join(', '),
+        additional: additional.map((x) => ({ text: x })), hasAdditional: additional.length > 0,
+        matchPct: cvJob.score + '%',
+        atsScore: passed + ' of ' + checks.length, atsBar: Math.round((passed / checks.length) * 100) + '%',
+        atsRows: checks.map((c) => ({ label: c.label, hint: c.hint || '', hasHint: !c.ok && !!c.hint, mark: c.ok ? '✓' : '!', bg: c.ok ? '#2A4BFF' : '#FF5A36', color: c.ok ? '#FFFFFF' : '#141516' })),
+        fileName: 'Andrei_Popescu_CV_' + cvJob.company.replace(/[^A-Za-z0-9]+/g, '_') + '.pdf'
+      };
+    }
+    const cvStatus = cvJob ? cvJob.status : null;
+
+    // ---- prep (before generating)
+    const prep = s.prep;
+    const isHave = (k) => have.indexOf(lc(k)) >= 0;
+    const setPrep = (fn) => { const c = this.st(); this.setState({ prep: Object.assign({}, c.prep, fn(c.prep)) }); };
+    const setDraft = (key, v) => setPrep((pp) => { const d = Object.assign({}, pp.drafts); d[key] = v; return { drafts: d }; });
+    const draftOf = (key) => (prep.drafts && prep.drafts[key]) || '';
+    const EXAMPLES = {
+      'terraform': 'Wrote Terraform modules for our staging environments, cutting setup from 2 days to 30 minutes',
+      'snowflake': 'Managed roles and warehouses in Snowflake for a team of 20 analysts',
+      'rbac': 'Set up RBAC roles for 15 teams and removed shared admin accounts',
+      'infrastructure as code': 'Moved 40 servers to Infrastructure as Code, so a rebuild now takes minutes',
+      'kubernetes': 'Ran a Kubernetes cluster with 30 services and cut deploy time by half',
+      'aws': 'Moved 12 services to AWS and reduced hosting cost by 20%',
+      'java': 'Built a Java service that handles 5,000 requests per minute',
+      'algorithms': 'Replaced a slow search with a better algorithm, cutting response time from 4s to 300ms',
+      'distributed systems': 'Worked on a queue-based system that processes 1M events a day',
+      'testing': 'Added automated tests for the checkout flow and caught 30 bugs before release',
+      'windows server': 'Administered 12 Windows Servers and automated monthly patching',
+      'active directory': 'Managed Active Directory for 150 users, including groups and policies',
+      'networking': 'Set up VLANs and VPN access for 3 offices',
+      'backup': 'Set up nightly backups and tested restores every month',
+      'virtualization': 'Ran 25 virtual machines on VMware and moved 8 of them to new hosts'
+    };
+    const exampleFor = (k) => EXAMPLES[lc(k)] || 'Used ' + k + ' to ..., which improved ... by ...';
+    // gap skills added here count for this CV only; adding them to the profile is a separate, explicit step
+    const gapsAdded = Object.keys(prep.gaps || {}).filter((k) => prep.gaps[k] === 'added');
+    const prepHave = have.concat(gapsAdded.map(lc));
+    const prepMatched = job.req.filter((r) => prepHave.indexOf(lc(r)) >= 0);
+    const prepScore = Math.round((prepMatched.length / job.req.length) * 100);
+    const roleOpts = s.experience.filter((e) => !(prep.skip || {})[e.id]);
+    const whereOf = (key) => {
+      const w = prep.factRole && prep.factRole[key];
+      if (w === 'other' || (w && roleOpts.some((e) => e.id === w))) return w;
+      return roleOpts.length ? roleOpts[0].id : 'other';
+    };
+    const whereLabel = (key) => { const e = s.experience.find((x) => x.id === whereOf(key)); return e ? e.role + ' at ' + e.company : 'Additional information'; };
+    const roleChipsFor = (key) => {
+      const w = whereOf(key);
+      return roleOpts.map((e) => ({ id: e.id, label: e.company })).concat([{ id: 'other', label: 'Elsewhere' }]).map((o) => {
+        const on = o.id === w;
+        return { label: o.label, pressed: on, bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246',
+          pick: () => setPrep((pp) => { const fr = Object.assign({}, pp.factRole); fr[key] = o.id; return { factRole: fr }; }) };
+      });
+    };
+    const gapRows = (prep.gapList || []).map((k) => {
+      const stt = prep.gaps[k];
+      const key = 'g:' + k;
+      const draft = draftOf(key);
+      const ok = draft.trim().length >= 10;
+      const where = whereOf(key);
+      return {
+        roleChips: roleChipsFor(key), whereLabel: whereLabel(key),
+        inProfile: isHave(k), canAddProfile: !isHave(k),
+        addToProfile: () => { const c = this.st(); if (c.skills.map(lc).indexOf(lc(k)) < 0) { this.setState({ skills: c.skills.concat([k]) }); } },
+        label: k, isAsk: !stt, isAdded: stt === 'added', isSkipped: stt === 'skipped',
+        ask: 'Have you used ' + k + '? Tell us where and what you did. Numbers help: how many, how much, how fast.',
+        placeholder: 'e.g. ' + exampleFor(k), draft: draft, factText: (prep.gapFacts && prep.gapFacts[k]) || '',
+        onDraft: (e) => setDraft('g:' + k, e.target.value),
+        cannotAdd: !ok, addOpacity: ok ? 1 : 0.5,
+        onAdd: () => {
+          const c = this.st();
+          const dr = String(c.prep.drafts['g:' + k] || '').trim();
+          if (dr.length < 10) return;
+          const g = Object.assign({}, c.prep.gaps); g[k] = 'added';
+          const f = Object.assign({}, c.prep.gapFacts); f[k] = dr;
+          const fr = Object.assign({}, c.prep.factRole); fr[key] = where;
+          this.setState({ prep: Object.assign({}, c.prep, { gaps: g, gapFacts: f, factRole: fr }) });
+        },
+        onSkip: () => { const c = this.st(); const g = Object.assign({}, c.prep.gaps); g[k] = 'skipped'; this.setState({ prep: Object.assign({}, c.prep, { gaps: g }) }); },
+        onUndo: () => {
+          const c = this.st();
+          const g = Object.assign({}, c.prep.gaps); const was = g[k]; delete g[k];
+          const f = Object.assign({}, c.prep.gapFacts); delete f[k];
+          this.setState({ prep: Object.assign({}, c.prep, { gaps: g, gapFacts: f }) });
+        }
+      };
+    });
+    const haveChips = job.req.filter((k) => isHave(k) && (prep.gapList || []).indexOf(k) < 0).map((k) => ({ label: k }));
+
+    const setClaim = (k, v) => {
+      const c = this.st();
+      const cl = Object.assign({}, c.prep.claims);
+      const ct = Object.assign({}, c.prep.claimText);
+      if (v === undefined) { delete cl[k]; } else { cl[k] = v; }
+      if (v !== true) { delete ct[k]; }
+      this.setState({ prep: Object.assign({}, c.prep, { claims: cl, claimText: ct }) });
+    };
+    // a responsibility only goes into the CV in the person's own words (they may start from the job's wording and edit it)
+    const claimRows = (job.claimIdx || [0, 1, 2]).map((k) => {
+      const d = job.dos[k];
+      const ans = prep.claims[k];
+      const key = 'c:' + k;
+      const draft = draftOf(key);
+      const ok = draft.trim().length >= 10;
+      const where = whereOf(key);
+      return {
+        q: 'Have you ' + pastPhrase(d.text) + '?', isAsk: ans === undefined, isYes: ans === true, isNo: ans === false,
+        draft: draft, onDraft: (e) => setDraft(key, e.target.value),
+        canPrefill: !draft.trim(), prefill: () => setDraft(key, cap(pastPhrase(d.text))),
+        cannotAdd: !ok, addOpacity: ok ? 1 : 0.5,
+        roleChips: roleChipsFor(key), whereLabel: whereLabel(key),
+        mine: (prep.claimText && prep.claimText[k]) || '',
+        yes: () => {
+          const c = this.st();
+          const dr = String(c.prep.drafts[key] || '').trim();
+          if (dr.length < 10) return;
+          const cl = Object.assign({}, c.prep.claims); cl[k] = true;
+          const ct = Object.assign({}, c.prep.claimText); ct[k] = dr;
+          const fr = Object.assign({}, c.prep.factRole); fr[key] = where;
+          this.setState({ prep: Object.assign({}, c.prep, { claims: cl, claimText: ct, factRole: fr }) });
+        },
+        no: () => setClaim(k, false), undo: () => setClaim(k, undefined)
+      };
+    });
+    const answered = gapRows.filter((g) => !g.isAsk).length + claimRows.filter((c) => !c.isAsk).length;
+    const totalQ = gapRows.length + claimRows.length;
+
+    const firstRole = s.experience.find((e) => !prep.skip[e.id]);
+    const impactRows = !firstRole ? [] : firstRole.bullets.map((b, bi) => ({ b: b, bi: bi })).filter((x) => !/\d/.test(x.b)).slice(0, 3).map((x) => {
+      const key = firstRole.id + '-' + x.bi;
+      return { bullet: x.b, value: (prep.impacts && prep.impacts[key]) || '',
+        onChange: (e) => { const v = e.target.value; setPrep((pp) => { const im = Object.assign({}, pp.impacts); im[key] = v; return { impacts: im }; }); } };
+    });
+
+    const prepRoles = s.experience.map((e, i) => {
+      const on = !prep.skip[e.id];
+      const overlap = job.matched.filter((k) => e.tools.map(lc).indexOf(lc(k)) >= 0);
+      return {
+        role: e.role, meta: e.company + ' · ' + (datesOf(e) || 'dates not set'),
+        overlap: overlap.length ? 'Uses ' + joinList(overlap) : 'No tools in common with this job',
+        state: on ? 'Included' : 'Left out', pressed: on,
+        bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#D3D1CA', border: on ? '#2A4BFF' : '#3F4246',
+        toggle: () => { const c = this.st(); const sk = Object.assign({}, c.prep.skip); sk[e.id] = !sk[e.id]; this.setState({ prep: Object.assign({}, c.prep, { skip: sk }) }); }
+      };
+    });
+    const focusSel = prep.focus && prep.focus.length ? prep.focus : prepMatched.slice(0, 3);
+    const focusChips = prepMatched.map((k) => {
+      const on = focusSel.indexOf(k) >= 0;
+      return {
+        label: k, pressed: on, bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246',
+        toggle: () => {
+          const c = this.st();
+          const cur = c.prep.focus && c.prep.focus.length ? c.prep.focus : prepMatched.slice(0, 3);
+          const nx = cur.indexOf(k) >= 0 ? cur.filter((x) => x !== k) : (cur.length < 3 ? cur.concat([k]) : cur);
+          this.setState({ prep: Object.assign({}, c.prep, { focus: nx }) });
+        }
+      };
+    });
+
+    // ---- saved jobs view
+    const trackedAll = jobs.filter((j) => j.status);
+    const savedTabs = ['All', 'Saved', 'CV ready', 'Applied'].map((n) => {
+      const cnt = n === 'All' ? trackedAll.length : trackedAll.filter((j) => j.status === n).length;
+      const on = s.savedTab === n;
+      return { label: n + ' ' + cnt, pressed: on, bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246', pick: () => this.setState({ savedTab: n }) };
+    });
+    const savedList = trackedAll.filter((j) => s.savedTab === 'All' || j.status === s.savedTab).map((j) => ({
+      title: j.title, company: j.company, place: j.place, score: j.score, status: j.status,
+      badgeBg: badge(j.status).bg, badgeColor: badge(j.status).color,
+      note: j.missing.length ? 'Missing: ' + j.missing.join(', ') : 'Every keyword is covered',
+      primaryLabel: j.status === 'Saved' ? 'Prepare CV' : 'View CV',
+      primary: () => { if (j.status === 'Saved') { this.openPrepFor(j.id, 'saved'); } else { this.setState({ cvJobId: j.id, screen: 'cv', cvMode: 'tailored' }); } },
+      details: () => this.setState({ jobId: j.id, screen: 'job', jobFrom: 'saved' }),
+      canRemove: j.status === 'Saved',
+      remove: () => { const tt = Object.assign({}, this.st().tracked); delete tt[j.id]; this.setState({ tracked: tt }); },
+      canApply: j.status === 'CV ready',
+      markApplied: () => { const tt = Object.assign({}, this.st().tracked); tt[j.id] = 'Applied'; this.setState({ tracked: tt }); }
+    }));
+
+    const cityNames = ['Anywhere', 'Iași', 'Bucharest', 'Cluj-Napoca'];
+    const cityChips = cityNames.map((c) => {
+      const val = c === 'Anywhere' ? '' : c;
+      const on = s.location.trim().toLowerCase() === val.toLowerCase();
+      return { label: c === 'Anywhere' ? 'Anywhere in ' + s.country : c, pressed: on, pick: () => this.setState({ location: val }),
+        bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246' };
+    });
+
+    const flip = (k) => () => { const c = this.st(); const o = Object.assign({}, c.open); o[k] = !o[k]; this.setState({ open: o }); };
+    const filled = (v) => String(v || '').trim().length > 0;
+    const richExp = s.experience.some((e) => e.tools.length >= 3 && e.bullets.length >= 2 && filled(e.start));
+    const checks = [
+      { ok: filled(s.headline), label: 'a headline' },
+      { ok: filled(s.about), label: 'a short intro' },
+      { ok: filled(s.email), label: 'your email' },
+      { ok: filled(s.phone), label: 'your phone number' },
+      { ok: filled(s.github) || filled(s.linkedin), label: 'a GitHub or LinkedIn link' },
+      { ok: s.skills.length >= 5, label: 'at least 5 skills' },
+      { ok: richExp, label: 'a role with dates, tools and two highlights' },
+      { ok: s.education.length >= 1, label: 'your education' },
+      { ok: s.languages.length >= 1, label: 'a language' }
+    ];
+    const pct = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
+    const nextMissing = checks.find((c) => !c.ok);
+    const contactDone = [s.email, s.phone, s.github, s.linkedin].filter(filled).length;
+
+    // ---- add a job: preview of what the rules read from the ad
+    const d = s.draft;
+    const modeLabel = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site' };
+    const setJobDraft = (patch) => this.setState({ draft: Object.assign({}, this.st().draft, patch) });
+    const dAll = d ? d.must.concat(d.nice) : [];
+    const dWeight = (k) => (d && d.nice.indexOf(k) >= 0 ? 1 : 2);
+    const dTot = dAll.reduce((a, k) => a + dWeight(k), 0);
+    const dGot = dAll.filter((k) => have.indexOf(lc(k)) >= 0).reduce((a, k) => a + dWeight(k), 0);
+    const dScore = dTot ? Math.round((dGot / dTot) * 100) : 0;
+    const youYears = (() => { const ys = s.experience.map((e) => parseInt(e.start, 10)).filter((y) => y > 1950); return ys.length ? new Date().getFullYear() - Math.min.apply(null, ys) : 0; })();
+    const reqChip = (k, list) => {
+      const hit = have.indexOf(lc(k)) >= 0;
+      return { label: k, aria: 'Remove ' + k, bg: hit ? '#18235E' : '#1F2123', color: hit ? '#A9B8FF' : '#D3D1CA', border: hit ? '#5B77FF' : '#A9A79F',
+        remove: () => { const p = {}; p[list] = this.st().draft[list].filter((x) => x !== k); setJobDraft(p); } };
+    };
+    const pill = (on) => ({ bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246' });
+    const addReq = (list) => {
+      const c = this.st();
+      const v = c.draftReq.trim();
+      if (!v || !c.draft) return;
+      const known = this.skillDict().find((e) => e[1].test(v));
+      const k = known ? known[0] : v;
+      const inAny = c.draft.must.concat(c.draft.nice).some((x) => lc(x) === lc(k));
+      const p = { draftReq: '' };
+      if (!inAny) { const nd = Object.assign({}, c.draft); nd[list] = nd[list].concat([k]); p.draft = nd; }
+      this.setState(p);
+    };
+    let knockout = '';
+    if (d) {
+      const far = d.city && lc(d.city) !== lc(s.city) && !s.relocation;
+      if (d.mode && s.workModes.indexOf(d.mode) < 0 && !(d.mode === 'onsite' && !far)) knockout = modeLabel[d.mode] + (d.city ? ' in ' + d.city : '') + '. Your profile asks for ' + s.workModes.map((m) => modeLabel[m].toLowerCase()).join(' or ') + ' work' + (far ? ', and you are not open to relocation.' : '.');
+      else if (far && d.mode !== 'remote') knockout = 'Based in ' + d.city + (d.mode === 'hybrid' ? ', hybrid' : '') + '. You live in ' + s.city + ' and are not open to relocation.';
+    }
+    const host = (u) => String(u || '').replace(/^https?:\/\//i, '').split('/')[0];
+    const dv = d ? {
+      title: d.title, company: d.company, city: d.city,
+      source: d.from === 'link' ? 'Read from the job data on ' + host(d.url) : 'Read from the text you pasted',
+      score: dScore,
+      verdict: dScore >= 80 ? 'Strong match. You already have most of what they ask for.' : dScore >= 60 ? 'Good match, with a couple of things to pick up.' : dScore >= 40 ? 'Partial match. Worth a try if the role excites you.' : 'Light match, in a new direction for you.',
+      hasKnockout: !!knockout, knockout: knockout,
+      hasYears: !!d.years, yearsLine: 'Asks for ' + d.years + '+ years of experience. You have about ' + youYears + '.',
+      hasMust: d.must.length > 0, hasNice: d.nice.length > 0, noReq: dAll.length === 0,
+      mustChips: d.must.map((k) => reqChip(k, 'must')), niceChips: d.nice.map((k) => reqChip(k, 'nice')),
+      hasDos: d.dos.length > 0, dosCount: d.dos.length, dos: wrapText(d.dos.slice(0, 6)),
+      modeChips: ['remote', 'hybrid', 'onsite'].map((m) => { const on = d.mode === m; return Object.assign({ label: modeLabel[m], pressed: on, pick: () => setJobDraft({ mode: on ? '' : m }) }, pill(on)); }),
+      levelChips: ['Junior', 'Mid', 'Senior', 'Lead'].map((l) => { const on = d.level === l; return Object.assign({ label: l, pressed: on, pick: () => setJobDraft({ level: l }) }, pill(on)); })
+    } : { title: '', company: '', city: '', source: '', score: 0, verdict: '', hasKnockout: false, knockout: '', hasYears: false, yearsLine: '', hasMust: false, hasNice: false, noReq: false, mustChips: [], niceChips: [], hasDos: false, dosCount: 0, dos: [], modeChips: [], levelChips: [] };
+
+    const fromSaved = (x) => x === 'saved' || x === 'cv';
+    const navSec = s.screen === 'profile' ? 'profile'
+      : (s.screen === 'saved' || s.screen === 'cv') ? 'saved'
+      : s.screen === 'job' ? (s.jobFrom === 'saved' ? 'saved' : 'jobs')
+      : s.screen === 'add' ? (s.addFrom === 'saved' ? 'saved' : 'jobs')
+      : (s.screen === 'prep' || s.screen === 'generating') ? ((fromSaved(s.prepBack) || (s.prepBack === 'job' && s.jobFrom === 'saved')) ? 'saved' : 'jobs')
+      : 'jobs';
+    const active = '#8FA2FF', idle = '#A9A79F';
+
+    return {
+      isProfile: s.screen === 'profile', isJobs: s.screen === 'jobs', isSaved: s.screen === 'saved', isPrep: s.screen === 'prep', isFilters: s.screen === 'jobs' && s.stage === 'filters', isDeck: s.screen === 'jobs' && s.stage === 'deck', isJob: s.screen === 'job',
+      isGenerating: s.screen === 'generating', isCv: s.screen === 'cv',
+      goProfile: () => this.setState({ screen: 'profile' }),
+      goJobs: () => this.setState({ screen: 'jobs' }),
+      goCv: () => this.setState({ screen: 'cv' }),
+      navProfile: navSec === 'profile' ? active : idle, navJobs: navSec === 'jobs' ? active : idle, navSaved: navSec === 'saved' ? active : idle,
+      navBgProfile: navSec === 'profile' ? '#2B2E31' : 'transparent', navBgJobs: navSec === 'jobs' ? '#2B2E31' : 'transparent', navBgSaved: navSec === 'saved' ? '#2B2E31' : 'transparent',
+      curProfile: navSec === 'profile' ? 'page' : 'false', curJobs: navSec === 'jobs' ? 'page' : 'false', curSaved: navSec === 'saved' ? 'page' : 'false',
+      goSaved: () => this.setState({ screen: 'saved' }),
+      savedCount: String(trackedAll.length), hasSavedBadge: trackedAll.length > 0,
+      savedTabs: savedTabs, savedList: savedList, noSaved: savedList.length === 0,
+      noSavedText: s.savedTab === 'All' ? 'Nothing saved yet. Swipe right on jobs you like, or add one you found elsewhere.' : 'No jobs with this status yet.',
+      gapRows: gapRows, hasGaps: gapRows.length > 0, haveChips: haveChips, hasHave: haveChips.length > 0, claimRows: claimRows, impactRows: impactRows, hasImpacts: impactRows.length > 0, prepRoles: prepRoles, focusChips: focusChips, hasFocus: prepMatched.length > 0,
+      prepNote: prep.note, onPrepNote: (e) => this.setState({ prep: Object.assign({}, this.st().prep, { note: e.target.value.slice(0, 500) }) }),
+      matchFromTo: prepScore !== prep.base ? prep.base + '% → ' + prepScore + '%' : prepScore + '%', matchToBar: prepScore + '%',
+      generateLabel: 'Generate CV · ' + prepScore + '% match',
+      prepProgress: answered + ' of ' + totalQ + ' questions answered',
+      openPrep: () => this.openPrepFor(this.st().jobId, 'job'),
+      leavePrep: () => this.setState({ screen: this.st().prepBack || 'job' }),
+
+      about: s.about,
+      onAbout: (e) => this.setState({ about: e.target.value.slice(0, 280) }),
+      aboutCount: s.about.length + '/280',
+      email: s.email, phone: s.phone, github: s.github, linkedin: s.linkedin,
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onPhone: (e) => this.setState({ phone: e.target.value }),
+      onGithub: (e) => this.setState({ github: e.target.value }),
+      onLinkedin: (e) => this.setState({ linkedin: e.target.value }),
+      contactLine: [s.email, s.phone].filter((x) => String(x || '').trim()).join(' · '),
+      linksLine: [s.github, s.linkedin].filter((x) => String(x || '').trim()).join(' · '),
+      profilePct: pct + '%', profileBar: pct + '%',
+      profileHint: nextMissing ? 'Next up: add ' + nextMissing.label : 'All set. Time to find some jobs.',
+      openAbout: !!s.open.About, openContact: !!s.open.Contact, openSkills: !!s.open.Skills, openExp: !!s.open.Exp, openJobs: !!s.open.Jobs,
+      chevAbout: s.open.About ? 'rotate(180deg)' : 'rotate(0deg)', chevContact: s.open.Contact ? 'rotate(180deg)' : 'rotate(0deg)',
+      chevSkills: s.open.Skills ? 'rotate(180deg)' : 'rotate(0deg)', chevExp: s.open.Exp ? 'rotate(180deg)' : 'rotate(0deg)',
+      chevJobs: s.open.Jobs ? 'rotate(180deg)' : 'rotate(0deg)',
+      tgAbout: flip('About'), tgContact: flip('Contact'), tgSkills: flip('Skills'), tgExp: flip('Exp'), tgJobs: flip('Jobs'),
+      sumAbout: filled(s.about) && filled(s.headline) ? 'Done' : 'To do', sumContact: contactDone + '/4', sumSkills: s.skills.length + (s.skills.length === 1 ? ' skill' : ' skills'),
+      sumExp: s.experience.length + (s.experience.length === 1 ? ' role' : ' roles'), sumJobs: trackedJobs.length + ' saved',
+      skillChips: skillChips,
+      skillDraft: s.skillDraft,
+      onSkillDraft: (e) => this.setState({ skillDraft: e.target.value }),
+      onSkillKey: (e) => { if (e.key === 'Enter') { this.addSkillNow(); } },
+      addSkill: () => this.addSkillNow(),
+      experience: s.experience.map((e, i) => ({
+        role: e.role, company: e.company, dates: datesOf(e) || 'dates not set',
+        count: e.bullets.length + (e.bullets.length === 1 ? ' highlight' : ' highlights'),
+        open: !!s.expOpen[e.id],
+        toggle: () => { const c = this.st(); const o = Object.assign({}, c.expOpen); o[e.id] = !o[e.id]; this.setState({ expOpen: o }); },
+        confirming: s.confirmRemove === e.id, notConfirming: s.confirmRemove !== e.id,
+        askRemove: () => this.setState({ confirmRemove: e.id }),
+        cancelRemove: () => this.setState({ confirmRemove: null }),
+        remove: () => { const c = this.st(); this.setState({ experience: c.experience.filter((x) => x.id !== e.id), confirmRemove: null }); },
+        toolChips: wrapLabel(e.tools), bullets: wrapText(e.bullets)
+      })),
+      adding: s.adding, notAdding: !s.adding,
+      toggleAdding: () => this.setState({ adding: !this.st().adding, dRole: '', dCompany: '', dStart: '', dEnd: '', dTools: '', dBullet: '', dBullet2: '', dResult: '' }),
+      dRole: s.dRole, dCompany: s.dCompany, dStart: s.dStart, dEnd: s.dEnd, dTools: s.dTools, dBullet: s.dBullet, dBullet2: s.dBullet2, dResult: s.dResult,
+      onDResult: (e) => this.setState({ dResult: e.target.value }),
+      onDRole: (e) => this.setState({ dRole: e.target.value }),
+      onDCompany: (e) => this.setState({ dCompany: e.target.value }),
+      onDStart: (e) => this.setState({ dStart: e.target.value }),
+      onDEnd: (e) => this.setState({ dEnd: e.target.value }),
+      onDTools: (e) => this.setState({ dTools: e.target.value }),
+      onDBullet: (e) => this.setState({ dBullet: e.target.value }),
+      onDBullet2: (e) => this.setState({ dBullet2: e.target.value }),
+      saveExp: () => {
+        const c = this.st();
+        if (!c.dRole.trim()) return;
+        const entry = {
+          id: 'r' + Date.now(), role: c.dRole.trim(), company: c.dCompany.trim() || 'Company', location: '', start: c.dStart.trim(), end: c.dEnd.trim(),
+          tools: c.dTools.split(',').map((x) => x.trim()).filter(Boolean),
+          bullets: [c.dBullet.trim(), c.dBullet2.trim(), c.dResult.trim()].filter(Boolean)
+        };
+        const eo = Object.assign({}, c.expOpen); eo[entry.id] = true;
+        this.setState({ experience: [entry].concat(c.experience), adding: false, expOpen: eo, dRole: '', dCompany: '', dStart: '', dEnd: '', dTools: '', dBullet: '', dBullet2: '', dResult: '' });
+      },
+
+      headline: s.headline, onHeadline: (e) => this.setState({ headline: e.target.value }),
+
+      education: s.education.map((d, i) => ({
+        degree: d.degree, meta: [d.school, d.years].filter(Boolean).join(' · '), aria: 'Remove ' + d.degree,
+        remove: () => this.setState({ education: this.st().education.filter((x, k) => k !== i) })
+      })),
+      addingEdu: s.addingEdu, notAddingEdu: !s.addingEdu,
+      toggleEdu: () => this.setState({ addingEdu: !this.st().addingEdu, eDeg: '', eSchool: '', eYears: '' }),
+      eDeg: s.eDeg, eSchool: s.eSchool, eYears: s.eYears,
+      onEDeg: (e) => this.setState({ eDeg: e.target.value }),
+      onESchool: (e) => this.setState({ eSchool: e.target.value }),
+      onEYears: (e) => this.setState({ eYears: e.target.value }),
+      saveEdu: () => {
+        const c = this.st();
+        if (!c.eDeg.trim()) return;
+        this.setState({ education: c.education.concat([{ degree: c.eDeg.trim(), school: c.eSchool.trim(), years: c.eYears.trim() }]), addingEdu: false, eDeg: '', eSchool: '', eYears: '' });
+      },
+
+      langChips: s.languages.map((l, i) => ({
+        label: l.name + ' · ' + l.level, aria: 'Remove ' + l.name,
+        remove: () => this.setState({ languages: this.st().languages.filter((x, k) => k !== i) })
+      })),
+      langName: s.langName, langLevel: s.langLevel,
+      onLangName: (e) => this.setState({ langName: e.target.value }),
+      onLangLevel: (e) => this.setState({ langLevel: e.target.value }),
+      addLang: () => {
+        const c = this.st();
+        const n = c.langName.trim();
+        if (!n) return;
+        this.setState({ languages: c.languages.concat([{ name: n, level: c.langLevel }]), langName: '' });
+      },
+
+      openEdu: !!s.open.Edu, openLang: !!s.open.Lang,
+      chevEdu: s.open.Edu ? 'rotate(180deg)' : 'rotate(0deg)', chevLang: s.open.Lang ? 'rotate(180deg)' : 'rotate(0deg)',
+      tgEdu: flip('Edu'), tgLang: flip('Lang'),
+      sumEdu: s.education.length + (s.education.length === 1 ? ' degree' : ' degrees'),
+      sumLang: s.languages.length + (s.languages.length === 1 ? ' language' : ' languages'),
+      trackedJobs: trackedJobs, noTracked: trackedJobs.length === 0,
+
+      locationValue: s.location, onLocation: (e) => this.setState({ location: e.target.value }),
+      locationLabel: s.location.trim() || 'Remote',
+      cityChips: cityChips,
+      toggleRemote: () => this.setState({ openRemote: !this.st().openRemote }),
+      remoteLabel: 'Include remote', openRemote: s.openRemote,
+      remoteBg: s.openRemote ? '#2A4BFF' : '#1F2123', remoteColor: s.openRemote ? '#FFFFFF' : '#F2F1EC', remoteBorder: s.openRemote ? '#2A4BFF' : '#3F4246',
+      query: s.query, onQuery: (e) => this.setState({ query: e.target.value }),
+      resultsLabel: deck.length + (deck.length === 1 ? ' job left' : ' jobs left'),
+      areaChips: ['DevOps', 'Backend', 'Data', 'Sysadmin'].map((a) => {
+        const on = s.areas.indexOf(a) >= 0;
+        return { label: a, pressed: on, bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246',
+          pick: () => { const c = this.st(); this.setState({ areas: c.areas.indexOf(a) >= 0 ? c.areas.filter((x) => x !== a) : c.areas.concat([a]) }); } };
+      }),
+      levelChips: ['Any', 'Junior', 'Mid', 'Senior'].map((l) => {
+        const on = s.level === l;
+        return { label: l, pressed: on, bg: on ? '#2A4BFF' : '#1F2123', color: on ? '#FFFFFF' : '#F2F1EC', border: on ? '#2A4BFF' : '#3F4246',
+          pick: () => this.setState({ level: l }) };
+      }),
+      showLabel: deck.length ? 'Show ' + deck.length + (deck.length === 1 ? ' job' : ' jobs') : 'No jobs match yet',
+      noneToShow: deck.length === 0, showOpacity: deck.length ? 1 : 0.5,
+      filterSummary: [q ? '“' + s.query.trim() + '”' : '', s.areas.length ? s.areas.join(', ') : 'All areas', s.location.trim() ? s.location.trim() + (s.openRemote ? ' + remote' : '') : 'Anywhere', s.level !== 'Any' ? s.level : ''].filter(Boolean).join(' · '),
+      showJobs: () => this.setState({ stage: 'deck', dragX: 0, snap: false, last: null }),
+      editFilters: () => this.setState({ stage: 'filters' }),
+      startSearch: () => this.setState({ screen: 'jobs', stage: 'filters' }),
+      backToJobs: () => { const f = this.st().jobFrom; this.setState(f === 'saved' ? { screen: 'saved' } : f === 'profile' ? { screen: 'profile' } : { screen: 'jobs', stage: 'deck' }); },
+      clearFilters: () => this.setState({ query: '', location: '', openRemote: true, areas: [], level: 'Any' }),
+      hasCard: !!cur, noCard: !cur, hasNext: !!nextCard, card: card,
+      cardTransform: 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + (dx / 18) + 'deg)',
+      cardTransition: s.snap ? 'transform 0.24s ease' : 'none',
+      backTransform: 'scale(' + (0.95 + 0.05 * prog) + ') translateY(' + (12 * (1 - prog)) + 'px)',
+      saveOpacity: !vertical && dx > 0 ? prog : 0, skipOpacity: !vertical && dx < 0 ? prog : 0, applyOpacity: vertical ? prog : 0,
+      onDown: (e) => this.startDrag(e), onMove: (e) => this.moveDrag(e), onUp: () => this.endDrag(),
+      skipNow: () => this.decide('left'), saveNow: () => this.decide('right'), applyNow: () => this.decide('up'), detailsNow: () => this.openCurrent(),
+      hasToast: !!toast, toast: toast, undo: () => this.undo(),
+      resetDeck: () => this.setState({ skipped: [], last: null }),
+
+      marketNote: 'From your profile: ' + s.city + ', ' + s.country + ' · ' + s.workModes.map((m) => modeLabel[m].toLowerCase()).join(' or ') + ' · ' + (s.relocation ? 'open to relocation' : 'not relocating') + '. Change it in Profile.',
+      isAdd: s.screen === 'add',
+      openAddJobs: () => this.openAdd('jobs'), openAddSaved: () => this.openAdd('saved'), leaveAdd: () => this.leaveAdd(),
+      addInput: s.addPhase === 'input', addLoading: s.addPhase === 'loading', addFailed: s.addPhase === 'failed', addPreview: s.addPhase === 'preview' && !!d,
+      tabLinkOn: s.addTab === 'link', tabTextOn: s.addTab === 'text',
+      tabLinkBg: s.addTab === 'link' ? '#3A3D41' : 'transparent', tabTextBg: s.addTab === 'text' ? '#3A3D41' : 'transparent',
+      pickLink: () => this.setState({ addTab: 'link', addError: '' }), pickText: () => this.setState({ addTab: 'text', addError: '' }),
+      addUrl: s.addUrl, onAddUrl: (e) => this.setState({ addUrl: e.target.value }),
+      addText: s.addText, onAddText: (e) => this.setState({ addText: e.target.value }),
+      addTitle: s.addTitle, onAddTitle: (e) => this.setState({ addTitle: e.target.value }),
+      addCompany: s.addCompany, onAddCompany: (e) => this.setState({ addCompany: e.target.value }),
+      addLink: s.addLink, onAddLink: (e) => this.setState({ addLink: e.target.value }),
+      hasAddError: !!s.addError, addError: s.addError, failReason: s.failReason,
+      readLink: () => this.readLink(), readText: () => this.readText(),
+      useExample: () => this.setState({ addText: this.exampleAd(), addTitle: '', addCompany: '', addError: '' }),
+      pasteInstead: () => this.setState({ addTab: 'text', addPhase: 'input', addLink: this.st().addUrl, addError: '' }),
+      tryAnother: () => this.setState({ addPhase: 'input', addTab: 'link', addError: '' }),
+      draft: dv, draftReq: s.draftReq, onDraftReq: (e) => this.setState({ draftReq: e.target.value }),
+      onDTitle: (e) => setJobDraft({ title: e.target.value }), onDCompany: (e) => setJobDraft({ company: e.target.value }), onDCity: (e) => setJobDraft({ city: e.target.value }),
+      addMust: () => addReq('must'), addNice: () => addReq('nice'),
+      saveDraft: () => this.saveDraft(false), saveDraftTailor: () => this.saveDraft(true),
+
+      job: job,
+      applyLabel: (job.status === 'CV ready' || job.status === 'Applied') ? 'Prepare a new CV' : 'Prepare my CV',
+      toggleSave: () => {
+        const c = this.st(); const t = Object.assign({}, c.tracked);
+        if (t[c.jobId] === 'Saved') { delete t[c.jobId]; } else if (!t[c.jobId]) { t[c.jobId] = 'Saved'; }
+        this.setState({ tracked: t });
+      },
+      apply: () => {
+        const c0 = this.st();
+        const id = c0.jobId;
+        const opts = Object.assign({}, c0.cvOpts);
+        opts[id] = { skip: c0.prep.skip, focus: c0.prep.focus, note: c0.prep.note, claims: c0.prep.claims, claimText: c0.prep.claimText, gapFacts: c0.prep.gapFacts, impacts: c0.prep.impacts, factRole: c0.prep.factRole,
+          snap: { about: c0.about, headline: c0.headline, skills: c0.skills, experience: c0.experience, education: c0.education, languages: c0.languages, email: c0.email, phone: c0.phone, github: c0.github, linkedin: c0.linkedin } };
+        this.setState({ screen: 'generating', step: 0, cvOpts: opts });
+        [900, 1800, 2700, 3600].forEach((ms, i) => setTimeout(() => { if (this.st().screen === 'generating') this.setState({ step: i + 1 }); }, ms));
+        setTimeout(() => {
+          const c = this.st();
+          if (c.screen !== 'generating') return;
+          const t = Object.assign({}, c.tracked);
+          t[id] = t[id] === 'Applied' ? 'Applied' : 'CV ready';
+          this.setState({ screen: 'cv', cvJobId: id, cvMode: 'tailored', tracked: t });
+        }, 4500);
+      },
+
+      steps: steps, progressWidth: Math.min(100, Math.round((s.step / 4) * 100)) + '%',
+      showKeywords: s.step >= 1,
+      showRewrite: s.step >= 3 && !!rewriteFrom, rewriteFrom: rewriteFrom, rewriteParts: rewriteParts,
+
+      hasCv: !!cv, noCv: !cv, improveCv: () => this.openPrepFor(this.st().cvJobId, 'cv'), cv: cv || { jobTitle: '', company: '', headline: '', contactLine: '', linksLine: '', summaryParts: [], skillsParts: [], experience: [], education: [], languages: '', additional: [], hasAdditional: false, matchPct: '', atsScore: '', atsBar: '0%', atsRows: [], fileName: '' },
+      isTailored: tailored,
+      showTailored: () => this.setState({ cvMode: 'tailored' }),
+      showGeneric: () => this.setState({ cvMode: 'generic' }),
+      tailoredBg: tailored ? '#3A3D41' : 'transparent',
+      genericBg: tailored ? 'transparent' : '#3A3D41',
+      markApplied: () => {
+        const c = this.st(); const t = Object.assign({}, c.tracked);
+        if (c.cvJobId) { t[c.cvJobId] = 'Applied'; }
+        this.setState({ tracked: t });
+      },
+      appliedLabel: cvStatus === 'Applied' ? 'Marked as applied ✓' : 'I applied to this job',
+      appliedBg: cvStatus === 'Applied' ? '#2B2E31' : 'transparent'
+    };
+  }
+
+  startDrag(e) {
+    this.sx = e.clientX;
+    this.sy = e.clientY;
+    this.moved = false;
+    try { if (e.currentTarget && e.currentTarget.setPointerCapture) { e.currentTarget.setPointerCapture(e.pointerId); } } catch (err) {}
+    this.setState({ dragging: true, snap: false, dragX: 0, dragY: 0 });
+  }
+
+  moveDrag(e) {
+    if (!this.st().dragging) return;
+    const dx = e.clientX - this.sx;
+    const dy = e.clientY - this.sy;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) { this.moved = true; }
+    this.setState({ dragX: dx, dragY: dy });
+  }
+
+  endDrag() {
+    const c = this.st();
+    if (!c.dragging) return;
+    const dx = c.dragX;
+    const dy = c.dragY;
+    this.setState({ dragging: false });
+    if (dy < -110 && Math.abs(dy) > Math.abs(dx)) { this.decide('up'); }
+    else if (dx > 100) { this.decide('right'); }
+    else if (dx < -100) { this.decide('left'); }
+    else if (!this.moved) { this.openCurrent(); }
+    else { this.setState({ snap: true, dragX: 0, dragY: 0 }); }
+  }
+
+  openCurrent() {
+    if (this.curId == null) return;
+    this.setState({ jobId: this.curId, screen: 'job', jobFrom: 'jobs', dragX: 0, dragY: 0, snap: false, dragging: false });
+  }
+
+  // must-have requirements count twice as much as nice-to-have ones
+  scoreFor(j, skills) {
+    const have = skills.map((x) => x.toLowerCase());
+    const w = (r) => ((j.nice || []).indexOf(r) >= 0 ? 1 : 2);
+    const tot = j.req.reduce((a, r) => a + w(r), 0);
+    const got = j.req.filter((r) => have.indexOf(r.toLowerCase()) >= 0).reduce((a, r) => a + w(r), 0);
+    return tot ? Math.round((got / tot) * 100) : 0;
+  }
+
+  missingFor(j, skills) {
+    const have = skills.map((x) => x.toLowerCase());
+    return j.req.filter((r) => have.indexOf(r.toLowerCase()) < 0);
+  }
+
+  scoreOf(id) {
+    const j = this.allJobs().find((x) => x.id === id);
+    return j ? this.scoreFor(j, this.st().skills) : 0;
+  }
+
+  missingOf(id) {
+    const s = this.st();
+    const j = this.allJobs().find((x) => x.id === id);
+    if (!j) return [];
+    const have = s.skills.map((x) => x.toLowerCase());
+    return j.req.filter((r) => have.indexOf(r.toLowerCase()) < 0);
+  }
+
+  openPrepFor(id, from) {
+    this.setState({ jobId: id, screen: 'prep', prepBack: from, dragX: 0, dragY: 0, snap: false, dragging: false,
+      prep: { skip: {}, focus: null, note: '', base: this.scoreOf(id), claims: {}, drafts: {}, gaps: {}, gapFacts: {}, claimText: {}, impacts: {}, factRole: {}, gapList: this.missingOf(id) } });
+  }
+
+  decide(dir) {
+    const id = this.curId;
+    if (id == null) return;
+    const c0 = this.st();
+    if (Math.abs(c0.dragX) >= 500 || c0.dragY <= -700) return;
+    if (dir === 'up') { this.setState({ snap: true, dragging: false, dragX: 0, dragY: -760 }); }
+    else { this.setState({ snap: true, dragging: false, dragX: dir === 'right' ? 520 : -520, dragY: 0 }); }
+    setTimeout(() => {
+      const c = this.st();
+      if (dir === 'up') {
+        const t = Object.assign({}, c.tracked);
+        if (!t[id]) { t[id] = 'Saved'; }
+        this.setState({ tracked: t, dragX: 0, dragY: 0, snap: false, last: null });
+        this.openPrepFor(id, 'jobs');
+        return;
+      }
+      if (dir === 'right') {
+        const t = Object.assign({}, c.tracked);
+        if (!t[id]) { t[id] = 'Saved'; }
+        this.setState({ tracked: t, dragX: 0, snap: false, last: { id: id, dir: 'right' } });
+      } else {
+        this.setState({ skipped: c.skipped.concat([id]), dragX: 0, snap: false, last: { id: id, dir: 'left' } });
+      }
+      setTimeout(() => { const l = this.st().last; if (l && l.id === id) { this.setState({ last: null }); } }, 3500);
+    }, 240);
+  }
+
+  undo() {
+    const c = this.st();
+    const l = c.last;
+    if (!l) return;
+    if (l.dir === 'right') {
+      const t = Object.assign({}, c.tracked);
+      if (t[l.id] === 'Saved') { delete t[l.id]; }
+      this.setState({ tracked: t, last: null });
+    } else {
+      this.setState({ skipped: c.skipped.filter((x) => x !== l.id), last: null });
+    }
+  }
+
+  // ---- adding a job: rules and a skills dictionary, no AI
+  skillDict() {
+    return [
+      ['Kubernetes', /\bkubernetes\b|\bk8s\b/i], ['Docker', /\bdocker\b/i], ['Terraform', /\bterraform\b/i],
+      ['Infrastructure as Code', /infrastructure as code|\biac\b/i], ['AWS', /\baws\b|amazon web services/i], ['Azure', /\bazure\b/i],
+      ['GCP', /\bgcp\b|google cloud/i], ['CI/CD', /ci\/cd|continuous (integration|delivery)/i], ['Linux', /\blinux\b/i],
+      ['Python', /\bpython\b/i], ['Go', /\bgolang\b|\bGo\b/], ['Bash', /\bbash\b|shell script/i], ['SQL', /\bsql\b/i],
+      ['PostgreSQL', /postgres/i], ['Ansible', /\bansible\b/i], ['Jenkins', /\bjenkins\b/i], ['GitHub Actions', /github actions/i],
+      ['GitLab CI', /gitlab/i], ['Prometheus', /prometheus/i], ['Grafana', /grafana/i], ['Helm', /\bhelm\b/i], ['Git', /\bgit\b/i],
+      ['Java', /\bjava\b/i], ['TypeScript', /typescript/i], ['React', /\breact\b/i], ['Node.js', /node\.?js/i], ['Kafka', /\bkafka\b/i],
+      ['Redis', /\bredis\b/i], ['Monitoring', /monitoring|observability|monitorizare/i], ['Networking', /networking|tcp\/ip|re[țt]ele/i],
+      ['Snowflake', /snowflake/i], ['RBAC', /\brbac\b/i], ['Windows Server', /windows server/i], ['Active Directory', /active directory/i]
+    ];
+  }
+
+  parseJob(text, hints) {
+    const lines = String(text || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const HEAD = [
+      ['must', /^(requirements|what we look for|what you bring|must[- ]have|qualifications|cerin[țt]e|ce c[ăa]ut[ăa]m)/i],
+      ['nice', /^(nice[- ]to[- ]have|bonus|preferred|constituie un avantaj|ar fi un plus)/i],
+      ['dos', /^(responsibilities|what you will do|what you'll do|your role|responsabilit|ce vei face)/i]
+    ];
+    const parts = { body: [], must: [], nice: [], dos: [] };
+    let section = 'body';
+    lines.forEach((l) => {
+      const bare = l.replace(/^[#*\s]+/, '').replace(/:$/, '');
+      const h = bare.length < 60 ? HEAD.find((x) => x[1].test(bare)) : null;
+      if (h) { section = h[0]; return; }
+      parts[section].push(l.replace(/^[-•*·]\s*/, ''));
+    });
+    const find = (arr) => this.skillDict().filter((e) => arr.some((l) => e[1].test(l))).map((e) => e[0]);
+    const sectioned = parts.must.length + parts.nice.length + parts.dos.length > 0;
+    const nice = find(parts.nice);
+    const must = find(sectioned ? parts.must.concat(parts.dos) : lines).filter((k) => nice.indexOf(k) < 0);
+    const all = lines.join('\n');
+    const yearsM = all.match(/(\d{1,2})\s*\+?\s*(?:years|yrs|ani)\b/i);
+    const years = yearsM ? parseInt(yearsM[1], 10) : 0;
+    const CITIES = [['Iași', /ia[șs]i/i], ['Bucharest', /bucharest|bucure[șs]ti/i], ['Cluj-Napoca', /cluj/i], ['Timișoara', /timi[șs]oara/i], ['Brașov', /bra[șs]ov/i]];
+    const cityE = CITIES.find((c) => c[1].test(all));
+    const mode = /hybrid|hibrid/i.test(all) ? 'hybrid' : /on-?site|la birou|office-based/i.test(all) ? 'onsite' : /remote|de acas/i.test(all) ? 'remote' : '';
+    const title = (hints.title || lines[0] || '').slice(0, 80);
+    const companyM = all.match(/(?:company|firma|angajator)\s*:\s*([^,\n·(]+)/i);
+    const company = hints.company || (companyM ? companyM[1].trim() : '');
+    let level = /\b(senior|sr\.?)\b/i.test(title) ? 'Senior' : /\b(junior|jr\.?|entry)\b/i.test(title) ? 'Junior' : /\b(lead|principal|staff|head)\b/i.test(title) ? 'Lead' : '';
+    if (!level) level = years >= 5 ? 'Senior' : years && years <= 1 ? 'Junior' : 'Mid';
+    return { title: title, company: company, city: cityE ? cityE[0] : '', mode: mode, level: level, years: years, must: must, nice: nice,
+      dos: parts.dos.slice(0, 9), about: parts.body.slice(1).filter((l) => l.length > 40).join(' ').slice(0, 400) };
+  }
+
+  linkDemoAd() {
+    return ['Platform Engineer', 'Northwind Cloud · Cluj-Napoca, hybrid',
+      'We run the infrastructure behind Northwind payment products and we want releases to be boring.',
+      'Responsibilities', '- Run and evolve our Kubernetes clusters on AWS.', '- Build CI/CD pipelines with GitHub Actions and Terraform.',
+      '- Improve monitoring and on-call with Prometheus and Grafana.', '- Write runbooks and help developers ship safely.',
+      'Requirements', '- 4+ years in DevOps or platform engineering.', '- Strong Linux and Docker skills.', '- Kubernetes and Terraform in production.', '- Python or Go for automation.',
+      'Nice to have', '- Helm and Kafka.', '- PostgreSQL.'].join('\n');
+  }
+
+  exampleAd() {
+    return ['DevOps Engineer', 'Firma: Carpathia Systems, Brașov (hibrid)',
+      'Căutăm un coleg care să ne ajute să automatizăm infrastructura și să avem lansări mai sigure.',
+      'Responsabilități', '- Administrezi servere Linux și containere Docker.', '- Automatizezi infrastructura cu Ansible și Terraform.',
+      '- Configurezi monitorizare și alerte cu Prometheus.', '- Scrii documentație pentru echipa de gardă.',
+      'Cerințe', '- Minimum 3 ani experiență în DevOps sau administrare de sisteme.', '- Bash sau Python pentru automatizări.', '- Experiență cu CI/CD în GitLab.',
+      'Constituie un avantaj', '- Kubernetes', '- AWS'].join('\n');
+  }
+
+  toDraft(p, from, url) {
+    return { title: p.title, company: p.company, city: p.city, mode: p.mode, level: p.level, years: p.years, must: p.must, nice: p.nice, dos: p.dos, about: p.about, from: from, url: url || '' };
+  }
+
+  openAdd(from) { this.setState({ screen: 'add', addFrom: from, addPhase: 'input', addError: '', draft: null }); }
+
+  leaveAdd() {
+    const c = this.st();
+    if (c.addPhase !== 'input') { this.setState({ addPhase: 'input', draft: null, addError: '' }); return; }
+    this.setState(c.addFrom === 'saved' ? { screen: 'saved' } : { screen: 'jobs' });
+  }
+
+  readLink() {
+    const url = this.st().addUrl.trim();
+    if (!/^https?:\/\/[^\s/]+\.[^\s]+/i.test(url)) { this.setState({ addError: 'Enter the full link, starting with https://' }); return; }
+    this.setState({ addPhase: 'loading', addError: '' });
+    setTimeout(() => {
+      if (this.st().addPhase !== 'loading') return;
+      if (/linkedin\.com/i.test(url)) {
+        this.setState({ addPhase: 'failed', failReason: 'LinkedIn shows job pages only to signed-in members, so we cannot read this one. Copy the ad from LinkedIn and paste its text; we keep the link with it.' });
+        return;
+      }
+      const p = this.parseJob(this.linkDemoAd(), { title: 'Platform Engineer', company: 'Northwind Cloud' });
+      this.setState({ addPhase: 'preview', draft: this.toDraft(p, 'link', url), draftReq: '' });
+    }, 1300);
+  }
+
+  readText() {
+    const c = this.st();
+    if (c.addText.trim().length < 80) { this.setState({ addError: 'Paste the whole ad: a few lines with what they ask for and what you would do.' }); return; }
+    const p = this.parseJob(c.addText, { title: c.addTitle.trim(), company: c.addCompany.trim() });
+    this.setState({ addPhase: 'preview', addError: '', draft: this.toDraft(p, 'text', c.addLink.trim()), draftReq: '' });
+  }
+
+  saveDraft(tailor) {
+    const c = this.st();
+    const d = c.draft;
+    if (!d) return;
+    if (!d.title.trim()) { this.setState({ addError: 'Add the job title.' }); return; }
+    const id = 1001 + c.added.length;
+    const dos = d.dos.slice(0, 9);
+    const place = [d.city, d.mode === 'onsite' ? 'on-site' : d.mode].filter(Boolean).join(', ') || 'Location not given';
+    const job = { id: id, title: d.title.trim(), company: d.company.trim() || 'Company not given', place: place, source: 'Added by you', posted: '', sample: false, added: true, from: d.from, url: d.url,
+      areas: [], level: d.level, product: 'products', pitch: '', about: d.about, dos: dos, claimIdx: dos.map((x, i) => i).slice(0, 4),
+      looks: d.must.map((k) => 'Experience with ' + k + '.').concat(d.nice.map((k) => k + ' is a plus.')), perks: [], aboutCompany: '',
+      req: d.must.concat(d.nice), nice: d.nice.slice() };
+    const t = Object.assign({}, c.tracked); t[id] = 'Saved';
+    const next = { added: c.added.concat([job]), tracked: t, draft: null, addPhase: 'input', addUrl: '', addText: '', addTitle: '', addCompany: '', addLink: '', addError: '', draftReq: '' };
+    if (tailor) {
+      Object.assign(next, { jobId: id, screen: 'prep', prepBack: 'saved', dragX: 0, dragY: 0, snap: false, dragging: false,
+        prep: { skip: {}, focus: null, note: '', base: this.scoreFor(job, c.skills), claims: {}, drafts: {}, gaps: {}, gapFacts: {}, claimText: {}, impacts: {}, factRole: {}, gapList: this.missingFor(job, c.skills) } });
+    } else {
+      Object.assign(next, { screen: 'saved', savedTab: 'All' });
+    }
+    this.setState(next);
+  }
+
+  addSkillNow() {
+    const c = this.st();
+    const v = c.skillDraft.trim();
+    if (!v) return;
+    if (c.skills.map((x) => x.toLowerCase()).indexOf(v.toLowerCase()) >= 0) { this.setState({ skillDraft: '' }); return; }
+    this.setState({ skills: c.skills.concat([v]), skillDraft: '' });
+  }
+}
+</script>
+</body>
+</html>

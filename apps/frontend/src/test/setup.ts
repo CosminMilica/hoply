@@ -1,0 +1,45 @@
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { config } from '@vue/test-utils'
+import ui from '@nuxt/ui/vue-plugin'
+import { createMemoryHistory, createRouter, routeLocationKey, routerKey } from 'vue-router'
+import { server } from '@/shared/mocks/node'
+
+beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }))
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+// Every mounted component gets Nuxt UI as the app does (main.ts): its bundled
+// icons, color mode and router integration.
+config.global.plugins.push(ui)
+
+// Vue's warnings on one line: the message and the component chain by name, without the props it prints by default
+config.global.config.warnHandler = (msg, _instance, trace) => {
+  console.warn(`[Vue warn]: ${msg}${trace ? ` ${trace}` : ''}`.replaceAll('\n', ' '))
+}
+
+// Nuxt UI's links read the router: a test that installs none gets an empty one; a test's own router or route stays.
+config.global.plugins.push({
+  install(app) {
+    app.mixin({
+      beforeCreate() {
+        const provides = this.$.appContext.provides
+        if (this.$.parent || routerKey in provides || routeLocationKey in provides) return
+        app.use(createRouter({ history: createMemoryHistory(), routes: [{ path: '/:path(.*)*', component: { render: () => null } }] }))
+      },
+    })
+  },
+})
+
+Object.defineProperty(window, 'matchMedia', { writable: true, value: vi.fn().mockImplementation((query: string) => ({ matches: false, media: query, onchange: null, addListener: vi.fn(), removeListener: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn() })) })
+
+// jsdom has no layout: Reka UI's overlays and the dashboard observe sizes, and
+// its menus scroll the highlighted option into view.
+class NoopObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return [] }
+}
+globalThis.ResizeObserver ??= NoopObserver as unknown as typeof ResizeObserver
+globalThis.IntersectionObserver ??= NoopObserver as unknown as typeof IntersectionObserver
+Element.prototype.scrollIntoView ??= function scrollIntoView() {}

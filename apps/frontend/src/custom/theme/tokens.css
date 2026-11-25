@@ -1,0 +1,89 @@
+/*
+ * Design tokens: the project's half of the design system, for Nuxt UI.
+ *
+ * Hoply is dark first: one blue accent (hoply-600, #2A4BFF), warm greys (ink)
+ * and Nunito. `@theme static` keeps every shade available as a CSS variable,
+ * which Nuxt UI's semantic colours point at (see nuxt-ui.config.ts).
+ * https://ui.nuxt.com/docs/getting-started/theme/css-variables
+ */
+@theme static {
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+
+  --color-hoply-50: #eef1ff;
+  --color-hoply-100: #e0e6ff;
+  --color-hoply-200: #c7d2ff;
+  --color-hoply-300: #a9b8ff;
+  --color-hoply-400: #8fa2ff;
+  --color-hoply-500: #5b77ff;
+  --color-hoply-600: #2a4bff;
+  --color-hoply-700: #2139d1;
+  --color-hoply-800: #1c2fa3;
+  --color-hoply-900: #18235e;
+  --color-hoply-950: #0b1440;
+
+  --color-ink-50: #f2f1ec;
+  --color-ink-100: #e5e3dd;
+  --color-ink-200: #d3d1ca;
+  --color-ink-300: #c9c7bf;
+  --color-ink-400: #a5a39c;
+  --color-ink-500: #8e8c85;
+  --color-ink-600: #5c5e62;
+  --color-ink-700: #3f4246;
+  --color-ink-800: #2b2e31;
+  --color-ink-900: #1f2123;
+  --color-ink-950: #141516;
+
+  --color-ember-50: #fff3f0;
+  --color-ember-100: #ffe3dc;
+  --color-ember-200: #ffc6b8;
+  --color-ember-300: #ffa18a;
+  --color-ember-400: #ff7a5b;
+  --color-ember-500: #ff5a36;
+  --color-ember-600: #ed3e18;
+  --color-ember-700: #c72f0f;
+  --color-ember-800: #a42912;
+  --color-ember-900: #872816;
+  --color-ember-950: #4a1006;
+}
+
+:root {
+  --ui-radius: 0.625rem;
+}
+
+.dark {
+  --ui-primary: var(--ui-color-primary-400);
+  --ui-error: var(--ui-color-error-500);
+  --ui-bg: var(--color-ink-950);
+  --ui-bg-muted: var(--color-ink-900);
+  --ui-bg-elevated: var(--color-ink-900);
+  --ui-bg-accented: var(--color-ink-800);
+  --ui-bg-inverted: var(--color-ink-50);
+  --ui-border: #34363a;
+  --ui-border-muted: var(--color-ink-800);
+  --ui-border-accented: var(--color-ink-700);
+  --ui-border-inverted: var(--color-ink-50);
+  --ui-text: var(--color-ink-50);
+  --ui-text-highlighted: var(--color-ink-50);
+  --ui-text-toned: var(--color-ink-200);
+  --ui-text-muted: var(--color-ink-400);
+  --ui-text-dimmed: var(--color-ink-500);
+  --ui-text-inverted: var(--color-ink-950);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
+  }
+
+  [data-print-root] {
+    position: fixed;
+    inset: 0;
+    border: 0;
+    border-radius: 0;
+  }
+}

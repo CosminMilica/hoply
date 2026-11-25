@@ -1,0 +1,112 @@
+import { mockSession } from './session';
+import { expect, test } from '@playwright/test';
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { application } from '../../src/shared/application/config';
+
+// FORGE_BROWSER_COVERAGE is set for the instrumented run; the run against the
+// production build under the content-security policy collects none.
+test.afterEach(async ({ page }, testInfo) => {
+  const directory = process.env.FORGE_BROWSER_COVERAGE;
+  if (!directory) return;
+  const coverage = await page.evaluate(() => (window as any).__coverage__);
+  expect(coverage, 'Browser instrumentation must produce real coverage').toBeTruthy();
+  await mkdir(directory, { recursive: true });
+  await writeFile(path.join(directory, String(testInfo.parallelIndex) + '-' + Date.now() + '.json'), JSON.stringify(coverage));
+});
+
+const [firstLayout] = Object.keys(application.layouts);
+const layout = application.layouts[firstLayout!]!;
+const topLevel = layout.menus.primary.flatMap(section => section.items.map(item => item.label));
+const parents = layout.menus.primary.flatMap(section => section.items).filter(item => item.children?.length);
+// A sub-menu item that opens a route, and an item that opens the placeholder route.
+const subMenuDestination = parents.flatMap(parent => (parent.children ?? []).filter(child => child.to).map(child => ({ parent, child })))[0];
+const placeholder = layout.placeholder
+  ? parents.flatMap(parent => (parent.children ?? []).filter(child => !child.to && !child.action).map(child => ({ parent, child })))[0]
+  : undefined;
+
+test('the application shell boots on the landing route with its menus', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await mockSession(page);
+  await page.goto('/');
+  await expect(page.locator('[data-shell="header"]')).toBeVisible();
+  // Nuxt UI's palette applies: under the content-security policy only its
+  // nonce lets the palette element in, and nothing else defines the shades.
+  const shade = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--ui-color-primary-500').trim());
+  expect(shade).not.toBe('');
+  const main = page.getByRole('navigation', { name: 'Main' });
+  for (const label of topLevel) await expect(main.getByText(label, { exact: true }).first()).toBeVisible();
+  await page.locator('[data-shell="sidebar-toggle"]').click();
+  await page.locator('[data-shell="sidebar-toggle"]').click();
+  expect(errors).toEqual([]);
+});
+
+// A project that renders its own not-found page tests it with its own specs.
+if (application.builtin.includes('not_found')) test('an unknown address opens the not-found destination', async ({ page }) => {
+  await mockSession(page);
+  await page.goto('/no-such-page-anywhere');
+  await expect(page.getByText('Page not found')).toBeVisible();
+  await page.getByRole('link', { name: 'Back to start' }).click();
+  await expect(page.locator('[data-shell="header"]')).toBeVisible();
+});
+
+// The configuration names a sub-menu item with a route: opening its parent and the item
+// opens that route (the address its link names, which may be the landing route's own),
+// and the parent stays open on it.
+if (subMenuDestination) test('a sub-menu item opens its route and keeps its parent open', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await mockSession(page);
+  await page.goto('/');
+  const main = page.getByRole('navigation', { name: 'Main' });
+  await main.getByRole('button', { name: subMenuDestination.parent.label }).click();
+  const link = main.getByRole('link', { name: subMenuDestination.child.label });
+  const href = await link.getAttribute('href');
+  await link.click();
+  await expect(page).toHaveURL(new URL(href!, page.url()).href);
+  await expect(main.getByRole('link', { name: subMenuDestination.child.label })).toBeVisible();
+  await expect(page.getByText('Page not found')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+// An item without a destination opens the layout's placeholder route.
+if (placeholder) test('an item without a destination opens the placeholder route', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await mockSession(page);
+  await page.goto('/');
+  const main = page.getByRole('navigation', { name: 'Main' });
+  await main.getByRole('button', { name: placeholder.parent.label }).click();
+  const link = main.getByRole('link', { name: placeholder.child.label });
+  const href = await link.getAttribute('href');
+  await link.click();
+  await expect(page).toHaveURL(new URL(href!, page.url()).href);
+  await expect(page.getByText('Page not found')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+// Collapsed to icons, the sidebar's links and sub-menu buttons keep their names.
+test('the collapsed sidebar keeps the names of its items', async ({ page }) => {
+  await mockSession(page);
+  await page.goto('/');
+  await page.locator('[data-shell="sidebar-toggle"]').click();
+  const main = page.getByRole('navigation', { name: 'Main' });
+  for (const label of topLevel) {
+    await expect(main.getByRole('link', { name: label, exact: true }).or(main.getByRole('button', { name: label, exact: true }))).toBeVisible();
+  }
+});
+
+// Below 900px the primary menu is a bottom tab bar, and the header has no menu button.
+test('on a narrow screen the primary menu is a bottom tab bar', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await mockSession(page);
+  await page.goto('/');
+  const tabs = page.locator('[data-shell="tabs"]');
+  for (const label of topLevel) await expect(tabs.getByRole('link', { name: label })).toBeVisible();
+  await expect(page.locator('[data-shell="header"]').getByRole('button', { name: 'Open sidebar' })).toBeHidden();
+  await tabs.getByRole('link', { name: 'Find jobs' }).click();
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(tabs.getByRole('link', { name: 'Find jobs' })).toHaveAttribute('aria-current', 'page');
+});

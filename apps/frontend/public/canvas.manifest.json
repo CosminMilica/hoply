@@ -1,0 +1,238 @@
+{
+  "$schema": "https://forge.dev/schemas/canvas-manifest-v1.json",
+  "version": 1,
+  "components": {
+    "CodeViewer": {
+      "description": "Props for the CodeViewer canvas component \u2014 renders syntax-highlighted code with optional filename header.",
+      "props_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://forge.dev/schemas/canvas-components/CodeViewer.props.json",
+        "title": "CodeViewerProps",
+        "description": "Props for the CodeViewer canvas component \u2014 renders syntax-highlighted code with optional filename header.",
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "showLineNumbers": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "language"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "DataTable": {
+      "description": "Props for the DataTable canvas component \u2014 renders tabular data with optional sorting and pagination.",
+      "props_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://forge.dev/schemas/canvas-components/DataTable.props.json",
+        "title": "DataTableProps",
+        "description": "Props for the DataTable canvas component \u2014 renders tabular data with optional sorting and pagination.",
+        "type": "object",
+        "properties": {
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "sortable": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "key",
+                "label"
+              ]
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "pageSize": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "columns",
+          "rows"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "DynamicForm": {
+      "description": "Props for the DynamicForm canvas component \u2014 renders a form declared by a JSON Schema-like field list.",
+      "props_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://forge.dev/schemas/canvas-components/DynamicForm.props.json",
+        "title": "DynamicFormProps",
+        "description": "Props for the DynamicForm canvas component \u2014 renders a form declared by a JSON Schema-like field list.",
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "number",
+                    "password",
+                    "email",
+                    "select",
+                    "checkbox",
+                    "textarea"
+                  ]
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "default": {},
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "label",
+                "type"
+              ]
+            }
+          },
+          "submitLabel": {
+            "type": "string"
+          },
+          "cancelLabel": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "Report": {
+      "description": "Props for the Report canvas component \u2014 renders a Markdown document with optional title.",
+      "props_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://forge.dev/schemas/canvas-components/Report.props.json",
+        "title": "ReportProps",
+        "description": "Props for the Report canvas component \u2014 renders a Markdown document with optional title.",
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "markdown": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "markdown"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "WorkflowDiagram": {
+      "description": "Props for the WorkflowDiagram canvas component \u2014 renders a DAG of steps with status indicators.",
+      "props_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://forge.dev/schemas/canvas-components/WorkflowDiagram.props.json",
+        "title": "WorkflowDiagramProps",
+        "description": "Props for the WorkflowDiagram canvas component \u2014 renders a DAG of steps with status indicators.",
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "running",
+                    "completed",
+                    "error",
+                    "skipped"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "status"
+              ]
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ]
+            }
+          }
+        },
+        "required": [
+          "nodes",
+          "edges"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

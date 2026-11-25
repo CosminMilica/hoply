@@ -1,0 +1,6 @@
+db:
+  url: "postgresql://postgres:postgres@localhost:5432/jobs_test"
+
+logging:
+  level: "warn"
+  pretty: false

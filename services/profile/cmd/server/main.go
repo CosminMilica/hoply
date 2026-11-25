@@ -1,0 +1,62 @@
+// Command server runs the profile HTTP service.
+package main
+
+import (
+	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"profile/internal/app"
+	"profile/internal/config"
+	"profile/internal/db"
+	// FORGE:IMPORTS
+)
+
+func main() {
+	os.Exit(run())
+}
+
+func run() int {
+	slog.SetDefault(app.Logger("info", false))
+	// Load and validate config at startup so the fail-closed auth guard runs:
+	// it rejects a production-like env with auth enabled but
+	// GATEKEEPER_ISSUER/SERVICE_AUDIENCE unset.
+	cfg, err := config.Load(config.LoadOptions{})
+	if err != nil {
+		slog.Error("configuration error", "error", err)
+		return 1
+	}
+	slog.SetDefault(app.Logger(cfg.Logging.Level, cfg.Logging.Pretty))
+	slog.Info("configuration validated", "env", cfg.App.Env)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	// FORGE:STARTUP_INIT
+	// FORGE:BEGIN pii_redaction:STARTUP_INIT fp:bd51ca96
+	app.InstallPIIRedaction()
+	// FORGE:END pii_redaction:STARTUP_INIT
+
+	pool, err := db.NewPool(ctx, db.URL(cfg.DB.URL), cfg.DB.PoolMax,
+		time.Duration(cfg.DB.StatementTimeoutMS)*time.Millisecond)
+	if err != nil {
+		slog.Error("database configuration error", "error", err)
+		return 1
+	}
+	defer pool.Close()
+	// FORGE:POOL_READY
+
+	listener, err := app.Listen(cfg.Server.Port)
+	if err != nil {
+		slog.Error("listen failed", "error", err)
+		return 1
+	}
+	if err := app.Serve(ctx, listener, app.New(cfg, pool)); err != nil {
+		slog.Error("server failed", "error", err)
+		return 1
+	}
+	// FORGE:SHUTDOWN
+	return 0
+}

@@ -1,0 +1,15 @@
+# Changes here will be overwritten by forge / Copier on regenerate.
+# To re-render this subtree, run `copier update` from its directory
+# or `forge update` from the project root.
+_src_path: /private/tmp/claude-501/-Users-milicacosmin-sergiu-work/51a792af-8bc4-48a1-ba26-d99f6fea7acf/scratchpad/forge-main/forge/templates/services/go-service-template
+_commit: 5b6b671fa2518fcc58201175ced78142a4b67661
+db_name: profile
+entity_plural: profiles
+go_version: '1.27'
+include_error_envelope: true
+include_platform_auth: false
+project_description: 'Hoply: job search with a CV tailored to each job'
+project_name: profile
+project_slug: profile
+project_title: Profile
+server_port: 5010

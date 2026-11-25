@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "paths": {
+      "#build/ui": ["./node_modules/.nuxt-ui/ui"]
+    }
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.dev.config.ts",
+    "src/custom/theme/nuxt-ui.config.ts",
+    "openapi-ts.config.ts",
+    "eslint.config.js"
+  ]
+}

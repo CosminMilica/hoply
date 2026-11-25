@@ -1,0 +1,144 @@
+// Package testutil holds the shared test vocabulary used by the Python, Node,
+// Rust and Go templates.
+package testutil
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"profile/internal/identity"
+)
+
+// ServiceRoot is the module root (the directory holding go.mod).
+func ServiceRoot() string {
+	_, file, _, _ := runtime.Caller(0)
+	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
+}
+
+// TenantTestContext describes a test caller.
+type TenantTestContext struct {
+	UserID     uuid.UUID
+	CustomerID uuid.UUID
+	Email      string
+	Roles      []string
+}
+
+// TenantFactory returns the default local tenant.
+func TenantFactory() TenantTestContext {
+	id := uuid.MustParse(identity.DevSubject)
+	return TenantTestContext{UserID: id, CustomerID: id, Email: "test@localhost", Roles: []string{"user"}}
+}
+
+// Envelope is the RFC-007 error body.
+type Envelope struct {
+	Error struct {
+		Code          string         `json:"code"`
+		Message       string         `json:"message"`
+		Type          string         `json:"type"`
+		Context       map[string]any `json:"context"`
+		CorrelationID string         `json:"correlation_id"`
+	} `json:"error"`
+}
+
+// Do sends a JSON request to handler and decodes the JSON response.
+func Do(t *testing.T, handler http.Handler, method, url string, payload any) (int, map[string]any) {
+	t.Helper()
+	var body bytes.Buffer
+	if payload != nil {
+		if raw, ok := payload.(string); ok {
+			body.WriteString(raw)
+		} else if err := json.NewEncoder(&body).Encode(payload); err != nil {
+			t.Fatal(err)
+		}
+	}
+	request := httptest.NewRequest(method, url, &body)
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	decoded := map[string]any{}
+	if text := strings.TrimSpace(recorder.Body.String()); text != "" {
+		if err := json.Unmarshal([]byte(text), &decoded); err != nil {
+			t.Fatalf("%s %s: non-JSON response %q", method, url, text)
+		}
+	}
+	return recorder.Code, decoded
+}
+
+// ErrorCode extracts error.code from a decoded envelope.
+func ErrorCode(body map[string]any) string {
+	envelope, _ := body["error"].(map[string]any)
+	code, _ := envelope["code"].(string)
+	return code
+}
+
+// DatabaseURL returns DATABASE_URL. Integration and e2e suites require a real
+// database, so a missing value fails the test instead of skipping it.
+func DatabaseURL(t *testing.T) string {
+	t.Helper()
+	url := os.Getenv("DATABASE_URL")
+	if url == "" {
+		t.Fatal("integration tests require DATABASE_URL")
+	}
+	return url
+}
+
+// TestSchema is an empty Postgres schema that is dropped when the test ends.
+type TestSchema struct {
+	Name  string
+	URL   string // DATABASE_URL whose connections use the schema
+	Admin *pgxpool.Pool
+}
+
+// NewSchema creates a TestSchema in the DATABASE_URL database, so tests never
+// touch the developer's tables.
+func NewSchema(t *testing.T) TestSchema {
+	t.Helper()
+	base := DatabaseURL(t)
+	ctx := context.Background()
+	admin, err := pgxpool.New(ctx, base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := "forge_test_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	if _, err := admin.Exec(ctx, "CREATE SCHEMA "+name); err != nil {
+		admin.Close()
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, _ = admin.Exec(context.Background(), "DROP SCHEMA "+name+" CASCADE")
+		admin.Close()
+	})
+	parsed, err := url.Parse(base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	query := parsed.Query()
+	query.Set("search_path", name)
+	parsed.RawQuery = query.Encode()
+	return TestSchema{Name: name, URL: parsed.String(), Admin: admin}
+}
+
+// HasTable reports whether table exists in the schema.
+func (s TestSchema) HasTable(t *testing.T, table string) bool {
+	t.Helper()
+	var found bool
+	err := s.Admin.QueryRow(context.Background(),
+		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)",
+		s.Name, table).Scan(&found)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return found
+}

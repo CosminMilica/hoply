@@ -1,0 +1,338 @@
+{
+  "config": {
+    "backends": [
+      {
+        "app_template": "crud-service",
+        "depends_on": [],
+        "description": "Hoply: job search with a CV tailored to each job",
+        "features": [
+          "profiles"
+        ],
+        "go_version": "1.27",
+        "language": "go",
+        "name": "profile",
+        "node_version": "26",
+        "project_name": "hoply",
+        "python_version": "3.13",
+        "rust_edition": "2024",
+        "sdk_consumption": null,
+        "server_port": 5010
+      },
+      {
+        "app_template": "crud-service",
+        "depends_on": [],
+        "description": "Hoply: job search with a CV tailored to each job",
+        "features": [
+          "jobs"
+        ],
+        "go_version": "1.27",
+        "language": "go",
+        "name": "jobs",
+        "node_version": "26",
+        "project_name": "hoply",
+        "python_version": "3.13",
+        "rust_edition": "2024",
+        "sdk_consumption": null,
+        "server_port": 5020
+      }
+    ],
+    "component_origins": {},
+    "components": [],
+    "frontend": {
+      "api_base_url": "",
+      "api_proxy_target": "",
+      "app_template": "app-shell",
+      "auth": null,
+      "author_name": "Your Name",
+      "default_color_scheme": "blue",
+      "description": "Hoply: job search with a CV tailored to each job",
+      "dev_server": true,
+      "extras": [
+        "msw",
+        "forms",
+        "confirm"
+      ],
+      "features": null,
+      "framework": "vue",
+      "generate_e2e_tests": true,
+      "include_auth": false,
+      "include_chat": false,
+      "include_openapi": false,
+      "keycloak_client_id": "",
+      "keycloak_realm": "",
+      "keycloak_url": "http://localhost:8080",
+      "layout": "sidebar",
+      "layouts": [
+        {
+          "menus": {
+            "primary": [
+              {
+                "items": [
+                  {
+                    "icon": "i-lucide-user",
+                    "id": "profile",
+                    "label": "Profile",
+                    "to": "hoply-profile"
+                  },
+                  {
+                    "icon": "i-lucide-search",
+                    "id": "jobs",
+                    "label": "Find jobs",
+                    "to": "hoply-jobs"
+                  },
+                  {
+                    "badge": "saved",
+                    "icon": "i-lucide-heart",
+                    "id": "saved",
+                    "label": "Saved",
+                    "to": "hoply-saved"
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "app",
+          "shell": "header-sidebar"
+        }
+      ],
+      "name": "frontend",
+      "org_name": "com.example",
+      "package_manager": "npm",
+      "project_name": "hoply",
+      "routing": {
+        "forbidden": "builtin",
+        "landing": "hoply-profile",
+        "not_found": "builtin"
+      },
+      "server_port": 5173,
+      "ui_kit": "nuxt-ui",
+      "version": "0.1.0"
+    },
+    "frontends": [
+      {
+        "api_base_url": "",
+        "api_proxy_target": "",
+        "app_template": "app-shell",
+        "auth": null,
+        "author_name": "Your Name",
+        "default_color_scheme": "blue",
+        "description": "Hoply: job search with a CV tailored to each job",
+        "dev_server": true,
+        "extras": [
+          "msw",
+          "forms",
+          "confirm"
+        ],
+        "features": null,
+        "framework": "vue",
+        "generate_e2e_tests": true,
+        "include_auth": false,
+        "include_chat": false,
+        "include_openapi": false,
+        "keycloak_client_id": "",
+        "keycloak_realm": "",
+        "keycloak_url": "http://localhost:8080",
+        "layout": "sidebar",
+        "layouts": [
+          {
+            "menus": {
+              "primary": [
+                {
+                  "items": [
+                    {
+                      "icon": "i-lucide-user",
+                      "id": "profile",
+                      "label": "Profile",
+                      "to": "hoply-profile"
+                    },
+                    {
+                      "icon": "i-lucide-search",
+                      "id": "jobs",
+                      "label": "Find jobs",
+                      "to": "hoply-jobs"
+                    },
+                    {
+                      "badge": "saved",
+                      "icon": "i-lucide-heart",
+                      "id": "saved",
+                      "label": "Saved",
+                      "to": "hoply-saved"
+                    }
+                  ]
+                }
+              ]
+            },
+            "name": "app",
+            "shell": "header-sidebar"
+          }
+        ],
+        "name": "frontend",
+        "org_name": "com.example",
+        "package_manager": "npm",
+        "project_name": "hoply",
+        "routing": {
+          "forbidden": "builtin",
+          "landing": "hoply-profile",
+          "not_found": "builtin"
+        },
+        "server_port": 5173,
+        "ui_kit": "nuxt-ui",
+        "version": "0.1.0"
+      }
+    ],
+    "include_keycloak": false,
+    "keycloak_port": 18080,
+    "option_origins": {
+      "agent.llm": "default",
+      "agent.mode": "default",
+      "agent.streaming": "default",
+      "agent.tools": "default",
+      "airlock.client": "default",
+      "async.rag_ingest_queue": "default",
+      "async.task_queue": "default",
+      "auth.api_keys": "default",
+      "auth.keycloak_self_registration": "default",
+      "auth.keycloak_tenant_source": "default",
+      "auth.mode": "user",
+      "auth.provider": "default",
+      "auth.service_discovery": "default",
+      "backend.mode": "default",
+      "chat.attachments": "default",
+      "connectors.backends": "default",
+      "connectors.enabled": "default",
+      "conversation.persistence": "default",
+      "database.allow_unverified_tenant": "default",
+      "database.engine": "default",
+      "database.mode": "default",
+      "database.multitenancy": "default",
+      "database.rls_app_role": "default",
+      "database.rls_startup_guard": "default",
+      "database.tenant_claim_path": "default",
+      "database.tenant_header_name": "default",
+      "database.tenant_resolution": "default",
+      "deploy.helm_layout": "default",
+      "deploy.target": "default",
+      "events.bus": "default",
+      "events.outbox": "default",
+      "frontend.api_target.type": "default",
+      "frontend.api_target.url": "default",
+      "frontend.mode": "default",
+      "frontend.openapi_spec_url": "default",
+      "infrastructure.event_bus": "default",
+      "llm.provider": "default",
+      "mcp_template.openapi_to_tools": "default",
+      "mcp_template.server": "default",
+      "middleware.api_version": "default",
+      "middleware.correlation_id": "default",
+      "middleware.pii_redaction": "default",
+      "middleware.rate_limit": "default",
+      "middleware.response_cache": "default",
+      "middleware.security_headers": "default",
+      "object_store.backend": "default",
+      "observability.error_envelope": "default",
+      "observability.health": "user",
+      "observability.json_logging": "default",
+      "observability.otel": "default",
+      "observability.tracing": "default",
+      "platform.admin": "default",
+      "platform.agents_md": "default",
+      "platform.cli_extensions": "default",
+      "platform.mcp": "default",
+      "platform.shared_lib": "default",
+      "platform.testing_enhanced": "default",
+      "platform.webhooks": "default",
+      "queue.backend": "default",
+      "rag.backend": "default",
+      "rag.embeddings": "default",
+      "rag.reranker": "default",
+      "rag.top_k": "default",
+      "reliability.cache": "default",
+      "reliability.circuit_breaker": "default",
+      "reliability.connection_pool": "default",
+      "reliability.service_client": "default",
+      "security.csp": "default",
+      "security.sbom": "default",
+      "streaming.sse": "default"
+    },
+    "options": {
+      "agent.llm": false,
+      "agent.mode": "none",
+      "agent.streaming": false,
+      "agent.tools": false,
+      "airlock.client": false,
+      "async.rag_ingest_queue": false,
+      "async.task_queue": false,
+      "auth.api_keys": false,
+      "auth.keycloak_self_registration": "off",
+      "auth.keycloak_tenant_source": "organization",
+      "auth.mode": "none",
+      "auth.provider": "none",
+      "auth.service_discovery": false,
+      "backend.mode": "generate",
+      "chat.attachments": false,
+      "connectors.backends": [],
+      "connectors.enabled": false,
+      "conversation.persistence": false,
+      "database.allow_unverified_tenant": false,
+      "database.engine": "postgres",
+      "database.mode": "generate",
+      "database.multitenancy": "none",
+      "database.rls_app_role": true,
+      "database.rls_startup_guard": true,
+      "database.tenant_claim_path": "tenant_id",
+      "database.tenant_header_name": "X-Tenant-ID",
+      "database.tenant_resolution": "token_claim",
+      "deploy.helm_layout": "umbrella",
+      "deploy.target": "none",
+      "events.bus": "none",
+      "events.outbox": false,
+      "frontend.api_target.type": "local",
+      "frontend.api_target.url": "",
+      "frontend.mode": "generate",
+      "frontend.openapi_spec_url": "",
+      "infrastructure.event_bus": "none",
+      "llm.provider": "none",
+      "mcp_template.openapi_to_tools": false,
+      "mcp_template.server": false,
+      "middleware.api_version": false,
+      "middleware.correlation_id": "always-on",
+      "middleware.pii_redaction": true,
+      "middleware.rate_limit": true,
+      "middleware.response_cache": false,
+      "middleware.security_headers": true,
+      "object_store.backend": "none",
+      "observability.error_envelope": true,
+      "observability.health": true,
+      "observability.json_logging": false,
+      "observability.otel": false,
+      "observability.tracing": false,
+      "platform.admin": false,
+      "platform.agents_md": true,
+      "platform.cli_extensions": false,
+      "platform.mcp": false,
+      "platform.shared_lib": false,
+      "platform.testing_enhanced": false,
+      "platform.webhooks": false,
+      "queue.backend": "none",
+      "rag.backend": "none",
+      "rag.embeddings": "openai",
+      "rag.reranker": false,
+      "rag.top_k": 5,
+      "reliability.cache": "none",
+      "reliability.circuit_breaker": false,
+      "reliability.connection_pool": true,
+      "reliability.service_client": false,
+      "security.csp": true,
+      "security.sbom": false,
+      "streaming.sse": false
+    },
+    "output_dir": ".",
+    "platform_template": null,
+    "project_name": "hoply"
+  },
+  "generator_requirement": "forge-cli @ git+https://github.com/cchifor/forge@5b6b671fa2518fcc58201175ced78142a4b67661",
+  "generator_sha256": "e4ce7777e59f6e74efccce7208c3b68061525fc948f93da5cf21bcc4dc1c7c4c",
+  "generator_version": "1.2.0",
+  "plugin_requirements": [],
+  "schema_version": 2
+}

@@ -1,0 +1,50 @@
+# docker-compose fragment for the jobs Go service. Mirrors the
+# Python, Node and Rust templates so platform-level orchestration is uniform
+# across language backends.
+
+services:
+  jobs-migrate:
+    build:
+      context: ./services/jobs
+      dockerfile: Dockerfile
+      additional_contexts:
+        project_root: .
+        packages: ./packages
+    environment:
+      ENV: development
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/jobs"
+    command: ["/app/migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [app-network]
+
+  jobs:
+    build:
+      context: ./services/jobs
+      dockerfile: Dockerfile
+      additional_contexts:
+        project_root: .
+        packages: ./packages
+    ports:
+      - "5020:5020"
+    environment:
+      # The dev stack overrides the image's ENV=production so the startup auth
+      # guard does not abort boot without GATEKEEPER_ISSUER/SERVICE_AUDIENCE.
+      ENV: development
+      PORT: "5020"
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/jobs"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy:4318"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jobs.rule=Host(`app.localhost`) && PathPrefix(`/api/jobs`)"
+      - "traefik.http.routers.jobs.middlewares=jobs-rewrite"
+      - "traefik.http.middlewares.jobs-rewrite.replacepathregex.regex=^/api/jobs/(.*)"
+      - "traefik.http.middlewares.jobs-rewrite.replacepathregex.replacement=/api/$$1"
+      - "traefik.http.services.jobs.loadbalancer.server.port=5020"
+    depends_on:
+      jobs-migrate:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    networks: [app-network]

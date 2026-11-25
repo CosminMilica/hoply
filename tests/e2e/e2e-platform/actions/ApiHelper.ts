@@ -1,0 +1,76 @@
+import type { Page } from '@playwright/test';
+
+interface BackendInfo {
+  port: number;
+  features: string[];
+}
+
+const BACKEND_FEATURES: Record<string, BackendInfo> = JSON.parse(
+  '{"profile": {"port": 5010, "features": ["profiles"]}, "jobs": {"port": 5020, "features": ["jobs"]}}'
+);
+
+export class ApiHelper {
+  constructor(private readonly page: Page) {}
+
+  private backendFor(feature: string): string {
+    for (const [name, info] of Object.entries(BACKEND_FEATURES)) {
+      if (info.features.includes(feature)) {
+        return name;
+      }
+    }
+    return Object.keys(BACKEND_FEATURES)[0] ?? 'backend';
+  }
+
+  private apiUrl(feature: string, id?: string): string {
+    const backend = this.backendFor(feature);
+    const base = `/api/${backend}/v1/${feature}`;
+    return id ? `${base}/${id}` : base;
+  }
+
+  async create<T extends Record<string, unknown>>(
+    feature: string,
+    data: T,
+  ): Promise<Record<string, unknown>> {
+    const url = this.apiUrl(feature);
+    console.log(`[api] POST ${url}`);
+    const result = await this.page.evaluate(async ({ url, data }) => {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      if (!resp.ok) throw new Error(`API POST ${url}: ${resp.status} ${await resp.text()}`);
+      return resp.json();
+    }, { url, data });
+    console.log(`[api] ← created ${(result as Record<string, unknown>).id}`);
+    return result as Record<string, unknown>;
+  }
+
+  async list(feature: string): Promise<Record<string, unknown>> {
+    const url = this.apiUrl(feature);
+    return await this.page.evaluate(async (url) => {
+      const resp = await fetch(url, { credentials: 'include' });
+      if (!resp.ok) throw new Error(`API GET ${url}: ${resp.status}`);
+      return resp.json();
+    }, url) as Record<string, unknown>;
+  }
+
+  async get(feature: string, id: string): Promise<Record<string, unknown>> {
+    const url = this.apiUrl(feature, id);
+    return await this.page.evaluate(async (url) => {
+      const resp = await fetch(url, { credentials: 'include' });
+      if (!resp.ok) throw new Error(`API GET ${url}: ${resp.status}`);
+      return resp.json();
+    }, url) as Record<string, unknown>;
+  }
+
+  async delete(feature: string, id: string): Promise<void> {
+    const url = this.apiUrl(feature, id);
+    console.log(`[api] DELETE ${url}`);
+    await this.page.evaluate(async (url) => {
+      const resp = await fetch(url, { method: 'DELETE', credentials: 'include' });
+      if (!resp.ok) throw new Error(`API DELETE ${url}: ${resp.status}`);
+    }, url);
+  }
+}

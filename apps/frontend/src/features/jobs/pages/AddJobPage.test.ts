@@ -1,0 +1,166 @@
+import { afterEach, describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/shared/mocks/node'
+import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
+import { sampleProfile } from '@/test/profile-service'
+import AddJobPage from './AddJobPage.vue'
+
+const text = () => document.body.textContent ?? ''
+const failed = () => document.querySelector('[data-test="read-failed"]')?.textContent ?? ''
+const submit = async (label: string) => {
+  input(label).closest('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+  await settle()
+}
+const AD = ['DevOps Engineer', 'Firma: Carpathia Systems, Brașov (hibrid)', 'Responsabilități', '- Administrezi servere Linux.',
+  '- Automatizezi infrastructura cu Terraform.', 'Cerințe', '- Minimum 3 ani experiență în DevOps.'].join('\n')
+
+async function readLink(url: string) {
+  await type(input('Link to the job ad'), url)
+  await submit('Link to the job ad')
+}
+
+afterEach(() => {
+  document.body.innerHTML = ''
+})
+
+describe('AddJobPage', () => {
+  it('reads a link, lets the person fix it, and saves it to their jobs', async () => {
+    const { jobs, applications } = useServices()
+    const { router } = await mountPage(AddJobPage, { at: '/jobs/add?from=saved' })
+    expect(button('Link').getAttribute('aria-selected')).toBe('true')
+    await readLink('https://careers.northwind.example/jobs/platform-engineer')
+    expect(text()).toContain('Read from the job data on careers.northwind.example. Fix anything we got wrong.')
+    expect(document.querySelector('[data-test="draft-match"]')!.textContent).toContain('38%')
+    expect(document.querySelector('[data-test="knockout"]')!.textContent).toBe('Based in Cluj-Napoca, hybrid. You live in Iași and are not open to relocation.')
+    expect(document.querySelector('[data-test="years"]')!.textContent).toBe('Asks for 4+ years of experience. You have about 6.')
+    expect(button('Remove Linux').className).toContain('bg-hoply-900')
+    expect(button('Remove Kubernetes').className).not.toContain('bg-hoply-900')
+    expect(text()).toContain('Responsibilities we found · 4')
+
+    await type(input('Job title'), 'Senior Platform Engineer')
+    await type(input('City'), 'Iași')
+    await click(button('Hybrid'))
+    expect(button('Hybrid').getAttribute('aria-pressed')).toBe('false')
+    await click(button('Senior'))
+    await click(button('Remove Kafka'))
+    await type(input('Add a requirement'), 'Ansible')
+    await click(button('+ Nice'))
+    await type(input('Add a requirement'), 'kubernetes')
+    await click(button('+ Must'))
+    await type(input('Add a requirement'), '  ')
+    await click(button('+ Must'))
+    expect(document.querySelector('[data-test="knockout"]')).toBeNull()
+
+    await click(button('Save to my jobs'))
+    await settle()
+    const saved = jobs.jobs[0]!
+    expect(saved).toMatchObject({
+      title: 'Senior Platform Engineer', company: 'Northwind Cloud', city: 'Iași', work_mode: '', level: 'senior', years_required: 4,
+      nice_to_have: ['Helm', 'PostgreSQL', 'Ansible'], source: 'link', read_from: 'json_ld', added_by_me: true,
+      url: 'https://careers.northwind.example/jobs/platform-engineer',
+    })
+    expect(saved.must_have).not.toContain('kubernetes')
+    expect(applications.applications.get(saved.id)?.status).toBe('saved')
+    expect(router.currentRoute.value.name).toBe('hoply-saved')
+  })
+
+  it('saves and opens Prepare your CV', async () => {
+    const { jobs } = useServices()
+    const { router } = await mountPage(AddJobPage, { at: '/jobs/add' })
+    await readLink('https://careers.northwind.example/jobs/platform-engineer')
+    await click(button('Save and prepare my CV'))
+    await settle()
+    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: jobs.jobs[0]!.id } })
+  })
+
+  it('reads pasted text with its hints and keeps the link', async () => {
+    const { jobs } = useServices(sampleProfile({ work_modes: ['remote'] }))
+    await mountPage(AddJobPage, { at: '/jobs/add' })
+    await click(button('Text'))
+    await type(input('The job ad'), 'Too short')
+    await submit('The job ad')
+    expect(text()).toContain('Paste the whole ad: a few lines with what they ask for and what you would do.')
+    await type(input('The job ad'), AD)
+    await type(input('Company (optional)'), 'Carpathia Systems')
+    await type(input('Link to the ad (optional, to find it again)'), 'https://ejobs.ro/123')
+    await submit('The job ad')
+    expect(text()).toContain('Read from the text you pasted')
+    expect((input('Job title') as HTMLInputElement).value).toBe('DevOps Engineer')
+    expect((input('Company') as HTMLInputElement).value).toBe('Carpathia Systems')
+    expect(document.querySelector('[data-test="knockout"]')!.textContent).toBe('Hybrid in Brașov. Your profile asks for remote work, and you are not open to relocation.')
+    expect(document.querySelector('[data-test="years"]')).toBeNull()
+    await click(button('Save to my jobs'))
+    await settle()
+    expect(jobs.jobs[0]).toMatchObject({ source: 'text', read_from: 'text', url: 'https://ejobs.ro/123', responsibilities: ['Administrezi servere Linux.', 'Automatizezi infrastructura cu Terraform.', 'Minimum 3 ani experiență în DevOps.'] })
+  })
+
+  it.each([
+    ['https://www.linkedin.com/jobs/view/1', 'LinkedIn shows job pages only to signed-in members'],
+    ['https://empty.example.org/jobs', 'We found no job ad on this page'],
+    ['https://down.example.org/jobs', 'The page did not answer'],
+    ['https://huge.example.org/jobs', 'The page is too big for us to read'],
+    ['https://10.0.0.1/jobs', 'private or local address'],
+    ['https://odd.example.org/jobs', 'Something on this page stopped us'],
+  ])('explains why %s could not be read and offers the text instead', async (url, message) => {
+    useServices()
+    await mountPage(AddJobPage, { at: '/jobs/add' })
+    await readLink(url)
+    expect(failed()).toContain('We could not read this page')
+    expect(failed()).toContain(message)
+    await click(button('Paste the text instead'))
+    expect(button('Text').getAttribute('aria-selected')).toBe('true')
+    expect((input('Link to the ad (optional, to find it again)') as HTMLInputElement).value).toBe(url)
+    await click(button('Link'))
+    await readLink(url)
+    await click(button('Try another link'))
+    expect(button('Link').getAttribute('aria-selected')).toBe('true')
+  })
+
+  it('checks the link and the title, and shows what the service refuses', async () => {
+    useServices()
+    await mountPage(AddJobPage, { at: '/jobs/add' })
+    await readLink('linkedin.com/jobs/1')
+    expect(text()).toContain('Enter the full link, starting with https://')
+    server.use(http.post('*/api/jobs/v1/jobs/read', () => HttpResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'url is too long' } }, { status: 422 })))
+    await readLink('https://a.example.org/x')
+    expect(document.querySelector('[role="alert"]')!.textContent).toBe('url is too long')
+    server.resetHandlers()
+    useServices()
+    await readLink('https://careers.northwind.example/jobs/1')
+    await type(input('Job title'), ' ')
+    await click(button('Save to my jobs'))
+    expect(text()).toContain('Add the job title.')
+    await type(input('Job title'), 'Platform Engineer')
+    server.use(http.post('*/api/jobs/v1/jobs', () => HttpResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'title is too long' } }, { status: 422 })))
+    await click(button('Save to my jobs'))
+    await settle()
+    expect(document.querySelector('[role="alert"]')!.textContent).toBe('title is too long')
+  })
+
+  it('asks for requirements when none were found', async () => {
+    useServices()
+    server.use(http.post('*/api/jobs/v1/jobs/read', () => HttpResponse.json({
+      title: 'Office manager', company: '', city: '', country: '', work_mode: '', level: '', years_required: null, must_have: [], nice_to_have: [],
+      responsibilities: [], about: '', url: 'https://a.example.org/x', source: 'link', read_from: 'page_text', host: 'a.example.org',
+    })))
+    await mountPage(AddJobPage, { at: '/jobs/add' })
+    await readLink('https://a.example.org/x')
+    expect(text()).toContain('Read from the page on a.example.org')
+    expect(text()).toContain('We did not recognise any skills in this ad.')
+    expect(text()).not.toContain('Responsibilities we found')
+  })
+
+  it('goes back to the form from the preview, then where the person came from', async () => {
+    useServices()
+    const { router } = await mountPage(AddJobPage, { at: '/jobs/add?from=saved' })
+    await readLink('https://careers.northwind.example/jobs/1')
+    await click(button('Back'))
+    expect(text()).toContain('Link to the job ad')
+    await click(button('Back'))
+    expect(router.currentRoute.value.name).toBe('hoply-saved')
+    await router.push('/jobs/add')
+    await settle()
+    await click(button('Back'))
+    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+  })
+})

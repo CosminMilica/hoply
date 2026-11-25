@@ -1,0 +1,50 @@
+# docker-compose fragment for the profile Go service. Mirrors the
+# Python, Node and Rust templates so platform-level orchestration is uniform
+# across language backends.
+
+services:
+  profile-migrate:
+    build:
+      context: ./services/profile
+      dockerfile: Dockerfile
+      additional_contexts:
+        project_root: .
+        packages: ./packages
+    environment:
+      ENV: development
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/profile"
+    command: ["/app/migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [app-network]
+
+  profile:
+    build:
+      context: ./services/profile
+      dockerfile: Dockerfile
+      additional_contexts:
+        project_root: .
+        packages: ./packages
+    ports:
+      - "5010:5010"
+    environment:
+      # The dev stack overrides the image's ENV=production so the startup auth
+      # guard does not abort boot without GATEKEEPER_ISSUER/SERVICE_AUDIENCE.
+      ENV: development
+      PORT: "5010"
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/profile"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy:4318"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.profile.rule=Host(`app.localhost`) && PathPrefix(`/api/profile`)"
+      - "traefik.http.routers.profile.middlewares=profile-rewrite"
+      - "traefik.http.middlewares.profile-rewrite.replacepathregex.regex=^/api/profile/(.*)"
+      - "traefik.http.middlewares.profile-rewrite.replacepathregex.replacement=/api/$$1"
+      - "traefik.http.services.profile.loadbalancer.server.port=5010"
+    depends_on:
+      profile-migrate:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    networks: [app-network]

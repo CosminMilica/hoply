@@ -1,0 +1,35 @@
+# The forge stack of hoply. Regenerate with the forge build pinned in .forge/quality.json.
+project_name: hoply
+description: "Hoply: job search with a CV tailored to each job"
+include_keycloak: false
+backends:
+  # profile owns the person's profile: headline, about, contact, skills, experience, education, languages
+  - { name: profile, language: go, go_version: "1.27", app_template: crud-service, features: [profiles], server_port: 5010 }
+  # jobs holds the jobs a person finds or adds (from a link or pasted text) and reads their requirements with rules
+  - { name: jobs, language: go, go_version: "1.27", app_template: crud-service, features: [jobs], server_port: 5020 }
+# The web app on forge's app-shell template: no generated page of its own; hoply's pages are composed into the
+# router factory. Jobs, saved jobs and CVs run on MSW mocks until their services exist.
+frontend:
+  framework: vue
+  include_auth: false
+  include_chat: false
+  layout: sidebar
+  package_manager: npm
+  server_port: 5173
+  dev_server: true
+  ui_kit: nuxt-ui
+  app_template: app-shell
+  extras: [msw, forms, confirm]
+  routing: { landing: hoply-profile, not_found: builtin, forbidden: builtin }
+  layouts:
+    app:
+      shell: header-sidebar
+      menus:
+        primary:
+          - items:
+              - { id: profile, label: Profile, icon: i-lucide-user, to: hoply-profile }
+              - { id: jobs, label: Find jobs, icon: i-lucide-search, to: hoply-jobs }
+              - { id: saved, label: Saved, icon: i-lucide-heart, to: hoply-saved, badge: saved }
+options:
+  auth.mode: none
+  observability.health: true

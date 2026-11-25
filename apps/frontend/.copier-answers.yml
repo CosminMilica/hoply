@@ -1,0 +1,64 @@
+# Changes here will be overwritten by forge / Copier on regenerate.
+# To re-render this subtree, run `copier update` from its directory
+# or `forge update` from the project root.
+_src_path: /private/tmp/claude-501/-Users-milicacosmin-sergiu-work/51a792af-8bc4-48a1-ba26-d99f6fea7acf/scratchpad/forge-main/forge/templates/apps/vue-frontend-template
+_commit: 5b6b671fa2518fcc58201175ced78142a4b67661
+ag_ui_client_version: 1.0.2
+ag_ui_core_version: 1.0.2
+agent_base_url: /api/profile/v1/agent
+api_base_url: http://localhost:5010
+api_proxy_target: http://profile:5010
+app_template: app-shell
+application: "{\n  \"title\": \"hoply\",\n  \"auth\": false,\n  \"routing\": {\n \
+  \   \"landing\": \"hoply-profile\",\n    \"not_found\": \"not-found\",\n    \"forbidden\"\
+  : \"forbidden\"\n  },\n  \"builtin\": [\n    \"not_found\",\n    \"forbidden\"\n\
+  \  ],\n  \"layouts\": {\n    \"app\": {\n      \"shell\": \"header-sidebar\",\n\
+  \      \"placeholder\": null,\n      \"menus\": {\n        \"primary\": [\n    \
+  \      {\n            \"items\": [\n              {\n                \"id\": \"\
+  profile\",\n                \"label\": \"Profile\",\n                \"icon\": \"\
+  i-lucide-user\",\n                \"to\": \"hoply-profile\"\n              },\n\
+  \              {\n                \"id\": \"jobs\",\n                \"label\":\
+  \ \"Find jobs\",\n                \"icon\": \"i-lucide-search\",\n             \
+  \   \"to\": \"hoply-jobs\"\n              },\n              {\n                \"\
+  id\": \"saved\",\n                \"label\": \"Saved\",\n                \"icon\"\
+  : \"i-lucide-heart\",\n                \"to\": \"hoply-saved\",\n              \
+  \  \"badge\": \"saved\"\n              }\n            ]\n          }\n        ],\n\
+  \        \"account\": [],\n        \"footer\": []\n      }\n    }\n  },\n  \"extras\"\
+  : []\n}"
+auth_runtime: forge
+author_name: Your Name
+backend_features: '{"profile": {"port": 5010, "features": ["profiles"]}, "jobs": {"port":
+  5020, "features": ["jobs"]}}'
+builtin_pages: not_found,forbidden
+default_color_scheme: blue
+description: 'Hoply: job search with a CV tailored to each job'
+dev_server: true
+dev_server_host: app.localhost
+env_api_base_url: http://localhost:5173
+extras: confirm,forms,msw
+features: ''
+forge_orchestrated: true
+frontend_layout: sidebar
+include_auth: false
+include_chat: false
+include_dag_editor: false
+include_openapi: false
+keycloak_client_id: frontend
+keycloak_realm: ''
+keycloak_url: http://localhost:8080
+nuxt_ui_primary: blue
+nuxt_ui_version: 4.12.0
+package_manager: npm
+project_name: hoply
+project_slug: frontend
+proxy_targets: '[{"name": "profile", "port": 5010}, {"name": "jobs", "port": 5020}]'
+security_csp: true
+server_port: 5173
+session_dialog: none
+ui_kit: nuxt-ui
+version: 0.1.0
+vite_proxy_config: "      '/api/profile': {\n        target: 'http://localhost:5010',\n\
+  \        changeOrigin: true,\n        rewrite: (path: string) => path.replace(/^\\\
+  /api\\/profile/, '/api'),\n      },\n      '/api/jobs': {\n        target: 'http://localhost:5020',\n\
+  \        changeOrigin: true,\n        rewrite: (path: string) => path.replace(/^\\\
+  /api\\/jobs/, '/api'),\n      },"
