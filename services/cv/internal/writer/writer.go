@@ -346,3 +346,59 @@ func (w *Writer) setLoginNeeded(dead bool) {
 	defer w.mu.Unlock()
 	w.loginNeeded = dead
 }
+
+// Letter writes the cover letter and the messages to the recruiter for a ready
+// CV (prompts/letter-system.md), from what the CV was written from and the CV
+// itself. A letter that cannot be written now is failed, with the reason.
+func (w *Writer) Letter(ctx context.Context, task *repositories.Task, cv models.Cv, recruiter string) models.Letter {
+	failed := func(reason string, until *time.Time) models.Letter {
+		return models.Letter{Status: models.LetterFailed, Recruiter: recruiter, Reason: reason, LimitUntil: until}
+	}
+	if w.claude == nil {
+		return failed(models.RulesOff, nil)
+	}
+	if until := w.limit(); !until.IsZero() {
+		return failed(models.UsageLimit, &until)
+	}
+	logID := "letter " + cv.ID.String()
+	analysis, stop := w.analyze(ctx, logID, task.Job.ID, cvdoc.ReadJob(task.Job))
+	if stop != nil {
+		return failed(stop.reason, stop.until)
+	}
+	job := cvdoc.ReadJob(analysis.Apply(task.Job))
+	catalogue := grounding.Build(task.Profile, job, task.Request, task.CreatedAt).WithJob(job)
+	document := models.CvDocument{}
+	if cv.Tailored != nil {
+		document = *cv.Tailored
+	}
+	if cv.Tailoring != nil {
+		catalogue = catalogue.WithEquivalents(grounding.Closes(cv.Tailoring.Close))
+	}
+	to := grounding.Addressing{Person: task.Profile.Name, Recruiter: recruiter, Company: job.Company, Title: job.Title}
+	for attempt := 1; attempt <= Attempts; attempt++ {
+		raw, stop := w.run(ctx, logID, "letter", claude.Request{
+			System: grounding.LetterSystem, Schema: grounding.LetterSchema(), Prompt: catalogue.LetterPrompt(analysis, job, document, cv.Tailoring),
+		})
+		if stop != nil {
+			return failed(stop.reason, stop.until)
+		}
+		if raw == nil {
+			continue
+		}
+		answer, err := grounding.ParseLetter(raw)
+		if err != nil {
+			slog.Warn("claude letter unreadable", "for", logID, "attempt", attempt, "error", err)
+			continue
+		}
+		texts, refusals := catalogue.AssembleLetter(answer, to)
+		for _, reason := range refusals {
+			slog.Info("claude sentence refused", "for", logID, "reason", reason)
+		}
+		if texts.CoverLetter == "" {
+			slog.Warn("claude letter refused whole", "for", logID, "attempt", attempt)
+			continue
+		}
+		return models.Letter{Status: models.LetterReady, Recruiter: recruiter, Texts: &texts, Model: w.claude.Model(), Refused: len(refusals)}
+	}
+	return failed(models.ClaudeFailed, nil)
+}

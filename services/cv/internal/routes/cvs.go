@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"encoding/json"
+	"errors"
+	"io"
 	"mime"
 	"net/http"
 	"strconv"
@@ -82,6 +85,48 @@ func registerCvs(router chi.Router, cvs *services.CvService) {
 		}
 		return writeJSON(w, http.StatusOK, cv)
 	}))
+	router.Get("/{id}/letter", handle(func(w http.ResponseWriter, r *http.Request) error {
+		id, err := pathUUID(r, "id")
+		if err != nil {
+			return err
+		}
+		letter, err := cvs.Letter(r.Context(), requestIdentity(r), id)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, letter)
+	}))
+	router.Post("/{id}/letter", handle(func(w http.ResponseWriter, r *http.Request) error {
+		id, err := pathUUID(r, "id")
+		if err != nil {
+			return err
+		}
+		var body models.LetterRequest
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil && !errors.Is(err, io.EOF) {
+			return apperrors.NewValidation("invalid JSON body: " + err.Error())
+		}
+		letter, err := cvs.WriteLetter(r.Context(), requestIdentity(r), id, body)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusAccepted, letter)
+	}))
+	router.Post("/{id}/letter/file", handle(func(w http.ResponseWriter, r *http.Request) error {
+		id, err := pathUUID(r, "id")
+		if err != nil {
+			return err
+		}
+		var body models.LetterFile
+		if err := decode(r, &body); err != nil {
+			return err
+		}
+		query := r.URL.Query()
+		file, err := cvs.LetterFile(r.Context(), requestIdentity(r), id, query.Get("format"), query.Get("template"), body)
+		if err != nil {
+			return err
+		}
+		return writeFile(w, file)
+	}))
 	router.Get("/{id}/file", handle(func(w http.ResponseWriter, r *http.Request) error {
 		id, err := pathUUID(r, "id")
 		if err != nil {
@@ -92,12 +137,7 @@ func registerCvs(router chi.Router, cvs *services.CvService) {
 		if err != nil {
 			return err
 		}
-		w.Header().Set("Content-Type", file.ContentType)
-		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": file.Name}))
-		w.Header().Set("Content-Length", strconv.Itoa(len(file.Body)))
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write(file.Body)
-		return err
+		return writeFile(w, file)
 	}))
 	router.Delete("/{id}", handle(func(w http.ResponseWriter, r *http.Request) error {
 		id, err := pathUUID(r, "id")
@@ -127,4 +167,13 @@ func pathUUID(r *http.Request, name string) (uuid.UUID, error) {
 		return uuid.Nil, invalid
 	}
 	return id, nil
+}
+
+func writeFile(w http.ResponseWriter, file *services.File) error {
+	w.Header().Set("Content-Type", file.ContentType)
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": file.Name}))
+	w.Header().Set("Content-Length", strconv.Itoa(len(file.Body)))
+	w.WriteHeader(http.StatusOK)
+	_, err := w.Write(file.Body)
+	return err
 }

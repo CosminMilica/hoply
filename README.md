@@ -31,6 +31,7 @@ one-page CV around it, in the company's own words. It never invents a skill, a n
 | **Prepare your CV** | Asks only what the job needs and your profile does not show yet. Your answers become notes that the CV is written from. |
 | **Tailored CV** | Claude analyzes the job, plans the evidence for each of its priorities, writes the CV and then reviews it as the hiring manager. Every sentence cites the facts it rests on, and code checks them. |
 | **ATS check** | Twelve checks a screening system cares about: keywords in sentences, mirrored responsibilities, action verbs, numbers, dates, length. |
+| **Cover letter and messages** | From the tailored CV: a cover letter, a LinkedIn note, a message for after you apply and a follow-up a week later, checked against your facts like the CV, editable, and exported in the CV's template. |
 | **Export** | A one-column PDF and a Word DOCX with standard headings and real text, readable by any applicant tracking system. |
 
 ## How a CV is written

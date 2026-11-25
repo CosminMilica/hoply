@@ -278,3 +278,46 @@ func TestProbesAreKeptPerPersonAndJob(t *testing.T) {
 		t.Fatalf("another person's: %+v %v", probe, err)
 	}
 }
+
+func TestLettersAreKeptPerCvAndOwner(t *testing.T) {
+	_, pool := application(t, isolatedSchema(t))
+	ctx := context.Background()
+	repo := repositories.NewPgCvRepository(pool).WithScope(bindTenant(pool))
+	me := identity.New(uuid.New(), uuid.NewString())
+	other := identity.New(uuid.New(), uuid.NewString())
+	cv := newCv(t, repo, me)
+	if letter, err := repo.Letter(ctx, me, cv.ID); err != nil || letter != nil {
+		t.Fatalf("none yet: %+v %v", letter, err)
+	}
+	if err := repo.SaveLetter(ctx, me, cv.ID, models.Letter{Status: models.LetterWriting, Recruiter: "Ana Pop"}); err != nil {
+		t.Fatal(err)
+	}
+	texts := &models.LetterTexts{CoverLetter: "Dear Ana Pop,", Message: models.Message{Subject: "Application", Body: "Hi Ana,"}}
+	if err := repo.SaveLetter(ctx, me, cv.ID, models.Letter{Status: models.LetterReady, Recruiter: "Ana Pop", Texts: texts, Model: "m", Refused: 1}); err != nil {
+		t.Fatal(err)
+	}
+	letter, err := repo.Letter(ctx, me, cv.ID)
+	if err != nil || letter.Status != models.LetterReady || letter.Texts.CoverLetter != "Dear Ana Pop," || letter.Texts.Message.Subject != "Application" ||
+		letter.Refused != 1 || letter.Model != "m" || letter.UpdatedAt.IsZero() {
+		t.Fatalf("kept: %+v %v", letter, err)
+	}
+	if err := repo.SaveLetter(ctx, other, cv.ID, models.Letter{Status: models.LetterFailed}); err != nil {
+		t.Fatal(err)
+	}
+	if letter, err := repo.Letter(ctx, other, cv.ID); err != nil || letter != nil {
+		t.Fatalf("another person's: %+v %v", letter, err)
+	}
+	task, err := repo.Source(ctx, me, cv.ID)
+	if err != nil || task.ID != cv.ID || task.Job.Title == "" || task.Profile.Name == "" || task.Request.Confirmed[0] != 1 {
+		t.Fatalf("source: %+v %v", task, err)
+	}
+	if task, err := repo.Source(ctx, other, cv.ID); err != nil || task != nil {
+		t.Fatalf("another person's source: %+v %v", task, err)
+	}
+	if _, err := repo.Delete(ctx, me, cv.ID); err != nil {
+		t.Fatal(err)
+	}
+	if letter, err := repo.Letter(ctx, me, cv.ID); err != nil || letter != nil {
+		t.Fatalf("goes with its CV: %+v %v", letter, err)
+	}
+}

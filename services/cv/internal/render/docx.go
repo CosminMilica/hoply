@@ -13,8 +13,13 @@ import (
 // real bullets, so a recruiter can edit it and an applicant tracking system can
 // read it.
 // The template is one of the Templates ("" is the default).
-func DOCX(document models.CvDocument, template string) ([]byte, error) {
+func DOCX(cv models.CvDocument, template string) ([]byte, error) {
 	look := lookOf(template).docx
+	return pack(look, body(cv, look))
+}
+
+// pack zips a document body with the template's styles into a .docx.
+func pack(look docxLook, documentXML string) ([]byte, error) {
 	var out bytes.Buffer
 	archive := zip.NewWriter(&out)
 	for _, part := range []struct{ name, body string }{
@@ -23,7 +28,7 @@ func DOCX(document models.CvDocument, template string) ([]byte, error) {
 		{"word/_rels/document.xml.rels", documentRels},
 		{"word/styles.xml", styles(look)},
 		{"word/numbering.xml", numbering},
-		{"word/document.xml", body(document, look)},
+		{"word/document.xml", documentXML},
 	} {
 		file, err := archive.Create(part.name)
 		if err != nil {
@@ -132,7 +137,12 @@ func body(d models.CvDocument, look docxLook) string {
 		add("Heading1", "Additional information", false)
 		bullets(d.Additional)
 	}
-	return xml.Header + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>` + b.String() +
+	return document(b.String())
+}
+
+// document is the paragraphs as word/document.xml, on A4.
+func document(paragraphs string) string {
+	return xml.Header + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>` + paragraphs +
 		`<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="680" w:right="794" w:bottom="680" w:left="794" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>` +
 		`</w:body></w:document>`
 }
@@ -179,6 +189,8 @@ func styles(look docxLook) string {
 		`<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="200" w:after="60"/>` +
 		`<w:pBdr>` + look.headingRules + `</w:pBdr>` + center + `<w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/>` + caps + `<w:color w:val="` + look.accent + `"/><w:sz w:val="19"/></w:rPr></w:style>` +
 		`<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="120" w:after="0"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/></w:rPr></w:style>` +
+		`<w:style w:type="paragraph" w:styleId="Date"><w:name w:val="Date"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="280" w:after="240"/></w:pPr></w:style>` +
+		`<w:style w:type="paragraph" w:styleId="Body"><w:name w:val="Body Text"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="180" w:line="300" w:lineRule="auto"/></w:pPr><w:rPr><w:sz w:val="21"/><w:szCs w:val="21"/></w:rPr></w:style>` +
 		`<w:style w:type="paragraph" w:styleId="ListBullet"><w:name w:val="List Bullet"/><w:basedOn w:val="Normal"/><w:pPr><w:numPr><w:numId w:val="1"/></w:numPr><w:ind w:left="360" w:hanging="240"/></w:pPr></w:style>` +
 		`</w:styles>`
 }

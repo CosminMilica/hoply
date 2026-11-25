@@ -41,11 +41,14 @@ type CvService struct {
 	printer Printer
 	queued  func()
 
-	probes  repositories.Probes
-	prober  Prober
-	mu      sync.Mutex
-	asking  map[string]bool
-	settled func()
+	probes repositories.Probes
+	prober Prober
+
+	letters      repositories.Letters
+	letterWriter LetterWriter
+	mu           sync.Mutex
+	asking       map[string]bool
+	settled      func()
 }
 
 // Prober asks Claude for the questions of Prepare your CV and reads job ads;

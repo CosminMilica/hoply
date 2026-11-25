@@ -307,8 +307,12 @@ for the facts as they were.
 
 **Requirements from the analysis** (done, 2026-11-25). The rules read requirements by keyword, so practices
 ("Security", "SRE"), the field itself and the stack's extras landed in `must_have`. The analysis now reads them, `must`
-or `nice`, and writes them back to the job; the web app starts it when a job is added. Next: an evaluation set with a
-judge (C).
+or `nice`, and writes them back to the job; the web app starts it when a job is added.
+
+**Cover letter and messages** (done, 2026-11-25). From a ready CV, on request: a cover letter, a LinkedIn note, a
+message for after applying and a follow-up, in one Claude call from the kept analysis, the CV and the facts, checked
+like the CV (`letters` table, `docs/api/cv.md`). Editable on the page and exported in the CV's template. Next: an
+evaluation set with a judge (C).
 
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.

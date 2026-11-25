@@ -1,5 +1,5 @@
 import { getApiClient } from '@/shared/api/client'
-import { cvListSchema, cvSchema, prepQuestionsSchema, probeSchema, analysisStartSchema, type CvRequest } from './cv.schema'
+import { cvListSchema, cvSchema, prepQuestionsSchema, probeSchema, analysisStartSchema, letterSchema, type CvRequest, type CvTemplate } from './cv.schema'
 
 const BASE = '/api/cv/v1'
 
@@ -27,5 +27,18 @@ export const cvApi = {
   /** The CVs made for a job, newest first. */
   async forJob(jobId: string) {
     return cvListSchema.parse(await getApiClient().get(`${BASE}/cvs`, { searchParams: { job_id: jobId } }).json()).items
+  },
+  async letter(cvId: string) {
+    return letterSchema.parse(await getApiClient().get(`${BASE}/cvs/${encodeURIComponent(cvId)}/letter`).json())
+  },
+  /** Starts writing the CV's cover letter and messages; follow it with `letter`. */
+  async writeLetter(cvId: string, recruiter: string) {
+    return letterSchema.parse(await getApiClient().post(`${BASE}/cvs/${encodeURIComponent(cvId)}/letter`, { json: { recruiter } }).json())
+  },
+  /** The cover letter as the person edited it, as a file with the CV's header. */
+  async letterFile(cvId: string, format: 'pdf' | 'docx', template: CvTemplate, text: string) {
+    const response = await getApiClient().post(`${BASE}/cvs/${encodeURIComponent(cvId)}/letter/file`, { json: { text }, searchParams: { format, template } })
+    const name = /filename="?([^";]+)"?/.exec(response.headers.get('content-disposition') ?? '')?.[1] ?? `Cover_Letter.${format}`
+    return { name, blob: await response.blob() }
   },
 }

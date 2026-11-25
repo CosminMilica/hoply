@@ -62,6 +62,11 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   await expect(page.locator('[data-test="cv-name"]')).toHaveText('Andrei Popescu');
   await expect(page.getByText('Andrei_Popescu_CV_Northwind_Cloud.pdf')).toBeVisible();
   await expect(page.getByRole('article', { name: 'CV preview' })).toContainText('Looking to join Northwind Cloud as Platform Engineer');
+  await page.getByLabel("Recruiter's name (optional)").fill('Ana Pop');
+  await page.getByRole('button', { name: 'Write them' }).click();
+  await expect(page.getByRole('textbox', { name: 'Cover letter' })).toHaveValue(/^Dear Ana Pop,/);
+  await page.getByRole('button', { name: 'LinkedIn note' }).click();
+  await expect(page.getByRole('textbox', { name: 'LinkedIn note' })).toHaveValue(/^Hi Ana, I applied for the Platform Engineer role/);
   await page.getByRole('button', { name: 'I applied to this job' }).click();
   await expect(page.getByRole('button', { name: 'Marked as applied ✓' })).toBeVisible();
 

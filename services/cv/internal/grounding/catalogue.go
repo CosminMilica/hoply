@@ -54,6 +54,8 @@ type Catalogue struct {
 	// named only next to that equivalent.
 	Related []cvdoc.Related
 	Company string
+	// JobTitle is the job's title, set by WithJob for the letter.
+	JobTitle string
 	// PageLimit is how many pages the CV may take (cvdoc.PageLimit).
 	PageLimit int
 }

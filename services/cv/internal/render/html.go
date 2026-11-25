@@ -12,12 +12,8 @@ import (
 	"cv/internal/models"
 )
 
-var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"join": strings.Join}).Parse(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>{{if .Name}}{{.Name}} – CV{{else}}CV{{end}}</title>
-<style>
+// baseCSS is the classic look; a template's CSS comes after it.
+const baseCSS = `
   @page { size: A4; margin: 12mm 14mm; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: "Liberation Sans", Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.32; color: #111111; }
@@ -32,7 +28,15 @@ var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"
   li { margin: 0.5pt 0; }
   .meta { font-weight: 400; }
   .entry { break-inside: avoid; }
-{{- .CSS}}
+`
+
+var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"join": strings.Join}).Parse(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{if .Name}}{{.Name}} – CV{{else}}CV{{end}}</title>
+<style>
+{{.CSS}}
 </style>
 </head>
 <body>
@@ -124,7 +128,7 @@ func HTML(document models.CvDocument, template string) (string, error) {
 	if err := page.Execute(&out, struct {
 		models.CvDocument
 		CSS htmltemplate.CSS
-	}{document, lookOf(template).css}); err != nil {
+	}{document, htmltemplate.CSS(baseCSS) + lookOf(template).css}); err != nil {
 		return "", err
 	}
 	return out.String(), nil

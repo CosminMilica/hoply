@@ -83,6 +83,14 @@ type Probes interface {
 	SaveProbe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID, probe StoredProbe) error
 }
 
+// Letters keeps the cover letter and messages written for each CV.
+type Letters interface {
+	Letter(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID) (*models.Letter, error)
+	SaveLetter(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID, letter models.Letter) error
+	// Source is what the CV was written from: its request and its snapshots of the profile and the job.
+	Source(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID) (*Task, error)
+}
+
 // MaxAttempts is how many times the worker takes a CV before it gives up.
 const MaxAttempts = 3
 
@@ -320,4 +328,60 @@ ON CONFLICT (customer_id, subject, job_id) DO UPDATE SET fingerprint = EXCLUDED.
 questions = EXCLUDED.questions, updated_at = NOW()`, ident.TenantID, ident.Subject, jobID, probe.Fingerprint, probe.Status, probe.Questions)
 		return err
 	})
+}
+
+func (r *PgCvRepository) Letter(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID) (*models.Letter, error) {
+	var found *models.Letter
+	err := r.run(ctx, ident, func(db DBTX) error {
+		var letter models.Letter
+		err := db.QueryRow(ctx, "SELECT status, recruiter, written, model, refused, reason, limit_until, updated_at FROM letters WHERE "+owner+
+			" AND cv_id = $3", ident.TenantID, ident.Subject, cvID).Scan(&letter.Status, &letter.Recruiter, &letter.Texts, &letter.Model,
+			&letter.Refused, &letter.Reason, &letter.LimitUntil, &letter.UpdatedAt)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		found = &letter
+		return err
+	})
+	return found, err
+}
+
+func (r *PgCvRepository) SaveLetter(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID, letter models.Letter) error {
+	return r.run(ctx, ident, func(db DBTX) error {
+		_, err := db.Exec(ctx, `INSERT INTO letters (cv_id, customer_id, subject, status, recruiter, written, model, refused, reason, limit_until)
+SELECT id, customer_id, subject, $4, $5, $6, $7, $8, $9, $10 FROM cvs WHERE `+owner+` AND id = $3
+ON CONFLICT (cv_id) DO UPDATE SET status = EXCLUDED.status, recruiter = EXCLUDED.recruiter, written = EXCLUDED.written,
+model = EXCLUDED.model, refused = EXCLUDED.refused, reason = EXCLUDED.reason, limit_until = EXCLUDED.limit_until, updated_at = NOW()`,
+			ident.TenantID, ident.Subject, cvID, letter.Status, letter.Recruiter, letter.Texts, letter.Model, letter.Refused, letter.Reason, letter.LimitUntil)
+		return err
+	})
+}
+
+func (r *PgCvRepository) Source(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID) (*Task, error) {
+	var found *Task
+	err := r.run(ctx, ident, func(db DBTX) error {
+		var (
+			task                     Task
+			request, profile, jobRaw []byte
+		)
+		err := db.QueryRow(ctx, "SELECT id, request, profile_snapshot, job_snapshot, created_at FROM cvs WHERE "+owner+" AND id = $3",
+			ident.TenantID, ident.Subject, cvID).Scan(&task.ID, &request, &profile, &jobRaw, &task.CreatedAt)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		for _, part := range []struct {
+			raw    []byte
+			target any
+		}{{request, &task.Request}, {profile, &task.Profile}, {jobRaw, &task.Job}} {
+			if err := json.Unmarshal(part.raw, part.target); err != nil {
+				return err
+			}
+		}
+		found = &task
+		return nil
+	})
+	return found, err
 }

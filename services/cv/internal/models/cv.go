@@ -228,3 +228,51 @@ type PrepQuestions struct {
 	Related          []Close          `json:"related"`
 	Responsibilities []Responsibility `json:"responsibilities"`
 }
+
+// Letter states of a CV's cover letter and messages; LetterNone is a CV nobody asked one for.
+const (
+	LetterNone    = "none"
+	LetterWriting = "writing"
+	LetterReady   = "ready"
+	LetterFailed  = "failed"
+)
+
+// Message is a message to the recruiter: a subject line and its body.
+type Message struct {
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
+// LetterTexts are the texts written for one CV, each ready to send.
+type LetterTexts struct {
+	CoverLetter    string  `json:"cover_letter"`
+	ConnectionNote string  `json:"connection_note"`
+	Message        Message `json:"message"`
+	FollowUp       Message `json:"follow_up"`
+}
+
+// Letter is a CV's cover letter and messages to the recruiter (docs/api/cv.md).
+type Letter struct {
+	Status    string `json:"status"`
+	Recruiter string `json:"recruiter"`
+	// Texts are nil until the letter is ready.
+	Texts *LetterTexts `json:"texts"`
+	Model string       `json:"model"`
+	// Refused is how many sentences failed the checks and were left out.
+	Refused int `json:"refused"`
+	// Reason is why a letter failed: no_token, login_needed, usage_limit or claude_failed.
+	Reason     string     `json:"reason"`
+	LimitUntil *time.Time `json:"limit_until"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+}
+
+// LetterRequest asks for a CV's cover letter and messages.
+type LetterRequest struct {
+	// Recruiter is the name to address, optional.
+	Recruiter string `json:"recruiter"`
+}
+
+// LetterFile is a cover letter, as the person edited it, to export.
+type LetterFile struct {
+	Text string `json:"text"`
+}

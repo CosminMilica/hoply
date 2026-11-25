@@ -8,6 +8,29 @@ export const cvKeys = {
   forJob: (jobId: string) => ['cv', 'job', jobId] as const,
   one: (id: string) => ['cv', 'one', id] as const,
   probe: (jobId: string) => ['cv', 'probe', jobId] as const,
+  letter: (cvId: string) => ['cv', 'letter', cvId] as const,
+}
+
+/** How often a letter being written is asked for again. */
+export const LETTER_POLL_MS = 2000
+
+/** The CV's cover letter and messages, followed while they are being written. */
+export function useLetterQuery(cvId: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: computed(() => cvKeys.letter(toValue(cvId))),
+    queryFn: () => cvApi.letter(toValue(cvId)),
+    enabled: computed(() => Boolean(toValue(cvId))),
+    refetchInterval: current => (current.state.data?.status === 'writing' ? LETTER_POLL_MS : false),
+  })
+}
+
+/** Asks for the CV's cover letter and messages, addressed to the recruiter when named. */
+export function useWriteLetter(cvId: MaybeRefOrGetter<string>) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (recruiter: string) => cvApi.writeLetter(toValue(cvId), recruiter),
+    onSuccess: letter => client.setQueryData(cvKeys.letter(toValue(cvId)), letter),
+  })
 }
 
 /** How often questions still being asked for are asked for again. */

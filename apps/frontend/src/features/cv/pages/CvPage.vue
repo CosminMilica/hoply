@@ -5,6 +5,7 @@ import { useLocalStorage } from '@vueuse/core'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
 import AtsCard from '../components/AtsCard.vue'
 import CvPaper from '../components/CvPaper.vue'
+import LetterCard from '../components/LetterCard.vue'
 import TailoringCard from '../components/TailoringCard.vue'
 import { authorshipLine } from '../authorship'
 import { useLatestCvQuery } from '../composables/useCv'
@@ -102,6 +103,7 @@ const fileUrl = (format: 'pdf' | 'docx') =>
           <mark class="rounded-md bg-hoply-200 px-1.5 py-px font-extrabold text-hoply-950">Highlighted</mark>
           words are only for you. Every template exports real text in one column with standard headings, so any ATS can read it. Everything in it comes from your profile and your answers.
         </p>
+        <LetterCard class="order-7" :cv-id="cv.id" :template="template" />
       </div>
     </div>
   </div>

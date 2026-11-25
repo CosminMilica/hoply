@@ -126,3 +126,26 @@ export const analysisStartSchema = z.object({ status: z.enum(['pending', 'unavai
 /** The looks a CV is shown and exported in, the default first (render.Templates in the cv service). */
 export const CV_TEMPLATES = { classic: 'Classic', modern: 'Modern', elegant: 'Elegant' } as const
 export type CvTemplate = keyof typeof CV_TEMPLATES
+
+const messageSchema = z.object({ subject: z.string(), body: z.string() })
+
+/** A CV's cover letter and messages to the recruiter: none until asked for, then writing, ready or failed. */
+export const letterSchema = z.object({
+  status: z.enum(['none', 'writing', 'ready', 'failed']),
+  recruiter: z.string().nullish().transform(value => value ?? ''),
+  texts: z.object({
+    cover_letter: z.string(),
+    connection_note: z.string(),
+    message: messageSchema,
+    follow_up: messageSchema,
+  }).nullish().transform(value => value ?? null),
+  model: z.string().nullish().transform(value => value ?? ''),
+  refused: z.number().nullish().transform(value => value ?? 0),
+  reason: z.enum(['', 'off', 'no_token', 'login_needed', 'usage_limit', 'claude_failed']).catch(''),
+  limit_until: z.string().nullish().transform(value => value ?? null),
+})
+
+export type Letter = z.infer<typeof letterSchema>
+
+/** LinkedIn's limit for the note of a connection request. */
+export const CONNECTION_NOTE_LIMIT = 300

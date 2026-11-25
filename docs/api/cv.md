@@ -21,6 +21,9 @@ else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
 | GET | `/api/v1/cvs/{id}` | | 200 `Cv`; 404 |
 | GET | `/api/v1/cvs/{id}/file` | query `format` (`pdf` or `docx`), `version` (`tailored`, the default, or `profile`), `template` (`classic`, the default, `modern` or `elegant`) | 200 the file as an attachment named `file_name` (`.docx` for DOCX); 409 not ready; 422 bad `format`, `version` or `template`; 503 PDF printer unavailable |
+| GET | `/api/v1/cvs/{id}/letter` | | 200 `Letter`; 404 |
+| POST | `/api/v1/cvs/{id}/letter` | `{ recruiter? }` (at most 80 characters) | 202 `Letter` with `status: writing`, or `failed` without Claude; 404; 409 not ready; 422 bad `recruiter` |
+| POST | `/api/v1/cvs/{id}/letter/file` | `{ text }` (1–8000 characters), query `format` (`pdf` or `docx`), `template` | 200 the cover letter as an attachment named like `file_name` with `Cover_Letter` for `CV`; 404; 409 not ready; 422 bad `format`, `template` or `text`; 503 PDF printer unavailable |
 | DELETE | `/api/v1/cvs/{id}` | | 204; 404 |
 | GET | `/api/v1/writer` | | 200 `WriterStatus` |
 
@@ -149,3 +152,30 @@ person and job for the facts as they were, and asked again when the facts change
 be asked now (no token, a usage limit, a failure); it is tried again after five minutes. `about` is the fact or role
 the question is about, `place` where an answer goes (`experience:<id>`, `projects:<id>` or `other`); the web app saves
 answers as notes there.
+
+## Cover letter and messages
+
+`POST /cvs/{id}/letter` asks Claude, in the background, for four texts written from a ready CV: a cover letter, a
+LinkedIn connection note, a message to the recruiter for right after applying, and a follow-up for a week later
+(`prompts/letter-system.md`). The web app asks again every two seconds while it is `writing`.
+
+```text
+Letter      { status: none | writing | ready | failed, recruiter, texts: LetterTexts | null, model, refused,
+              reason: "" | off | no_token | login_needed | usage_limit | claude_failed, limit_until, updated_at }
+LetterTexts { cover_letter, connection_note, message: { subject, body }, follow_up: { subject, body } }
+```
+
+- One Claude call reads the job's kept analysis, the CV as it will be sent, how it was tailored and the numbered
+  facts, plus what the ad says about the role and the company as facts `J1`, `J2`…
+- Each sentence passes the CV's checks (cited facts, their numbers, no missing or related requirement named), with
+  the company allowed and the job title never counted as a claim. Clichés ("passionate", "team player", "I am
+  writing to"…) and exclamation marks fail. A failed sentence is left out; a subject that fails is replaced by
+  "Application for <title>". `refused` counts what was left out.
+- The greetings and sign-offs are the code's: "Dear <recruiter>," or "Dear <company> hiring team,", "Hi <first
+  name>," in the messages, and the person's name. The connection note is cut, sentence by sentence, to LinkedIn's
+  300 characters.
+- A letter left `writing` by a service that stopped reads as `failed` after five minutes. Without Claude there is no
+  letter: a rules letter would read as a template.
+- The person can edit every text on the page; the edits are not saved. `POST /cvs/{id}/letter/file` prints the
+  letter they send with the CV's header, the date and the CV's template.
+

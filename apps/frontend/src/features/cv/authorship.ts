@@ -18,6 +18,14 @@ const RULES_REASONS: Record<Exclude<Cv['rules_reason'], ''>, string> = {
   claude_failed: 'Claude could not answer this time.',
 }
 
+/** Why a cover letter could not be written. */
+export function letterFailure(letter: { reason: string, limit_until: string | null }): string {
+  if (letter.reason === 'off') return 'The service is set to write without Claude, and a letter needs Claude.'
+  const reason = RULES_REASONS[letter.reason as keyof typeof RULES_REASONS] ?? RULES_REASONS.claude_failed
+  const back = letter.reason === 'usage_limit' && letter.limit_until ? ` It is back at ${time(letter.limit_until)}.` : ''
+  return `${reason}${back}`
+}
+
 /** Who wrote the CV, and why the rules did when Claude did not. */
 export function authorshipLine(cv: Pick<Cv, 'written_by' | 'model' | 'refused' | 'rules_reason' | 'limit_until'>): string {
   if (cv.written_by === 'claude') {

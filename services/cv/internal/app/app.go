@@ -33,8 +33,14 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 // newHandler builds the HTTP handler. Middlewares run in list order: the
 // first entry is the outermost. queued is called after a CV is queued.
+// Author asks Claude for the questions, the job analyses and the letters; *writer.Writer is one.
+type Author interface {
+	services.Prober
+	services.LetterWriter
+}
+
 func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources, cvWriter routes.WriterStatus, printer services.Printer,
-	queued func(), prober services.Prober) http.Handler {
+	queued func(), author Author) http.Handler {
 	useErrorPort()
 	router := chi.NewRouter()
 	middlewares := []middleware.Middleware{
@@ -68,7 +74,7 @@ func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources
 	routes.Register(router, routes.Deps{
 		Pool:   pool,
 		DB:     pool,
-		Cvs:    services.NewCvService(cvs, sources, printer, queued).WithProbes(cvs, prober),
+		Cvs:    services.NewCvService(cvs, sources, printer, queued).WithProbes(cvs, author).WithLetters(cvs, author),
 		Writer: cvWriter,
 		Info:   routes.Info{Title: cfg.App.Name, Version: cfg.App.Version, Description: Description},
 	})

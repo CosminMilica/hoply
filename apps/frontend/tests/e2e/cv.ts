@@ -15,9 +15,17 @@ export async function mockCvService(page: Page, profile: object, jobs: { jobs: {
   await page.context().route(url => url.pathname.startsWith('/api/cv/v1/'), async (route) => {
     const request = route.request();
     const url = new URL(request.url());
-    const [kind, id, rest] = url.pathname.replace(/^\/api\/cv\/v1\//, '').split('/') as [string, string | undefined, string | undefined];
+    const [kind, id, rest, part] = url.pathname.replace(/^\/api\/cv\/v1\//, '').split('/') as [string, string | undefined, string | undefined, string | undefined];
     const method = request.method();
-    const answer = kind === 'jobs' && rest === 'questions' ? backend.questions(id ?? '')
+    if (kind === 'cvs' && rest === 'letter' && part === 'file') {
+      const file = backend.letterFile(id ?? '', url.searchParams.get('format') ?? '', url.searchParams.get('template') ?? '', request.postDataJSON());
+      await route.fulfill(file.status === 200
+        ? { status: 200, body: '%PDF-letter', headers: { 'content-disposition': `attachment; filename=${(file.body as { name: string }).name}` } }
+        : { status: file.status, json: file.body });
+      return;
+    }
+    const answer = kind === 'cvs' && rest === 'letter' ? (method === 'POST' ? backend.writeLetter(id ?? '', request.postDataJSON()) : backend.letter(id ?? ''))
+      : kind === 'jobs' && rest === 'questions' ? backend.questions(id ?? '')
       : kind === 'jobs' && rest === 'probe' ? backend.probe(id ?? '')
       : kind === 'jobs' && rest === 'analysis' ? backend.analyze(id ?? '')
       : method === 'POST' ? backend.create(request.postDataJSON())
