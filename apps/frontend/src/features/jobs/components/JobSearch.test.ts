@@ -167,6 +167,8 @@ describe('JobSearch', () => {
     useAllServices(sampleProfile({ city: '', work_modes: ['remote'], target_seniority: ['lead'] }))
     await mountPage(JobSearch)
     expect(button('Any').getAttribute('aria-pressed')).toBe('true')
+    expect([...document.querySelectorAll('button')].some(item => item.textContent?.trim() === 'Include remote')).toBe(false)
+    await click(button('Iași'))
     expect(button('Include remote').getAttribute('aria-pressed')).toBe('true')
   })
 

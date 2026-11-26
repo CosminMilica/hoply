@@ -39,7 +39,8 @@ const showLabel = computed(() => (props.count ? `Show ${props.count} ${props.cou
       </UFormField>
       <div class="flex flex-wrap gap-2" role="group" aria-label="Where">
         <ToggleChip v-for="city in cities" :key="city.label" :label="city.label" :pressed="city.pressed" @toggle="search.location = city.value" />
-        <ToggleChip label="Include remote" :pressed="search.includeRemote" @toggle="search.includeRemote = !search.includeRemote" />
+        <!-- Anywhere already holds the remote jobs: the chip matters only next to a city. -->
+        <ToggleChip v-if="search.location.trim()" label="Include remote" :pressed="search.includeRemote" @toggle="search.includeRemote = !search.includeRemote" />
       </div>
     </div>
 
