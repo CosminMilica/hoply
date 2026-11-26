@@ -23,6 +23,9 @@ export const jobSchema = z.object({
   must_have: list,
   nice_to_have: list,
   responsibilities: list,
+  /** The ad's own lines for what it asks and what is a plus. */
+  qualifications: list,
+  bonuses: list,
   about: text,
   about_company: text,
   product: text,
@@ -60,6 +63,10 @@ export const jobInputSchema = z.object({
   must_have: skills,
   nice_to_have: skills,
   responsibilities: z.array(short(400)).max(30),
+  qualifications: z.array(short(400)).max(30).default([]),
+  bonuses: z.array(short(400)).max(30).default([]),
+  about_company: short(4000).default(''),
+  perks: z.array(short(400)).max(30).default([]),
   about: short(4000),
   url: z.string().trim().max(2000).regex(/^(https?:\/\/\S+)?$/i, 'Use a link starting with http:// or https://'),
   source: z.enum(['link', 'text']),
@@ -69,7 +76,7 @@ export const jobInputSchema = z.object({
 export type JobInput = z.infer<typeof jobInputSchema>
 
 export const jobDraftSchema = jobSchema
-  .pick({ title: true, company: true, city: true, country: true, work_mode: true, level: true, years_required: true, must_have: true, nice_to_have: true, responsibilities: true, about: true, url: true, source: true, read_from: true })
+  .pick({ title: true, company: true, city: true, country: true, work_mode: true, level: true, years_required: true, must_have: true, nice_to_have: true, responsibilities: true, qualifications: true, bonuses: true, about: true, about_company: true, perks: true, url: true, source: true, read_from: true })
   .extend({ host: text })
 
 export type JobDraft = z.infer<typeof jobDraftSchema>
@@ -94,7 +101,8 @@ export interface JobFilters {
   ids?: string[]
 }
 
-export const AREAS = ['DevOps', 'Backend', 'Data', 'Sysadmin'] as const
+/** The tech areas the jobs service reads from a job's title (extract.Areas). */
+export const AREAS = ['DevOps', 'Backend', 'Frontend', 'Full stack', 'Mobile', 'Data', 'AI', 'QA', 'Security', 'Embedded', 'Sysadmin', 'Product', 'Design'] as const
 export const LEVELS = ['Any', 'Junior', 'Mid', 'Senior'] as const
 export const CITIES = ['Iași', 'Bucharest', 'Cluj-Napoca'] as const
 

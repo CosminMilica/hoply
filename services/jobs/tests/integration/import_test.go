@@ -22,7 +22,9 @@ func importedJob(id, title string) models.ImportedJob {
 	posted := time.Date(2026, 11, 20, 9, 0, 0, 0, time.UTC)
 	return models.ImportedJob{
 		JobInput: models.JobInput{Title: title, Company: "Northwind", City: "Iași", Country: "Romania", WorkMode: "hybrid",
-			MustHave: []string{"Kubernetes"}, URL: "https://example.com/" + id, ReadFrom: "ats_api"},
+			MustHave: []string{"Kubernetes"}, URL: "https://example.com/" + id, ReadFrom: "ats_api",
+			Qualifications: []string{"3+ years running Kubernetes"}, Bonuses: []string{"Terraform"}, AboutCompany: "We build payments.",
+			Perks: []string{"Learning budget"}},
 		Areas: []string{"DevOps"}, Origin: "greenhouse", ExternalID: id, Board: "northwind", PostedAt: &posted,
 	}
 }
@@ -45,6 +47,10 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		t.Fatalf("imported jobs are listed for everyone: %+v %v", jobs, err)
 	}
 	devops := jobs[slices.IndexFunc(jobs, func(j models.Job) bool { return j.Title == "DevOps Engineer" })]
+	if !slices.Equal(devops.Qualifications, []string{"3+ years running Kubernetes"}) || !slices.Equal(devops.Bonuses, []string{"Terraform"}) ||
+		devops.AboutCompany != "We build payments." || !slices.Equal(devops.Perks, []string{"Learning budget"}) {
+		t.Fatalf("the ad's own lines are kept: %+v", devops)
+	}
 	if set, err := repo.SetRequirements(ctx, me, devops.ID, models.RequirementsInput{MustHave: []string{"Terraform"}}); err != nil || set == nil {
 		t.Fatalf("an imported job's analysis is kept on the job: %+v %v", set, err)
 	}

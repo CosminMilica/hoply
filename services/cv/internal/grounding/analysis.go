@@ -85,7 +85,10 @@ type analysisMessage struct {
 	AboutCompany  string         `json:"about_company,omitempty"`
 	Product       string         `json:"product,omitempty"`
 	Lines         []analysisLine `json:"lines"`
-	Requirements  []string       `json:"requirements"`
+	// Qualifications and NiceToHave are the ad's own lines; Requirements are the skills read from it.
+	Qualifications []string `json:"qualifications,omitempty"`
+	NiceToHave     []string `json:"nice_to_have,omitempty"`
+	Requirements   []string `json:"requirements"`
 }
 
 // AnalysisPrompt is the job ad as the analysis reads it.
@@ -96,7 +99,8 @@ func AnalysisPrompt(job cvdoc.Job) string {
 	}
 	raw, err := json.MarshalIndent(analysisMessage{
 		Title: job.Title, Company: job.Company, Level: job.Level, YearsRequired: job.YearsRequired, About: job.About,
-		AboutCompany: job.AboutCompany, Product: job.Product, Lines: lines, Requirements: nonNil(job.Keywords),
+		AboutCompany: job.AboutCompany, Product: job.Product, Lines: lines, Qualifications: job.Qualifications,
+		NiceToHave: job.Bonuses, Requirements: nonNil(job.Keywords),
 	}, "", "  ")
 	if err != nil {
 		panic(err)

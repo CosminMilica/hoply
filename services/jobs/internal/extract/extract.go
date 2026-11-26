@@ -44,6 +44,12 @@ type Result struct {
 	NiceToHave       []string
 	Responsibilities []string
 	About            string
+	// Qualifications and Bonuses are the lines of the requirements and nice-to-have sections, as the ad words them.
+	Qualifications []string
+	Bonuses        []string
+	// AboutCompany and Perks are what the ad says about the company and what it offers.
+	AboutCompany string
+	Perks        []string
 }
 
 type section int
@@ -53,6 +59,8 @@ const (
 	requirements
 	niceToHave
 	responsibilities
+	aboutCompany
+	perks
 	ignored
 )
 
@@ -71,8 +79,9 @@ var headings = []struct {
 	{responsibilities, []string{"responsibilities", "key responsibilities", "what you will do", "what you'll do",
 		"what you'll be doing", "what you will be doing", "your role", "your responsibilities", "in this role", "the role",
 		"responsabilit", "ce vei face", "atributii"}},
-	{ignored, []string{"benefits", "what we offer", "perks", "why you'll", "why join", "about us", "our culture",
-		"equal opportunity", "apply for this job", "how to apply", "ce oferim", "beneficii", "despre noi"}},
+	{aboutCompany, []string{"about us", "about the company", "company description", "who we are", "despre noi", "despre companie"}},
+	{perks, []string{"benefits", "what we offer", "perks", "why you'll", "why join", "ce oferim", "beneficii"}},
+	{ignored, []string{"our culture", "equal opportunity", "apply for this job", "how to apply"}},
 }
 
 // normalised turns curly quotes and apostrophes into straight ones and
@@ -109,12 +118,18 @@ func Read(text string, hints Hints) Result {
 	for _, line := range lines {
 		if s, ok := heading(line, company); ok {
 			current, sectioned = s, true
-			if s != ignored {
+			if s < aboutCompany {
 				kept = append(kept, line)
 			}
 			continue
 		}
 		if current == ignored {
+			continue
+		}
+		// What the ad says about the company and its perks feeds no other field: a city or a skill named there is
+		// not the job's.
+		if current == aboutCompany || current == perks {
+			parts[current] = append(parts[current], listMarker.ReplaceAllString(line, ""))
 			continue
 		}
 		kept = append(kept, line)
@@ -157,12 +172,11 @@ func Read(text string, hints Hints) Result {
 	result.MustHave = limit(must, MaxSkills)
 	result.NiceToHave = limit(nice, MaxSkills)
 
-	result.Responsibilities = []string{}
-	for _, line := range parts[responsibilities] {
-		if line = strings.TrimSpace(line); line != "" && len(result.Responsibilities) < MaxResponsibilities {
-			result.Responsibilities = append(result.Responsibilities, clip(line, MaxResponsibility))
-		}
-	}
+	result.Responsibilities = listOf(parts[responsibilities])
+	result.Qualifications = listOf(parts[requirements])
+	result.Bonuses = listOf(parts[niceToHave])
+	result.Perks = listOf(parts[perks])
+	result.AboutCompany = clip(strings.Join(listOf(parts[aboutCompany]), " "), MaxAbout)
 
 	var about []string
 	for i, line := range parts[body] {
@@ -186,6 +200,17 @@ func splitLines(text string) []string {
 	return lines
 }
 
+// listOf keeps a section's lines that say something, at most MaxResponsibilities, each clipped.
+func listOf(lines []string) []string {
+	kept := []string{}
+	for _, line := range lines {
+		if line = strings.TrimSpace(line); line != "" && len(kept) < MaxResponsibilities {
+			kept = append(kept, clip(line, MaxResponsibility))
+		}
+	}
+	return kept
+}
+
 // heading reports the section a heading line opens. A heading is shorter than
 // 60 characters, may start with "#" or "*" and end with ":", and starts with a
 // known heading (so "Cerințele postului" opens the requirements), or with
@@ -200,7 +225,7 @@ func heading(line, company string) (section, bool) {
 	}
 	folded := Fold(bare)
 	if company != "" && strings.HasPrefix(folded, "about "+Fold(company)) {
-		return ignored, true
+		return aboutCompany, true
 	}
 	for _, h := range headings {
 		for _, prefix := range h.prefixes {

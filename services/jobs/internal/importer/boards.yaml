@@ -1,4 +1,4 @@
-# Companies whose public job boards the importer reads. Only jobs based in Romania, in the areas Find jobs
+# Companies whose public job boards the importer reads. Only jobs based in Romania, in a tech area Find jobs
 # filters on, are kept. board is the company's name on its platform, as in its board's links:
 #   greenhouse        job-boards.greenhouse.io/<board>
 #   lever, lever-eu   jobs.lever.co/<board>, jobs.eu.lever.co/<board>

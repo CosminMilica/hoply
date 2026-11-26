@@ -97,15 +97,26 @@ func TestAreasFromTheTitle(t *testing.T) {
 		"Principal Software Engineer, Site Reliability": {"DevOps", "Backend"},
 		"Backend Developer (NodeJS)":                    {"Backend"},
 		"Senior Golang Engineer":                        {"Backend"},
-		"Frontend Software Engineer":                    {},
-		"Full-Stack Engineer (React)":                   {"Backend"},
-		"Lead Data Scientist":                           {"Data"},
+		"Frontend Software Engineer":                    {"Frontend"},
+		"Senior React Developer":                        {"Frontend"},
+		"Full-Stack Engineer (React)":                   {"Full stack"},
+		"Software Engineer (React Native)":              {"Mobile"},
+		"Senior Backend Engineer, Mobile Platform":      {"Backend", "Mobile"},
+		"iOS Developer":                                 {"Mobile"},
+		"Lead Data Scientist":                           {"Data", "AI"},
+		"Generative AI Engineer":                        {"AI"},
+		"Software QA Engineer":                          {"QA"},
+		"SDET - AI Gateway":                             {"AI", "QA"},
+		"Senior Security Operations Specialist (SOC)":   {"Security"},
+		"Embedded C++ AUTOSAR Developer":                {"Embedded"},
 		"Linux Systems Engineer":                        {"Sysadmin"},
 		"Junior Network Administrator":                  {"Sysadmin"},
+		"Technical Product Owner":                       {"Product"},
+		"Senior UX/UI Designer":                         {"Design"},
 		"Senior Sales Engineer":                         {},
 		"Account Executive":                             {},
 	} {
-		if got := extract.Areas(title); !slices.Equal(got, want) {
+		if got := extract.AreasOf(title); !slices.Equal(got, want) {
 			t.Errorf("%s: %v, want %v", title, got, want)
 		}
 	}

@@ -48,7 +48,7 @@ type ImportStore interface {
 
 const (
 	jobColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
-		"responsibilities, about, about_company, product, perks, areas, url, source, read_from, requirements_from, sample, " +
+		"responsibilities, qualifications, bonuses, about, about_company, product, perks, areas, url, source, read_from, requirements_from, sample, " +
 		"customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
 	// visible keeps the catalog and the jobs of the $1 tenant and $2 subject.
 	visible = "(customer_id IS NULL OR (customer_id = $1 AND subject = $2))"
@@ -152,10 +152,12 @@ func (r *PgJobRepository) Get(ctx context.Context, ident identity.IdentityContex
 
 func (r *PgJobRepository) Create(ctx context.Context, ident identity.IdentityContext, d models.JobInput) (*models.Job, error) {
 	return r.one(ctx, ident, "INSERT INTO jobs (customer_id, subject, title, company, city, country, work_mode, level, "+
-		"years_required, must_have, nice_to_have, responsibilities, about, url, source, read_from) "+
-		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING "+jobColumns,
+		"years_required, must_have, nice_to_have, responsibilities, about, url, source, read_from, qualifications, bonuses, "+
+		"about_company, perks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) "+
+		"RETURNING "+jobColumns,
 		ident.TenantID, ident.Subject, d.Title, d.Company, d.City, d.Country, d.WorkMode, d.Level, d.YearsRequired,
-		nonNil(d.MustHave), nonNil(d.NiceToHave), nonNil(d.Responsibilities), d.About, d.URL, d.Source, d.ReadFrom)
+		nonNil(d.MustHave), nonNil(d.NiceToHave), nonNil(d.Responsibilities), d.About, d.URL, d.Source, d.ReadFrom,
+		nonNil(d.Qualifications), nonNil(d.Bonuses), d.AboutCompany, nonNil(d.Perks))
 }
 
 // SetRequirements replaces the requirements of a job the caller sees and marks
@@ -183,18 +185,21 @@ func (r *PgJobRepository) Import(ctx context.Context, j models.ImportedJob, seen
 	created := false
 	err := r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
 		return db.QueryRow(ctx, "INSERT INTO jobs (title, company, city, country, work_mode, level, years_required, must_have, "+
-			"nice_to_have, responsibilities, about, areas, url, source, read_from, origin, external_id, board, posted_at, last_seen_at) "+
-			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19) "+
+			"nice_to_have, responsibilities, about, areas, url, source, read_from, origin, external_id, board, posted_at, last_seen_at, "+
+			"qualifications, bonuses, about_company, perks) "+
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) "+
 			"ON CONFLICT (origin, external_id) WHERE source = 'import' DO UPDATE SET title = EXCLUDED.title, "+
 			"company = EXCLUDED.company, city = EXCLUDED.city, country = EXCLUDED.country, work_mode = EXCLUDED.work_mode, "+
 			"level = EXCLUDED.level, years_required = EXCLUDED.years_required, "+
 			"must_have = CASE WHEN jobs.requirements_from = 'analysis' THEN jobs.must_have ELSE EXCLUDED.must_have END, "+
 			"nice_to_have = CASE WHEN jobs.requirements_from = 'analysis' THEN jobs.nice_to_have ELSE EXCLUDED.nice_to_have END, "+
 			"responsibilities = EXCLUDED.responsibilities, about = EXCLUDED.about, areas = EXCLUDED.areas, url = EXCLUDED.url, "+
+			"qualifications = EXCLUDED.qualifications, bonuses = EXCLUDED.bonuses, about_company = EXCLUDED.about_company, perks = EXCLUDED.perks, "+
 			"read_from = EXCLUDED.read_from, board = EXCLUDED.board, posted_at = COALESCE(EXCLUDED.posted_at, jobs.posted_at), "+
 			"last_seen_at = EXCLUDED.last_seen_at, closed_at = NULL RETURNING xmax = 0",
 			j.Title, j.Company, j.City, j.Country, j.WorkMode, j.Level, j.YearsRequired, nonNil(j.MustHave), nonNil(j.NiceToHave),
 			nonNil(j.Responsibilities), j.About, nonNil(j.Areas), j.URL, j.ReadFrom, j.Origin, j.ExternalID, j.Board, j.PostedAt, seen,
+			nonNil(j.Qualifications), nonNil(j.Bonuses), j.AboutCompany, nonNil(j.Perks),
 		).Scan(&created)
 	})
 	return created, err
@@ -257,9 +262,9 @@ func (r *PgJobRepository) run(ctx context.Context, ident identity.IdentityContex
 func scanJob(row pgx.CollectableRow) (models.Job, error) {
 	var j models.Job
 	err := row.Scan(&j.ID, &j.Title, &j.Company, &j.City, &j.Country, &j.WorkMode, &j.Level, &j.YearsRequired,
-		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.About, &j.AboutCompany, &j.Product, &j.Perks, &j.Areas,
+		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Qualifications, &j.Bonuses, &j.About, &j.AboutCompany, &j.Product, &j.Perks, &j.Areas,
 		&j.URL, &j.Source, &j.ReadFrom, &j.RequirementsFrom, &j.Sample, &j.AddedByMe, &j.CreatedAt, &j.Origin, &j.PostedAt, &j.ClosedAt)
-	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Perks, &j.Areas} {
+	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Qualifications, &j.Bonuses, &j.Perks, &j.Areas} {
 		*list = nonNil(*list)
 	}
 	return j, err
