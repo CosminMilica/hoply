@@ -55,6 +55,7 @@ type CvService struct {
 // *writer.Writer is one.
 type Prober interface {
 	Questions(ctx context.Context, job models.Job, profile models.Profile) ([]models.ProbeQuestion, error)
+	ProfileQuestions(ctx context.Context, profile models.Profile) ([]models.ProbeQuestion, error)
 	Analyze(ctx context.Context, job models.Job) error
 	Available() bool
 }
@@ -111,11 +112,36 @@ func (s *CvService) Probe(ctx context.Context, ident identity.IdentityContext, j
 	if err != nil {
 		return nil, err
 	}
+	fingerprint := grounding.Build(profile, cvdoc.ReadJob(job), models.CvRequest{}, time.Now()).Fingerprint()
+	return s.probe(ctx, ident, jobID, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
+		return s.prober.Questions(ctx, job, profile)
+	})
+}
+
+// ProfileProbe is the questions Claude asks to make every CV stronger: results
+// for the facts every CV leans on. They are kept like a job's, under no job.
+func (s *CvService) ProfileProbe(ctx context.Context, ident identity.IdentityContext) (*models.Probe, error) {
+	if err := requireSubject(ident); err != nil {
+		return nil, err
+	}
+	profile, _, err := s.sources.Profile(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fingerprint := grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, time.Now()).Fingerprint()
+	return s.probe(ctx, ident, uuid.Nil, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
+		return s.prober.ProfileQuestions(ctx, profile)
+	})
+}
+
+// probe answers the kept questions when they were asked for the facts as they
+// are now, else starts asking in the background and answers pending.
+func (s *CvService) probe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID, fingerprint string,
+	questions func(context.Context) ([]models.ProbeQuestion, error)) (*models.Probe, error) {
 	unavailable := &models.Probe{Status: models.ProbeUnavailable, Questions: []models.ProbeQuestion{}}
 	if s.probes == nil || s.prober == nil {
 		return unavailable, nil
 	}
-	fingerprint := grounding.Build(profile, cvdoc.ReadJob(job), models.CvRequest{}, time.Now()).Fingerprint()
 	stored, err := s.probes.Probe(ctx, ident, jobID)
 	if err != nil {
 		return nil, err
@@ -142,20 +168,21 @@ func (s *CvService) Probe(ctx context.Context, ident identity.IdentityContext, j
 		s.doneAsking(key)
 		return nil, err
 	}
-	go s.ask(ident, key, jobID, fingerprint, job, profile)
+	go s.ask(ident, key, jobID, fingerprint, questions)
 	return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}, nil
 }
 
-func (s *CvService) ask(ident identity.IdentityContext, key string, jobID uuid.UUID, fingerprint string, job models.Job, profile models.Profile) {
+func (s *CvService) ask(ident identity.IdentityContext, key string, jobID uuid.UUID, fingerprint string,
+	questions func(context.Context) ([]models.ProbeQuestion, error)) {
 	defer s.doneAsking(key)
 	ctx, cancel := context.WithTimeout(context.Background(), ProbeTimeout)
 	defer cancel()
 	probe := repositories.StoredProbe{Fingerprint: fingerprint, Status: models.ProbeReady}
-	questions, err := s.prober.Questions(ctx, job, profile)
+	asked, err := questions(ctx)
 	if err != nil {
 		probe.Status = models.ProbeUnavailable
 	}
-	probe.Questions = questions
+	probe.Questions = asked
 	if err := s.probes.SaveProbe(context.Background(), ident, jobID, probe); err != nil {
 		slog.Error("probe not kept", "job_id", jobID, "error", err)
 	}

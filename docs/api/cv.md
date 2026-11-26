@@ -17,6 +17,7 @@ else with the rules engine (`docs/plans/2026-11-25-cv-service.md`, §4–6).
 | GET | `/api/v1/jobs/{job_id}/questions` | | 200 `PrepQuestions`; 404 unknown job; 503 profile or jobs unavailable |
 | POST | `/api/v1/jobs/{job_id}/analysis` | | 202 `{ status: pending \| unavailable }`; 404 unknown job; 503 jobs unavailable |
 | GET | `/api/v1/jobs/{job_id}/probe` | | 200 `Probe`; 404 unknown job; 503 profile or jobs unavailable |
+| GET | `/api/v1/probe` | | 200 `Probe` for the whole profile; 503 profile unavailable |
 | POST | `/api/v1/cvs` | `CvRequest` | 202 `Cv` with `status: queued`; 404 unknown job; 422 invalid body; 503 profile or jobs unavailable |
 | GET | `/api/v1/cvs` | query `job_id` (optional) | 200 `{ items: [Cv] }`, newest first |
 | GET | `/api/v1/cvs/{id}` | | 200 `Cv`; 404 |
@@ -42,7 +43,7 @@ Cv            { id, job_id, status, created_at, updated_at, job_title, company, 
                 ats: { passed, total, checks: [{ ok, label, hint }] } | null, preview: { from, to } | null,
                 written_by: "claude" | "rules" | null, model, refused, rules_reason, limit_until | null }
 WriterStatus  { writer: "claude" | "rules", model, state, limit_until | null }
-Probe         { status: "ready" | "pending" | "unavailable", questions: [{ theme, question, why, example, about, place }] }
+Probe         { status: "ready" | "pending" | "unavailable", questions: [{ theme, question, why, example, about, place, choices: [string] }] }
 CvDocument    { name, headline, contact: [string], links: [string], summary, skills: [string],
                 experience: [{ role, meta, bullets: [string] }], projects: [{ name, meta, bullets: [string] }],
                 education: [{ degree, meta }], certifications: [string], languages, additional: [string] }
@@ -152,6 +153,16 @@ person and job for the facts as they were, and asked again when the facts change
 be asked now (no token, a usage limit, a failure); it is tried again after five minutes. `about` is the fact or role
 the question is about, `place` where an answer goes (`experience:<id>`, `projects:<id>` or `other`); the web app saves
 answers as notes there.
+
+`choices` are up to four answers the person can pick instead of typing, offered when the answer is a count, a size,
+a frequency or a before and after: non-overlapping ranges in the person's field ("Covers 5–20 AWS accounts"). People
+rarely know the exact figure, and an honest range is a fact the CV can use; a picked choice is saved as a note like a
+typed answer.
+
+`GET /probe` asks the same way for the whole profile, once for every job (`prompts/profile-probe-system.md`): results,
+scale or frequency for the facts every CV leans on (the current role's highlights and notes, the strongest projects).
+They are kept like a job's questions, under no job, and the web app shows them on the profile page as "Make every CV
+stronger".
 
 ## Cover letter and messages
 

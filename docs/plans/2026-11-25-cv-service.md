@@ -326,6 +326,11 @@ restates the ad, ends on a specific question and keeps messages to one proof tol
 3.40 → 4.00, blind comparison 4 wins and 1 tie; evidence is slightly lower. Tried and dropped: a number in every
 story (human 4.00 → 3.60, lost the blind comparison 0–3): with few numbers in the facts it repeats them.
 
+**More material** (done, 2026-11-26). The questions were good but the answers held few numbers ("don't matter how
+many repos"): people rarely know the exact figure. Questions now offer ranges to pick (`choices`), and the profile page
+asks once, for every job, about the facts every CV leans on (`GET /probe`). Measured by the person's answers, not the
+eval: re-export the local cases after answering and run the eval again.
+
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.
 2. Measure the refusal rate and score the CVs against a short checklist, at effort `medium` and `high`.

@@ -108,6 +108,8 @@ export const probeQuestionSchema = z.object({
   about: z.string(),
   /** Where the answer goes: `experience:<id>`, `projects:<id>` or `other`. */
   place: z.string(),
+  /** Answers to pick instead of typing: ranges for a count, a size or a frequency. */
+  choices: z.array(z.string()).nullish().transform(value => value ?? []),
 })
 
 export type ProbeQuestion = z.infer<typeof probeQuestionSchema>

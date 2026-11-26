@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ProbeQuestionCard, { type ProbeAnswer } from '../components/ProbeQuestionCard.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
@@ -96,6 +97,11 @@ onBeforeUnmount(clearTimers)
 type Answer = { status: string, remembered?: { text: string, place: string }, text?: string }
 const addedText = (answer: Answer) => answer.remembered?.text ?? answer.text ?? ''
 const addedPlace = (answer: Answer) => answer.remembered?.place ?? ''
+function probeAnswer(index: number): ProbeAnswer {
+  const answer = prep.state.probes[index]
+  if (!answer) return undefined
+  return answer.status === 'added' ? { status: 'added', text: addedText(answer), where: prep.whereLabel(addedPlace(answer)) } : { status: 'skipped' }
+}
 
 function addToProfile(skill: string) {
   setSkills.mutate(cleanList([...(profile.data.value?.skills ?? []), skill]))
@@ -155,37 +161,21 @@ function addToProfile(skill: string) {
         <section v-else-if="asked.length" class="flex flex-col gap-2.5">
           <SectionLabel>Make your CV stronger for this job</SectionLabel>
           <p class="m-0 text-[13px] leading-snug font-medium text-muted">What this job cares about that your profile does not say yet. Answer in your own words; we write the CV from it.</p>
-          <div v-for="(item, index) in asked" :key="index" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="probe">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-xs font-extrabold tracking-wider text-hoply-300 uppercase">{{ item.theme }}</span>
-              <StatusTag v-if="prep.state.probes[index]?.status === 'added'" label="Added" tone="added" />
-              <StatusTag v-else-if="prep.state.probes[index]" label="Skipped" tone="muted" />
-            </div>
-            <p v-if="item.about" class="m-0 border-s-2 border-ink-600 ps-2.5 text-[13px] leading-snug font-medium text-muted">{{ item.about }}</p>
-            <h3 class="m-0 text-[15px] leading-snug font-bold">{{ item.question }}</h3>
-            <template v-if="!prep.state.probes[index]">
-              <p v-if="item.why" class="m-0 text-[13px] leading-snug font-medium text-muted">{{ item.why }}</p>
-              <UTextarea
-                :model-value="prep.draft(`p:${index}`)"
-                :aria-label="item.question"
-                :placeholder="item.example"
-                :rows="2"
-                class="w-full"
-                @update:model-value="(value: string) => prep.setDraft(`p:${index}`, String(value))"
-              />
-              <div class="flex items-center gap-2.5">
-                <UButton label="Add to my CV" :disabled="!prep.canAdd(`p:${index}`)" :loading="prep.state.saving[`p:${index}`]" @click="prep.answerProbe(index, item)" />
-                <UButton label="Skip" color="neutral" variant="outline" @click="prep.skipProbe(index)" />
-              </div>
-            </template>
-            <template v-else-if="prep.state.probes[index]!.status === 'added'">
-              <p class="m-0 text-sm leading-snug font-medium">{{ addedText(prep.state.probes[index]!) }}</p>
-              <p class="m-0 text-[13px] font-medium text-muted">Saved in your profile under {{ prep.whereLabel(addedPlace(prep.state.probes[index]!)) }}</p>
-              <UButton label="Change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="prep.state.saving[`p:${index}`]" @click="prep.undoProbe(index)" />
-            </template>
-            <UButton v-else label="Change my mind" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" @click="prep.undoProbe(index)" />
-            <p v-if="prep.state.errors[`p:${index}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`p:${index}`] }}</p>
-          </div>
+          <ProbeQuestionCard
+            v-for="(item, index) in asked"
+            :key="index"
+            :item="item"
+            :answer="probeAnswer(index)"
+            :draft="prep.draft(`p:${index}`)"
+            :can-add="prep.canAdd(`p:${index}`)"
+            :saving="prep.state.saving[`p:${index}`]"
+            :error="prep.state.errors[`p:${index}`]"
+            add-label="Add to my CV"
+            @update:draft="(value: string) => prep.setDraft(`p:${index}`, value)"
+            @add="prep.answerProbe(index, item)"
+            @skip="prep.skipProbe(index)"
+            @undo="prep.undoProbe(index)"
+          />
         </section>
 
         <section v-if="questions.data.value.related.length" class="flex flex-col gap-2.5">

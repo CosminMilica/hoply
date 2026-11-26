@@ -22,6 +22,8 @@ interface CvBackendOptions {
   failing?: boolean
   /** Claude's questions for every job; unavailable by default. */
   probe?: Probe
+  /** Claude's questions for the whole profile; unavailable by default. */
+  profileProbe?: Probe
   /** How many reads of a letter asked for answer that it is still being written. */
   letterWriting?: number
   /** Why every letter fails, instead of being written. */
@@ -44,6 +46,7 @@ export function createCvBackend(sources: CvSources, {
   probe = { status: 'unavailable', questions: [] },
   letterWriting = 0,
   letterFailure = '',
+  profileProbe = { status: 'unavailable', questions: [] },
 }: CvBackendOptions = {}) {
   const cvs: { cv: Cv, pending: number }[] = []
   const letters = new Map<string, { recruiter: string, pending: number }>()
@@ -97,6 +100,9 @@ export function createCvBackend(sources: CvSources, {
       if (!readJob(jobId)) return problem(404, 'NOT_FOUND', 'Job not found')
       analyses.push(jobId)
       return { status: 202, body: { status: probe.status === 'unavailable' ? 'unavailable' : 'pending' } }
+    },
+    profileProbe(): Answer {
+      return sources.profile() ? { status: 200, body: profileProbe } : problem(503, 'DEPENDENCY_UNAVAILABLE', 'profile is unavailable')
     },
     probe(jobId: string): Answer {
       return readJob(jobId) ? { status: 200, body: probe } : problem(404, 'NOT_FOUND', 'Job not found')
@@ -177,6 +183,7 @@ export function cvServiceHandlers(sources: CvSources, options: CvBackendOptions 
     handlers: [
       http.get('*/api/cv/v1/jobs/:jobId/questions', ({ params }) => reply(backend.questions(String(params.jobId)))),
       http.post('*/api/cv/v1/jobs/:jobId/analysis', ({ params }) => reply(backend.analyze(String(params.jobId)))),
+      http.get('*/api/cv/v1/probe', () => reply(backend.profileProbe())),
       http.get('*/api/cv/v1/jobs/:jobId/probe', ({ params }) => reply(backend.probe(String(params.jobId)))),
       http.post('*/api/cv/v1/cvs', async ({ request }) => reply(backend.create(await request.json().catch(() => null)))),
       http.get('*/api/cv/v1/cvs', ({ request }) => reply(backend.list(new URL(request.url).searchParams.get('job_id')))),

@@ -424,8 +424,9 @@ func (m *memoryProbes) SaveProbe(_ context.Context, ident identity.IdentityConte
 // fakeProber answers with its questions, or fails.
 type fakeProber struct {
 	mu        sync.Mutex
-	calls     int
-	analyzed  int
+	calls        int
+	profileCalls int
+	analyzed     int
 	fail      bool
 	available bool
 	release   chan struct{}
@@ -442,6 +443,16 @@ func (f *fakeProber) Questions(context.Context, models.Job, models.Profile) ([]m
 		return nil, errors.New("no")
 	}
 	return []models.ProbeQuestion{{Theme: "CI/CD", Question: "How many services?", Place: "experience:r1"}}, nil
+}
+
+func (f *fakeProber) ProfileQuestions(context.Context, models.Profile) ([]models.ProbeQuestion, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.profileCalls++
+	if f.fail {
+		return nil, errors.New("no")
+	}
+	return []models.ProbeQuestion{{Theme: "Infrastructure", Question: "How many accounts?", Place: "experience:r1", Choices: []string{"Under 5 accounts"}}}, nil
 }
 
 func (f *fakeProber) Analyze(context.Context, models.Job) error {
@@ -565,6 +576,40 @@ func TestProbeIsAskedInTheBackgroundAndKeptForTheFacts(t *testing.T) {
 func TestProbeIsUnavailableWithoutAProber(t *testing.T) {
 	_, handler := newCvHarness(t)
 	if _, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/jobs/"+jobID+"/probe", nil); body["status"] != "unavailable" {
+		t.Fatalf("no prober: %v", body)
+	}
+}
+
+func TestProfileProbeIsAskedOnceForEveryJob(t *testing.T) {
+	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t), printer: &fakePrinter{}}
+	store := &memoryProbes{kept: map[string]repositories.StoredProbe{}}
+	prober := &fakeProber{available: true}
+	service := services.NewCvService(h.repo, h.sources, h.printer, func() {}).WithProbes(store, prober)
+	settled := make(chan struct{}, 4)
+	service.OnProbeSettled(func() { settled <- struct{}{} })
+	router := chi.NewRouter()
+	routes.Register(router, routes.Deps{DB: okPinger{}, Cvs: service, Writer: writer.New(nil)})
+	dev := identity.Dev()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		router.ServeHTTP(w, r.WithContext(identity.WithContext(r.Context(), dev)))
+	})
+	if _, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/probe", nil); body["status"] != "pending" {
+		t.Fatalf("pending: %v", body)
+	}
+	<-settled
+	status, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/probe", nil)
+	question := body["questions"].([]any)[0].(map[string]any)
+	if status != http.StatusOK || body["status"] != "ready" || question["choices"].([]any)[0] != "Under 5 accounts" {
+		t.Fatalf("ready: %d %v", status, body)
+	}
+	equal(t, prober.profileCalls, 1)
+	equal(t, prober.calls, 0)
+	h.sources.profileErr = apperrors.NewDependencyUnavailable("profile")
+	if status, _ := testutil.Do(t, handler, http.MethodGet, "/api/v1/probe", nil); status != http.StatusServiceUnavailable {
+		t.Fatalf("no profile: %d", status)
+	}
+	_, plain := newCvHarness(t)
+	if _, body := testutil.Do(t, plain, http.MethodGet, "/api/v1/probe", nil); body["status"] != "unavailable" {
 		t.Fatalf("no prober: %v", body)
 	}
 }

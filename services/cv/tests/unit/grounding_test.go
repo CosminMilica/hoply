@@ -278,7 +278,8 @@ func TestProbeQuestionsSayWhatTheyAreAboutAndWhereAnswersGo(t *testing.T) {
 	}
 	equal(t, len(questions), 4)
 	equal(t, questions[0], models.ProbeQuestion{Theme: "CI/CD", Question: "How many services use your pipelines?", Why: "Scale.",
-		Example: "<number> services", About: "Built and maintained deployment pipelines for internal services.", Place: "experience:r1"})
+		Example: "<number> services", About: "Built and maintained deployment pipelines for internal services.", Place: "experience:r1",
+		Choices: []string{}})
 	equal(t, questions[1].About, "Home lab")
 	equal(t, questions[1].Place, "projects:p1")
 	equal(t, questions[2].Place, "other")

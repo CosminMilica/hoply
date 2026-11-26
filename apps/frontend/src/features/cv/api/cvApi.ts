@@ -10,6 +10,10 @@ export const cvApi = {
     )
   },
   /** Claude's questions for the job, asked in the background: poll while `pending`. */
+  /** The questions that make every CV stronger, asked once for the whole profile. */
+  async profileProbe() {
+    return probeSchema.parse(await getApiClient().get(`${BASE}/probe`).json())
+  },
   async probe(jobId: string) {
     return probeSchema.parse(await getApiClient().get(`${BASE}/jobs/${encodeURIComponent(jobId)}/probe`).json())
   },

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
+	"slices"
 	"strings"
 
 	"cv/internal/models"
@@ -17,6 +18,12 @@ var ProbeSystem string
 
 //go:embed prompts/probe.schema.json
 var probeSchema []byte
+
+// ProfileProbeSystem is the system prompt of the questions that make the whole
+// profile stronger, for every job.
+//
+//go:embed prompts/profile-probe-system.md
+var ProfileProbeSystem string
 
 // ProbeSchema is the questions' JSON schema on one line.
 func ProbeSchema() string { return compact(probeSchema) }
@@ -39,11 +46,12 @@ func (c Catalogue) ProbePrompt(analysis *Analysis) string {
 
 type probeAnswer struct {
 	Questions []struct {
-		Target   string `json:"target"`
-		Theme    string `json:"theme"`
-		Question string `json:"question"`
-		Why      string `json:"why"`
-		Example  string `json:"example"`
+		Target   string   `json:"target"`
+		Theme    string   `json:"theme"`
+		Question string   `json:"question"`
+		Why      string   `json:"why"`
+		Example  string   `json:"example"`
+		Choices  []string `json:"choices"`
 	} `json:"questions"`
 }
 
@@ -74,7 +82,7 @@ func (c Catalogue) ParseProbe(raw json.RawMessage) ([]models.ProbeQuestion, erro
 		}
 		questions = append(questions, models.ProbeQuestion{
 			Theme: strings.TrimSpace(item.Theme), Question: question, Why: strings.TrimSpace(item.Why),
-			Example: strings.TrimSpace(item.Example), About: about, Place: place,
+			Example: strings.TrimSpace(item.Example), About: about, Place: place, Choices: choices(item.Choices),
 		})
 	}
 	return questions, nil
@@ -85,4 +93,19 @@ func (c Catalogue) Fingerprint() string {
 	raw, _ := json.Marshal(c.FactList())
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:])
+}
+
+// MaxChoice is the longest answer a question offers to pick.
+const MaxChoice = 80
+
+// choices are the answers to pick, at most 4, each once.
+func choices(offered []string) []string {
+	kept := []string{}
+	for _, choice := range offered {
+		choice = strings.TrimSpace(choice)
+		if choice != "" && len(choice) <= MaxChoice && !slices.Contains(kept, choice) && len(kept) < 4 {
+			kept = append(kept, choice)
+		}
+	}
+	return kept
 }

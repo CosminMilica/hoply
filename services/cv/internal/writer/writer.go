@@ -270,6 +270,32 @@ func (w *Writer) Questions(ctx context.Context, job models.Job, profile models.P
 	return nil, ErrNoQuestions
 }
 
+// ProfileQuestions asks Claude what would make every CV of the person stronger
+// (prompts/profile-probe-system.md): results for the facts every CV leans on.
+func (w *Writer) ProfileQuestions(ctx context.Context, profile models.Profile) ([]models.ProbeQuestion, error) {
+	if w.claude == nil || !w.limit().IsZero() {
+		return nil, ErrNoQuestions
+	}
+	catalogue := grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, w.now())
+	for attempt := 1; attempt <= Attempts; attempt++ {
+		raw, stop := w.run(ctx, "profile probe", "probe", claude.Request{
+			System: grounding.ProfileProbeSystem, Schema: grounding.ProbeSchema(), Prompt: catalogue.ProbePrompt(nil),
+		})
+		if stop != nil {
+			return nil, ErrNoQuestions
+		}
+		if raw == nil {
+			continue
+		}
+		questions, err := catalogue.ParseProbe(raw)
+		if err == nil && len(questions) > 0 {
+			return questions, nil
+		}
+		slog.Warn("claude questions unreadable", "for", "profile probe", "error", err)
+	}
+	return nil, ErrNoQuestions
+}
+
 // ErrNoAnalysis is why Analyze read nothing: Claude is off, cannot be asked now,
 // or answered with nothing readable.
 var ErrNoAnalysis = errors.New("writer: no analysis now")

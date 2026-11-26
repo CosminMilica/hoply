@@ -2,30 +2,19 @@ import { computed, reactive, ref, toValue, watch, type MaybeRefOrGetter } from '
 import { serviceErrorMessage } from '@/features/common/errors'
 import type { Job } from '@/features/jobs/api/jobs.schema'
 import { keywordsIn, matchJob, requirementsOf } from '@/features/jobs/match'
-import { withoutId, type Bullet, type Experience, type Note, type Profile, type Project } from '@/features/profile/api/profile.schema'
-import { useProfileMutations } from '@/features/profile/composables/useProfile'
+import type { Bullet, Profile } from '@/features/profile/api/profile.schema'
 import { monthRange } from '@/features/profile/format'
 import { bulletLine, knownSkills } from '@/features/profile/skills'
 import type { CvRequest, PrepQuestions, ProbeQuestion } from '../api/cv.schema'
+import { OTHER, useNotes, type Place, type Remembered } from './useNotes'
 
-export const OTHER = 'other'
-const MIN_ANSWER = 10
-
-type List = 'experience' | 'projects'
-/** Where an answer goes: `experience:<id>`, `projects:<id>`, or `other` (the person's own notes). */
-type Place = string
-/** What an answer added to the profile, so that Change takes exactly that back out. */
-interface Remembered {
-  place: Place
-  text: string
-  skills: string[]
-}
+export { OTHER }
+export const MIN_ANSWER = 10
 type GapAnswer = { status: 'added', remembered: Remembered } | { status: 'skipped' }
 type ClaimAnswer = { status: 'added', remembered: Remembered } | { status: 'picked', text: string } | { status: 'no' }
 
 const joinList = (items: string[]) =>
   items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
-const sameSkills = (a: string[], b: string[]) => a.length === b.length && a.every((skill, index) => skill === b[index])
 
 interface PrepInputs {
   job: MaybeRefOrGetter<Job | undefined>
@@ -42,7 +31,7 @@ interface PrepInputs {
  * responsibilities confirmed.
  */
 export function usePrep({ job, profile, questions, probe }: PrepInputs) {
-  const mutations = useProfileMutations()
+  const { experience, projects, entryOf, putEntry, whereLabel, remember, forget, mutations } = useNotes(profile)
   const state = reactive({
     skip: {} as Record<string, boolean>,
     focus: null as string[] | null,
@@ -56,8 +45,6 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   })
 
   const current = () => toValue(profile)
-  const experience = computed(() => current()?.experience ?? [])
-  const projects = computed(() => current()?.projects ?? [])
   const keywords = computed(() => { const current = toValue(job); return current ? requirementsOf(current) : [] })
   const known = computed(() => (current() ? knownSkills(current()!) : []))
   const match = computed(() => matchJob(toValue(job) ?? { must_have: [], nice_to_have: [] }, known.value))
@@ -78,13 +65,6 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     if (chosen === OTHER || choices.value.some(choice => choice.id === chosen)) return chosen!
     return choices.value[0]?.id ?? OTHER
   }
-  function whereLabel(place: Place): string {
-    const target = entryOf(place)
-    if (!target) return 'Your notes'
-    if (target.list === 'projects') return `the ${(target.entry as Project).name} project`
-    const role = target.entry as Experience
-    return role.company ? `${role.role} at ${role.company}` : role.role
-  }
   function roleChoices(key: string) {
     const where = whereOf(key)
     return [...choices.value, { id: OTHER, label: 'Elsewhere' }].map(choice => ({ id: choice.id, label: choice.label, pressed: choice.id === where }))
@@ -93,42 +73,7 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     state.places[key] = id
   }
 
-  function entryOf(place: Place): { list: List, entry: Experience | Project } | null {
-    const [list, id] = place.split(':') as [List, string]
-    const entries: (Experience | Project)[] = list === 'experience' ? experience.value : list === 'projects' ? projects.value : []
-    const entry = entries.find(item => item.id === id)
-    return entry ? { list, entry } : null
-  }
-  async function putEntry(list: List, entry: Experience | Project, change: Partial<Pick<Experience, 'bullets' | 'notes'>>) {
-    const body = { ...withoutId(entry), ...change }
-    if (list === 'experience') await mutations.experience.update.mutateAsync({ id: entry.id, body: body as Omit<Experience, 'id'> as never })
-    else await mutations.projects.update.mutateAsync({ id: entry.id, body: body as Omit<Project, 'id'> as never })
-  }
-  const putBullets = (list: List, entry: Experience | Project, bullets: Bullet[]) => putEntry(list, entry, { bullets })
-
-  /** An answer becomes a note of the role or project it is about, or of the person: material Claude writes from. */
-  async function remember(place: Place, text: string, skills: string[]): Promise<Remembered> {
-    const note: Note = { text, skills }
-    const target = entryOf(place)
-    if (!target) {
-      await mutations.patch.mutateAsync({ notes: [...(current()?.notes ?? []), note] })
-      return { place: OTHER, text, skills }
-    }
-    await putEntry(target.list, target.entry, { notes: [...target.entry.notes, note] })
-    return { place, text, skills }
-  }
-  async function forget({ place, text, skills }: Remembered) {
-    const target = entryOf(place)
-    const notes = target ? target.entry.notes : (current()?.notes ?? [])
-    let at = -1
-    notes.forEach((note, index) => {
-      if (note.text === text && sameSkills(note.skills, skills)) at = index
-    })
-    if (at < 0) return
-    const kept = notes.filter((_, index) => index !== at)
-    if (target) await putEntry(target.list, target.entry, { notes: kept })
-    else await mutations.patch.mutateAsync({ notes: kept })
-  }
+  const putBullets = (list: 'experience' | 'projects', entry: Parameters<typeof putEntry>[1], bullets: Bullet[]) => putEntry(list, entry, { bullets })
 
   /** Runs one save for a question, keeping its error next to it. */
   async function saving(key: string, work: () => Promise<void>) {

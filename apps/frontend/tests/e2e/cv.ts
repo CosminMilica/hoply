@@ -26,6 +26,7 @@ export async function mockCvService(page: Page, profile: object, jobs: { jobs: {
     }
     const answer = kind === 'cvs' && rest === 'letter' ? (method === 'POST' ? backend.writeLetter(id ?? '', request.postDataJSON()) : backend.letter(id ?? ''))
       : kind === 'jobs' && rest === 'questions' ? backend.questions(id ?? '')
+      : kind === 'probe' ? backend.profileProbe()
       : kind === 'jobs' && rest === 'probe' ? backend.probe(id ?? '')
       : kind === 'jobs' && rest === 'analysis' ? backend.analyze(id ?? '')
       : method === 'POST' ? backend.create(request.postDataJSON())

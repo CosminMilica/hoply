@@ -9,6 +9,7 @@ export const cvKeys = {
   one: (id: string) => ['cv', 'one', id] as const,
   probe: (jobId: string) => ['cv', 'probe', jobId] as const,
   letter: (cvId: string) => ['cv', 'letter', cvId] as const,
+  profileProbe: ['cv', 'probe', 'profile'] as const,
 }
 
 /** How often a letter being written is asked for again. */
@@ -44,6 +45,19 @@ export function useCvProbeQuery(jobId: MaybeRefOrGetter<string>) {
     enabled: computed(() => Boolean(toValue(jobId))),
     staleTime: Infinity,
     refetchOnMount: 'always',
+    refetchInterval: current => (current.state.data?.status === 'pending' ? PROBE_POLL_MS : false),
+  })
+}
+
+/** The questions that make every CV stronger, followed while they are being asked for; a failure stays quiet. */
+export function useProfileProbeQuery() {
+  return useQuery({
+    queryKey: cvKeys.profileProbe,
+    queryFn: () => cvApi.profileProbe(),
+    staleTime: Infinity,
+    refetchOnMount: 'always',
+    retry: false,
+    meta: { suppressToast: true },
     refetchInterval: current => (current.state.data?.status === 'pending' ? PROBE_POLL_MS : false),
   })
 }

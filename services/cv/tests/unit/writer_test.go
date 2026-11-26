@@ -301,3 +301,31 @@ func TestWriterAnalyzesAJobOnItsOwn(t *testing.T) {
 		t.Fatalf("login needed: %v", err)
 	}
 }
+
+var profileProbeOutput = json.RawMessage(`{"questions":[{"target":"E1.B1","theme":"Pipelines","question":"How many services use your pipelines?",
+"why":"Scale.","example":"<number>","choices":[" Under 10 services ","10–50 services","10–50 services","","Over 50 services","Over 100 services"]}]}`)
+
+func TestWriterAsksWhatMakesEveryCVStronger(t *testing.T) {
+	model := &fakeModel{replies: []modelReply{{output: profileProbeOutput}}}
+	questions, err := writer.New(model).ProfileQuestions(context.Background(), sampleProfile(t))
+	if err != nil || len(questions) != 1 {
+		t.Fatalf("questions: %+v %v", questions, err)
+	}
+	equal(t, questions[0].Choices, []string{"Under 10 services", "10–50 services", "Over 50 services", "Over 100 services"})
+	equal(t, questions[0].Place, "experience:r1")
+	equal(t, strings.Contains(model.last.System, "every job they will apply to"), true)
+	equal(t, model.calls, 1)
+
+	if _, err := writer.New(nil).ProfileQuestions(context.Background(), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("without Claude: %v", err)
+	}
+	unreadable := &fakeModel{replies: []modelReply{{output: json.RawMessage(`[]`)}, {err: claude.ErrFailed}}}
+	if _, err := writer.New(unreadable).ProfileQuestions(context.Background(), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("unreadable: %v", err)
+	}
+	equal(t, unreadable.calls, 2)
+	noLogin := &fakeModel{replies: []modelReply{{err: claude.ErrLoginNeeded}}}
+	if _, err := writer.New(noLogin).ProfileQuestions(context.Background(), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("login needed: %v", err)
+	}
+}

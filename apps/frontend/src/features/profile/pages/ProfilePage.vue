@@ -13,6 +13,7 @@ import PreferencesFields from '../components/PreferencesFields.vue'
 import ProfileSection from '../components/ProfileSection.vue'
 import ProjectsEditor from '../components/ProjectsEditor.vue'
 import ReadinessCard from '../components/ReadinessCard.vue'
+import ProfileProbeCard from '@/features/cv/components/ProfileProbeCard.vue'
 import SkillsEditor from '../components/SkillsEditor.vue'
 
 const { data: profile, isPending, isError, refetch } = useProfileQuery()
@@ -57,6 +58,7 @@ const summaries = computed(() => {
     />
     <template v-else-if="summaries">
       <ReadinessCard :profile="profile" />
+      <ProfileProbeCard :profile="profile" />
       <div class="flex flex-col gap-3.5 min-[900px]:grid min-[900px]:grid-cols-2 min-[900px]:items-start min-[900px]:gap-x-12">
         <div class="flex flex-col">
           <ProfileSection v-model:open="open.about" title="About you" icon="i-lucide-pencil" :summary="summaries.about">

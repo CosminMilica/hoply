@@ -53,6 +53,13 @@ func Register(router chi.Router, deps Deps) {
 		api.Route("/health", func(health chi.Router) { registerHealth(health, deps.DB) })
 		api.Route("/jobs", func(router chi.Router) { registerQuestions(router, deps.Cvs) })
 		api.Route("/cvs", func(router chi.Router) { registerCvs(router, deps.Cvs) })
+		api.Get("/probe", handle(func(w http.ResponseWriter, r *http.Request) error {
+			probe, err := deps.Cvs.ProfileProbe(r.Context(), requestIdentity(r))
+			if err != nil {
+				return err
+			}
+			return writeJSON(w, http.StatusOK, probe)
+		}))
 		api.Get("/writer", handle(func(w http.ResponseWriter, _ *http.Request) error {
 			return writeJSON(w, http.StatusOK, deps.Writer.Status())
 		}))

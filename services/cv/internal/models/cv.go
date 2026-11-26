@@ -189,6 +189,8 @@ type ProbeQuestion struct {
 	About string `json:"about"`
 	// Place is where the answer goes: "experience:<id>", "projects:<id>" or "other" (the person's own notes).
 	Place string `json:"place"`
+	// Choices are answers the person can pick instead of typing: ranges for a count, a size or a frequency.
+	Choices []string `json:"choices"`
 }
 
 // Probe states of a job's questions.
