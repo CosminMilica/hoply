@@ -320,6 +320,12 @@ lists, trailing "-ing" clauses, a summary formula, duplicate skills. The prompts
 the lint of its draft. Findings per sentence 0.80 → 0.15, judge 3.60 → 3.88, blind comparison 4 wins and 1 tie. What
 is left is material: a job far from the person's facts (a fullstack role for a DevOps profile) stays weak (2.6).
 
+**Letters and messages, same rules** (done, 2026-11-26). The letter judge's main complaint was the ad handed back
+("You need…", "The ad asks…") and a closing formula. The letter prompt now opens with the strongest proof, never
+restates the ad, ends on a specific question and keeps messages to one proof told as context. Lint 0.18 → 0.09, human
+3.40 → 4.00, blind comparison 4 wins and 1 tie; evidence is slightly lower. Tried and dropped: a number in every
+story (human 4.00 → 3.60, lost the blind comparison 0–3): with few numbers in the facts it repeats them.
+
 **Phase 4. Quality**
 1. `services/cv/eval/`: 5–10 anonymised profile × job pairs. The live runs are started by hand and are never a gate.
 2. Measure the refusal rate and score the CVs against a short checklist, at effort `medium` and `high`.

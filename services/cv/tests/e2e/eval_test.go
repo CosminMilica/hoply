@@ -33,6 +33,12 @@ func TestEvalBinaryWritesJudgesAndComparesRuns(t *testing.T) {
 	if code != 0 || !strings.Contains(out, "| finance-fpa-analyst | rules |") {
 		t.Fatalf("write: %d %s", code, out)
 	}
+	if out, code := evalRun(t, nil, "letters", "-cases", "eval/cases", "-run", run); code != 0 || !strings.Contains(out, "reason=no_token") {
+		t.Fatalf("letters without Claude: %d %s", code, out)
+	}
+	if out, code := evalRun(t, nil, "compare", "-cases", "eval/cases", "-a", run, "-b", run, "-letters"); code != 0 || !strings.Contains(out, "tie 0 |") {
+		t.Fatalf("compare letters: %d %s", code, out)
+	}
 	for _, args := range [][]string{{"show", "-run", run}, {"judge", "-cases", "eval/cases", "-run", run}} {
 		if out, code := evalRun(t, nil, args...); code != 0 || !strings.Contains(out, "finance-fpa-analyst") {
 			t.Fatalf("%s: %d %s", args[0], code, out)
@@ -42,7 +48,7 @@ func TestEvalBinaryWritesJudgesAndComparesRuns(t *testing.T) {
 		t.Fatalf("compare: %d %s", code, out)
 	}
 	for _, args := range [][]string{{}, {"nope"}, {"write", "-cases", "eval/cases", "-only", "nobody", "-out", run}, {"show", "-run", t.TempDir()},
-		{"judge", "-run", t.TempDir()}, {"compare", "-a", t.TempDir(), "-b", run}, {"compare", "-a", run, "-b", t.TempDir()}} {
+		{"judge", "-run", t.TempDir()}, {"letters", "-run", t.TempDir()}, {"compare", "-a", t.TempDir(), "-b", run}, {"compare", "-a", run, "-b", t.TempDir()}} {
 		if _, code := evalRun(t, nil, args...); code != 1 {
 			t.Fatalf("%v exits 1, got %d", args, code)
 		}

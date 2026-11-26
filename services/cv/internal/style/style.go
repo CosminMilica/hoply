@@ -60,45 +60,62 @@ type Report struct {
 	Score     float64        `json:"score"`
 }
 
+type linter struct {
+	report Report
+	skills []string
+}
+
+func newLinter(known []string) *linter {
+	return &linter{report: Report{Findings: []Finding{}, ByRule: map[string]int{}}, skills: known}
+}
+
+func (l *linter) add(where, rule, text string) {
+	l.report.Findings = append(l.report.Findings, Finding{Where: where, Rule: rule, Text: text})
+	l.report.ByRule[rule]++
+}
+
+// sentence applies the rules every sentence follows, plus the extra stock words.
+func (l *linter) sentence(where, text string, extra ...string) {
+	l.report.Sentences++
+	if named := tools(text, l.skills); len(named) > MaxTools {
+		l.add(where, Tools, fmt.Sprintf("names %d tools: %s", len(named), strings.Join(named, ", ")))
+	}
+	for _, match := range ingTail.FindAllStringSubmatch(text, -1) {
+		if !notTails[strings.ToLower(match[1])] {
+			l.add(where, IngTail, strings.TrimSpace(match[0]))
+		}
+	}
+	lower := strings.ToLower(text)
+	for _, word := range append(slices.Clone(stockWords), extra...) {
+		if cvdoc.HasWord(lower, word) {
+			l.add(where, Stock, word)
+		}
+	}
+}
+
+func (l *linter) done() Report {
+	if l.report.Sentences > 0 {
+		l.report.Score = math.Round(float64(len(l.report.Findings))/float64(l.report.Sentences)*100) / 100
+	}
+	return l.report
+}
+
 // Lint reads the CV's summary and bullets; known are the skills it counts as
 // tools (the person's skills and the CV's).
 func Lint(document models.CvDocument, known []string) Report {
-	report := Report{Findings: []Finding{}, ByRule: map[string]int{}}
-	add := func(where, rule, text string) {
-		report.Findings = append(report.Findings, Finding{Where: where, Rule: rule, Text: text})
-		report.ByRule[rule]++
-	}
-	skills := append(append([]string{}, known...), document.Skills...)
-	sentence := func(where, text string) {
-		report.Sentences++
-		if named := tools(text, skills); len(named) > MaxTools {
-			add(where, Tools, fmt.Sprintf("names %d tools: %s", len(named), strings.Join(named, ", ")))
-		}
-		for _, match := range ingTail.FindAllStringSubmatch(text, -1) {
-			if !notTails[strings.ToLower(match[1])] {
-				add(where, IngTail, strings.TrimSpace(match[0]))
-			}
-		}
-		lower := strings.ToLower(text)
-		for _, word := range stockWords {
-			if cvdoc.HasWord(lower, word) {
-				add(where, Stock, word)
-			}
-		}
-	}
-
+	l := newLinter(append(append([]string{}, known...), document.Skills...))
 	for i, line := range sentences(document.Summary) {
-		sentence(fmt.Sprintf("summary %d", i+1), line)
+		l.sentence(fmt.Sprintf("summary %d", i+1), line)
 	}
 	if formula.MatchString(strings.TrimSpace(document.Summary)) {
-		add("summary", Formula, strings.SplitN(document.Summary, ",", 2)[0])
+		l.add("summary", Formula, strings.SplitN(document.Summary, ",", 2)[0])
 	}
 	starts := map[string][]string{}
 	bullets := func(kind, name string, items []string) {
 		lengths := []float64{}
 		for i, bullet := range items {
 			where := fmt.Sprintf("%s %q bullet %d", kind, name, i+1)
-			sentence(where, bullet)
+			l.sentence(where, bullet)
 			if fields := strings.Fields(bullet); len(fields) > 0 {
 				first := strings.ToLower(strings.Trim(fields[0], ",.;:"))
 				starts[first] = append(starts[first], where)
@@ -106,7 +123,7 @@ func Lint(document models.CvDocument, known []string) Report {
 			lengths = append(lengths, float64(len(bullet)))
 		}
 		if len(lengths) >= 4 && variation(lengths) < 0.15 {
-			add(fmt.Sprintf("%s %q", kind, name), Uniform, "every bullet is about as long")
+			l.add(fmt.Sprintf("%s %q", kind, name), Uniform, "every bullet is about as long")
 		}
 	}
 	for _, role := range document.Experience {
@@ -122,21 +139,59 @@ func Lint(document models.CvDocument, known []string) Report {
 	slices.Sort(words)
 	for _, word := range words {
 		if places := starts[word]; len(places) > 2 {
-			add(strings.Join(places[2:], "; "), SameStart, fmt.Sprintf("%d bullets start with %q", len(places), word))
+			l.add(strings.Join(places[2:], "; "), SameStart, fmt.Sprintf("%d bullets start with %q", len(places), word))
 		}
 	}
 	for i, skill := range document.Skills {
 		for _, earlier := range document.Skills[:i] {
 			if cvdoc.SameSkill(skill, earlier) {
-				add("skills", DoubleSkill, earlier+" and "+skill)
+				l.add("skills", DoubleSkill, earlier+" and "+skill)
 				break
 			}
 		}
 	}
-	if report.Sentences > 0 {
-		report.Score = math.Round(float64(len(report.Findings))/float64(report.Sentences)*100) / 100
+	return l.done()
+}
+
+// letterStock are what letters and messages say when they have nothing to say.
+var letterStock = []string{"look forward to hearing", "please find attached", "would love the opportunity", "excited to",
+	"thrilled", "exceptional addition", "uniquely positions", "perfect fit", "hit the ground running", "add value",
+	"make an impact", "dream job", "team player", "i believe i would be", "i am writing to", "i'm writing to",
+	"just checking in", "touch base", "reach out"}
+
+// OpensWithI is a cover letter that starts with the person, not the company.
+const OpensWithI = "opens-with-i"
+
+var (
+	salutation = regexp.MustCompile(`^(?:Dear|Hi|Hello)\b.*,$`)
+	signOff    = regexp.MustCompile(`^(?:Kind regards|Best regards|Best|Regards|Thank you|Thanks),?$`)
+)
+
+// LintLetter reads a cover letter and the messages, without their greetings
+// and sign-offs; known are the skills it counts as tools.
+func LintLetter(texts models.LetterTexts, known []string) Report {
+	l := newLinter(known)
+	read := func(where, text string) []string {
+		lines := []string{}
+		for _, line := range strings.Split(text, "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" || salutation.MatchString(line) || signOff.MatchString(line) || !strings.ContainsAny(line, ".?") && len(line) < 40 {
+				continue
+			}
+			lines = append(lines, sentences(line)...)
+		}
+		for i, line := range lines {
+			l.sentence(fmt.Sprintf("%s %d", where, i+1), line, letterStock...)
+		}
+		return lines
 	}
-	return report
+	if body := read("letter", texts.CoverLetter); len(body) > 0 && strings.HasPrefix(body[0], "I ") {
+		l.add("letter 1", OpensWithI, body[0])
+	}
+	read("note", texts.ConnectionNote)
+	read("message", texts.Message.Body)
+	read("follow-up", texts.FollowUp.Body)
+	return l.done()
 }
 
 // tools are the skills a sentence names, each once, the longest name first so

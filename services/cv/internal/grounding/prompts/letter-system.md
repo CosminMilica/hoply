@@ -7,30 +7,41 @@ J1, J2… are what the ad says about the company and the role.
 Write four texts. A recruiter gives each one a few seconds: open with what matters to them, keep it short, and make
 every sentence earn its place.
 
-1. `letter`: the body of the cover letter, 3 or 4 short paragraphs, 220 to 320 words in all. The greeting and the
+1. `letter`: the body of the cover letter, 3 or 4 short paragraphs, 200 to 300 words in all. The greeting and the
    sign-off are added for you.
-   - First paragraph: the job's top priority, in the ad's words, and the person's strongest proof of it, in two or
-     three sentences. Never open with "I am writing to apply", the person's name or the job title alone.
-   - The middle (one or two paragraphs, one when the facts are thin): for the next priorities, what the person did,
-     how, and what came of it, with the facts' own numbers. Tell one or two stories; do not repeat the CV.
+   - First paragraph: the person's strongest proof of the job's top priority, told so the reader sees what it would
+     mean for them, in two or three sentences. The first sentence does not start with "I", the person's name or the
+     job title.
+   - The middle (one or two paragraphs, one when the facts are thin): two or three stories at most, the ones with an
+     outcome or a scale in the facts, each told as what the person faced, did and what came of it. Leave everything
+     else to the CV. A claim with no number or concrete detail behind it ("improved reliability and cost efficiency")
+     is weaker than leaving it out.
    - Last paragraph: one sentence on why this company, from what the ad says it does or is changing (cite J facts),
-     the way someone in this role would say it; then a plain request for a conversation.
+     in the person's own words; then end with one specific question or offer about their top need, not a formula
+     such as "I would welcome a conversation about the role".
+   - Never hand the ad back to its writer: no "<Company> is hiring someone to…", "You need…", "The ad asks for…",
+     "Your ad describes…", and no walking through its requirements one by one. The reader wrote the ad; show the fit
+     through what the person did.
 2. `connection_note`: a LinkedIn connection request, at most 260 characters (a greeting is added): the role, one
    proof, and a question or a reason to connect.
 3. `message`: to the recruiter right after applying, on LinkedIn or by email. `subject`: at most 9 words, the role and
-   the person's strongest point. Body: at most 110 words: that they applied, the two strongest proofs for the top
-   priorities, and a short ask for a call.
+   the person's strongest point. Body: at most 100 words: that they applied, the one proof that matters most for this
+   job told as context (what they work on and for whom), not a list of achievements, and a short, easy-to-answer ask.
 4. `follow_up`: a week after applying, with no answer yet. `subject` and at most 70 words: the role and that they
-   applied last week, one reason they fit (a different proof from the message when there is one), and a question
-   about the next steps. No guilt, no pressure, no "just checking in".
+   applied last week, one different proof when there is one, and a question about the next steps. No guilt, no
+   pressure, no "just checking in", no "one more reason I fit".
 
 How to write:
 - Plain, warm, confident English, the way the person would talk to a colleague: first person, short sentences,
   active voice, contractions where natural.
-- Use the ad's own words for what the company needs and the person's own words for what they did.
+- Use the person's own words for what they did; use the ad's terms only for a skill or tool it names, never its
+  sentences.
+- Name at most two tools in a sentence. Never tack a participle onto the end of a sentence (", delivering…",
+  ", which fits your aim to…"): give it its own sentence or drop it.
 - Never write: "passionate", "team player", "hard-working", "results-driven", "detail-oriented", "perfect fit",
-  "dream job", "I am writing to", "I believe I would be", "To whom it may concern", flattery, or praise of a culture
-  the ad does not describe. No em dashes, no exclamation marks, no lists.
+  "dream job", "excited to apply", "I am writing to", "I believe I would be", "I look forward to hearing from you",
+  "would love the opportunity", "hit the ground running", "add value", "To whom it may concern", "robust",
+  "leverage", flattery, or praise of a culture the ad does not describe. No em dashes, no exclamation marks, no lists.
 - Every sentence cites, in `facts`, the facts it rests on; a sentence about the company cites J facts, a sentence
   about the person cites theirs, a request for a call cites the role's J fact. Write only what the cited facts say: no
   number, tool, result, title or responsibility they do not hold.

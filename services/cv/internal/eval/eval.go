@@ -72,6 +72,10 @@ type Result struct {
 	Seconds float64           `json:"seconds"`
 	Style   style.Report      `json:"style"`
 	Judge   *Scores           `json:"judge,omitempty"`
+	// The letter and messages written from this CV, when asked for (Letters).
+	Letter      *models.LetterTexts `json:"letter,omitempty"`
+	LetterStyle *style.Report       `json:"letter_style,omitempty"`
+	LetterJudge *Scores             `json:"letter_judge,omitempty"`
 }
 
 // Writer writes a CV; *writer.Writer is one.
@@ -158,6 +162,12 @@ var compareSystem string
 //go:embed prompts/compare.schema.json
 var compareSchema []byte
 
+//go:embed prompts/letter-judge-system.md
+var letterJudgeSystem string
+
+//go:embed prompts/letter-compare-system.md
+var letterCompareSystem string
+
 func compact(raw []byte) string {
 	var out bytes.Buffer
 	if err := json.Compact(&out, raw); err != nil {
@@ -208,8 +218,16 @@ var ErrUnreadable = errors.New("eval: unreadable answer")
 
 // Judge scores one CV's writing for the job.
 func Judge(ctx context.Context, m Model, job models.Job, document models.CvDocument) (*Scores, error) {
-	raw, err := m.Run(ctx, claude.Request{System: judgeSystem, Schema: compact(judgeSchema),
-		Prompt: message(map[string]any{"job": ad(job), "cv": Text(document)})})
+	return score(ctx, m, judgeSystem, map[string]any{"job": ad(job), "cv": Text(document)})
+}
+
+// JudgeLetter scores the writing of a letter and its messages for the job.
+func JudgeLetter(ctx context.Context, m Model, job models.Job, texts models.LetterTexts) (*Scores, error) {
+	return score(ctx, m, letterJudgeSystem, map[string]any{"job": ad(job), "texts": LetterText(texts)})
+}
+
+func score(ctx context.Context, m Model, system string, prompt any) (*Scores, error) {
+	raw, err := m.Run(ctx, claude.Request{System: system, Schema: compact(judgeSchema), Prompt: message(prompt)})
 	if err != nil {
 		return nil, err
 	}
@@ -248,9 +266,18 @@ func (c comparison) pick(dimension string) string {
 // Compare asks the judge twice, with the CVs in both orders, so the place a CV
 // is shown in cannot decide; a pick the two orders disagree on is a tie.
 func Compare(ctx context.Context, m Model, job models.Job, a, b models.CvDocument) (Verdict, error) {
-	ask := func(first, second models.CvDocument) (comparison, error) {
-		raw, err := m.Run(ctx, claude.Request{System: compareSystem, Schema: compact(compareSchema),
-			Prompt: message(map[string]any{"job": ad(job), "a": Text(first), "b": Text(second)})})
+	return compare(ctx, m, compareSystem, job, Text(a), Text(b))
+}
+
+// CompareLetters is Compare for two versions of a letter and its messages.
+func CompareLetters(ctx context.Context, m Model, job models.Job, a, b models.LetterTexts) (Verdict, error) {
+	return compare(ctx, m, letterCompareSystem, job, LetterText(a), LetterText(b))
+}
+
+func compare(ctx context.Context, m Model, system string, job models.Job, a, b any) (Verdict, error) {
+	ask := func(first, second any) (comparison, error) {
+		raw, err := m.Run(ctx, claude.Request{System: system, Schema: compact(compareSchema),
+			Prompt: message(map[string]any{"job": ad(job), "a": first, "b": second})})
 		if err != nil {
 			return comparison{}, err
 		}
@@ -346,18 +373,26 @@ func JudgeRun(ctx context.Context, m Model, cases []Case, results []Result) []Re
 		if !ok {
 			continue
 		}
-		scores, err := Judge(ctx, m, c.Job, result.Written.Tailored)
-		if err != nil {
+		if scores, err := Judge(ctx, m, c.Job, result.Written.Tailored); err == nil {
+			judged[i].Judge = scores
+		} else {
 			slog.Warn("case not judged", "case", result.Case, "error", err)
+		}
+		if result.Letter == nil {
 			continue
 		}
-		judged[i].Judge = scores
+		if scores, err := JudgeLetter(ctx, m, c.Job, *result.Letter); err == nil {
+			judged[i].LetterJudge = scores
+		} else {
+			slog.Warn("letter not judged", "case", result.Case, "error", err)
+		}
 	}
 	return judged
 }
 
-// CompareRuns compares, blind, the CVs two runs wrote for each case both hold.
-func CompareRuns(ctx context.Context, m Model, cases []Case, a, b []Result) map[string]Verdict {
+// CompareRuns compares, blind, the CVs two runs wrote for each case both hold;
+// with letters, their letters and messages instead.
+func CompareRuns(ctx context.Context, m Model, cases []Case, a, b []Result, letters bool) map[string]Verdict {
 	known := byName(cases)
 	other := map[string]Result{}
 	for _, result := range b {
@@ -370,7 +405,18 @@ func CompareRuns(ctx context.Context, m Model, cases []Case, a, b []Result) map[
 		if !ok || !known {
 			continue
 		}
-		verdict, err := Compare(ctx, m, c.Job, first.Written.Tailored, second.Written.Tailored)
+		var (
+			verdict Verdict
+			err     error
+		)
+		switch {
+		case !letters:
+			verdict, err = Compare(ctx, m, c.Job, first.Written.Tailored, second.Written.Tailored)
+		case first.Letter != nil && second.Letter != nil:
+			verdict, err = CompareLetters(ctx, m, c.Job, *first.Letter, *second.Letter)
+		default:
+			continue
+		}
 		if err != nil {
 			slog.Warn("case not compared", "case", first.Case, "error", err)
 			continue
@@ -421,4 +467,41 @@ func (a *Analyses) SaveAnalysis(_ context.Context, jobID uuid.UUID, analysis jso
 	defer a.mu.Unlock()
 	a.kept[jobID] = analysis
 	return nil
+}
+
+// LetterWriter writes the letter and messages for a ready CV; *writer.Writer is one.
+type LetterWriter interface {
+	Letter(ctx context.Context, task *repositories.Task, cv models.Cv, recruiter string) models.Letter
+}
+
+// Letters writes and lints the letter and messages for each result's CV.
+func Letters(ctx context.Context, w LetterWriter, cases []Case, results []Result, now time.Time) []Result {
+	known := byName(cases)
+	written := slices.Clone(results)
+	for i, result := range written {
+		c, ok := known[result.Case]
+		if !ok {
+			continue
+		}
+		tailored := result.Written.Tailored
+		cv := models.Cv{ID: uuid.New(), Status: models.StatusReady, Tailored: &tailored, Tailoring: result.Written.Tailoring}
+		letter := w.Letter(ctx, &repositories.Task{ID: cv.ID, Request: c.Request, Profile: c.Profile, Job: c.Job, CreatedAt: now}, cv, "")
+		if letter.Texts == nil {
+			slog.Warn("letter not written", "case", result.Case, "reason", letter.Reason)
+			continue
+		}
+		report := style.LintLetter(*letter.Texts, cvdoc.KnownSkills(c.Profile))
+		written[i].Letter, written[i].LetterStyle, written[i].LetterJudge = letter.Texts, &report, nil
+	}
+	return written
+}
+
+// LetterText is a letter and its messages as the reader gets them.
+func LetterText(t models.LetterTexts) map[string]string {
+	return map[string]string{
+		"cover_letter":    t.CoverLetter,
+		"connection_note": t.ConnectionNote,
+		"message":         strings.TrimSpace("Subject: " + t.Message.Subject + "\n\n" + t.Message.Body),
+		"follow_up":       strings.TrimSpace("Subject: " + t.FollowUp.Subject + "\n\n" + t.FollowUp.Body),
+	}
 }

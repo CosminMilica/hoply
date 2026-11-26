@@ -100,3 +100,32 @@ func CompareTable(cases []string, verdicts map[string]Verdict) string {
 	fmt.Fprintf(&b, "| **total** | %s | %s |\n", count("winner"), strings.Join(totals, " | "))
 	return b.String()
 }
+
+// LetterTable is a run's letters and messages: their lengths, the lint and the
+// judge, the means last. Results without a letter are left out.
+func LetterTable(results []Result) string {
+	var b strings.Builder
+	b.WriteString("| Case | Letter words | Note chars | Message words | Follow-up words | Style | Most found | Judge | Human |\n")
+	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
+	var style, judge, human []float64
+	for _, r := range results {
+		if r.Letter == nil || r.LetterStyle == nil {
+			continue
+		}
+		judged, humanly := "", ""
+		if r.LetterJudge != nil {
+			judged, humanly = fmt.Sprintf("%.1f", r.LetterJudge.Mean), fmt.Sprint(r.LetterJudge.Human)
+			judge = append(judge, r.LetterJudge.Mean)
+			human = append(human, float64(r.LetterJudge.Human))
+		}
+		style = append(style, r.LetterStyle.Score)
+		fmt.Fprintf(&b, "| %s | %d | %d | %d | %d | %.2f | %s | %s | %s |\n", r.Case, len(strings.Fields(r.Letter.CoverLetter)),
+			len(r.Letter.ConnectionNote), len(strings.Fields(r.Letter.Message.Body)), len(strings.Fields(r.Letter.FollowUp.Body)),
+			r.LetterStyle.Score, mostFound(r.LetterStyle.ByRule), judged, humanly)
+	}
+	if len(style) == 0 {
+		return ""
+	}
+	fmt.Fprintf(&b, "| **mean** | | | | | **%.2f** | | **%s** | **%s** |\n", mean(style), meanText(judge), meanText(human))
+	return b.String()
+}

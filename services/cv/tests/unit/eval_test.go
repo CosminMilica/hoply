@@ -160,10 +160,54 @@ func TestEvalJudgesAndComparesBlind(t *testing.T) {
 
 	a := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: document}}, {Case: cases[1].Name}, {Case: "unknown"}}
 	b := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: other}}, {Case: cases[1].Name}}
-	verdicts := eval.CompareRuns(context.Background(), &judgeModel{replies: []modelReply{{output: forward}, {output: backward}, {err: claude.ErrFailed}}}, cases, a, b)
+	verdicts := eval.CompareRuns(context.Background(), &judgeModel{replies: []modelReply{{output: forward}, {output: backward}, {err: claude.ErrFailed}}}, cases, a, b, false)
 	equal(t, len(verdicts), 1)
 	table := eval.CompareTable([]string{cases[0].Name, cases[1].Name}, verdicts)
 	equal(t, strings.Contains(table, "| finance-fpa-analyst | a | a | tie | b | tie | a |"), true)
 	equal(t, strings.Contains(table, "| **total** | a 1 · b 0 · tie 0 |"), true)
 	equal(t, eval.Text(models.CvDocument{Headline: "Engineer"}), "Engineer")
+}
+
+// fixedLetters writes a fixed letter, or none for one case.
+type fixedLetters struct{ failFor string }
+
+func (f fixedLetters) Letter(_ context.Context, task *repositories.Task, _ models.Cv, _ string) models.Letter {
+	if task.Profile.Name == f.failFor {
+		return models.Letter{Status: models.LetterFailed, Reason: models.ClaudeFailed}
+	}
+	return models.Letter{Status: models.LetterReady, Texts: &models.LetterTexts{
+		CoverLetter:    "Dear team,\n\nI am excited to apply. Your forecast needs an owner.\n\nKind regards,\nMihai",
+		ConnectionNote: "Hi, I applied for the FP&A role.",
+		Message:        models.Message{Subject: "Application", Body: "Hello,\n\nI applied today.\n\nBest regards,\nMihai"},
+		FollowUp:       models.Message{Subject: "Following up", Body: "Hello,\n\nAny news on the next steps?\n\nBest regards,\nMihai"},
+	}}
+}
+
+func TestEvalWritesJudgesAndComparesLetters(t *testing.T) {
+	cases := evalCases(t)
+	results := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: sampleDocument(t)}}, {Case: cases[1].Name}, {Case: "unknown"}}
+	written := eval.Letters(context.Background(), fixedLetters{failFor: "Ioana Marin"}, cases, results, now)
+	equal(t, written[0].Letter.ConnectionNote, "Hi, I applied for the FP&A role.")
+	equal(t, written[0].LetterStyle.ByRule["stock-word"], 1)
+	equal(t, written[1].Letter == nil, true)
+	equal(t, written[2].Letter == nil, true)
+	equal(t, eval.LetterText(*written[0].Letter)["message"], "Subject: Application\n\nHello,\n\nI applied today.\n\nBest regards,\nMihai")
+	equal(t, eval.LetterTable(results), "")
+
+	scores := json.RawMessage(`{"specific":3,"human":2,"evidence":3,"relevance":4,"readable":4,"plastic":["excited to apply"],"note":"Start with them."}`)
+	model := &judgeModel{replies: []modelReply{{output: scores}}}
+	judged := eval.JudgeRun(context.Background(), model, cases, written)
+	equal(t, judged[0].LetterJudge.Human, 2)
+	equal(t, strings.Contains(model.prompts[1], `"connection_note": "Hi, I applied for the FP&A role."`), true)
+	table := eval.LetterTable(judged)
+	equal(t, strings.Contains(table, "| finance-fpa-analyst | 15 | 32 | 7 | 10 | 0.40 |"), true)
+	equal(t, strings.Contains(table, "| 3.2 | 2 |"), true)
+	failing := eval.JudgeRun(context.Background(), &judgeModel{replies: []modelReply{{output: scores}, {err: claude.ErrFailed}}}, cases, written)
+	equal(t, failing[0].LetterJudge == nil, true)
+
+	forward := json.RawMessage(`{"specific":"b","human":"b","evidence":"tie","relevance":"b","readable":"b","winner":"b","why":"B opens with them."}`)
+	backward := json.RawMessage(`{"specific":"a","human":"a","evidence":"tie","relevance":"a","readable":"a","winner":"a","why":"The first opens with them."}`)
+	verdicts := eval.CompareRuns(context.Background(), &judgeModel{replies: []modelReply{{output: forward}, {output: backward}}}, cases, written, written, true)
+	equal(t, len(verdicts), 1)
+	equal(t, verdicts[cases[0].Name].Winner, "b")
 }

@@ -57,3 +57,19 @@ func TestTheReviewGetsTheStyleFindingsAndSkillsAreNamedOnce(t *testing.T) {
 	document, _ := dup.Assemble(answer, job, models.CvDocument{})
 	equal(t, document.Skills, []string{"FluxCD", "Helm"})
 }
+
+func TestStyleReadsLettersWithoutTheirGreetings(t *testing.T) {
+	texts := models.LetterTexts{
+		CoverLetter: "Dear Acme hiring team,\n\nI am excited to apply. I run Kubernetes, Terraform and Helm daily, delivering releases.\n\n" +
+			"Your platform team needs faster releases.\n\nKind regards,\nAna Pop",
+		ConnectionNote: "Hi Ana, I applied for the role and would love the opportunity to connect.",
+		Message:        models.Message{Subject: "Application", Body: "Hi Ana,\n\nI applied today. Could we talk?\n\nBest regards,\nAna Pop"},
+		FollowUp:       models.Message{Subject: "Following up", Body: "Hello,\n\nJust checking in on my application.\n\nBest regards,\nAna Pop"},
+	}
+	report := style.LintLetter(texts, []string{"Kubernetes", "Terraform", "Helm"})
+	equal(t, report.Sentences, 7)
+	equal(t, report.ByRule, map[string]int{style.Stock: 3, style.Tools: 1, style.IngTail: 1, style.OpensWithI: 1})
+	clean := style.LintLetter(models.LetterTexts{CoverLetter: "Dear team,\n\nYour releases take a day. Mine take an hour.\n\nKind regards,\nAna"}, nil)
+	equal(t, clean.Findings, []style.Finding{})
+	equal(t, clean.Sentences, 2)
+}

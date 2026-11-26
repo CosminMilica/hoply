@@ -21,9 +21,10 @@ import (
 const usage = `usage: eval <command> [flags]
   export  -ids <job ids> [-out eval/local]       cases from the running profile and jobs services
   write   -out <run dir> [-cases dirs] [-only names]  write and lint a CV per case
-  judge   -run <run dir> [-cases dirs]            score each CV with the judge model
-  show    -run <run dir>                          print a run's table
-  compare -a <run dir> -b <run dir> [-cases dirs] blind comparison of two runs`
+  letters -run <run dir> [-cases dirs]            write and lint the letter and messages for each CV
+  judge   -run <run dir> [-cases dirs]            score each CV (and letter) with the judge model
+  show    -run <run dir>                          print a run's tables
+  compare -a <run dir> -b <run dir> [-cases dirs] [-letters]  blind comparison of two runs`
 
 func main() {
 	if len(os.Args) < 2 {
@@ -37,6 +38,7 @@ func main() {
 	b := flags.String("b", "", "second run directory")
 	only := flags.String("only", "", "comma-separated case names")
 	ids := flags.String("ids", "", "comma-separated job ids")
+	letters := flags.Bool("letters", false, "compare the letters instead of the CVs")
 	_ = flags.Parse(os.Args[2:])
 	ctx := context.Background()
 
@@ -62,16 +64,23 @@ func main() {
 		results := eval.Write(ctx, w, cases, time.Now())
 		check(eval.SaveRun(*out, results))
 		fmt.Print(eval.Table(results))
+	case "letters":
+		results, err := eval.LoadRun(*run)
+		check(err)
+		w := writer.New(claude.New(claude.ConfigFromEnv())).KeepAnalyses(eval.NewAnalyses())
+		results = eval.Letters(ctx, w, loadCases(*casesDirs, ""), results, time.Now())
+		check(eval.SaveRun(*run, results))
+		fmt.Print(eval.LetterTable(results))
 	case "judge":
 		results, err := eval.LoadRun(*run)
 		check(err)
 		results = eval.JudgeRun(ctx, judge(), loadCases(*casesDirs, ""), results)
 		check(eval.SaveRun(*run, results))
-		fmt.Print(eval.Table(results))
+		fmt.Print(eval.Table(results) + "\n" + eval.LetterTable(results))
 	case "show":
 		results, err := eval.LoadRun(*run)
 		check(err)
-		fmt.Print(eval.Table(results))
+		fmt.Print(eval.Table(results) + "\n" + eval.LetterTable(results))
 	case "compare":
 		first, err := eval.LoadRun(*a)
 		check(err)
@@ -82,7 +91,7 @@ func main() {
 		for _, c := range cases {
 			names = append(names, c.Name)
 		}
-		fmt.Print(eval.CompareTable(names, eval.CompareRuns(ctx, judge(), cases, first, second)))
+		fmt.Print(eval.CompareTable(names, eval.CompareRuns(ctx, judge(), cases, first, second, *letters)))
 	default:
 		fail(usage)
 	}

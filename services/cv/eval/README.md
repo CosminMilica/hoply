@@ -16,6 +16,7 @@ eval/
 | Judge | the judge model's 1–5 marks on specific, human, evidence, relevance and readable (`internal/eval/prompts`) | higher |
 | Compare | the judge picks between two runs' CVs, asked in both orders; a pick that flips with the order is a tie | more wins |
 | ATS, lines, refused, seconds | as the service reports them | |
+| Letters | `eval letters` writes the cover letter and messages from each CV of a run; the same lint (`style.LintLetter`), judge and blind comparison (`compare -letters`) apply | |
 
 The judge is Opus (`EVAL_JUDGE_MODEL`), so the writer (Sonnet) does not grade itself.
 
@@ -28,4 +29,6 @@ scripts/cv-eval.sh judge -run eval/runs/baseline
 scripts/cv-eval.sh write -out eval/runs/next                  # after changing a prompt
 scripts/cv-eval.sh judge -run eval/runs/next
 scripts/cv-eval.sh compare -a eval/runs/baseline -b eval/runs/next
+scripts/cv-eval.sh letters -run eval/runs/next                # letters from that run's CVs, then judge and
+scripts/cv-eval.sh compare -letters -a eval/runs/x -b eval/runs/next  # compare as above
 ```

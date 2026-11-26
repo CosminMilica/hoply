@@ -35,11 +35,14 @@ mirroring no longer works. Hoply uses the job's terms only where the person's fa
 
 | Rule | Where | Source |
 | --- | --- | --- |
-| Open with the job's top priority and the strongest proof of it; never "I am writing to apply" | prompt, checks | [6], [7] |
-| 220–320 words in 3 or 4 short paragraphs; one or two stories, not the CV again | prompt | [6], [8] |
+| Open with the strongest proof of the job's top priority, not with "I" or "I am writing to apply" | prompt, checks, `internal/style` | [6], [7] |
+| 200–300 words in 3 or 4 short paragraphs; two or three stories with outcomes, not the CV again | prompt | [6], [8] |
+| Never hand the ad back ("You need…", "The ad asks…") or answer it requirement by requirement | prompt | the eval, 2026-11-25 |
+| End on a specific question or offer, not "I would welcome a conversation about the role" | prompt, checks | [7], the eval |
+| At most two tools in a sentence, no trailing participles, no stock phrases | prompt, checks, `internal/style` | the eval, 2026-11-25 |
 | One sentence on why this company, only from what the ad says; no flattery | prompt, `J` facts | [6] |
 | No clichés or generic AI phrasing ("passionate", "team player", "perfect fit") | prompt, checks | [6], [7] |
-| A message after applying: under 120 words, the role, two proofs, a short ask for a call | prompt | [9], [10] |
+| A message after applying: under 100 words, the role, one proof told as context rather than achievements, an easy ask | prompt | [9], [10] |
 | A connection note within LinkedIn's 300 characters | prompt, checks | the platform's limit |
 | One follow-up, about a week after applying: the role, one reason they fit, a question about next steps | prompt, page hint | [11], [12] |
 | The same facts, checks and naming rules as the CV | checks | Hoply's own rule |

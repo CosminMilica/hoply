@@ -29,7 +29,9 @@ const MaxConnectionNote = 300
 // cliches are what recruiters skip and what reads as written by a machine.
 var cliches = []string{"passionate", "team player", "hard-working", "hardworking", "results-driven", "detail-oriented",
 	"perfect fit", "perfect candidate", "dream job", "i am writing to", "i'm writing to", "i believe i would be",
-	"to whom it may concern", "just checking in", "!"}
+	"to whom it may concern", "just checking in", "look forward to hearing", "please find attached",
+	"would love the opportunity", "excited to apply", "exceptional addition", "uniquely positions", "hit the ground running",
+	"one more reason i fit", "!"}
 
 // WithJob is the catalogue with what the ad says about the role and the company
 // as facts J1, J2…, which the letter's sentences about the company cite.
