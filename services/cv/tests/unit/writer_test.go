@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 
 	"cv/internal/claude"
+	"cv/internal/grounding"
 	"cv/internal/models"
 	"cv/internal/writer"
 )
@@ -332,4 +334,56 @@ func TestWriterAsksWhatMakesEveryCVStronger(t *testing.T) {
 	if _, err := writer.New(noLogin).ProfileQuestions(context.Background(), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
 		t.Fatalf("login needed: %v", err)
 	}
+}
+
+// gatedModel holds every analysis until released and counts them; other runs answer at once.
+type gatedModel struct {
+	mu       sync.Mutex
+	analyses int
+	release  chan struct{}
+}
+
+func (g *gatedModel) Run(_ context.Context, req claude.Request) (json.RawMessage, error) {
+	if req.System != grounding.AnalyzeSystem {
+		return probeOutput, nil
+	}
+	g.mu.Lock()
+	g.analyses++
+	g.mu.Unlock()
+	<-g.release
+	return analysisOutput, nil
+}
+
+func (*gatedModel) Model() string  { return "claude-sonnet-5-5" }
+func (*gatedModel) HasToken() bool { return true }
+
+func TestWriterAnalysesAJobOnceForCallersAskingAtOnce(t *testing.T) {
+	model := &gatedModel{release: make(chan struct{})}
+	w := writer.New(model)
+	var wg sync.WaitGroup
+	results := make([]int, 3)
+	for i := range results {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			questions, _ := w.Questions(context.Background(), catalogJob(t, 0), sampleProfile(t))
+			results[i] = len(questions)
+		}()
+	}
+	time.Sleep(50 * time.Millisecond)
+	close(model.release)
+	wg.Wait()
+	equal(t, model.analyses, 1)
+	equal(t, results, []int{1, 1, 1})
+
+	held := &gatedModel{release: make(chan struct{})}
+	waiting := writer.New(held)
+	go func() { _, _ = waiting.Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)) }()
+	time.Sleep(50 * time.Millisecond)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := waiting.Questions(ctx, catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
+		t.Fatalf("a caller that stops waiting gets no questions: %v", err)
+	}
+	close(held.release)
 }

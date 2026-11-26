@@ -22,8 +22,9 @@ type LetterWriter interface {
 }
 
 const (
-	// LetterTimeout is the longest writing one CV's letter may take.
-	LetterTimeout = 5 * time.Minute
+	// LetterTimeout is the longest writing one CV's letter may take: the job's analysis and two attempts, each up
+	// to Claude's 3-minute deadline, plus a margin.
+	LetterTimeout = 10 * time.Minute
 	// MaxRecruiter is the longest recruiter name.
 	MaxRecruiter = 80
 	// MaxLetterText is the longest cover letter that can be exported.

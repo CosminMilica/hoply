@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/shared/mocks/node'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import SavedPage from './SavedPage.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -44,6 +46,21 @@ describe('SavedPage', () => {
     await vi.waitFor(() => expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready'))
     expect(applications.applications.get(seedId(4))?.status).toBe('saved')
     expect(button('CV ready 1')).toBeTruthy()
+  })
+
+  it('says when the saved jobs cannot be loaded, and asks for them 200 at a time', async () => {
+    const { applications } = useServices()
+    applications.track(seedId(1), 'saved')
+    for (let i = 0; i < 204; i += 1) applications.track(`44444444-0000-4000-8000-${String(i).padStart(12, '0')}`, 'saved')
+    const asked: number[] = []
+    server.use(http.get('*/api/jobs/v1/jobs', ({ request }) => {
+      asked.push((new URL(request.url).searchParams.get('ids') ?? '').split(',').length)
+      return HttpResponse.json({ message: 'down' }, { status: 503 })
+    }))
+    await mountPage(SavedPage)
+    await vi.waitFor(() => expect(text()).toContain('We could not load your saved jobs'))
+    expect(asked.slice(0, 2).sort((a, b) => b - a)).toEqual([200, 5])
+    expect(text()).not.toContain('Nothing saved yet')
   })
 
   it('prepares a CV for a saved job, or removes it', async () => {

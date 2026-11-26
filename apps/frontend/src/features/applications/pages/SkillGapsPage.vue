@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { askedLine, skillGaps } from '../gaps'
 import { useTrackedJobs } from '../composables/useTrackedJobs'
 
-const { tracked, skills, loading } = useTrackedJobs()
+const { tracked, skills, loading, error } = useTrackedJobs()
 const total = computed(() => tracked.value.length)
 const gaps = computed(() => skillGaps(tracked.value.map(entry => entry.job), skills.value))
 const sections = computed(() => [
@@ -21,6 +21,7 @@ const sections = computed(() => [
     </div>
 
     <USkeleton v-if="loading" class="h-40 w-full rounded-[14px]" />
+    <UAlert v-else-if="error" color="error" variant="subtle" title="We could not load your saved jobs" description="Try again in a moment." />
     <div v-else-if="!total" class="flex flex-col gap-2.5 rounded-[14px] border border-default bg-elevated p-[22px]">
       <p class="m-0 text-[15px] leading-normal font-medium text-muted">Save a few jobs first. Their requirements show here, next to your profile.</p>
       <UButton :to="{ name: 'hoply-job-add', query: { from: 'saved' } }" icon="i-lucide-plus" label="Add a job" size="lg" block class="justify-center" />

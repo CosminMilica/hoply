@@ -49,7 +49,7 @@ func TestStyleFindsWhatReadsMachineMade(t *testing.T) {
 func TestTheReviewGetsTheStyleFindingsAndSkillsAreNamedOnce(t *testing.T) {
 	c, job := catalogue(t)
 	prompt := c.ReviewPrompt(job, request(), c.Known, nil, syntheticAnswer(t), []style.Finding{{Where: "summary", Rule: style.Formula, Text: "x"}})
-	equal(t, strings.Contains(prompt, `"rule": "formula"`), true)
+	equal(t, strings.Contains(prompt, `"rule":"formula"`), true)
 	equal(t, strings.Contains(c.Prompt(job, request(), c.Known, nil), `"style"`), false)
 
 	dup := grounding.Catalogue{Facts: map[string]grounding.Fact{}, Known: []string{"FluxCD", "Flux CD", "Helm"}, Matched: []string{"Flux CD"}}

@@ -64,8 +64,9 @@ func (s *BoardService) Of(ctx context.Context, ident identity.IdentityContext, l
 	return of, nil
 }
 
-// Follow follows the board of a job link and, with an importer, imports it in
-// the background. A board already listed or followed is returned as it is.
+// Follow follows the board of a job link and, with an importer, imports a newly
+// followed board in the background. A board already listed or followed is
+// returned as it is.
 func (s *BoardService) Follow(ctx context.Context, ident identity.IdentityContext, in models.FollowInput) (*models.Board, error) {
 	if err := requireSubject(ident); err != nil {
 		return nil, err
@@ -85,11 +86,12 @@ func (s *BoardService) Follow(ctx context.Context, ident identity.IdentityContex
 			}
 		}
 	}
-	stored, err := s.repo.Follow(ctx, models.Board{Company: company, Platform: platform, Board: board})
+	stored, created, err := s.repo.Follow(ctx, models.Board{Company: company, Platform: platform, Board: board})
 	if err != nil {
 		return nil, err
 	}
-	if s.importer != nil {
+	// A board followed before is already imported on every run; only a new one is imported at once.
+	if created && s.importer != nil {
 		follow := importer.Board{Company: stored.Company, Platform: stored.Platform, Board: stored.Board}
 		s.background(func() {
 			ctx, cancel := context.WithTimeout(context.Background(), FollowTimeout)

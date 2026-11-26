@@ -81,7 +81,13 @@ func (s *JobService) List(ctx context.Context, ident identity.IdentityContext, q
 	if err != nil {
 		return nil, err
 	}
-	return &models.JobList{Items: jobs, Total: len(jobs)}, nil
+	total := len(jobs)
+	if filter.Limit > 0 && total == filter.Limit {
+		if total, err = s.repo.Count(ctx, ident, filter); err != nil {
+			return nil, err
+		}
+	}
+	return &models.JobList{Items: jobs, Total: total}, nil
 }
 
 func (s *JobService) Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error) {

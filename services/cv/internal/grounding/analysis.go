@@ -97,11 +97,11 @@ func AnalysisPrompt(job cvdoc.Job) string {
 	for i, line := range job.Responsibilities {
 		lines = append(lines, analysisLine{Index: i, Text: line})
 	}
-	raw, err := json.MarshalIndent(analysisMessage{
+	raw, err := json.Marshal(analysisMessage{
 		Title: job.Title, Company: job.Company, Level: job.Level, YearsRequired: job.YearsRequired, About: job.About,
 		AboutCompany: job.AboutCompany, Product: job.Product, Lines: lines, Qualifications: job.Qualifications,
 		NiceToHave: job.Bonuses, Requirements: nonNil(job.Keywords),
-	}, "", "  ")
+	})
 	if err != nil {
 		panic(err)
 	}

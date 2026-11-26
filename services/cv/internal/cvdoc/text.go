@@ -6,6 +6,7 @@ package cvdoc
 import (
 	"regexp"
 	"strings"
+	"sync"
 	"unicode"
 	"unicode/utf8"
 )
@@ -36,11 +37,20 @@ func JoinList(items []string) string {
 	return strings.Join(items[:len(items)-1], ", ") + " and " + items[len(items)-1]
 }
 
+// wordPatterns caches wordPattern: the same skills and stock words are looked for in every sentence.
+var wordPatterns sync.Map
+
 // wordPattern matches word as a whole word, ignoring case: group 1 is the character before it, 2 the word, 3 the
 // character after. A boundary is anything but a letter, a digit, "_", "+" or "#", as in the jobs service's
 // skills: "C++", "C#" and ".NET" match, and "C" does not match inside "C++".
 func wordPattern(word string) *regexp.Regexp {
-	return regexp.MustCompile(`(?i)(^|[^\pL\pN_+#])(` + regexp.QuoteMeta(word) + `)($|[^\pL\pN_+#])`)
+	key := strings.ToLower(word)
+	if cached, ok := wordPatterns.Load(key); ok {
+		return cached.(*regexp.Regexp)
+	}
+	pattern := regexp.MustCompile(`(?i)(^|[^\pL\pN_+#])(` + regexp.QuoteMeta(word) + `)($|[^\pL\pN_+#])`)
+	wordPatterns.Store(key, pattern)
+	return pattern
 }
 
 // HasWord reports whether text names word as a whole word, ignoring case.
