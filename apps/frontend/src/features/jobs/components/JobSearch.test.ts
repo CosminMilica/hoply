@@ -16,8 +16,16 @@ const wait = async (ms: number) => {
   await settle()
 }
 
+/** Shows the jobs, then the swipe deck. */
+const showDeck = async (label: string) => {
+  await click(button(label))
+  await click(button('Swipe'))
+}
+const rows = () => [...document.querySelectorAll('[data-test="job-tile"]')].map(row => row.getAttribute('aria-label'))
+
 afterEach(() => {
   document.body.innerHTML = ''
+  localStorage.clear()
   vi.useRealTimers()
 })
 
@@ -34,7 +42,7 @@ describe('JobSearch', () => {
     expect(button('No jobs match yet').disabled).toBe(true)
     await click(button('Reset filters'))
     await type(input('What'), 'devops')
-    await click(button('Show 2 jobs'))
+    await showDeck('Show 2 jobs')
     expect(text()).toContain('“devops” · All areas · Anywhere')
     expect(text()).toContain('2 jobs left')
     expect(cardTitle()).toBe('DevOps Engineer')
@@ -47,7 +55,7 @@ describe('JobSearch', () => {
     const devops = jobs.jobs.find(job => job.id === seedId(2))!
     jobs.jobs.push({ ...structuredClone(devops), id: '22222222-0000-4000-8000-000000000001', city: 'Iași' })
     await mountPage(JobSearch)
-    await click(button('Show 4 jobs'))
+    await showDeck('Show 4 jobs')
     expect(text()).toContain('4 jobs left')
     await click(button('Save this job'))
     await wait(260)
@@ -60,7 +68,7 @@ describe('JobSearch', () => {
     const { applications, jobs, cvs } = useServices()
     jobs.jobs.find(job => job.id === seedId(2))!.source = 'import'
     await mountPage(JobSearch)
-    await click(button('Show 4 jobs'))
+    await showDeck('Show 4 jobs')
     expect(cardTitle()).toBe('DevOps Engineer')
 
     await click(button('Save this job'))
@@ -91,7 +99,7 @@ describe('JobSearch', () => {
   it('hides the undo after a while', async () => {
     useServices()
     await mountPage(JobSearch)
-    await click(button('Show 4 jobs'))
+    await showDeck('Show 4 jobs')
     vi.useFakeTimers()
     button('Save this job').click()
     await vi.advanceTimersByTimeAsync(300)
@@ -105,7 +113,7 @@ describe('JobSearch', () => {
   it('opens Prepare your CV on Tailor CV, and the job on Details', async () => {
     const { applications } = useServices()
     const { router } = await mountPage(JobSearch)
-    await click(button('Show 4 jobs'))
+    await showDeck('Show 4 jobs')
     await click(button('Details'))
     expect(router.currentRoute.value).toMatchObject({ name: 'hoply-job', params: { id: seedId(2) } })
     await router.push('/jobs')
@@ -119,7 +127,7 @@ describe('JobSearch', () => {
   it('reacts to swipes and taps on the card', async () => {
     useServices()
     const { router } = await mountPage(JobSearch)
-    await click(button('Show 4 jobs'))
+    await showDeck('Show 4 jobs')
     const card = () => document.querySelector<HTMLElement>('[data-test="job-card"]')!
     const pointer = (type: string, x: number, y: number) => {
       const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y }) as unknown as PointerEvent
@@ -150,6 +158,72 @@ describe('JobSearch', () => {
     expect(router.currentRoute.value.name).toBe('hoply-prep')
   })
 
+  it('shows the jobs as a grid by default, best match first, a page at a time, and remembers the view', async () => {
+    const { jobs, applications } = useServices()
+    const devops = jobs.jobs.find(job => job.id === seedId(2))!
+    for (let i = 0; i < 26; i += 1) jobs.jobs.push({ ...structuredClone(devops), id: `33333333-0000-4000-8000-${String(i).padStart(12, '0')}`, title: `Platform Engineer ${i}` })
+    const { router } = await mountPage(JobSearch)
+    await click(button('Show 30 jobs'))
+    expect(button('Grid').getAttribute('aria-pressed')).toBe('true')
+    expect(document.querySelector('[data-test="job-card"]')).toBeNull()
+    expect(rows()).toHaveLength(24)
+    expect(rows()[0]).toBe('DevOps Engineer at Bitdefender')
+    await click(button('Show 6 more'))
+    expect(rows()).toHaveLength(30)
+
+    await click(button('Save'))
+    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
+    expect(text()).toContain('Saved · DevOps Engineer')
+    expect(rows()).toHaveLength(29)
+    await click(button('Undo'))
+    expect(applications.applications.has(seedId(2))).toBe(false)
+    expect(rows()[0]).toBe('DevOps Engineer at Bitdefender')
+
+    await click(button('Skip'))
+    expect(text()).toContain('Skipped · DevOps Engineer')
+    expect(rows()).not.toContain('DevOps Engineer at Bitdefender')
+    await click(document.querySelector<HTMLButtonElement>('[data-test="job-tile"] button')!)
+    expect(router.currentRoute.value.name).toBe('hoply-job')
+    await router.push('/jobs')
+    await settle()
+    await click(button('Details'))
+    expect(router.currentRoute.value.name).toBe('hoply-job')
+    await router.push('/jobs')
+    await settle()
+    await click(button('Tailor CV'))
+    expect(router.currentRoute.value.name).toBe('hoply-prep')
+
+    await router.push('/jobs')
+    await settle()
+    await click(button('Swipe'))
+    expect(localStorage.getItem('hoply.jobs.view')).toBe('swipe')
+    expect(cardTitle()).toBeTruthy()
+  })
+
+  it('shows a view remembered from before the grid as the grid', async () => {
+    useServices()
+    localStorage.setItem('hoply.jobs.view', 'list')
+    await mountPage(JobSearch)
+    await click(button('Show 4 jobs'))
+    expect(button('Grid').getAttribute('aria-pressed')).toBe('true')
+    expect(rows()).toHaveLength(4)
+  })
+
+  it('says when the grid is all seen, and brings skipped jobs back', async () => {
+    const { applications } = useServices()
+    for (const n of [1, 2, 3, 4] as const) applications.skips.push(seedId(n))
+    await mountPage(JobSearch)
+    useJobSearchStore().stage = 'deck'
+    await settle()
+    expect(text()).toContain('You are all caught up')
+    await click(button('Change filters'))
+    expect(text()).toContain('Position area')
+    useJobSearchStore().stage = 'deck'
+    await settle()
+    await click(button('Bring back skipped jobs'))
+    expect(rows()).toHaveLength(4)
+  })
+
   it('fills the filters from the person’s preferences, once', async () => {
     useAllServices(sampleProfile({ city: 'Bucharest', work_modes: ['hybrid', 'onsite'], target_seniority: ['mid'] }))
     await mountPage(JobSearch)
@@ -170,6 +244,8 @@ describe('JobSearch', () => {
     expect([...document.querySelectorAll('button')].some(item => item.textContent?.trim() === 'Include remote')).toBe(false)
     await click(button('Iași'))
     expect(button('Include remote').getAttribute('aria-pressed')).toBe('true')
+    await click(button('Include remote'))
+    expect(button('Include remote').getAttribute('aria-pressed')).toBe('false')
   })
 
   it('reminds the person of their market, searches their country, and offers to add a job', async () => {

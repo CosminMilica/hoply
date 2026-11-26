@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { useLocalStorage } from '@vueuse/core'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { LEVELS, type JobFilters } from '../api/jobs.schema'
 
@@ -13,6 +14,8 @@ export const useJobSearchStore = defineStore('job-search', () => {
   /** The person's country, from their profile: the search stays in it. */
   const country = ref('')
   const stage = ref<'filters' | 'deck'>('filters')
+  /** How the jobs are shown: a grid of cards, or the swipe deck; remembered on this device. */
+  const view = useLocalStorage<'grid' | 'swipe'>('hoply.jobs.view', 'grid')
   const prefilled = ref(false)
 
   const filters = computed<JobFilters>(() => ({
@@ -56,5 +59,5 @@ export const useJobSearchStore = defineStore('job-search', () => {
     if (match) level.value = match
   }
 
-  return { query, location, includeRemote, areas, level, country, stage, prefilled, filters, anywhere, summary, toggleArea, reset, prefill }
+  return { query, location, includeRemote, areas, level, country, stage, view, prefilled, filters, anywhere, summary, toggleArea, reset, prefill }
 })

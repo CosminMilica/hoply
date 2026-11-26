@@ -48,3 +48,14 @@ boards:
   - {company: Frequentis, platform: smartrecruiters, board: Frequentis}
   - {company: P3 Digital Services, platform: smartrecruiters, board: P3DigitalServices}
   - {company: Greppy Systems, platform: smartrecruiters, board: GreppySystems}
+  - {company: Deutsche Bank, platform: workday, board: db.wd3.myworkdayjobs.com/DBWebsite}
+  - {company: CGM, platform: workday, board: cgm.wd3.myworkdayjobs.com/cgm}
+  - {company: Accesa, platform: smartrecruiters, board: ACCESA}
+  - {company: Aumovio, platform: smartrecruiters, board: Aumovio}
+  - {company: Software Mind, platform: smartrecruiters, board: SoftwareMind}
+  - {company: Grab, platform: smartrecruiters, board: Grab}
+  - {company: Taktile, platform: ashby, board: taktile}
+  - {company: Equal1, platform: ashby, board: equal1}
+  - {company: Speechify, platform: greenhouse, board: speechify}
+  - {company: Showpad, platform: greenhouse, board: showpad}
+  - {company: Sand Technologies, platform: greenhouse, board: sandtechholdingslimited}

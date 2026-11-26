@@ -5,12 +5,14 @@ import { useRouter } from 'vue-router'
 import { useApplicationMutations } from '@/features/applications/composables/useApplications'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import JobFilters from './JobFilters.vue'
+import JobGrid from './JobGrid.vue'
 import SwipeDeck from './SwipeDeck.vue'
 import { useDeck, type Decision, type ScoredJob } from '../composables/useDeck'
 import { analyzeImported } from '../composables/useJobs'
 import { useJobSearchStore } from '../stores/search'
 
 const UNDO_MS = 3500
+const VIEWS = [{ id: 'grid', label: 'Grid', icon: 'i-lucide-layout-grid' }, { id: 'swipe', label: 'Swipe', icon: 'i-lucide-layers' }] as const
 const router = useRouter()
 const search = useJobSearchStore()
 const { deck, loading, error } = useDeck()
@@ -25,6 +27,8 @@ const last = ref<{ job: ScoredJob, decision: 'save' | 'skip' } | null>(null)
 let timer: number | undefined
 
 const toast = computed(() => (last.value ? `${last.value.decision === 'save' ? 'Saved' : 'Skipped'} · ${last.value.job.title}` : ''))
+// A view this device remembered from before the grid (the list) shows as the grid.
+const shownView = computed(() => (search.view === 'swipe' ? 'swipe' : 'grid'))
 const results = computed(() => `${deck.value.length} ${deck.value.length === 1 ? 'job' : 'jobs'} left`)
 
 function remember(job: ScoredJob, decision: 'save' | 'skip') {
@@ -65,16 +69,42 @@ onBeforeUnmount(() => window.clearTimeout(timer))
 
 <template>
   <JobFilters v-if="search.stage === 'filters'" :count="deck.length" @show="show" />
-  <div v-else class="mx-auto flex h-full min-h-[560px] w-full max-w-[560px] flex-col gap-2.5">
+  <div v-else class="mx-auto flex h-full w-full flex-col gap-2.5" :class="search.view === 'swipe' ? 'min-h-[560px] max-w-[560px]' : 'max-w-[1080px]'">
     <div class="flex items-center justify-between gap-2.5">
       <div class="flex min-w-0 flex-col gap-px">
         <h1 class="m-0 truncate text-[15px] font-extrabold">{{ search.summary }}</h1>
         <span class="text-[13px] font-medium text-muted">{{ results }}</span>
       </div>
-      <UButton label="Filters" color="neutral" variant="outline" class="shrink-0" @click="search.stage = 'filters'" />
+      <div class="flex shrink-0 items-center gap-2">
+        <div role="group" aria-label="View" class="flex gap-0.5 rounded-[10px] bg-accented p-0.5">
+          <UButton
+            v-for="option in VIEWS"
+            :key="option.id"
+            :icon="option.icon"
+            :aria-label="option.label"
+            :aria-pressed="shownView === option.id"
+            :title="option.label"
+            size="sm"
+            color="neutral"
+            :variant="shownView === option.id ? 'solid' : 'ghost'"
+            @click="search.view = option.id"
+          />
+        </div>
+        <UButton label="Filters" color="neutral" variant="outline" @click="search.stage = 'filters'" />
+      </div>
     </div>
     <UAlert v-if="error" color="error" variant="subtle" title="We could not load jobs" />
     <USkeleton v-else-if="loading" class="min-h-[360px] flex-1 rounded-[18px]" />
+    <JobGrid
+      v-else-if="search.view !== 'swipe'"
+      :deck="deck"
+      :toast="toast"
+      @decide="onDecide"
+      @details="job => router.push({ name: 'hoply-job', params: { id: job.id } })"
+      @undo="undo"
+      @change-filters="search.stage = 'filters'"
+      @reset-skipped="clearSkips.mutate()"
+    />
     <SwipeDeck
       v-else
       :deck="deck"
