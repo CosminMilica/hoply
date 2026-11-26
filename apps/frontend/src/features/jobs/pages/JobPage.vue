@@ -22,7 +22,8 @@ const status = computed(() => statuses.value.get(props.id))
 const lists = computed(() => (job.value
   ? [
       { title: 'What you will do', items: job.value.responsibilities },
-      { title: 'What we look for', items: lookFor(job.value) },
+      { title: 'What we look for', items: job.value.qualifications.length ? job.value.qualifications : lookFor(job.value) },
+      { title: 'Nice to have', items: job.value.qualifications.length ? job.value.bonuses : [] },
       { title: 'Why people like it here', items: job.value.perks },
     ].filter(list => list.items.length)
   : []))

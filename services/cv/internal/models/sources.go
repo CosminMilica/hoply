@@ -103,4 +103,7 @@ type Job struct {
 	MustHave         []string  `json:"must_have"`
 	NiceToHave       []string  `json:"nice_to_have"`
 	Responsibilities []string  `json:"responsibilities"`
+	// Qualifications and Bonuses are the ad's own lines for what it asks and what is a plus.
+	Qualifications []string `json:"qualifications"`
+	Bonuses        []string `json:"bonuses"`
 }

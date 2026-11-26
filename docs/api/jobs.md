@@ -43,11 +43,12 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 ```text
 Job       { id, title, company, city, country, work_mode, level, years_required,
             must_have: [string], nice_to_have: [string], responsibilities: [string],
+            qualifications: [string], bonuses: [string],
             about, about_company, product, perks: [string], areas: [string],
             url, source, read_from, requirements_from, sample, added_by_me, created_at,
             origin, posted_at, closed_at }
 JobInput  { title, company, city, country, work_mode, level, years_required, must_have, nice_to_have,
-            responsibilities, about, url, source, read_from }
+            responsibilities, qualifications?, bonuses?, about, about_company?, perks?, url, source, read_from }
 JobDraft  JobInput + { host }
 BoardOf   { platform, board, company, imported }
 Board     { company, platform, board, followed_at }
@@ -135,14 +136,19 @@ Failures are 422 with `code: PAGE_UNREADABLE` and `context.reason`:
   - responsibilities: `Responsibilities`, `Key responsibilities`, `What you will do`, `What you'll do`, `What you'll be
     doing`, `What you will be doing`, `Your role`, `Your responsibilities`, `In this role`, `The role`,
     `Responsabilități`, `Ce vei face`, `Atribuții`
-  - ignored (their lines feed no field): `Benefits`, `What we offer`, `Perks`, `Why you'll`, `Why join`, `About us`,
-    `About {company}`, `Our culture`, `Equal opportunity`, `Apply for this job`, `How to apply`, `Ce oferim`,
-    `Beneficii`, `Despre noi`
+  - about the company (`about_company`): `About us`, `About the company`, `About {company}`, `Company description`,
+    `Who we are`, `Despre noi`, `Despre companie`
+  - perks (`perks`): `Benefits`, `What we offer`, `Perks`, `Why you'll`, `Why join`, `Ce oferim`, `Beneficii`
+  - ignored: `Our culture`, `Equal opportunity`, `Apply for this job`, `How to apply`
+
+  Lines about the company and its perks feed no other field: a city or a skill named there is not the job's.
 - Skills come from a dictionary with aliases (`K8s` → `Kubernetes`, `IaC` → `Infrastructure as Code`, `Postgres` →
   `PostgreSQL`, `golang` → `Go` and a case-sensitive `Go`, Romanian terms such as `rețele` → `Networking`). Skills found
   in the nice-to-have section are `nice_to_have`; skills found in the requirements and responsibilities sections are
   `must_have`; with no sections at all, every skill in the text is `must_have`.
-- `responsibilities`: the lines of the responsibilities section, list markers removed.
+- `responsibilities`, `qualifications`, `bonuses`, `perks`: the lines of the responsibilities, requirements,
+  nice-to-have and perks sections, list markers removed, at most 30 each, each at most 400 characters. The job page
+  shows `qualifications` as "What we look for" when an ad has them, else a line per skill.
 - `years_required`: the first `N years`, `N+ years`, `N yrs` or `N ani`.
 - `city`: from a list of Romanian cities with and without diacritics (Iași, București/Bucharest, Cluj-Napoca,
   Timișoara, Brașov, Constanța, Craiova, Galați, Oradea, Sibiu, Arad, Ploiești, Târgu Mureș); `country` is `Romania`
@@ -154,6 +160,7 @@ Failures are 422 with `code: PAGE_UNREADABLE` and `context.reason`:
 - `title`: the hint, else the JSON-LD title, else the first line. `company`: the hint, else the JSON-LD organisation,
   else a `Company:` / `Firma:` / `Angajator:` line.
 - `about`: the body lines before the first section, longer than 40 characters, joined, at most 4000 characters.
+  `about_company`: the lines of the about-the-company section, joined, at most 4000 characters.
 
 ## Catalog
 
@@ -172,15 +179,17 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `lever`, `lever-eu` | `api.lever.co/v0/postings/{board}?mode=json` (`api.eu.lever.co` for `lever-eu`) |
 | `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
 | `smartrecruiters` | `api.smartrecruiters.com/v1/companies/{board}/postings?country=ro`, 100 a page; each wanted job's description from `/postings/{id}` |
-| `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently; none means no jobs in Romania), then 20 a page with it; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
+| `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
 | `sitemap` | the career site's sitemap; its links with a `/job/` or `/jobs/` segment, each wanted page read like a link (JSON-LD first) |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
-  country code `RO`, or a list the platform kept to Romania) and its title names one of the areas (`DevOps`,
-  `Backend`, `Data`, `Sysadmin`). Where the list has no descriptions, only those jobs are read, a quarter of a second
+  country code `RO`, or a list the platform kept to Romania) and its title names one of the tech areas: `DevOps`,
+  `Backend`, `Frontend`, `Full stack`, `Mobile`, `Data`, `AI`, `QA`, `Security`, `Embedded`, `Sysadmin`, `Product`,
+  `Design` (a generic developer title is `Backend` unless it names a narrower area). Where the list has no descriptions, only those jobs are read, a quarter of a second
   apart. Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform and the platform's id: a later run updates it and keeps requirements Claude's
   analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
-  answers with no jobs, or whose descriptions could not all be read, closes nothing.
+  answers with no jobs, or whose descriptions could not all be read, closes nothing. A run that read the followed
+  boards also closes the jobs of every board no longer listed or followed.
 - A board that fails is logged and skipped; the others still run. Answers are capped at 32 MB and 30 s.
 

@@ -315,3 +315,29 @@ func TestReadHeadingVocabularyAndIgnoredSections(t *testing.T) {
 		}
 	}
 }
+
+func TestReadKeepsTheAdsOwnLines(t *testing.T) {
+	// An Endava ad as the SmartRecruiters reader joins its sections.
+	ad := strings.Join([]string{
+		"Development is the largest discipline at Endava. Our developers design, build, and release software products.",
+		"Responsibilities:", "- Develop functionalities according to defined acceptance criteria;", "- Write reusable, testable, and efficient code;",
+		"Requirements", "- 6+ years of experience working in Python;", "- Familiarity with some ORM (Object Relational Mapper) libraries;",
+		"- Good unit test and debugging skills;", "Nice to have:", "- Experience with Linux, Docker and Kubernetes;",
+		"What we offer", "- Finance: Competitive salary package, share plan;", "- Health: Global internal wellbeing programme in Bucharest;",
+		"About us", "Technology is our how. And people are our why.", "We partner with leading brands. We use Java everywhere.",
+		"Equal opportunity", "We welcome applications from everyone.",
+	}, "\n")
+	got := extract.Read(ad, extract.Hints{Title: "Senior Developer (Python)", Company: "Endava"})
+	if !slices.Equal(got.Qualifications, []string{"6+ years of experience working in Python;", "Familiarity with some ORM (Object Relational Mapper) libraries;", "Good unit test and debugging skills;"}) ||
+		!slices.Equal(got.Bonuses, []string{"Experience with Linux, Docker and Kubernetes;"}) ||
+		!slices.Equal(got.Perks, []string{"Finance: Competitive salary package, share plan;", "Health: Global internal wellbeing programme in Bucharest;"}) ||
+		got.AboutCompany != "Technology is our how. And people are our why. We partner with leading brands. We use Java everywhere." {
+		t.Fatalf("the ad's own lines: %+v", got)
+	}
+	if slices.Contains(got.MustHave, "Java") || got.City != "" || len(got.Responsibilities) != 2 {
+		t.Fatalf("what the ad says about the company and its perks feeds no other field: %+v", got)
+	}
+	if about := extract.Read("T\nAbout Endava\n- Founded in 2000", extract.Hints{Company: "Endava"}); about.AboutCompany != "Founded in 2000" {
+		t.Fatalf("About {company}: %+v", about)
+	}
+}

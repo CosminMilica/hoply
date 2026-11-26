@@ -200,7 +200,8 @@ func draft(r extract.Result, source, readFrom, link string) *models.JobDraft {
 	return &models.JobDraft{Host: host, JobInput: models.JobInput{
 		Title: r.Title, Company: r.Company, City: r.City, Country: r.Country, WorkMode: r.WorkMode, Level: r.Level,
 		YearsRequired: r.YearsRequired, MustHave: r.MustHave, NiceToHave: r.NiceToHave,
-		Responsibilities: r.Responsibilities, About: r.About, URL: link, Source: source, ReadFrom: readFrom,
+		Responsibilities: r.Responsibilities, Qualifications: r.Qualifications, Bonuses: r.Bonuses, About: r.About,
+		AboutCompany: r.AboutCompany, Perks: r.Perks, URL: link, Source: source, ReadFrom: readFrom,
 	}}
 }
 
@@ -361,7 +362,11 @@ func CleanJob(data models.JobInput) (models.JobInput, error) {
 	c.list("must_have", &data.MustHave, extract.MaxSkills, maxSkill, seen)
 	c.list("nice_to_have", &data.NiceToHave, extract.MaxSkills, maxSkill, seen)
 	c.list("responsibilities", &data.Responsibilities, extract.MaxResponsibilities, extract.MaxResponsibility, nil)
+	c.list("qualifications", &data.Qualifications, extract.MaxResponsibilities, extract.MaxResponsibility, nil)
+	c.list("bonuses", &data.Bonuses, extract.MaxResponsibilities, extract.MaxResponsibility, nil)
+	c.list("perks", &data.Perks, extract.MaxResponsibilities, extract.MaxResponsibility, nil)
 	c.text("about", &data.About, extract.MaxAbout, false)
+	c.text("about_company", &data.AboutCompany, extract.MaxAbout, false)
 	if c.err == nil {
 		data.URL = strings.TrimSpace(data.URL)
 		if data.URL != "" && !validURL(data.URL) {

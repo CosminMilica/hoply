@@ -1,6 +1,6 @@
 // Package importer reads the jobs of the companies in boards.yaml from their
 // public job boards, on a schedule, and keeps the ones based in Romania in the
-// areas Find jobs filters on.
+// tech areas Find jobs filters on (extract.Areas).
 package importer
 
 import (
@@ -40,7 +40,10 @@ type Lister interface {
 }
 
 // Romania is the market the importer keeps to.
-var Romania = fetch.Country{Code: "RO", Name: "Romania"}
+var Romania = fetch.Country{Code: "RO", Name: "Romania", In: func(place string) bool {
+	_, country := extract.Place(place)
+	return country == "Romania"
+}}
 
 // Lock takes a lock only one importer holds at a time; ok is false when
 // another holds it.
@@ -87,14 +90,21 @@ func (im *Importer) Listed() []Board {
 // Boards returns the boards a run reads: the listed ones, then the followed
 // ones not listed. A failure to read the followed ones is logged.
 func (im *Importer) Boards(ctx context.Context) []Board {
+	boards, _ := im.allBoards(ctx)
+	return boards
+}
+
+// allBoards is Boards, and whether it holds every board: false when the
+// followed ones could not be read.
+func (im *Importer) allBoards(ctx context.Context) ([]Board, bool) {
 	boards := im.Listed()
 	if im.followed == nil {
-		return boards
+		return boards, true
 	}
 	followed, err := im.followed.Followed(ctx)
 	if err != nil {
 		slog.Error("followed job boards could not be read", "error", err)
-		return boards
+		return boards, false
 	}
 	for _, f := range followed {
 		b := Board{Company: f.Company, Platform: f.Platform, Board: f.Board}
@@ -102,7 +112,7 @@ func (im *Importer) Boards(ctx context.Context) []Board {
 			boards = append(boards, b)
 		}
 	}
-	return boards
+	return boards, true
 }
 
 // Import reads one board now, outside the schedule.
@@ -177,7 +187,9 @@ func (im *Importer) Run(ctx context.Context, interval time.Duration) {
 }
 
 // RunOnce imports the boards in turn, unless another importer holds the lock.
-// A board that fails is logged and skipped; the others still run.
+// A board that fails is logged and skipped; the others still run. A run that
+// reads every board then closes the jobs of boards no longer listed or
+// followed.
 func (im *Importer) RunOnce(ctx context.Context) []Result {
 	unlock, ok, err := im.lock(ctx)
 	if err != nil || !ok {
@@ -187,14 +199,26 @@ func (im *Importer) RunOnce(ctx context.Context) []Result {
 		return nil
 	}
 	defer unlock()
+	boards, complete := im.allBoards(ctx)
 	results := []Result{}
-	for i, b := range im.Boards(ctx) {
+	for i, b := range boards {
 		if i > 0 && !sleep(ctx, im.pause) {
-			break
+			return results
 		}
 		r := im.board(ctx, b)
 		logResult(r)
 		results = append(results, r)
+	}
+	if complete {
+		origins, names := make([]string, len(boards)), make([]string, len(boards))
+		for i, b := range boards {
+			origins[i], names[i] = b.Platform, b.Board
+		}
+		if closed, err := im.store.CloseUnlisted(ctx, origins, names); err != nil {
+			slog.Error("jobs of boards no longer listed could not be closed", "error", err)
+		} else if closed > 0 {
+			slog.Info("jobs of boards no longer listed closed", "closed", closed)
+		}
 	}
 	return results
 }
@@ -259,7 +283,7 @@ func (im *Importer) board(ctx context.Context, b Board) Result {
 // read: its title names an area, and it is in Romania or the platform kept the
 // list to Romania.
 func wanted(p fetch.Posting) bool {
-	if len(extract.Areas(p.Page.Title)) == 0 {
+	if len(extract.AreasOf(p.Page.Title)) == 0 {
 		return false
 	}
 	_, country := extract.Place(strings.Join(append(slices.Clone(p.Places), p.Page.Location, p.Page.City), " · "))
@@ -279,7 +303,7 @@ func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 	if country == "" && (p.InCountry || romaniaCode(p.Page.Country)) {
 		country = "Romania"
 	}
-	areas := extract.Areas(p.Page.Title)
+	areas := extract.AreasOf(p.Page.Title)
 	if country != "Romania" || len(areas) == 0 || p.ID == "" {
 		return models.ImportedJob{}, false
 	}
@@ -289,7 +313,8 @@ func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 			Title: read.Title, Company: b.Company, City: city, Country: country,
 			WorkMode: firstOf(p.Page.WorkMode, extract.WorkMode(where+" "+p.Page.Title), read.WorkMode),
 			Level:    read.Level, YearsRequired: read.YearsRequired, MustHave: read.MustHave, NiceToHave: read.NiceToHave,
-			Responsibilities: read.Responsibilities, About: read.About, URL: p.URL, Source: "import", ReadFrom: p.Page.ReadFrom,
+			Responsibilities: read.Responsibilities, Qualifications: read.Qualifications, Bonuses: read.Bonuses, About: read.About,
+			AboutCompany: read.AboutCompany, Perks: read.Perks, URL: p.URL, Source: "import", ReadFrom: p.Page.ReadFrom,
 		},
 		Areas: areas, Origin: b.Platform, ExternalID: p.ID, Board: b.Board, PostedAt: p.PostedAt,
 	}, true

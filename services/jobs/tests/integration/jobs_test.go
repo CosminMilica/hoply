@@ -93,8 +93,10 @@ func TestJobRepositoryAgainstPostgres(t *testing.T) {
 		mine.Perks == nil || mine.Areas == nil || mine.AboutCompany != "" || mine.CreatedAt.IsZero() {
 		t.Fatalf("create: %+v %v", mine, err)
 	}
-	theirs, err := repo.Create(ctx, other, models.JobInput{Title: "Their job", Source: "text", ReadFrom: "text"})
-	if err != nil || theirs.YearsRequired != nil || theirs.MustHave == nil {
+	theirs, err := repo.Create(ctx, other, models.JobInput{Title: "Their job", Source: "text", ReadFrom: "text",
+		Qualifications: []string{"Kafka in production"}, Bonuses: []string{"Rust"}, AboutCompany: "A bank.", Perks: []string{"Gym"}})
+	if err != nil || theirs.YearsRequired != nil || theirs.MustHave == nil || theirs.Qualifications[0] != "Kafka in production" ||
+		theirs.Bonuses[0] != "Rust" || theirs.AboutCompany != "A bank." || theirs.Perks[0] != "Gym" || mine.Qualifications == nil {
 		t.Fatalf("create other: %+v %v", theirs, err)
 	}
 

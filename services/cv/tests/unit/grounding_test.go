@@ -230,6 +230,13 @@ func TestAnalysisReadsTheAdAndKeepsOnlyRealDuties(t *testing.T) {
 	}
 	equal(t, message["title"], "Snowflake Administrator DevOps")
 	equal(t, len(message["lines"].([]any)), len(job.Responsibilities))
+	equal(t, message["qualifications"], nil)
+	job.Qualifications, job.Bonuses = []string{"Good unit test and debugging skills;"}, []string{"Knowledge of MongoDB;"}
+	if err := json.Unmarshal([]byte(grounding.AnalysisPrompt(job)), &message); err != nil {
+		t.Fatal(err)
+	}
+	equal(t, message["qualifications"], []any{"Good unit test and debugging skills;"})
+	equal(t, message["nice_to_have"], []any{"Knowledge of MongoDB;"})
 	analysis, err := grounding.ParseAnalysis(json.RawMessage(`{"role":"r","priorities":[{"theme":"IaC"}],
 		"responsibilities":[{"index":3,"theme":"IaC"},{"index":99,"theme":"x"},{"index":3,"theme":"dup"},{"index":0,"theme":"Snowflake"}]}`), job)
 	if err != nil {

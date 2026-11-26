@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { CATALOG_JOBS } from './jobs-seed'
 
-type Job = (typeof CATALOG_JOBS)[number]
+type Job = (typeof CATALOG_JOBS)[number] & { qualifications?: string[], bonuses?: string[] }
 interface Answer { status: number, body?: unknown }
 
 const plain = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
@@ -21,6 +21,8 @@ export const LINK_DRAFT = {
   nice_to_have: ['Helm', 'Kafka', 'PostgreSQL'],
   responsibilities: ['Run and evolve our Kubernetes clusters on AWS.', 'Build CI/CD pipelines with GitHub Actions and Terraform.',
     'Improve monitoring and on-call with Prometheus and Grafana.', 'Write runbooks and help developers ship safely.'],
+  qualifications: ['4+ years running Kubernetes on AWS.', 'You write Go and PostgreSQL every week.'], bonuses: ['Kafka in production.'],
+  about_company: 'Northwind Cloud runs payments for small shops across Europe.', perks: ['Learning budget'],
   about: 'We run the infrastructure behind Northwind payment products and we want releases to be boring.',
   url: 'https://careers.northwind.example/jobs/platform-engineer', source: 'link', read_from: 'json_ld', host: 'careers.northwind.example',
 }
@@ -94,8 +96,10 @@ export function createJobsBackend() {
       if (!String(body.title ?? '').trim()) return invalid('title', 'title is required')
       if (body.source === 'catalog') return invalid('source', 'source must be link or text')
       sequence += 1
+      const input = body as Partial<Job>
       const job = {
-        ...(body as unknown as Job), id: `00000000-0000-4000-9000-${String(sequence).padStart(12, '0')}`, about_company: '', product: '', perks: [], areas: [],
+        ...(body as unknown as Job), about_company: input.about_company ?? '', perks: input.perks ?? [], qualifications: input.qualifications ?? [],
+        bonuses: input.bonuses ?? [], id: `00000000-0000-4000-9000-${String(sequence).padStart(12, '0')}`, product: '', areas: [],
         sample: false, added_by_me: true, created_at: `2026-12-0${sequence}T08:00:00Z`,
       }
       jobs.unshift(job)

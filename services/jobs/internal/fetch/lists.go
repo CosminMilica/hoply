@@ -17,10 +17,20 @@ import (
 var Platforms = []string{"greenhouse", "lever", "lever-eu", "ashby", "workday", "smartrecruiters", "sitemap"}
 
 // Country is the market a list keeps to on the platforms that filter by
-// country (Workday, SmartRecruiters): its ISO code and its English name.
+// country (Workday, SmartRecruiters): its ISO code, its English name, and In,
+// which tells whether a place such as "Bucharest - Dacia One" is in it.
 type Country struct {
 	Code string
 	Name string
+	In   func(place string) bool
+}
+
+// has reports whether a place is in the country: by In, else by its name.
+func (c Country) has(place string) bool {
+	if c.In != nil {
+		return c.In(place)
+	}
+	return strings.Contains(strings.ToLower(place), strings.ToLower(c.Name))
 }
 
 // Posting is one job a company's board lists. Places are every location the

@@ -22,7 +22,9 @@ func importedJob(id, title string) models.ImportedJob {
 	posted := time.Date(2026, 11, 20, 9, 0, 0, 0, time.UTC)
 	return models.ImportedJob{
 		JobInput: models.JobInput{Title: title, Company: "Northwind", City: "Iași", Country: "Romania", WorkMode: "hybrid",
-			MustHave: []string{"Kubernetes"}, URL: "https://example.com/" + id, ReadFrom: "ats_api"},
+			MustHave: []string{"Kubernetes"}, URL: "https://example.com/" + id, ReadFrom: "ats_api",
+			Qualifications: []string{"3+ years running Kubernetes"}, Bonuses: []string{"Terraform"}, AboutCompany: "We build payments.",
+			Perks: []string{"Learning budget"}},
 		Areas: []string{"DevOps"}, Origin: "greenhouse", ExternalID: id, Board: "northwind", PostedAt: &posted,
 	}
 }
@@ -45,6 +47,10 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		t.Fatalf("imported jobs are listed for everyone: %+v %v", jobs, err)
 	}
 	devops := jobs[slices.IndexFunc(jobs, func(j models.Job) bool { return j.Title == "DevOps Engineer" })]
+	if !slices.Equal(devops.Qualifications, []string{"3+ years running Kubernetes"}) || !slices.Equal(devops.Bonuses, []string{"Terraform"}) ||
+		devops.AboutCompany != "We build payments." || !slices.Equal(devops.Perks, []string{"Learning budget"}) {
+		t.Fatalf("the ad's own lines are kept: %+v", devops)
+	}
 	if set, err := repo.SetRequirements(ctx, me, devops.ID, models.RequirementsInput{MustHave: []string{"Terraform"}}); err != nil || set == nil {
 		t.Fatalf("an imported job's analysis is kept on the job: %+v %v", set, err)
 	}
@@ -80,6 +86,18 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 	}
 	if open, _ := repo.List(ctx, me, models.JobFilter{}); len(open) != 2 {
 		t.Fatalf("a job listed again opens again: %q", titles(open))
+	}
+
+	other := importedJob("9", "Data Engineer")
+	other.Origin, other.Board = "lever", "elsewhere"
+	if _, err := repo.Import(ctx, other, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if closed, err := repo.CloseUnlisted(ctx, []string{"greenhouse"}, []string{"northwind"}); err != nil || closed != 1 {
+		t.Fatalf("the jobs of a board no longer listed close: %d %v", closed, err)
+	}
+	if open, _ := repo.List(ctx, me, models.JobFilter{}); len(open) != 2 || slices.ContainsFunc(open, func(j models.Job) bool { return j.Title == "Data Engineer" }) {
+		t.Fatalf("open after closing the unlisted: %q", titles(open))
 	}
 
 	if _, err := repo.Import(ctx, models.ImportedJob{JobInput: models.JobInput{Title: "No key"}}, time.Now()); err == nil {

@@ -19,14 +19,17 @@ type Job struct {
 	MustHave         []string  `json:"must_have"`
 	NiceToHave       []string  `json:"nice_to_have"`
 	Responsibilities []string  `json:"responsibilities"`
-	About            string    `json:"about"`
-	AboutCompany     string    `json:"about_company"`
-	Product          string    `json:"product"`
-	Perks            []string  `json:"perks"`
-	Areas            []string  `json:"areas"`
-	URL              string    `json:"url"`
-	Source           string    `json:"source"`
-	ReadFrom         string    `json:"read_from"`
+	// Qualifications and Bonuses are the ad's own lines for what it asks and what is a plus.
+	Qualifications []string `json:"qualifications"`
+	Bonuses        []string `json:"bonuses"`
+	About          string   `json:"about"`
+	AboutCompany   string   `json:"about_company"`
+	Product        string   `json:"product"`
+	Perks          []string `json:"perks"`
+	Areas          []string `json:"areas"`
+	URL            string   `json:"url"`
+	Source         string   `json:"source"`
+	ReadFrom       string   `json:"read_from"`
 	// RequirementsFrom is "rules" or "analysis" (Claude's reading of the ad, written by the cv service).
 	RequirementsFrom string    `json:"requirements_from"`
 	Sample           bool      `json:"sample"`
@@ -50,7 +53,11 @@ type JobInput struct {
 	MustHave         []string `json:"must_have"`
 	NiceToHave       []string `json:"nice_to_have"`
 	Responsibilities []string `json:"responsibilities"`
+	Qualifications   []string `json:"qualifications"`
+	Bonuses          []string `json:"bonuses"`
 	About            string   `json:"about"`
+	AboutCompany     string   `json:"about_company"`
+	Perks            []string `json:"perks"`
 	URL              string   `json:"url"`
 	Source           string   `json:"source"`
 	ReadFrom         string   `json:"read_from"`

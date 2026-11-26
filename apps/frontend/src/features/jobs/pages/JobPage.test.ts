@@ -77,6 +77,17 @@ describe('JobPage', () => {
     await vi.waitFor(() => expect(document.querySelector('[role="alert"]')?.textContent).toContain('We could not follow This company. Try again.'))
   })
 
+  it('shows what the ad asks in its own words, and what is a plus', async () => {
+    const { jobs } = useServices()
+    Object.assign(jobs.jobs.find(job => job.id === seedId(2))!, {
+      qualifications: ['6+ years of experience working in Python;', 'Good unit test and debugging skills;'], bonuses: ['Knowledge of MongoDB;'],
+    })
+    await mountPage(JobPage, { at: `/jobs/${seedId(2)}`, props: { id: seedId(2) } })
+    expect(text()).toContain('What we look for·6+ years of experience working in Python;·Good unit test and debugging skills;')
+    expect(text()).toContain('Nice to have·Knowledge of MongoDB;')
+    expect(text()).not.toContain('Experience with Kubernetes.')
+  })
+
   it('offers a new CV once one is made, and no save button', async () => {
     const { applications } = useServices()
     applications.track(seedId(1), 'applied')

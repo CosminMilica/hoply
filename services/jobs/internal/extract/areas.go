@@ -2,32 +2,48 @@ package extract
 
 import "regexp"
 
+// Areas are the tech areas a job's title can name, in the order Find jobs shows them.
+var Areas = []string{"DevOps", "Backend", "Frontend", "Full stack", "Mobile", "Data", "AI", "QA", "Security", "Embedded", "Sysadmin", "Product", "Design"}
+
 var (
-	devopsTitle   = regexp.MustCompile(`devops|dev ops|\bsre\b|site reliability|reliability engineer|platform engineer|infrastructure|\bcloud\b|kubernetes|release engineer|build engineer|mlops`)
-	sysadminTitle = regexp.MustCompile(`administrator|sysadmin|\blinux\b|\bnetwork\b|systems engineer|system engineer|\bnoc\b`)
-	dataTitle     = regexp.MustCompile(`\bdata\b|analytics|machine learning|\bml\b|\bai engineer|\bbi\b|\betl\b`)
-	backendTitle  = regexp.MustCompile(`back-?end|back end|full-?stack|full stack|software (?:engineer|developer)|\bdeveloper\b|programmer|\b(?:java|golang|go|python|node\.?js|nodejs|\.net|c\+\+|php|ruby|rust|scala)\b.*\b(?:engineer|developer)\b|\bapi\b`)
-	clientTitle   = regexp.MustCompile(`front-?end|front end|\bui\b|\bios\b|android|mobile|\bqa\b|test|game`)
-	serverTitle   = regexp.MustCompile(`back-?end|back end|full-?stack|full stack`)
+	areaTitles = map[string]*regexp.Regexp{
+		"DevOps":     regexp.MustCompile(`devops|dev ops|\bsre\b|site reliability|reliability engineer|platform engineer|infrastructure|\bcloud\b|kubernetes|release engineer|build engineer|mlops`),
+		"Backend":    regexp.MustCompile(`back-?end|back end|software (?:engineer|developer)|\bdeveloper\b|programmer|\b(?:java|golang|go|python|node\.?js|nodejs|\.net|c#|c\+\+|php|ruby|rust|scala|kotlin|salesforce|sap)\b.*\b(?:engineer|developer)\b|\bapi\b`),
+		"Frontend":   regexp.MustCompile(`front-?end|front end|\bui (?:engineer|developer)|\bweb developer|\b(?:react|angular|vue)(?:\.?js)?\b.*\b(?:engineer|developer)\b`),
+		"Full stack": regexp.MustCompile(`full-?stack|full stack`),
+		"Mobile":     regexp.MustCompile(`\bmobile\b|\bios\b|android|react native|flutter (?:engineer|developer)`),
+		"Data":       regexp.MustCompile(`\bdata\b|analytics|\bbi\b|\betl\b|big data|databricks|snowflake`),
+		"AI":         regexp.MustCompile(`\bai\b|\bml\b|machine learning|\bllm|gen ?ai|deep learning|\bnlp\b|computer vision|data scientist|agentic`),
+		"QA":         regexp.MustCompile(`\bqa\b|\btest|\bsdet\b|quality (?:assurance|engineer)`),
+		"Security":   regexp.MustCompile(`security|secops|\bsoc\b|penetration|pentest|cyber|\biam\b|appsec`),
+		"Embedded":   regexp.MustCompile(`embedded|firmware|autosar|\bfpga\b`),
+		"Sysadmin":   regexp.MustCompile(`administrator|sysadmin|\blinux\b|\bnetwork\b|systems engineer|system engineer|\bnoc\b|it support|help ?desk`),
+		"Product":    regexp.MustCompile(`product (?:manager|owner)|\bproduct lead|technical product`),
+		"Design":     regexp.MustCompile(`\bux\b|\bui\b.*designer|product designer|ux/ui|ui/ux|interaction designer`),
+	}
+	backEnd = regexp.MustCompile(`back-?end|back end`)
+	// narrower names the areas a generic "developer" or "software engineer" title belongs to instead of Backend.
+	narrower = []string{"Frontend", "Full stack", "Mobile", "QA", "Embedded", "Design"}
 )
 
-// Areas returns the areas Find jobs filters on (DevOps, Backend, Data, Sysadmin) that a job title names, in that
-// order; none for a title in another field. A front-end, mobile or test title is Backend only when it also says
-// back end or full stack.
-func Areas(title string) []string {
+// AreasOf returns the areas a job title names, in the order of Areas; none for a title outside tech. A title is
+// Backend when it says back end, or when it names a developer or a server language and no narrower area.
+func AreasOf(title string) []string {
 	folded := Fold(title)
+	found := map[string]bool{}
+	for area, pattern := range areaTitles {
+		found[area] = pattern.MatchString(folded)
+	}
+	if found["Backend"] && !backEnd.MatchString(folded) {
+		for _, area := range narrower {
+			found["Backend"] = found["Backend"] && !found[area]
+		}
+	}
 	areas := []string{}
-	if devopsTitle.MatchString(folded) {
-		areas = append(areas, "DevOps")
-	}
-	if backendTitle.MatchString(folded) && (!clientTitle.MatchString(folded) || serverTitle.MatchString(folded)) {
-		areas = append(areas, "Backend")
-	}
-	if dataTitle.MatchString(folded) {
-		areas = append(areas, "Data")
-	}
-	if sysadminTitle.MatchString(folded) {
-		areas = append(areas, "Sysadmin")
+	for _, area := range Areas {
+		if found[area] {
+			areas = append(areas, area)
+		}
 	}
 	return areas
 }

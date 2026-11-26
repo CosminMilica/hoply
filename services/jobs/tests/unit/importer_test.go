@@ -97,15 +97,26 @@ func TestAreasFromTheTitle(t *testing.T) {
 		"Principal Software Engineer, Site Reliability": {"DevOps", "Backend"},
 		"Backend Developer (NodeJS)":                    {"Backend"},
 		"Senior Golang Engineer":                        {"Backend"},
-		"Frontend Software Engineer":                    {},
-		"Full-Stack Engineer (React)":                   {"Backend"},
-		"Lead Data Scientist":                           {"Data"},
+		"Frontend Software Engineer":                    {"Frontend"},
+		"Senior React Developer":                        {"Frontend"},
+		"Full-Stack Engineer (React)":                   {"Full stack"},
+		"Software Engineer (React Native)":              {"Mobile"},
+		"Senior Backend Engineer, Mobile Platform":      {"Backend", "Mobile"},
+		"iOS Developer":                                 {"Mobile"},
+		"Lead Data Scientist":                           {"Data", "AI"},
+		"Generative AI Engineer":                        {"AI"},
+		"Software QA Engineer":                          {"QA"},
+		"SDET - AI Gateway":                             {"AI", "QA"},
+		"Senior Security Operations Specialist (SOC)":   {"Security"},
+		"Embedded C++ AUTOSAR Developer":                {"Embedded"},
 		"Linux Systems Engineer":                        {"Sysadmin"},
 		"Junior Network Administrator":                  {"Sysadmin"},
+		"Technical Product Owner":                       {"Product"},
+		"Senior UX/UI Designer":                         {"Design"},
 		"Senior Sales Engineer":                         {},
 		"Account Executive":                             {},
 	} {
-		if got := extract.Areas(title); !slices.Equal(got, want) {
+		if got := extract.AreasOf(title); !slices.Equal(got, want) {
 			t.Errorf("%s: %v, want %v", title, got, want)
 		}
 	}
@@ -177,9 +188,20 @@ func TestJobsKeptFromABoard(t *testing.T) {
 
 // memoryImports records what the importer stores.
 type memoryImports struct {
-	jobs     map[string]models.ImportedJob
-	closed   []string
-	failWith error
+	jobs        map[string]models.ImportedJob
+	closed      []string
+	listed      [][]string
+	failWith    error
+	unlistedErr error
+}
+
+func (m *memoryImports) CloseUnlisted(_ context.Context, origins, boards []string) (int64, error) {
+	keys := []string{}
+	for i := range origins {
+		keys = append(keys, origins[i]+"/"+boards[i])
+	}
+	m.listed = append(m.listed, keys)
+	return 2, m.unlistedErr
 }
 
 func (m *memoryImports) Import(_ context.Context, job models.ImportedJob, _ time.Time) (bool, error) {
@@ -244,10 +266,17 @@ func TestImporterRunsEveryBoard(t *testing.T) {
 	if !slices.Equal(store.closed, []string{"greenhouse/a"}) {
 		t.Fatalf("only a board that listed jobs closes the missing ones: %v", store.closed)
 	}
+	if len(store.listed) != 1 || !slices.Equal(store.listed[0], []string{"greenhouse/a", "lever/b", "ashby/c", "ashby/d"}) {
+		t.Fatalf("a full run closes the jobs of boards no longer listed: %v", store.listed)
+	}
 	if again := im.RunOnce(context.Background()); again[0].New != 0 || again[0].Kept != 1 {
 		t.Fatalf("a known job is not new: %+v", again[0])
 	}
 
+	store.unlistedErr = errors.New("database down")
+	if again := im.RunOnce(context.Background()); len(again) != 4 {
+		t.Fatalf("a failure to close unlisted jobs is only logged: %+v", again)
+	}
 	store.failWith = errors.New("database down")
 	if failed := im.RunOnce(context.Background()); failed[0].Err == nil || failed[0].Kept != 0 {
 		t.Fatalf("a failed write stops that board: %+v", failed[0])
@@ -262,8 +291,9 @@ func TestImporterRunsEveryBoard(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	stopped := importer.New(store, &fakeLister{}, boards, nil, freeLock, time.Hour)
-	if results := stopped.RunOnce(ctx); len(results) != 1 {
-		t.Fatalf("a stopped run ends between boards: %+v", results)
+	runs := len(store.listed)
+	if results := stopped.RunOnce(ctx); len(results) != 1 || len(store.listed) != runs {
+		t.Fatalf("a stopped run ends between boards and closes nothing unlisted: %+v %v", results, store.listed)
 	}
 	lister.calls = nil
 	importer.New(store, lister, boards[:1], nil, freeLock, 0).Run(ctx, time.Hour)

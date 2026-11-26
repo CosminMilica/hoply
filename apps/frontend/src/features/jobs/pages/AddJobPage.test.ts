@@ -58,6 +58,8 @@ describe('AddJobPage', () => {
       title: 'Senior Platform Engineer', company: 'Northwind Cloud', city: 'Iași', work_mode: '', level: 'senior', years_required: 4,
       nice_to_have: ['Helm', 'PostgreSQL', 'Ansible'], source: 'link', read_from: 'json_ld', added_by_me: true,
       url: 'https://careers.northwind.example/jobs/platform-engineer',
+      qualifications: ['4+ years running Kubernetes on AWS.', 'You write Go and PostgreSQL every week.'], bonuses: ['Kafka in production.'],
+      about_company: 'Northwind Cloud runs payments for small shops across Europe.', perks: ['Learning budget'],
     })
     expect(saved.must_have).not.toContain('kubernetes')
     await vi.waitFor(() => expect(cvs.analyses).toEqual([saved.id]))

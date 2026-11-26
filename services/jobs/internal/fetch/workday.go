@@ -69,8 +69,34 @@ func countryFacet(facets []workdayFacet, name, parent string) (param, id string)
 	return "", ""
 }
 
-// workday lists a Workday site's jobs in the country, a page at a time; a site
-// without the country among its locations lists none.
+// placeFacet finds, when a site has no country facet, the values of its first
+// location facet that are in the country: "Bucharest - Dacia One" and
+// "Cluj-Napoca, Romania" for Romania.
+func placeFacet(facets []workdayFacet, country Country) (param string, ids []string) {
+	for _, facet := range facets {
+		if facet.FacetParameter == "" {
+			continue
+		}
+		if strings.Contains(strings.ToLower(facet.FacetParameter), "location") {
+			for _, value := range facet.Values {
+				if value.FacetParameter == "" && value.ID != "" && country.has(value.Descriptor) {
+					ids = append(ids, value.ID)
+				}
+			}
+			if len(ids) > 0 {
+				return facet.FacetParameter, ids
+			}
+		}
+		if param, ids := placeFacet(facet.Values, country); len(ids) > 0 {
+			return param, ids
+		}
+	}
+	return "", nil
+}
+
+// workday lists a Workday site's jobs in the country, a page at a time, by its
+// country facet or else by its locations in the country; a site with neither
+// lists none.
 func (r *Reader) workday(ctx context.Context, board string, country Country) ([]Posting, error) {
 	api, site, _ := workdaySite(board)
 	search := func(facets map[string][]string, offset int) (*workdayList, error) {
@@ -89,13 +115,17 @@ func (r *Reader) workday(ctx context.Context, board string, country Country) ([]
 		return nil, err
 	}
 	param, id := countryFacet(first.Facets, country.Name, "")
-	postings := []Posting{}
+	ids := []string{id}
 	if id == "" {
+		param, ids = placeFacet(first.Facets, country)
+	}
+	postings := []Posting{}
+	if len(ids) == 0 {
 		return postings, nil
 	}
 	total := 0
 	for offset := 0; offset < maxWorkdayJobs; offset += workdayPage {
-		list, err := search(map[string][]string{param: {id}}, offset)
+		list, err := search(map[string][]string{param: ids}, offset)
 		if err != nil {
 			return nil, err
 		}
