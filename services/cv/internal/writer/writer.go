@@ -113,38 +113,26 @@ func (w *Writer) Write(ctx context.Context, task *repositories.Task) (models.Wri
 	job = cvdoc.ReadJob(analysis.Apply(task.Job))
 	rules = cvdoc.Write(task.Profile, job, task.Request, task.CreatedAt)
 	catalogue := grounding.Build(task.Profile, job, task.Request, task.CreatedAt)
-	var draft *grounding.Answer
-	for attempt := 1; attempt <= Attempts && draft == nil; attempt++ {
-		raw, stop := w.run(ctx, logID, "write", claude.Request{
-			System: grounding.System, Schema: grounding.Schema(), Prompt: catalogue.Prompt(job, task.Request, catalogue.Known, analysis),
-		})
-		if stop != nil {
-			return byRules(stop.reason, stop.until)
-		}
-		if raw == nil {
-			continue
-		}
-		answer, err := grounding.ParseAnswer(raw)
-		if err != nil {
-			slog.Warn("claude answer unreadable", "cv_id", task.ID, "step", "write", "attempt", attempt, "error", err)
-			continue
-		}
-		draft = &answer
+	draft, ok, stop := ask(ctx, w, logID, "write", claude.Request{
+		System: grounding.System, Schema: grounding.Schema(), Prompt: catalogue.Prompt(job, task.Request, catalogue.Known, analysis),
+	}, grounding.ParseAnswer)
+	if stop != nil {
+		return byRules(stop.reason, stop.until)
 	}
-	if draft == nil {
+	if !ok {
 		return byRules(models.ClaudeFailed, nil)
 	}
-	final := *draft
-	drafted, _ := catalogue.WithEquivalents(draft.Plan.Equivalents).Assemble(*draft, job, rules.Tailored)
+	final := draft
+	drafted, _ := catalogue.WithEquivalents(draft.Plan.Equivalents).Assemble(draft, job, rules.Tailored)
 	findings := style.Lint(drafted, catalogue.Known).Findings
-	if reviewed := w.review(ctx, task, job, catalogue, analysis, *draft, findings); reviewed != nil {
+	if reviewed := w.review(ctx, logID, task, job, catalogue, analysis, draft, findings); reviewed != nil {
 		final = *reviewed
 	}
 
 	catalogue = catalogue.WithEquivalents(final.Plan.Equivalents)
 	tailored, refusals := catalogue.Assemble(final, job, rules.Tailored)
 	for _, reason := range refusals {
-		slog.Info("claude sentence refused", "cv_id", task.ID, "reason", reason)
+		slog.Info("claude sentence refused", "for", logID, "reason", reason)
 	}
 	atsJob, atsRequest := job, task.Request
 	if analysis != nil && len(analysis.Responsibilities) > 0 {
@@ -189,6 +177,27 @@ func (w *Writer) run(ctx context.Context, logID, step string, request claude.Req
 	}
 	w.setLoginNeeded(false)
 	return raw, nil
+}
+
+// ask asks Claude up to Attempts times, until read accepts an answer. ok is false when no answer was accepted; stop
+// is set when Claude cannot write now.
+func ask[T any](ctx context.Context, w *Writer, logID, step string, request claude.Request, read func(json.RawMessage) (T, error)) (T, bool, *stop) {
+	var none T
+	for attempt := 1; attempt <= Attempts; attempt++ {
+		raw, halt := w.run(ctx, logID, step, request)
+		if halt != nil {
+			return none, false, halt
+		}
+		if raw == nil {
+			continue
+		}
+		answer, err := read(raw)
+		if err == nil {
+			return answer, true, nil
+		}
+		slog.Warn("claude answer unusable", "for", logID, "step", step, "attempt", attempt, "error", err)
+	}
+	return none, false, nil
 }
 
 // analyze is what the job needs: kept from an earlier CV for the job, or read
@@ -255,9 +264,9 @@ func (w *Writer) analyzeOnce(ctx context.Context, logID string, jobID uuid.UUID,
 }
 
 // review is the draft improved by a hiring manager's reading; nil keeps the draft.
-func (w *Writer) review(ctx context.Context, task *repositories.Task, job cvdoc.Job, catalogue grounding.Catalogue,
+func (w *Writer) review(ctx context.Context, logID string, task *repositories.Task, job cvdoc.Job, catalogue grounding.Catalogue,
 	analysis *grounding.Analysis, draft grounding.Answer, findings []style.Finding) *grounding.Answer {
-	raw, stop := w.run(ctx, task.ID.String(), "review", claude.Request{
+	raw, stop := w.run(ctx, logID, "review", claude.Request{
 		System: grounding.ReviewSystem, Schema: grounding.ReviewSchema(),
 		Prompt: catalogue.ReviewPrompt(job, task.Request, catalogue.Known, analysis, draft, findings),
 	})
@@ -266,7 +275,7 @@ func (w *Writer) review(ctx context.Context, task *repositories.Task, job cvdoc.
 	}
 	reviewed, err := grounding.ParseAnswer(raw)
 	if err != nil || len(reviewed.Summary) == 0 {
-		slog.Warn("claude review unreadable", "cv_id", task.ID, "error", err)
+		slog.Warn("claude review unreadable", "for", logID, "error", err)
 		return nil
 	}
 	return &reviewed
@@ -290,23 +299,7 @@ func (w *Writer) Questions(ctx context.Context, job models.Job, profile models.P
 	}
 	read := cvdoc.ReadJob(analysis.Apply(job))
 	catalogue := grounding.Build(profile, read, models.CvRequest{}, w.now())
-	for attempt := 1; attempt <= Attempts; attempt++ {
-		raw, stop := w.run(ctx, logID, "probe", claude.Request{
-			System: grounding.ProbeSystem, Schema: grounding.ProbeSchema(), Prompt: catalogue.ProbePrompt(analysis),
-		})
-		if stop != nil {
-			return nil, ErrNoQuestions
-		}
-		if raw == nil {
-			continue
-		}
-		questions, err := catalogue.ParseProbe(raw)
-		if err == nil && len(questions) > 0 {
-			return questions, nil
-		}
-		slog.Warn("claude questions unreadable", "for", logID, "error", err)
-	}
-	return nil, ErrNoQuestions
+	return w.probe(ctx, logID, grounding.ProbeSystem, catalogue, analysis)
 }
 
 // ProfileQuestions asks Claude what would make every CV of the person stronger
@@ -316,23 +309,25 @@ func (w *Writer) ProfileQuestions(ctx context.Context, profile models.Profile) (
 		return nil, ErrNoQuestions
 	}
 	catalogue := grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, w.now())
-	for attempt := 1; attempt <= Attempts; attempt++ {
-		raw, stop := w.run(ctx, "profile probe", "probe", claude.Request{
-			System: grounding.ProfileProbeSystem, Schema: grounding.ProbeSchema(), Prompt: catalogue.ProbePrompt(nil),
-		})
-		if stop != nil {
-			return nil, ErrNoQuestions
-		}
-		if raw == nil {
-			continue
-		}
+	return w.probe(ctx, "profile probe", grounding.ProfileProbeSystem, catalogue, nil)
+}
+
+var errNoQuestionsAsked = errors.New("no questions in the answer")
+
+func (w *Writer) probe(ctx context.Context, logID, system string, catalogue grounding.Catalogue, analysis *grounding.Analysis) ([]models.ProbeQuestion, error) {
+	questions, ok, _ := ask(ctx, w, logID, "probe", claude.Request{
+		System: system, Schema: grounding.ProbeSchema(), Prompt: catalogue.ProbePrompt(analysis),
+	}, func(raw json.RawMessage) ([]models.ProbeQuestion, error) {
 		questions, err := catalogue.ParseProbe(raw)
-		if err == nil && len(questions) > 0 {
-			return questions, nil
+		if err == nil && len(questions) == 0 {
+			err = errNoQuestionsAsked
 		}
-		slog.Warn("claude questions unreadable", "for", "profile probe", "error", err)
+		return questions, err
+	})
+	if !ok {
+		return nil, ErrNoQuestions
 	}
-	return nil, ErrNoQuestions
+	return questions, nil
 }
 
 // ErrNoAnalysis is why Analyze read nothing: Claude is off, cannot be asked now,
@@ -443,30 +438,33 @@ func (w *Writer) Letter(ctx context.Context, task *repositories.Task, cv models.
 		catalogue = catalogue.WithEquivalents(grounding.Closes(cv.Tailoring.Close))
 	}
 	to := grounding.Addressing{Person: task.Profile.Name, Recruiter: recruiter, Company: job.Company, Title: job.Title}
-	for attempt := 1; attempt <= Attempts; attempt++ {
-		raw, stop := w.run(ctx, logID, "letter", claude.Request{
-			System: grounding.LetterSystem, Schema: grounding.LetterSchema(), Prompt: catalogue.LetterPrompt(analysis, job, document, cv.Tailoring),
-		})
-		if stop != nil {
-			return failed(stop.reason, stop.until)
-		}
-		if raw == nil {
-			continue
-		}
+	type assembled struct {
+		texts    models.LetterTexts
+		refusals []string
+	}
+	letter, ok, stop := ask(ctx, w, logID, "letter", claude.Request{
+		System: grounding.LetterSystem, Schema: grounding.LetterSchema(), Prompt: catalogue.LetterPrompt(analysis, job, document, cv.Tailoring),
+	}, func(raw json.RawMessage) (assembled, error) {
 		answer, err := grounding.ParseLetter(raw)
 		if err != nil {
-			slog.Warn("claude letter unreadable", "for", logID, "attempt", attempt, "error", err)
-			continue
+			return assembled{}, err
 		}
 		texts, refusals := catalogue.AssembleLetter(answer, to)
 		for _, reason := range refusals {
 			slog.Info("claude sentence refused", "for", logID, "reason", reason)
 		}
 		if texts.CoverLetter == "" {
-			slog.Warn("claude letter refused whole", "for", logID, "attempt", attempt)
-			continue
+			return assembled{}, errLetterRefused
 		}
-		return models.Letter{Status: models.LetterReady, Recruiter: recruiter, Texts: &texts, Model: w.claude.Model(), Refused: len(refusals)}
+		return assembled{texts, refusals}, nil
+	})
+	if stop != nil {
+		return failed(stop.reason, stop.until)
 	}
-	return failed(models.ClaudeFailed, nil)
+	if !ok {
+		return failed(models.ClaudeFailed, nil)
+	}
+	return models.Letter{Status: models.LetterReady, Recruiter: recruiter, Texts: &letter.texts, Model: w.claude.Model(), Refused: len(letter.refusals)}
 }
+
+var errLetterRefused = errors.New("every sentence of the letter was refused")

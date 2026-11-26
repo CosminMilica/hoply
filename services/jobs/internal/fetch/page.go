@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"html"
+	"jobs/internal/extract"
 	"net/url"
 	"regexp"
 	"strings"
@@ -64,7 +65,7 @@ func pageTitle(doc, main *xhtml.Node) (title, company string) {
 	if found := firstHeading(main); found != "" {
 		h1 = found
 	}
-	title = firstOf(h1, meta["og:title"], documentTitle)
+	title = extract.FirstOf(h1, meta["og:title"], documentTitle)
 	company = meta["og:site_name"]
 	if company == "" {
 		if at := strings.LastIndex(strings.ToLower(documentTitle), " at "); at >= 0 {

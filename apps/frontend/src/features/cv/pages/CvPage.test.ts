@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/shared/mocks/node'
 import { cvApi } from '../api/cvApi'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
@@ -45,15 +47,29 @@ describe('CvPage', () => {
 
   it('downloads the version on screen as a PDF or a DOCX from the service', async () => {
     const { cvs } = useServices()
+    URL.createObjectURL = vi.fn(() => 'blob:cv')
+    URL.revokeObjectURL = vi.fn()
+    const saved: string[] = []
+    const clicked = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { saved.push(this.download) })
     await cvApi.generate(request)
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     const id = cvs.cvs[0]!.cv.id
-    const link = (name: string) => [...document.querySelectorAll('a')].find(element => element.textContent?.trim() === name)!
-    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=tailored&template=classic`)
-    expect(link('Download PDF').hasAttribute('download')).toBe(true)
-    expect(link('DOCX').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=docx&version=tailored&template=classic`)
+    await click(button('Download PDF'))
+    await click(button('DOCX'))
     await click(button('Your profile'))
-    expect(link('Download PDF').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=pdf&version=profile&template=classic`)
+    await click(button('Download PDF'))
+    await vi.waitFor(() => expect(cvs.files).toHaveLength(3))
+    expect(cvs.files).toEqual([
+      { id, format: 'pdf', version: 'tailored', template: 'classic' },
+      { id, format: 'docx', version: 'tailored', template: 'classic' },
+      { id, format: 'pdf', version: 'profile', template: 'classic' },
+    ])
+    expect(saved).toEqual([cvs.cvs[0]!.cv.file_name, cvs.cvs[0]!.cv.file_name, cvs.cvs[0]!.cv.file_name])
+
+    server.use(http.get('*/api/cv/v1/cvs/:id/file', () => HttpResponse.json({ error: { code: 'DEPENDENCY_UNAVAILABLE' } }, { status: 503 })))
+    await click(button('Download PDF'))
+    await vi.waitFor(() => expect(document.querySelector('[role="alert"]')?.textContent).toContain('We could not download the CV'))
+    clicked.mockRestore()
   })
 
   it('shows and downloads the CV in the template the person picks, and remembers it', async () => {
@@ -62,12 +78,16 @@ describe('CvPage', () => {
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     const id = cvs.cvs[0]!.cv.id
     const paper = () => document.querySelector('[data-print-root]')!
-    const link = (name: string) => [...document.querySelectorAll('a')].find(element => element.textContent?.trim() === name)!
+    URL.createObjectURL = vi.fn(() => 'blob:cv')
+    URL.revokeObjectURL = vi.fn()
+    const clicked = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     expect(paper().getAttribute('data-template')).toBe('classic')
     expect(button('Classic').getAttribute('aria-pressed')).toBe('true')
     await click(button('Elegant'))
     expect(paper().getAttribute('data-template')).toBe('elegant')
-    expect(link('DOCX').getAttribute('href')).toBe(`/api/cv/v1/cvs/${id}/file?format=docx&version=tailored&template=elegant`)
+    await click(button('DOCX'))
+    await vi.waitFor(() => expect(cvs.files.at(-1)).toEqual({ id, format: 'docx', version: 'tailored', template: 'elegant' }))
+    clicked.mockRestore()
     await click(button('Modern'))
     document.body.innerHTML = ''
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })

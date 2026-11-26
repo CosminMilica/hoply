@@ -167,6 +167,8 @@ export const experienceInputSchema = z.object({
   end: month,
   tools: tags(30, 'tools'),
   bullets: z.array(bulletInputSchema).max(10, 'At most 10 highlights'),
+  /** Left out, the service keeps the role's notes as they are. */
+  notes: z.array(noteSchema).optional(),
 }).refine(value => notBefore(value.start, value.end), { message: 'The end cannot be before the start', path: ['end'] })
 
 export type ExperienceInput = z.infer<typeof experienceInputSchema>
@@ -179,6 +181,8 @@ export const projectInputSchema = z.object({
   end: month,
   tools: tags(30, 'tools'),
   bullets: z.array(bulletInputSchema).max(10, 'At most 10 highlights'),
+  /** Left out, the service keeps the project's notes as they are. */
+  notes: z.array(noteSchema).optional(),
 }).refine(value => notBefore(value.start, value.end), { message: 'The end cannot be before the start', path: ['end'] })
 
 export type ProjectInput = z.infer<typeof projectInputSchema>
@@ -229,4 +233,17 @@ export function cleanList(values: string[]): string[] {
 export function withoutId<T extends { id: string }>(entry: T): Omit<T, 'id'> {
   const { id: _id, ...rest } = entry
   return rest
+}
+
+type EntryChange = Partial<Pick<ExperienceInput, 'bullets' | 'notes'>>
+
+/** A role as the service takes it back, with a change; an employment type it no longer knows is left empty. */
+export function experienceInput(role: Experience, change: EntryChange = {}): ExperienceInput {
+  const known = (Object.keys(EMPLOYMENT_TYPES) as string[]).includes(role.employment_type)
+  return { ...withoutId(role), employment_type: known ? role.employment_type as ExperienceInput['employment_type'] : '', ...change }
+}
+
+/** A project as the service takes it back, with a change. */
+export function projectInput(project: Project, change: EntryChange = {}): ProjectInput {
+  return { ...withoutId(project), ...change }
 }

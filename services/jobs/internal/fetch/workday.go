@@ -188,6 +188,7 @@ func (r *Reader) workdayJob(ctx context.Context, api string) (*Page, []string, *
 // postedOn reads Workday's "Posted Today", "Posted Yesterday" and "Posted 3
 // Days Ago"; "Posted 30+ Days Ago" and anything else is nil.
 func postedOn(value string, now time.Time) *time.Time {
+	now = now.UTC()
 	day := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	switch folded := strings.ToLower(strings.TrimSpace(value)); {
 	case folded == "posted today":

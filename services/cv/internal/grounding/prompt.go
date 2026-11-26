@@ -1,9 +1,9 @@
 package grounding
 
 import (
-	"bytes"
 	_ "embed"
 	"encoding/json"
+	"strings"
 
 	"cv/internal/cvdoc"
 	"cv/internal/models"
@@ -15,19 +15,15 @@ import (
 //go:embed prompts/cv-system.md
 var System string
 
-// Schema is the JSON schema of the answer.
-//
+func init() {
+	System = strings.Replace(System, "{{stock_words}}", cvdoc.Quoted(cvdoc.StockWords), 1)
+}
+
 //go:embed prompts/cv-output.schema.json
 var schema []byte
 
 // Schema is the answer's JSON schema on one line, as the CLI takes it.
-func Schema() string {
-	var compact bytes.Buffer
-	if err := json.Compact(&compact, schema); err != nil {
-		panic(err)
-	}
-	return compact.String()
-}
+func Schema() string { return compact(schema) }
 
 type promptJob struct {
 	Title            string          `json:"title"`

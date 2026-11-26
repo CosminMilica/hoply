@@ -5,7 +5,6 @@
 #   ashby             jobs.ashbyhq.com/<board>
 #   smartrecruiters   jobs.smartrecruiters.com/<board>
 #   workday           <tenant>.wdN.myworkdayjobs.com/<site>, the board being that host and site
-#   sitemap           a career site's sitemap link, when its robots.txt allows the job pages
 boards:
   - {company: Bitdefender, platform: greenhouse, board: scbitdefendersrl}
   - {company: IONOS, platform: greenhouse, board: ionos2}

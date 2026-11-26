@@ -3,7 +3,6 @@ package fetch
 import (
 	"context"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,9 +12,8 @@ import (
 
 const (
 	smartRecruitersPage = 100
-	// maxSmartRecruitersJobs and maxSitemapJobs cap one board's list.
+	// maxSmartRecruitersJobs caps one board's list.
 	maxSmartRecruitersJobs = 500
-	maxSitemapJobs         = 5000
 )
 
 // smartRecruitersList lists a SmartRecruiters company's jobs in the country,
@@ -75,61 +73,4 @@ func (r *Reader) smartRecruitersList(ctx context.Context, company string, countr
 			return postings, true, nil
 		}
 	}
-}
-
-// sitemap lists the job pages of a career site's sitemap: the links whose path
-// has a /job/ or /jobs/ segment. Their title and places come from the link's
-// words until Describe reads the page. complete is false when the list stopped
-// at maxSitemapJobs.
-func (r *Reader) sitemap(ctx context.Context, board string) (postings []Posting, complete bool, err error) {
-	target, _ := url.Parse(board)
-	body, _, err := r.send(ctx, http.MethodGet, target, nil, r.opts.MaxAPIBytes, "text/xml", "application/xml")
-	if err != nil {
-		return nil, false, err
-	}
-	var set struct {
-		URLs []struct {
-			Loc string `xml:"loc"`
-		} `xml:"url"`
-	}
-	if err := xml.Unmarshal(body, &set); err != nil {
-		return nil, false, fail(NoJobData, err)
-	}
-	postings = []Posting{}
-	for _, entry := range set.URLs {
-		link, err := url.Parse(strings.TrimSpace(entry.Loc))
-		if err != nil || link.Hostname() != target.Hostname() || !jobPath(link.Path) {
-			continue
-		}
-		words := strings.FieldsFunc(link.Path, func(r rune) bool { return r == '/' })
-		title := ""
-		for _, word := range words {
-			if strings.Count(word, "-") > strings.Count(title, "-") {
-				title = word
-			}
-		}
-		page := link.String()
-		postings = append(postings, Posting{ID: link.Path, URL: page, Places: []string{strings.Join(words, " ")},
-			Page: Page{Title: strings.ReplaceAll(title, "-", " ")},
-			describe: func(ctx context.Context, r *Reader) (*Page, []string, *time.Time, error) {
-				read, err := r.Read(ctx, page)
-				if err != nil {
-					return nil, nil, nil, err
-				}
-				return read, []string{read.Location, read.City, read.Country}, nil, nil
-			}})
-		if len(postings) == maxSitemapJobs {
-			return postings, false, nil
-		}
-	}
-	return postings, true, nil
-}
-
-func jobPath(path string) bool {
-	for _, segment := range strings.Split(strings.ToLower(path), "/") {
-		if segment == "job" || segment == "jobs" {
-			return true
-		}
-	}
-	return false
 }

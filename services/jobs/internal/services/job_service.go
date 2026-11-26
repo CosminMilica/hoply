@@ -181,10 +181,10 @@ func (s *JobService) Read(ctx context.Context, ident identity.IdentityContext, r
 		}
 		return nil, err
 	}
-	hints := extract.Hints{Title: firstOf(req.Title, page.Title), Company: firstOf(req.Company, page.Company)}
+	hints := extract.Hints{Title: extract.FirstOf(req.Title, page.Title), Company: extract.FirstOf(req.Company, page.Company)}
 	result := extract.Read(page.Text, hints)
 	if page.City != "" {
-		result.City = clip(firstOf(extract.CityName(page.City), page.City), maxLocation)
+		result.City = extract.Clip(extract.FirstOf(extract.CityName(page.City), page.City), maxLocation)
 		if _, country := extract.Place(result.City); country != "" {
 			result.Country = country
 		}
@@ -192,9 +192,9 @@ func (s *JobService) Read(ctx context.Context, ident identity.IdentityContext, r
 		result.City, result.Country = city, country
 	}
 	if country := countryName(page.Country); country != "" {
-		result.Country = clip(country, maxLocation)
+		result.Country = extract.Clip(country, maxLocation)
 	}
-	result.WorkMode = firstOf(page.WorkMode, extract.WorkMode(page.Location), result.WorkMode)
+	result.WorkMode = extract.FirstOf(page.WorkMode, extract.WorkMode(page.Location), result.WorkMode)
 	return draft(result, "link", page.ReadFrom, req.URL), nil
 }
 
@@ -219,7 +219,7 @@ func countryName(value string) string {
 	switch folded := extract.Fold(value); {
 	case folded == "":
 		return ""
-	case folded == "ro" || folded == "rou" || folded == "romania":
+	case extract.IsRomania(value):
 		return "Romania"
 	case len(value) == 2:
 		return strings.ToUpper(value)
@@ -394,22 +394,6 @@ func validURL(value string) bool {
 	}
 	scheme := strings.ToLower(parsed.Scheme)
 	return (scheme == "http" || scheme == "https") && parsed.Hostname() != ""
-}
-
-func firstOf(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
-}
-
-func clip(value string, n int) string {
-	if utf8.RuneCountInString(value) <= n {
-		return value
-	}
-	return strings.TrimSpace(string([]rune(value)[:n]))
 }
 
 func invalid(field, message string) error {

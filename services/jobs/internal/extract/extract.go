@@ -109,7 +109,7 @@ func Read(text string, hints Hints) Result {
 	if m := companyLine.FindStringSubmatch(strings.Join(lines, "\n")); m != nil {
 		companyText = strings.TrimSpace(m[1])
 	}
-	company := firstNonEmpty(strings.TrimSpace(hints.Company), companyText)
+	company := FirstOf(strings.TrimSpace(hints.Company), companyText)
 
 	parts := map[section][]string{}
 	var mustLines, kept []string
@@ -149,9 +149,9 @@ func Read(text string, hints Hints) Result {
 	if titleFromText && len(lines) > 0 {
 		result.Title = lines[0]
 	}
-	result.Title = clip(result.Title, MaxTitle)
+	result.Title = Clip(result.Title, MaxTitle)
 
-	result.Company = clip(company, MaxCompany)
+	result.Company = Clip(company, MaxCompany)
 
 	if m := yearsPattern.FindStringSubmatch(strings.ToLower(all)); m != nil {
 		if years, err := strconv.Atoi(m[1]); err == nil && years <= maxYears {
@@ -176,7 +176,7 @@ func Read(text string, hints Hints) Result {
 	result.Qualifications = listOf(parts[requirements])
 	result.Bonuses = listOf(parts[niceToHave])
 	result.Perks = listOf(parts[perks])
-	result.AboutCompany = clip(strings.Join(listOf(parts[aboutCompany]), " "), MaxAbout)
+	result.AboutCompany = Clip(strings.Join(listOf(parts[aboutCompany]), " "), MaxAbout)
 
 	var about []string
 	for i, line := range parts[body] {
@@ -186,7 +186,7 @@ func Read(text string, hints Hints) Result {
 			about = append(about, line)
 		}
 	}
-	result.About = clip(strings.Join(about, " "), MaxAbout)
+	result.About = Clip(strings.Join(about, " "), MaxAbout)
 	return result
 }
 
@@ -205,7 +205,7 @@ func listOf(lines []string) []string {
 	kept := []string{}
 	for _, line := range lines {
 		if line = strings.TrimSpace(line); line != "" && len(kept) < MaxResponsibilities {
-			kept = append(kept, clip(line, MaxResponsibility))
+			kept = append(kept, Clip(line, MaxResponsibility))
 		}
 	}
 	return kept
@@ -338,7 +338,8 @@ func level(title string, years *int) string {
 	return "mid"
 }
 
-func firstNonEmpty(values ...string) string {
+// FirstOf returns the first value that is not empty.
+func FirstOf(values ...string) string {
 	for _, value := range values {
 		if value != "" {
 			return value
@@ -347,12 +348,18 @@ func firstNonEmpty(values ...string) string {
 	return ""
 }
 
+// IsRomania reports whether a country, as a name or an ISO code, is Romania: RO, ROU, Romania or România.
+func IsRomania(country string) bool {
+	folded := Fold(strings.TrimSpace(country))
+	return folded == "ro" || folded == "rou" || folded == "romania"
+}
+
 func limit(values []string, n int) []string {
 	return values[:min(len(values), n)]
 }
 
-// clip cuts value to at most n characters.
-func clip(value string, n int) string {
+// Clip cuts value to at most n characters.
+func Clip(value string, n int) string {
 	if utf8.RuneCountInString(value) <= n {
 		return value
 	}

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
-import { EMPLOYMENT_TYPES, withoutId, type Experience, type Profile } from '../api/profile.schema'
+import { EMPLOYMENT_TYPES, experienceInput, type Experience, type Profile } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
 import { useProfileMutations } from '../composables/useProfile'
 import { monthRange, plural } from '../format'
@@ -14,7 +14,7 @@ const props = defineProps<{ profile: Profile }>()
 const { experience } = useProfileMutations()
 
 function removeNote(role: Experience, index: number) {
-  experience.update.mutate({ id: role.id, body: { ...withoutId(role), notes: role.notes.filter((_, at) => at !== index) } as Omit<Experience, 'id'> as never })
+  experience.update.mutate({ id: role.id, body: experienceInput(role, { notes: role.notes.filter((_, at) => at !== index) }) })
 }
 const editor = useEntryEditor(experience)
 const expanded = ref<Record<string, boolean>>(props.profile.experience[0] ? { [props.profile.experience[0].id]: true } : {})

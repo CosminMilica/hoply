@@ -51,6 +51,7 @@ export function createCvBackend(sources: CvSources, {
   const cvs: { cv: Cv, pending: number }[] = []
   const letters = new Map<string, { recruiter: string, pending: number }>()
   const letterFiles: { id: string, format: string, template: string, text: string }[] = []
+  const files: { id: string, format: string, version: string, template: string }[] = []
   const none: Letter = { status: 'none', recruiter: '', texts: null, model: '', refused: 0, reason: '', limit_until: null }
   const readyCv = (id: string) => {
     const entry = cvs.find(item => item.cv.id === id)
@@ -133,6 +134,7 @@ export function createCvBackend(sources: CvSources, {
     },
     letters,
     letterFiles,
+    files,
     letter(id: string): Answer {
       const cv = cvs.find(item => item.cv.id === id)?.cv
       if (!cv) return problem(404, 'NOT_FOUND', 'CV not found')
@@ -191,6 +193,13 @@ export function cvServiceHandlers(sources: CvSources, options: CvBackendOptions 
       http.delete('*/api/cv/v1/cvs/:id', ({ params }) => reply(backend.remove(String(params.id)))),
       http.get('*/api/cv/v1/cvs/:id/letter', ({ params }) => reply(backend.letter(String(params.id)))),
       http.post('*/api/cv/v1/cvs/:id/letter', async ({ params, request }) => reply(backend.writeLetter(String(params.id), await request.json().catch(() => null)))),
+      http.get('*/api/cv/v1/cvs/:id/file', ({ params, request }) => {
+        const cv = backend.cvs.find(item => item.cv.id === String(params.id))?.cv
+        if (!cv) return reply(problem(404, 'NOT_FOUND', 'CV not found'))
+        const query = new URL(request.url).searchParams
+        backend.files.push({ id: cv.id, format: query.get('format') ?? '', version: query.get('version') ?? '', template: query.get('template') ?? '' })
+        return new HttpResponse('%PDF-cv', { status: 200, headers: { 'content-disposition': `attachment; filename=${cv.file_name}` } })
+      }),
       http.post('*/api/cv/v1/cvs/:id/letter/file', async ({ params, request }) => {
         const query = new URL(request.url).searchParams
         const answer = backend.letterFile(String(params.id), query.get('format') ?? '', query.get('template') ?? '', await request.json().catch(() => null))

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"jobs/internal/extract"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -12,9 +13,59 @@ import (
 	"time"
 )
 
-// Platforms are the job board platforms List reads. A sitemap board is a
-// career site's sitemap; its job pages are read like a link.
-var Platforms = []string{"greenhouse", "lever", "lever-eu", "ashby", "workday", "smartrecruiters", "sitemap"}
+// platform is a job board platform List reads: the board a link to it names, how its board names are checked, and
+// how a board's list is read.
+type platform struct {
+	name    string
+	boardOf func(host string, parts []string, query url.Values) (board string, ok bool)
+	check   func(board string) error
+	list    func(r *Reader, ctx context.Context, board string, country Country) ([]Posting, bool, error)
+}
+
+// platforms is ordered: a link is the first platform's whose boardOf matches it.
+var platforms = []platform{
+	{name: "greenhouse", boardOf: greenhouseBoardOf, list: func(r *Reader, ctx context.Context, board string, _ Country) ([]Posting, bool, error) {
+		return r.apiList(ctx, "https://boards-api.greenhouse.io/v1/boards/"+url.PathEscape(board)+"/jobs?content=true", greenhouseList)
+	}},
+	leverPlatform("lever", "jobs.lever.co"),
+	leverPlatform("lever-eu", "jobs.eu.lever.co"),
+	{name: "ashby", boardOf: onHost("jobs.ashbyhq.com"), list: func(r *Reader, ctx context.Context, board string, _ Country) ([]Posting, bool, error) {
+		return r.apiList(ctx, "https://api.ashbyhq.com/posting-api/job-board/"+url.PathEscape(board),
+			func(body []byte) ([]Posting, error) { return ashbyList(body, board) })
+	}},
+	{name: "workday", boardOf: workdayBoardOf, check: func(board string) error { _, _, err := workdaySite(board); return err },
+		list: (*Reader).workday},
+	{name: "smartrecruiters", boardOf: onHost("jobs.smartrecruiters.com"), list: (*Reader).smartRecruitersList},
+}
+
+func leverPlatform(name, host string) platform {
+	return platform{name: name, boardOf: onHost(host), list: func(r *Reader, ctx context.Context, board string, _ Country) ([]Posting, bool, error) {
+		return r.apiList(ctx, leverAPIs[host]+"/v0/postings/"+url.PathEscape(board)+"?mode=json",
+			func(body []byte) ([]Posting, error) { return leverList(body, board) })
+	}}
+}
+
+// onHost reads the board as the first part of the path of a link on host.
+func onHost(host string) func(string, []string, url.Values) (string, bool) {
+	return func(linkHost string, parts []string, _ url.Values) (string, bool) {
+		switch {
+		case linkHost != host:
+			return "", false
+		case len(parts) == 0:
+			return "", true
+		}
+		return parts[0], true
+	}
+}
+
+func platformNamed(name string) (platform, bool) {
+	for _, p := range platforms {
+		if p.name == name {
+			return p, true
+		}
+	}
+	return platform{}, false
+}
 
 // Country is the market a list keeps to on the platforms that filter by
 // country (Workday, SmartRecruiters): its ISO code, its English name, and In,
@@ -47,23 +98,17 @@ type Posting struct {
 }
 
 // CheckBoard reports whether board is a valid board name on platform.
-func CheckBoard(platform, board string) error {
-	switch platform {
-	case "workday":
-		_, _, err := workdaySite(board)
-		return err
-	case "sitemap":
-		if u, err := url.Parse(board); err != nil || u.Scheme != "https" || u.Hostname() == "" {
-			return fmt.Errorf("a sitemap board is an https link, got %q", board)
-		}
-		return nil
-	case "greenhouse", "lever", "lever-eu", "ashby", "smartrecruiters":
-		if board == "" || strings.ContainsAny(board, "/?# ") {
-			return fmt.Errorf("a %s board is a name without slashes, got %q", platform, board)
-		}
-		return nil
+func CheckBoard(name, board string) error {
+	p, ok := platformNamed(name)
+	switch {
+	case !ok:
+		return fmt.Errorf("unknown platform %q", name)
+	case p.check != nil:
+		return p.check(board)
+	case board == "" || strings.ContainsAny(board, "/?# "):
+		return fmt.Errorf("a %s board is a name without slashes, got %q", name, board)
 	}
-	return fmt.Errorf("unknown platform %q", platform)
+	return nil
 }
 
 // List reads every job a company's board lists on platform; Workday and
@@ -73,28 +118,12 @@ func (r *Reader) List(ctx context.Context, platform, board string, country Count
 	if err := CheckBoard(platform, board); err != nil {
 		return nil, false, err
 	}
-	switch platform {
-	case "workday":
-		return r.workday(ctx, board, country)
-	case "smartrecruiters":
-		return r.smartRecruitersList(ctx, board, country)
-	case "sitemap":
-		return r.sitemap(ctx, board)
-	}
-	var api string
-	var read func([]byte) ([]Posting, error)
-	switch platform {
-	case "greenhouse":
-		api, read = "https://boards-api.greenhouse.io/v1/boards/"+url.PathEscape(board)+"/jobs?content=true", greenhouseList
-	case "lever", "lever-eu":
-		host := leverAPIs["jobs.lever.co"]
-		if platform == "lever-eu" {
-			host = leverAPIs["jobs.eu.lever.co"]
-		}
-		api, read = host+"/v0/postings/"+url.PathEscape(board)+"?mode=json", func(body []byte) ([]Posting, error) { return leverList(body, board) }
-	default:
-		api, read = "https://api.ashbyhq.com/posting-api/job-board/"+url.PathEscape(board), func(body []byte) ([]Posting, error) { return ashbyList(body, board) }
-	}
+	p, _ := platformNamed(platform)
+	return p.list(r, ctx, board, country)
+}
+
+// apiList reads a board's whole list from one API call.
+func (r *Reader) apiList(ctx context.Context, api string, read func([]byte) ([]Posting, error)) (postings []Posting, complete bool, err error) {
 	body, err := r.json(ctx, http.MethodGet, api, nil)
 	if err != nil {
 		return nil, false, err
@@ -122,8 +151,8 @@ func (r *Reader) Describe(ctx context.Context, p *Posting) error {
 	if err != nil {
 		return err
 	}
-	page.Title, page.Company = firstOf(page.Title, p.Page.Title), firstOf(page.Company, p.Page.Company)
-	page.City, page.Country, page.WorkMode = firstOf(page.City, p.Page.City), firstOf(page.Country, p.Page.Country), firstOf(page.WorkMode, p.Page.WorkMode)
+	page.Title, page.Company = extract.FirstOf(page.Title, p.Page.Title), extract.FirstOf(page.Company, p.Page.Company)
+	page.City, page.Country, page.WorkMode = extract.FirstOf(page.City, p.Page.City), extract.FirstOf(page.Country, p.Page.Country), extract.FirstOf(page.WorkMode, p.Page.WorkMode)
 	p.Page, p.Places, p.describe = *page, append(p.Places, places...), nil
 	if posted != nil {
 		p.PostedAt = posted
@@ -183,7 +212,7 @@ func greenhouseList(body []byte) ([]Posting, error) {
 			places = append(places, text(office.Location))
 		}
 		postings = append(postings, Posting{ID: strconv.FormatInt(job.ID, 10), URL: job.AbsoluteURL,
-			PostedAt: timeOf(firstOf(job.FirstPublished, job.UpdatedAt)), Places: places, Page: *job.page()})
+			PostedAt: timeOf(extract.FirstOf(job.FirstPublished, job.UpdatedAt)), Places: places, Page: *job.page()})
 	}
 	return postings, nil
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
-import { withoutId, type Profile, type Project } from '../api/profile.schema'
+import { projectInput, type Profile, type Project } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
 import { useProfileMutations } from '../composables/useProfile'
 import { monthRange } from '../format'
@@ -13,7 +13,7 @@ defineProps<{ profile: Profile }>()
 const { projects } = useProfileMutations()
 
 function removeNote(project: Project, index: number) {
-  projects.update.mutate({ id: project.id, body: { ...withoutId(project), notes: project.notes.filter((_, at) => at !== index) } as Omit<Project, 'id'> as never })
+  projects.update.mutate({ id: project.id, body: projectInput(project, { notes: project.notes.filter((_, at) => at !== index) }) })
 }
 const editor = useEntryEditor(projects)
 </script>

@@ -1,6 +1,6 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
-import { withoutId, type Experience, type Note, type Profile, type Project } from '@/features/profile/api/profile.schema'
+import { experienceInput, projectInput, type Experience, type Note, type Profile, type Project } from '@/features/profile/api/profile.schema'
 import { profileKeys, useProfileMutations } from '@/features/profile/composables/useProfile'
 
 export const OTHER = 'other'
@@ -27,6 +27,7 @@ function serial<T>(work: () => Promise<T>): Promise<T> {
 }
 
 type EntryChange = Partial<Pick<Experience, 'bullets' | 'notes'>>
+type Target = { list: 'experience', entry: Experience } | { list: 'projects', entry: Project }
 
 /** Answers kept as notes of the role or project they are about, or of the person. */
 export function useNotes(profile: MaybeRefOrGetter<Profile | undefined>) {
@@ -37,11 +38,12 @@ export function useNotes(profile: MaybeRefOrGetter<Profile | undefined>) {
   const experience = computed(() => current()?.experience ?? [])
   const projects = computed(() => current()?.projects ?? [])
 
-  function find(person: Profile | undefined, place: Place): { list: List, entry: Experience | Project } | null {
+  function find(person: Profile | undefined, place: Place): Target | null {
     const [list, id] = place.split(':') as [List, string]
-    const entries: (Experience | Project)[] = list === 'experience' ? person?.experience ?? [] : list === 'projects' ? person?.projects ?? [] : []
-    const entry = entries.find(item => item.id === id)
-    return entry ? { list, entry } : null
+    const role = list === 'experience' ? person?.experience.find(item => item.id === id) : undefined
+    if (role) return { list: 'experience', entry: role }
+    const project = list === 'projects' ? person?.projects.find(item => item.id === id) : undefined
+    return project ? { list: 'projects', entry: project } : null
   }
   const entryOf = (place: Place) => find(current(), place)
 
@@ -49,10 +51,12 @@ export function useNotes(profile: MaybeRefOrGetter<Profile | undefined>) {
   function updateEntry(place: Place, change: (entry: Experience | Project) => EntryChange) {
     return serial(async () => {
       const target = find(latest(), place)
-      if (!target) return
-      const body = { ...withoutId(target.entry), ...change(target.entry) }
-      if (target.list === 'experience') await mutations.experience.update.mutateAsync({ id: target.entry.id, body: body as Omit<Experience, 'id'> as never })
-      else await mutations.projects.update.mutateAsync({ id: target.entry.id, body: body as Omit<Project, 'id'> as never })
+      if (target?.list === 'experience') {
+        await mutations.experience.update.mutateAsync({ id: target.entry.id, body: experienceInput(target.entry, change(target.entry)) })
+      }
+      else if (target?.list === 'projects') {
+        await mutations.projects.update.mutateAsync({ id: target.entry.id, body: projectInput(target.entry, change(target.entry)) })
+      }
     })
   }
   function whereLabel(place: Place): string {

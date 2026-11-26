@@ -3,6 +3,7 @@ package fetch
 import (
 	"encoding/json"
 	"errors"
+	"jobs/internal/extract"
 	"net/url"
 	"regexp"
 	"strings"
@@ -35,8 +36,8 @@ func boardFor(u *url.URL) *board {
 		return greenhouse(parts[0], parts[2])
 	case greenhouseHosts[host] && query.Get("for") != "" && digits.MatchString(query.Get("token")):
 		return greenhouse(query.Get("for"), query.Get("token"))
-	case digits.MatchString(query.Get("gh_jid")) && firstOf(query.Get("for"), query.Get("board")) != "":
-		return greenhouse(firstOf(query.Get("for"), query.Get("board")), query.Get("gh_jid"))
+	case digits.MatchString(query.Get("gh_jid")) && extract.FirstOf(query.Get("for"), query.Get("board")) != "":
+		return greenhouse(extract.FirstOf(query.Get("for"), query.Get("board")), query.Get("gh_jid"))
 	case leverAPIs[host] != "" && len(parts) >= 2:
 		return lever(leverAPIs[host], parts[0], parts[1])
 	case host == "jobs.ashbyhq.com" && len(parts) >= 2:
@@ -135,7 +136,7 @@ func smartRecruiters(company, id string) *board {
 			case posting.Location.Hybrid:
 				mode = "hybrid"
 			}
-			return &Page{Title: text(posting.Name), Company: firstOf(text(posting.Company.Name), slugName(company)),
+			return &Page{Title: text(posting.Name), Company: extract.FirstOf(text(posting.Company.Name), slugName(company)),
 				City: text(posting.Location.City), Country: text(posting.Location.Country), WorkMode: mode,
 				Text: strings.Join(descriptionLines(description), "\n")}, nil
 		},
@@ -166,7 +167,7 @@ func workable(account, shortcode string) *board {
 					if job.Telecommuting {
 						mode = "remote"
 					}
-					return &Page{Title: text(job.Title), Company: firstOf(text(listing.Name), slugName(account)),
+					return &Page{Title: text(job.Title), Company: extract.FirstOf(text(listing.Name), slugName(account)),
 						City: text(job.City), Country: text(job.Country), WorkMode: mode,
 						Text: strings.Join(descriptionLines(job.Description), "\n")}, nil
 				}
@@ -200,15 +201,6 @@ func slugName(slug string) string {
 	return strings.Join(words, " ")
 }
 
-func firstOf(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
-}
-
 func firstError(errs ...error) error {
 	for _, err := range errs {
 		if err != nil {
@@ -230,31 +222,37 @@ func BoardOf(link string) (platform, board string, ok bool) {
 	}
 	host := strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
 	parts := strings.FieldsFunc(u.Path, func(r rune) bool { return r == '/' })
+	for _, p := range platforms {
+		if board, ok := p.boardOf(host, parts, u.Query()); ok {
+			if CheckBoard(p.name, board) != nil {
+				return "", "", false
+			}
+			return p.name, board, true
+		}
+	}
+	return "", "", false
+}
+
+func greenhouseBoardOf(host string, parts []string, query url.Values) (string, bool) {
+	if greenhouseHosts[host] && len(parts) > 0 && parts[0] != "embed" {
+		return parts[0], true
+	}
+	if greenhouseHosts[host] || query.Get("gh_jid") != "" {
+		return extract.FirstOf(query.Get("for"), query.Get("board")), true
+	}
+	return "", false
+}
+
+func workdayBoardOf(host string, parts []string, _ url.Values) (string, bool) {
+	if !workdayHost.MatchString(host) {
+		return "", false
+	}
 	first := ""
 	if len(parts) > 0 {
 		first = parts[0]
 	}
-	switch {
-	case greenhouseHosts[host] && first != "" && first != "embed":
-		platform, board = "greenhouse", first
-	case greenhouseHosts[host] || u.Query().Get("gh_jid") != "":
-		platform, board = "greenhouse", firstOf(u.Query().Get("for"), u.Query().Get("board"))
-	case host == "jobs.lever.co" || host == "jobs.eu.lever.co":
-		platform, board = map[string]string{"jobs.lever.co": "lever", "jobs.eu.lever.co": "lever-eu"}[host], first
-	case host == "jobs.ashbyhq.com":
-		platform, board = "ashby", first
-	case host == "jobs.smartrecruiters.com":
-		platform, board = "smartrecruiters", first
-	case workdayHost.MatchString(host):
-		if len(parts) > 1 && workdayLocale.MatchString(first) {
-			first = parts[1]
-		}
-		platform, board = "workday", host+"/"+first
-	default:
-		return "", "", false
+	if len(parts) > 1 && workdayLocale.MatchString(first) {
+		first = parts[1]
 	}
-	if CheckBoard(platform, board) != nil {
-		return "", "", false
-	}
-	return platform, board, true
+	return host + "/" + first, true
 }

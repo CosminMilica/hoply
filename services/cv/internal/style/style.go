@@ -29,14 +29,6 @@ const (
 // MaxTools is how many skills one sentence may name before it reads as a list.
 const MaxTools = 2
 
-// stockWords are matched as whole words, case-insensitively.
-var stockWords = []string{"leverage", "leveraged", "leveraging", "spearheaded", "spearheading", "orchestrated", "robust",
-	"seamless", "seamlessly", "cutting-edge", "state-of-the-art", "end-to-end", "holistic", "synergy", "synergies",
-	"utilize", "utilized", "utilizing", "facilitated", "empowered", "empowering", "streamlined", "streamlining",
-	"ensure", "ensured", "ensuring", "passionate", "dynamic", "innovative", "best-in-class", "world-class",
-	"results-driven", "proven track record", "comprehensive", "successfully", "effectively", "efficiently",
-	"pivotal", "instrumental", "foster", "fostered", "elevate", "elevated", "showcase", "showcased", "various"}
-
 var (
 	ingTail = regexp.MustCompile(`,\s+(?:and\s+)?([a-z]+ing)\b`)
 	formula = regexp.MustCompile(`(?i)^[\w /&+.-]{2,60}\bwith\s+\d+\+?\s+years?\s+of\s+experience\b`)
@@ -89,7 +81,7 @@ func (l *linter) sentence(where, text string, extra ...string) {
 		}
 	}
 	lower := strings.ToLower(text)
-	for _, word := range append(slices.Clone(stockWords), extra...) {
+	for _, word := range append(slices.Clone(cvdoc.StockWords), extra...) {
 		if cvdoc.HasWord(lower, word) {
 			l.add(where, Stock, word)
 		}
@@ -156,12 +148,6 @@ func Lint(document models.CvDocument, known []string) Report {
 	return l.done()
 }
 
-// letterStock are what letters and messages say when they have nothing to say.
-var letterStock = []string{"look forward to hearing", "please find attached", "would love the opportunity", "excited to",
-	"thrilled", "exceptional addition", "uniquely positions", "perfect fit", "hit the ground running", "add value",
-	"make an impact", "dream job", "team player", "i believe i would be", "i am writing to", "i'm writing to",
-	"just checking in", "touch base", "reach out"}
-
 // OpensWithI is a cover letter that starts with the person, not the company.
 const OpensWithI = "opens-with-i"
 
@@ -184,7 +170,7 @@ func LintLetter(texts models.LetterTexts, known []string) Report {
 			lines = append(lines, sentences(line)...)
 		}
 		for i, line := range lines {
-			l.sentence(fmt.Sprintf("%s %d", where, i+1), line, letterStock...)
+			l.sentence(fmt.Sprintf("%s %d", where, i+1), line, cvdoc.LetterCliches...)
 		}
 		return lines
 	}

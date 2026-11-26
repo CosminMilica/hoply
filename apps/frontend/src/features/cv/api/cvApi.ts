@@ -1,3 +1,4 @@
+import { fileName, type DownloadedFile } from '@/features/common/download'
 import { getApiClient } from '@/shared/api/client'
 import { cvListSchema, cvSchema, prepQuestionsSchema, probeSchema, analysisStartSchema, letterSchema, type CvRequest, type CvTemplate } from './cv.schema'
 
@@ -44,9 +45,13 @@ export const cvApi = {
     return letterSchema.parse(await getApiClient().post(`${BASE}/cvs/${encodeURIComponent(cvId)}/letter`, { json: { recruiter } }).json())
   },
   /** The cover letter as the person edited it, as a file with the CV's header. */
-  async letterFile(cvId: string, format: 'pdf' | 'docx', template: CvTemplate, text: string) {
+  async letterFile(cvId: string, format: 'pdf' | 'docx', template: CvTemplate, text: string): Promise<DownloadedFile> {
     const response = await getApiClient().post(`${BASE}/cvs/${encodeURIComponent(cvId)}/letter/file`, { json: { text }, searchParams: { format, template } })
-    const name = /filename="?([^";]+)"?/.exec(response.headers.get('content-disposition') ?? '')?.[1] ?? `Cover_Letter.${format}`
-    return { name, blob: await response.blob() }
+    return { name: fileName(response, `Cover_Letter.${format}`), blob: await response.blob() }
+  },
+  /** The CV as a file: the tailored version or the profile's, in a template. */
+  async file(cvId: string, format: 'pdf' | 'docx', version: 'tailored' | 'profile', template: CvTemplate): Promise<DownloadedFile> {
+    const response = await getApiClient().get(`${BASE}/cvs/${encodeURIComponent(cvId)}/file`, { searchParams: { format, version, template } })
+    return { name: fileName(response, `CV.${format}`), blob: await response.blob() }
   },
 }
