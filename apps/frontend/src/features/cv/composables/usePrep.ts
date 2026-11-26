@@ -8,7 +8,6 @@ import { bulletLine, knownSkills } from '@/features/profile/skills'
 import type { CvRequest, PrepQuestions, ProbeQuestion } from '../api/cv.schema'
 import { OTHER, useNotes, type Place, type Remembered } from './useNotes'
 
-export { OTHER }
 export const MIN_ANSWER = 10
 type GapAnswer = { status: 'added', remembered: Remembered } | { status: 'skipped' }
 type ClaimAnswer = { status: 'added', remembered: Remembered } | { status: 'picked', text: string } | { status: 'no' }

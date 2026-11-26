@@ -10,7 +10,8 @@ import { settle, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { prepQuestions } from '@/test/cv-engine/questions'
-import { OTHER, usePrep } from './usePrep'
+import { OTHER } from './useNotes'
+import { usePrep } from './usePrep'
 import { seedId } from '@/test/jobs-seed'
 
 const job = engineJob(0)

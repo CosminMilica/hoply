@@ -21,6 +21,7 @@ export const hoplyRoutes: RouteRecordRaw[] = [
   { path: 'jobs/:id/prepare', name: 'hoply-prep', component: () => import('@/features/cv/pages/PrepPage.vue'), props: true, meta: { title: 'Prepare your CV', menu: 'saved' } },
   { path: 'jobs/:id/cv', name: 'hoply-cv', component: () => import('@/features/cv/pages/CvPage.vue'), props: true, meta: { title: 'Your CV', menu: 'saved' } },
   { path: 'saved', name: 'hoply-saved', component: () => import('@/features/applications/pages/SavedPage.vue'), meta: { title: 'Saved jobs', menu: 'saved' } },
+  { path: 'saved/skills', name: 'hoply-skills', component: () => import('@/features/applications/pages/SkillGapsPage.vue'), meta: { title: 'Skill gaps', menu: 'saved' } },
 ]
 
 const router = createApplicationRouter({

@@ -186,5 +186,8 @@ test('a saved job is still in Saved after a reload', async ({ page }) => {
   await expect(page.locator('[data-test="since"]')).toHaveText(/^Saved \d{1,2} [A-Z][a-z]{2}$/);
   await expect(page.getByRole('button', { name: 'Saved 1' })).toBeVisible();
   expect([...applications.applications.values()].map(item => item.status)).toEqual(['saved']);
+  await page.getByRole('link', { name: 'Skill gaps' }).click();
+  await expect(page.getByRole('heading', { name: 'Skill gaps' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Platform Engineer/ }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });

@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuery } from '@tanstack/vue-query'
 import ToggleChip from '@/features/common/components/ToggleChip.vue'
 import ScoreTile from '@/features/common/components/ScoreTile.vue'
-import { jobsApi } from '@/features/jobs/api/jobsApi'
-import { jobKeys } from '@/features/jobs/composables/useJobs'
-import { matchJob, placeOf } from '@/features/jobs/match'
-import { useProfileQuery } from '@/features/profile/composables/useProfile'
-import { knownSkills } from '@/features/profile/skills'
-import { STATUS_LABELS, statusSince, type ApplicationStatus } from '../api/applications.schema'
-import { useApplicationMutations, useApplicationsQuery } from '../composables/useApplications'
+import { placeOf } from '@/features/jobs/match'
+import { STATUS_LABELS, type ApplicationStatus } from '../api/applications.schema'
+import { useApplicationMutations } from '../composables/useApplications'
+import { useTrackedJobs } from '../composables/useTrackedJobs'
 
 type Tab = 'all' | ApplicationStatus
 
@@ -28,25 +24,14 @@ const BADGE: Record<ApplicationStatus, string> = {
 
 const router = useRouter()
 const tab = ref<Tab>('all')
-const applications = useApplicationsQuery()
-const jobs = useQuery({ queryKey: jobKeys.list({}), queryFn: () => jobsApi.list() })
-const profile = useProfileQuery()
+const { tracked, loading } = useTrackedJobs()
 const { setStatus, remove } = useApplicationMutations()
 
-const tracked = computed(() => {
-  const byId = new Map((jobs.data.value?.items ?? []).map(job => [job.id, job]))
-  const skills = profile.data.value ? knownSkills(profile.data.value) : []
-  return (applications.data.value ?? []).flatMap((application) => {
-    const job = byId.get(application.job_id)
-    return job ? [{ job, status: application.status, since: statusSince(application), ...matchJob(job, skills) }] : []
-  })
-})
 const tabs = computed(() => TABS.map(item => ({
   ...item,
   count: item.id === 'all' ? tracked.value.length : tracked.value.filter(entry => entry.status === item.id).length,
 })))
 const visible = computed(() => tracked.value.filter(entry => tab.value === 'all' || entry.status === tab.value))
-const loading = computed(() => applications.isPending.value || jobs.isPending.value)
 
 /** "Missing: GraphQL · Close: Argo CD", or that every keyword is covered. */
 function keywordLine(entry: { missing: string[], related: { skill: string }[] }) {
@@ -71,6 +56,7 @@ function primary(jobId: string, status: ApplicationStatus) {
       </div>
       <p class="m-0 text-[15px] leading-snug font-medium text-muted">Pick the ones worth a CV, and we will tailor it for you.</p>
     </div>
+    <UButton v-if="tracked.length" :to="{ name: 'hoply-skills' }" icon="i-lucide-target" label="Skill gaps" color="neutral" variant="soft" class="self-start" />
     <div class="flex flex-wrap gap-2" role="group" aria-label="Show">
       <ToggleChip v-for="item in tabs" :key="item.id" :label="`${item.label} ${item.count}`" :pressed="tab === item.id" @toggle="tab = item.id" />
     </div>

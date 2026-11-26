@@ -3,7 +3,7 @@ import router, { hoplyRoutes } from './index'
 
 describe('the application router', () => {
   it('composes hoply’s pages into the app layout, starting on the profile', async () => {
-    expect(hoplyRoutes.map(route => route.name)).toEqual(['hoply-profile', 'hoply-jobs', 'hoply-job-add', 'hoply-job', 'hoply-prep', 'hoply-cv', 'hoply-saved'])
+    expect(hoplyRoutes.map(route => route.name)).toEqual(['hoply-profile', 'hoply-jobs', 'hoply-job-add', 'hoply-job', 'hoply-prep', 'hoply-cv', 'hoply-saved', 'hoply-skills'])
     expect(router.resolve({ name: 'hoply-prep', params: { id: '3' } }).path).toBe('/jobs/3/prepare')
     expect(router.resolve({ name: 'hoply-cv', params: { id: '3' } }).path).toBe('/jobs/3/cv')
     await router.push('/')

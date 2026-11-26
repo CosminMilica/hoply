@@ -19,6 +19,7 @@ describe('SavedPage', () => {
     expect(button('All 3').getAttribute('aria-pressed')).toBe('true')
     expect([...document.querySelectorAll('[data-test="since"]')].map(line => line.textContent)).toEqual(['Applied 25 Nov', 'CV ready 25 Nov', 'Saved 25 Nov'])
     expect(text()).toContain('Missing: Snowflake, Terraform, Infrastructure as Code, RBAC')
+    expect([...document.querySelectorAll('a')].find(link => link.textContent?.trim() === 'Skill gaps')?.getAttribute('href')).toBe('/saved/skills')
 
     await click(button('Saved 1'))
     expect(text()).toContain('Snowflake Administrator DevOps')

@@ -34,7 +34,7 @@ for (const group of skillMap.same) {
   for (const name of group) sameKey.set(fold(name), fold(group[0]!))
 }
 /** One key per skill, whatever name it goes by. */
-const skillKey = (name: string) => sameKey.get(fold(name)) ?? fold(name)
+export const skillKey = (name: string) => sameKey.get(fold(name)) ?? fold(name)
 const coverBy = new Map(Object.entries(skillMap.covers).map(([umbrella, tools]) => [skillKey(umbrella), tools.map(skillKey)]))
 const families = skillMap.close.map(family => ({ category: family.category, keys: family.tools.map(skillKey) }))
 
