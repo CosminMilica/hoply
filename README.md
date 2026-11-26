@@ -138,8 +138,9 @@ version in `services/cv/tests/testdata/claude/`.
 
 | Done | Next |
 | --- | --- |
-| Profile, adding jobs from links and text, matching, saved jobs and applications | Remote job boards and a Send to Hoply bookmarklet ([plan](docs/plans/2026-11-26-find-jobs.md)) |
+| Profile, adding jobs from links and text, matching, saved jobs and applications | Search by meaning, and ranking by Claude's reading of each ad |
 | Finding jobs in Romania from the job boards of 19 companies (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, career sitemaps), and of the companies people follow | |
+| A Send to Hoply bookmarklet that brings a job from LinkedIn, eJobs or any site into Add a job | |
 | CVs tailored by Claude in three steps, checked sentence by sentence | An evaluation set to tune the prompts on more people and jobs |
 | PDF and DOCX export, ATS checks | CVs in Romanian |
 
