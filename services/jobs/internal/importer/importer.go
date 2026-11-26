@@ -35,7 +35,7 @@ type Board struct {
 // Lister reads every job a board lists, and the description of a job whose
 // list has none; *fetch.Reader implements it.
 type Lister interface {
-	List(ctx context.Context, platform, board string, country fetch.Country) ([]fetch.Posting, error)
+	List(ctx context.Context, platform, board string, country fetch.Country) (postings []fetch.Posting, complete bool, err error)
 	Describe(ctx context.Context, posting *fetch.Posting) error
 }
 
@@ -50,15 +50,17 @@ var Romania = fetch.Country{Code: "RO", Name: "Romania", In: func(place string) 
 type Lock func(ctx context.Context) (unlock func(), ok bool, err error)
 
 // Result is what one board's run did. Unread counts the jobs whose
-// description could not be read.
+// description could not be read; Partial is set when the board had more jobs
+// than its list reads.
 type Result struct {
-	Board  Board
-	Listed int
-	Kept   int
-	New    int
-	Unread int
-	Closed int64
-	Err    error
+	Board   Board
+	Partial bool
+	Listed  int
+	Kept    int
+	New     int
+	Unread  int
+	Closed  int64
+	Err     error
 }
 
 // Followed gives the boards people follow; repositories.BoardRepository implements it.
@@ -229,20 +231,22 @@ func logResult(r Result) {
 		slog.Warn("job board import failed", "company", b.Company, "platform", b.Platform, "error", r.Err)
 		return
 	}
-	slog.Info("job board imported", "company", b.Company, "listed", r.Listed, "kept", r.Kept, "new", r.New, "unread", r.Unread, "closed", r.Closed)
+	slog.Info("job board imported", "company", b.Company, "listed", r.Listed, "kept", r.Kept, "new", r.New, "unread", r.Unread,
+		"partial", r.Partial, "closed", r.Closed)
 }
 
 // board imports one board. The description of a job whose list has none is
 // read only for the jobs the list already shows as wanted. A board that lists
-// no jobs, or whose descriptions could not all be read, closes nothing: an
-// empty or partial answer is more likely a fault than jobs filled.
+// no jobs, whose list was cut short, or whose descriptions could not all be
+// read closes nothing: the jobs missing from its answer may still be open.
 func (im *Importer) board(ctx context.Context, b Board) Result {
 	r := Result{Board: b}
-	postings, err := im.lister.List(ctx, b.Platform, b.Board, Romania)
+	postings, complete, err := im.lister.List(ctx, b.Platform, b.Board, Romania)
 	if err != nil {
 		r.Err = err
 		return r
 	}
+	r.Partial = !complete
 	r.Listed = len(postings)
 	seen := im.now().UTC()
 	described := 0
@@ -273,7 +277,7 @@ func (im *Importer) board(ctx context.Context, b Board) Result {
 			r.New++
 		}
 	}
-	if r.Listed > 0 && r.Unread == 0 {
+	if r.Listed > 0 && r.Unread == 0 && !r.Partial {
 		r.Closed, r.Err = im.store.Close(ctx, b.Platform, b.Board, seen)
 	}
 	return r

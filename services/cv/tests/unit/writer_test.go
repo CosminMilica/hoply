@@ -243,6 +243,10 @@ func TestWriterAsksForQuestionsFromTheJobsAnalysis(t *testing.T) {
 	if _, err := writer.New(limited).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
 		t.Fatalf("usage limit: %v", err)
 	}
+	unreadable := &fakeModel{replies: []modelReply{{output: json.RawMessage(`[]`)}, {output: probeOutput}}}
+	if _, err := writer.New(unreadable).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) || unreadable.calls != 1 {
+		t.Fatalf("without the job's analysis, no questions about it: %v %d", err, unreadable.calls)
+	}
 	noLogin := &fakeModel{replies: []modelReply{{err: claude.ErrLoginNeeded}}}
 	if _, err := writer.New(noLogin).Questions(context.Background(), catalogJob(t, 0), sampleProfile(t)); !errors.Is(err, writer.ErrNoQuestions) {
 		t.Fatalf("login needed: %v", err)

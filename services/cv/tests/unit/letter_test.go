@@ -77,6 +77,12 @@ func TestTheLetterCitesTheJobAndKeepsOnlyCheckedSentences(t *testing.T) {
 	if reason := c.CheckLetter(grounding.Sentence{Text: "I know Snowflake well.", Facts: []string{"E1"}}); !strings.Contains(reason, "Snowflake") {
 		t.Fatalf("a missing skill outside the job title: %q", reason)
 	}
+	// "İ" grows when lower-cased, which moved the title's position in the original text.
+	for _, text := range []string{"İ applied for the snowflake administrator devops role.", "İİİİ: Snowflake Administrator DevOps"} {
+		if reason := c.CheckLetter(grounding.Sentence{Text: text, Facts: []string{"E1"}}); reason != "" {
+			t.Fatalf("the job title names the role, not a claim: %q %q", text, reason)
+		}
+	}
 	if _, err := grounding.ParseLetter(json.RawMessage(`[]`)); err == nil {
 		t.Fatal("a letter is an object")
 	}

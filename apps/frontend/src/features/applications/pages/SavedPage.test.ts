@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import SavedPage from './SavedPage.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -33,6 +33,17 @@ describe('SavedPage', () => {
     await click(button('Applied 2'))
     await click(button('View CV'))
     expect(router.currentRoute.value.name).toBe('hoply-cv')
+  })
+
+  it('moves a saved job whose CV got ready in the background on to CV ready', async () => {
+    const { applications, cvs } = useServices()
+    applications.track(seedId(1), 'saved')
+    applications.track(seedId(4), 'saved')
+    cvs.create({ job_id: seedId(1), skip_roles: [], focus: [], confirmed: [] })
+    await mountPage(SavedPage)
+    await vi.waitFor(() => expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready'))
+    expect(applications.applications.get(seedId(4))?.status).toBe('saved')
+    expect(button('CV ready 1')).toBeTruthy()
   })
 
   it('prepares a CV for a saved job, or removes it', async () => {

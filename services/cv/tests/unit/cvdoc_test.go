@@ -71,6 +71,13 @@ func TestTextHelpers(t *testing.T) {
 	equal(t, cvdoc.HasWord("Built CI/CD pipelines", "ci/cd"), true)
 	equal(t, cvdoc.HasWord("Ran SQL queries", "SQL"), true)
 	equal(t, cvdoc.HasWord("Ran MySQL queries", "SQL"), false)
+	for _, skill := range []string{"C++", "C#", ".NET", "Node.js"} {
+		equal(t, cvdoc.HasWord("Built services in "+skill+", daily", skill), true)
+		equal(t, cvdoc.HasWord(skill+" at scale", skill), true)
+	}
+	equal(t, cvdoc.HasWord("Wrote C++17 code", "C++"), false)
+	equal(t, cvdoc.HasWord("Wrote C++ code", "C"), false)
+	equal(t, cvdoc.HasWord("Ran Go_lang", "Go"), false)
 
 	equal(t, cvdoc.PastPhrase("Build and ship features in our React web app."), "built and shipped features in a React web app")
 	equal(t, cvdoc.PastPhrase("Monitor your services and fix operational issues quickly."), "monitored the services and fixed operational issues quickly")

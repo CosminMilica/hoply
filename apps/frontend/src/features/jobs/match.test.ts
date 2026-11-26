@@ -33,6 +33,7 @@ describe('matchJob', () => {
     expect(verdictFor(40)).toMatch(/^Partial/)
     expect(verdictFor(10)).toMatch(/^Light/)
     expect(keywordsIn('Ran CI/CD with Go', ['CI/CD', 'Go', 'Java'])).toEqual(['CI/CD', 'Go'])
+    expect(keywordsIn('Built C++ and C# services on .NET', ['C++', 'C#', '.NET', 'C'])).toEqual(['C++', 'C#', '.NET'])
   })
 })
 

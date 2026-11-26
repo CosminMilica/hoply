@@ -3,6 +3,7 @@ package unit_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -96,7 +97,7 @@ func TestWorkdayList(t *testing.T) {
 		"cities.wd1.myworkdayjobs.com": server.URL,
 	}})
 	ctx := context.Background()
-	postings, err := reader.List(ctx, "workday", "northwind.wd3.myworkdayjobs.com/Careers", importer.Romania)
+	postings, _, err := reader.List(ctx, "workday", "northwind.wd3.myworkdayjobs.com/Careers", importer.Romania)
 	if err != nil || len(postings) != 4 {
 		t.Fatalf("list: %+v %v", postings, err)
 	}
@@ -126,22 +127,22 @@ func TestWorkdayList(t *testing.T) {
 	if err := reader.Describe(ctx, &postings[2]); err == nil {
 		t.Fatal("a missing job fails")
 	}
-	if jobs, err := reader.List(ctx, "workday", "cities.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || len(jobs) != 1 ||
+	if jobs, _, err := reader.List(ctx, "workday", "cities.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || len(jobs) != 1 ||
 		!slices.Contains(server.requests, `POST /wday/cxs/cities/Careers/jobs {"appliedFacets":{"locations":["dacia","cluj"]},"limit":20,"offset":0,"searchText":""}`) {
 		t.Fatalf("a site without a country facet keeps to its locations in Romania: %v %v %v", jobs, err, server.requests)
 	}
 	byName := fetch.Country{Name: "Romania"}
-	if jobs, err := reader.List(ctx, "workday", "cities.wd1.myworkdayjobs.com/Careers", byName); err != nil || len(jobs) != 1 ||
+	if jobs, _, err := reader.List(ctx, "workday", "cities.wd1.myworkdayjobs.com/Careers", byName); err != nil || len(jobs) != 1 ||
 		!slices.Contains(server.requests, `POST /wday/cxs/cities/Careers/jobs {"appliedFacets":{"locations":["cluj"]},"limit":20,"offset":0,"searchText":""}`) {
 		t.Fatalf("without In, a place is in the country when it names it: %v %v", jobs, err)
 	}
-	if none, err := reader.List(ctx, "workday", "elsewhere.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || len(none) != 0 {
+	if none, _, err := reader.List(ctx, "workday", "elsewhere.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || len(none) != 0 {
 		t.Fatalf("a site without jobs in Romania lists none: %v %v", none, err)
 	}
-	if _, err := reader.List(ctx, "workday", "broken.wd1.myworkdayjobs.com/Careers", importer.Romania); err == nil {
+	if _, _, err := reader.List(ctx, "workday", "broken.wd1.myworkdayjobs.com/Careers", importer.Romania); err == nil {
 		t.Fatal("a broken answer fails")
 	}
-	if _, err := reader.List(ctx, "workday", "missing.wd1.myworkdayjobs.com/Careers", importer.Romania); err == nil {
+	if _, _, err := reader.List(ctx, "workday", "missing.wd1.myworkdayjobs.com/Careers", importer.Romania); err == nil {
 		t.Fatal("an unreachable site fails")
 	}
 }
@@ -168,7 +169,7 @@ func TestSmartRecruitersAndSitemapLists(t *testing.T) {
 	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"api.smartrecruiters.com": api.URL, "careers.northwind.example": site.URL}})
 	ctx := context.Background()
 
-	jobs, err := reader.List(ctx, "smartrecruiters", "NorthwindGroup", importer.Romania)
+	jobs, _, err := reader.List(ctx, "smartrecruiters", "NorthwindGroup", importer.Romania)
 	if err != nil || len(jobs) != 1 || jobs[0].URL != "https://jobs.smartrecruiters.com/NorthwindGroup/7440001" || !jobs[0].InCountry ||
 		jobs[0].Page.WorkMode != "hybrid" || jobs[0].PostedAt.Format(time.DateOnly) != "2026-11-18" {
 		t.Fatalf("smartrecruiters: %+v %v", jobs, err)
@@ -179,11 +180,11 @@ func TestSmartRecruitersAndSitemapLists(t *testing.T) {
 	if err := reader.Describe(ctx, &jobs[0]); err != nil || !strings.Contains(jobs[0].Page.Text, "DNS and DHCP") || jobs[0].Page.City != "Iasi" {
 		t.Fatalf("smartrecruiters described: %+v %v", jobs[0], err)
 	}
-	if _, err := reader.List(ctx, "smartrecruiters", "Broken", importer.Romania); err == nil {
+	if _, _, err := reader.List(ctx, "smartrecruiters", "Broken", importer.Romania); err == nil {
 		t.Fatal("a broken answer fails")
 	}
 
-	pages, err := reader.List(ctx, "sitemap", "https://careers.northwind.example/sitemap.xml", importer.Romania)
+	pages, _, err := reader.List(ctx, "sitemap", "https://careers.northwind.example/sitemap.xml", importer.Romania)
 	if err != nil || len(pages) != 1 || pages[0].Page.Title != "platform engineer northwind bank" || !strings.Contains(pages[0].Places[0], "bucharest") {
 		t.Fatalf("sitemap: %+v %v", pages, err)
 	}
@@ -191,11 +192,11 @@ func TestSmartRecruitersAndSitemapLists(t *testing.T) {
 		!slices.Contains(pages[0].Places, "Bucharest") {
 		t.Fatalf("sitemap described: %+v %v", pages[0], err)
 	}
-	if _, err := reader.List(ctx, "sitemap", "https://careers.northwind.example/broken.xml", importer.Romania); err == nil {
+	if _, _, err := reader.List(ctx, "sitemap", "https://careers.northwind.example/broken.xml", importer.Romania); err == nil {
 		t.Fatal("a broken sitemap fails")
 	}
 	gone := fetch.Posting{}
-	if missing, _ := reader.List(ctx, "sitemap", "https://careers.northwind.example/sitemap.xml", importer.Romania); len(missing) == 1 {
+	if missing, _, _ := reader.List(ctx, "sitemap", "https://careers.northwind.example/sitemap.xml", importer.Romania); len(missing) == 1 {
 		gone = missing[0]
 	}
 	site.Close()
@@ -232,7 +233,7 @@ func TestBoardsFromLinks(t *testing.T) {
 			t.Errorf("%s %s is refused", platform, board)
 		}
 	}
-	if _, err := fetch.New(fetch.Options{}).List(context.Background(), "greenhouse", "a/b", importer.Romania); err == nil {
+	if _, _, err := fetch.New(fetch.Options{}).List(context.Background(), "greenhouse", "a/b", importer.Romania); err == nil {
 		t.Fatal("List checks the board")
 	}
 }
@@ -399,5 +400,29 @@ func TestFollowingABoardThroughRoutes(t *testing.T) {
 	withoutImporter := boardsHandler(services.NewBoardService(&followedBoards{}, nil), &dev)
 	if status, body := testutil.Do(t, withoutImporter, http.MethodPost, "/api/v1/boards", map[string]any{"url": "https://jobs.lever.co/n/1", "company": "N"}); status != http.StatusCreated {
 		t.Fatalf("following without an importer stores the board: %d %v", status, body)
+	}
+}
+
+func TestListsCutShortSayTheyAreIncomplete(t *testing.T) {
+	workdayPage := make([]map[string]any, 20)
+	for i := range workdayPage {
+		workdayPage[i] = map[string]any{"title": "DevOps Engineer", "externalPath": fmt.Sprintf("/job/Bucharest/DevOps_R%d", i), "locationsText": "Romania - Bucharest"}
+	}
+	srPage := make([]map[string]any, 100)
+	for i := range srPage {
+		srPage[i] = map[string]any{"id": fmt.Sprint(i), "name": "SRE", "location": map[string]any{"city": "Iasi", "country": "ro"}}
+	}
+	server := newFixtureServer(t, map[string]answer{
+		"/wday/cxs/big/Careers/jobs": asJSON(t, map[string]any{"total": 2000, "jobPostings": workdayPage, "facets": []map[string]any{
+			{"facetParameter": "locationCountry", "values": []map[string]any{{"descriptor": "Romania", "id": romaniaID}}},
+		}}),
+		"/v1/companies/Big/postings": asJSON(t, map[string]any{"totalFound": 2000, "content": srPage}),
+	})
+	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"big.wd1.myworkdayjobs.com": server.URL, "api.smartrecruiters.com": server.URL}})
+	if jobs, complete, err := reader.List(context.Background(), "workday", "big.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || complete || len(jobs) != 400 {
+		t.Fatalf("workday stops at 400 jobs: %d %v %v", len(jobs), complete, err)
+	}
+	if jobs, complete, err := reader.List(context.Background(), "smartrecruiters", "Big", importer.Romania); err != nil || complete || len(jobs) != 500 {
+		t.Fatalf("smartrecruiters stops at 500 jobs: %d %v %v", len(jobs), complete, err)
 	}
 }

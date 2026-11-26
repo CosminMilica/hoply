@@ -9,11 +9,11 @@ export const cvApi = {
       await getApiClient().get(`${BASE}/jobs/${encodeURIComponent(jobId)}/questions`).json(),
     )
   },
-  /** Claude's questions for the job, asked in the background: poll while `pending`. */
   /** The questions that make every CV stronger, asked once for the whole profile. */
   async profileProbe() {
     return probeSchema.parse(await getApiClient().get(`${BASE}/probe`).json())
   },
+  /** Claude's questions for the job, asked in the background: poll while `pending`. */
   async probe(jobId: string) {
     return probeSchema.parse(await getApiClient().get(`${BASE}/jobs/${encodeURIComponent(jobId)}/probe`).json())
   },
@@ -29,6 +29,10 @@ export const cvApi = {
     return cvSchema.parse(await getApiClient().get(`${BASE}/cvs/${encodeURIComponent(id)}`).json())
   },
   /** The CVs made for a job, newest first. */
+  /** Every CV of the person, newest first. */
+  async all() {
+    return cvListSchema.parse(await getApiClient().get(`${BASE}/cvs`).json()).items
+  },
   async forJob(jobId: string) {
     return cvListSchema.parse(await getApiClient().get(`${BASE}/cvs`, { searchParams: { job_id: jobId } }).json()).items
   },

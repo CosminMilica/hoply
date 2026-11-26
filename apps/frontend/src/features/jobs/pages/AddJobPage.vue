@@ -5,7 +5,7 @@ import { useApplicationMutations } from '@/features/applications/composables/use
 import { serviceErrorMessage } from '@/features/common/errors'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { unreadableReason } from '../api/jobsApi'
-import { jobInputSchema, type JobDraft, type ReadRequest, type UnreadableReason } from '../api/jobs.schema'
+import { jobInputSchema, type Job, type JobDraft, type ReadRequest, type UnreadableReason } from '../api/jobs.schema'
 import JobDraftPreview from '../components/JobDraftPreview.vue'
 import SendToHoplyCard from '../components/SendToHoplyCard.vue'
 import { useAddJob } from '../composables/useJobs'
@@ -28,6 +28,7 @@ const error = ref('')
 const reason = ref<UnreadableReason | 'unknown'>('unknown')
 const draft = ref<JobDraft | null>(null)
 const saving = ref(false)
+const created = ref<Job | null>(null)
 const person = computed(() => profile.data.value)
 const failure = computed(() => unreadableMessage(reason.value, form.url))
 
@@ -47,6 +48,7 @@ function back() {
 }
 
 function readJob(body: ReadRequest) {
+  created.value = null
   error.value = ''
   phase.value = 'loading'
   read.mutate(body, {
@@ -118,7 +120,9 @@ async function save(tailor: boolean) {
   error.value = ''
   saving.value = true
   try {
-    const saved = await create.mutateAsync(parsed.data)
+    // A retry after saving the job but not its status saves only the status: the job is not added twice.
+    const saved = created.value ?? await create.mutateAsync(parsed.data)
+    created.value = saved
     await setStatus.mutateAsync({ jobId: saved.id, status: 'saved' })
     await router.push(tailor ? { name: 'hoply-prep', params: { id: saved.id } } : { name: 'hoply-saved' })
   }

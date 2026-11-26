@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -151,8 +152,8 @@ func (c Catalogue) CheckLetter(sentence Sentence) string {
 	}
 	// The job's own title may name a skill the person lacks; saying it is not claiming it.
 	if title := strings.TrimSpace(c.JobTitle); title != "" {
-		if at := strings.Index(lower, strings.ToLower(title)); at >= 0 {
-			sentence.Text = sentence.Text[:at] + "the role" + sentence.Text[at+len(title):]
+		if at := regexp.MustCompile(`(?i)` + regexp.QuoteMeta(title)).FindStringIndex(sentence.Text); at != nil {
+			sentence.Text = sentence.Text[:at[0]] + "the role" + sentence.Text[at[1]:]
 		}
 	}
 	return c.Check(sentence, "")

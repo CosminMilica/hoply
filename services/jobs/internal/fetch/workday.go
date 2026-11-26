@@ -96,8 +96,8 @@ func placeFacet(facets []workdayFacet, country Country) (param string, ids []str
 
 // workday lists a Workday site's jobs in the country, a page at a time, by its
 // country facet or else by its locations in the country; a site with neither
-// lists none.
-func (r *Reader) workday(ctx context.Context, board string, country Country) ([]Posting, error) {
+// lists none. complete is false when the list stopped at maxWorkdayJobs.
+func (r *Reader) workday(ctx context.Context, board string, country Country) (postings []Posting, complete bool, err error) {
 	api, site, _ := workdaySite(board)
 	search := func(facets map[string][]string, offset int) (*workdayList, error) {
 		body, err := r.json(ctx, http.MethodPost, api+"/jobs", map[string]any{"appliedFacets": facets, "limit": workdayPage, "offset": offset, "searchText": ""})
@@ -112,22 +112,25 @@ func (r *Reader) workday(ctx context.Context, board string, country Country) ([]
 	}
 	first, err := search(map[string][]string{}, 0)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	param, id := countryFacet(first.Facets, country.Name, "")
 	ids := []string{id}
 	if id == "" {
 		param, ids = placeFacet(first.Facets, country)
 	}
-	postings := []Posting{}
+	postings = []Posting{}
 	if len(ids) == 0 {
-		return postings, nil
+		return postings, true, nil
 	}
 	total := 0
-	for offset := 0; offset < maxWorkdayJobs; offset += workdayPage {
+	for offset := 0; ; offset += workdayPage {
+		if offset >= maxWorkdayJobs {
+			return postings, false, nil
+		}
 		list, err := search(map[string][]string{param: ids}, offset)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		if offset == 0 {
 			total = list.Total // later pages answer 0
@@ -141,10 +144,9 @@ func (r *Reader) workday(ctx context.Context, board string, country Country) ([]
 				}})
 		}
 		if len(list.JobPostings) < workdayPage || offset+workdayPage >= total {
-			break
+			return postings, true, nil
 		}
 	}
-	return postings, nil
 }
 
 // workdayJob reads one job of a Workday site.

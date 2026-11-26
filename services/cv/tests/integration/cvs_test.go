@@ -131,6 +131,19 @@ func TestQueueTakesTheOldestAndRecoversWhatAStoppedWorkerLeft(t *testing.T) {
 	if none, err := repo.Claim(ctx); err != nil || none != nil {
 		t.Fatalf("an empty queue: %v %v", none, err)
 	}
+	broken := newCv(t, repo, me)
+	if _, err := pool.Exec(ctx, "UPDATE cvs SET job_snapshot = '[]' WHERE id = $1", broken.ID); err != nil {
+		t.Fatal(err)
+	}
+	if none, err := repo.Claim(ctx); err == nil || none != nil {
+		t.Fatalf("a CV with unreadable snapshots is not handed out: %v %v", none, err)
+	}
+	if cv, _ := repo.Get(ctx, me, broken.ID); cv.Status != models.StatusFailed {
+		t.Fatalf("it is failed, so the queue moves on: %+v", cv)
+	}
+	if none, err := repo.Claim(ctx); err != nil || none != nil {
+		t.Fatalf("and never claimed again: %v %v", none, err)
+	}
 	if err := repo.Checking(ctx, first.ID, &models.Preview{From: "a", To: "b"}); err != nil {
 		t.Fatal(err)
 	}

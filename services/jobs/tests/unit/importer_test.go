@@ -50,8 +50,8 @@ func TestBoardLists(t *testing.T) {
 	reader := listReader(api)
 	ctx := context.Background()
 
-	greenhouse, err := reader.List(ctx, "greenhouse", "northwind", importer.Romania)
-	if err != nil || len(greenhouse) != 2 {
+	greenhouse, complete, err := reader.List(ctx, "greenhouse", "northwind", importer.Romania)
+	if err != nil || len(greenhouse) != 2 || !complete {
 		t.Fatalf("greenhouse: %v %v", greenhouse, err)
 	}
 	first := greenhouse[0]
@@ -64,29 +64,29 @@ func TestBoardLists(t *testing.T) {
 		t.Fatalf("greenhouse asks for the content: %v", api.hits)
 	}
 
-	lever, err := reader.List(ctx, "lever", "northwind-cloud", importer.Romania)
+	lever, _, err := reader.List(ctx, "lever", "northwind-cloud", importer.Romania)
 	if err != nil || len(lever) != 1 || lever[0].ID != "aa11" || lever[0].Page.Company != "Northwind Cloud" || lever[0].Page.Country != "RO" ||
 		lever[0].PostedAt.Format(time.DateOnly) != "2025-11-20" || lever[0].Page.WorkMode != "remote" || !strings.Contains(lever[0].Page.Text, "Linux") {
 		t.Fatalf("lever: %+v %v", lever, err)
 	}
 
-	ashby, err := reader.List(ctx, "ashby", "northwind", importer.Romania)
+	ashby, _, err := reader.List(ctx, "ashby", "northwind", importer.Romania)
 	if err != nil || len(ashby) != 1 || ashby[0].ID != "bb22" || !slices.Contains(ashby[0].Places, "Iași, Romania") ||
 		ashby[0].PostedAt.Format(time.DateOnly) != "2026-11-01" {
 		t.Fatalf("ashby lists only listed jobs: %+v %v", ashby, err)
 	}
 
 	var unreadable *fetch.Error
-	if _, err := reader.List(ctx, "ashby", "broken", importer.Romania); !errors.As(err, &unreadable) || unreadable.Reason != fetch.NoJobData {
+	if _, _, err := reader.List(ctx, "ashby", "broken", importer.Romania); !errors.As(err, &unreadable) || unreadable.Reason != fetch.NoJobData {
 		t.Fatalf("a broken answer: %v", err)
 	}
-	if eu, err := reader.List(ctx, "lever-eu", "northwind-cloud", importer.Romania); err != nil || len(eu) != 1 || !slices.Contains(api.hits, "/v0/postings/northwind-cloud?mode=json") {
+	if eu, _, err := reader.List(ctx, "lever-eu", "northwind-cloud", importer.Romania); err != nil || len(eu) != 1 || !slices.Contains(api.hits, "/v0/postings/northwind-cloud?mode=json") {
 		t.Fatalf("lever's EU host: %+v %v", eu, err)
 	}
-	if _, err := reader.List(ctx, "lever", "missing", importer.Romania); !errors.As(err, &unreadable) || unreadable.Reason != fetch.FetchFailed {
+	if _, _, err := reader.List(ctx, "lever", "missing", importer.Romania); !errors.As(err, &unreadable) || unreadable.Reason != fetch.FetchFailed {
 		t.Fatalf("a missing board: %v", err)
 	}
-	if _, err := reader.List(ctx, "workday", "northwind", importer.Romania); err == nil {
+	if _, _, err := reader.List(ctx, "workday", "northwind", importer.Romania); err == nil {
 		t.Fatal("an unknown platform fails")
 	}
 }
@@ -218,22 +218,24 @@ func (m *memoryImports) Close(_ context.Context, origin, board string, _ time.Ti
 	return 1, nil
 }
 
-// fakeLister answers each board with its postings, or fails for the boards in
-// fail; it describes a posting by filling its text, or fails for the ids in unreadable.
+// fakeLister answers each board with its postings, cut short for the boards in
+// partial, or fails for the boards in fail; it describes a posting by filling
+// its text, or fails for the ids in unreadable.
 type fakeLister struct {
 	postings   map[string][]fetch.Posting
 	fail       map[string]bool
+	partial    map[string]bool
 	unreadable map[string]bool
 	calls      []string
 	described  []string
 }
 
-func (f *fakeLister) List(_ context.Context, platform, board string, country fetch.Country) ([]fetch.Posting, error) {
+func (f *fakeLister) List(_ context.Context, platform, board string, country fetch.Country) ([]fetch.Posting, bool, error) {
 	f.calls = append(f.calls, platform+"/"+board+"@"+country.Code)
 	if f.fail[board] {
-		return nil, errors.New("board down")
+		return nil, false, errors.New("board down")
 	}
-	return f.postings[board], nil
+	return f.postings[board], !f.partial[board], nil
 }
 
 func (f *fakeLister) Describe(_ context.Context, p *fetch.Posting) error {
@@ -273,6 +275,11 @@ func TestImporterRunsEveryBoard(t *testing.T) {
 		t.Fatalf("a known job is not new: %+v", again[0])
 	}
 
+	lister.partial = map[string]bool{"a": true}
+	if cut := im.RunOnce(context.Background()); !cut[0].Partial || cut[0].Kept != 1 || len(store.closed) != 2 {
+		t.Fatalf("a list cut short closes nothing: %+v %v", cut[0], store.closed)
+	}
+	lister.partial = nil
 	store.unlistedErr = errors.New("database down")
 	if again := im.RunOnce(context.Background()); len(again) != 4 {
 		t.Fatalf("a failure to close unlisted jobs is only logged: %+v", again)

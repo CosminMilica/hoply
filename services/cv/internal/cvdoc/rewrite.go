@@ -101,7 +101,7 @@ func RewriteBullet(text string, index int, ctx RewriteContext) string {
 		}
 		for _, word := range group {
 			if word != jdTerm && HasWord(out, word) && !HasWord(out, jdTerm) {
-				out = replaceFirst(wordPattern(word), out, func([]string) string { return jdTerm })
+				out = replaceFirst(wordPattern(word), out, func(m []string) string { return m[1] + jdTerm + m[3] })
 			}
 		}
 	}

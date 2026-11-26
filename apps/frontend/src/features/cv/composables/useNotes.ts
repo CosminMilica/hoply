@@ -1,6 +1,7 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
+import { useQueryClient } from '@tanstack/vue-query'
 import { withoutId, type Experience, type Note, type Profile, type Project } from '@/features/profile/api/profile.schema'
-import { useProfileMutations } from '@/features/profile/composables/useProfile'
+import { profileKeys, useProfileMutations } from '@/features/profile/composables/useProfile'
 
 export const OTHER = 'other'
 
@@ -16,23 +17,43 @@ export interface Remembered {
 
 const sameSkills = (a: string[], b: string[]) => a.length === b.length && a.every((skill, index) => skill === b[index])
 
+// Saves to the profile run one at a time, each on the profile the save before it left in the cache: two answers
+// about the same role never overwrite each other.
+let queue: Promise<unknown> = Promise.resolve()
+function serial<T>(work: () => Promise<T>): Promise<T> {
+  const run = queue.then(work)
+  queue = run.catch(() => undefined)
+  return run
+}
+
+type EntryChange = Partial<Pick<Experience, 'bullets' | 'notes'>>
+
 /** Answers kept as notes of the role or project they are about, or of the person. */
 export function useNotes(profile: MaybeRefOrGetter<Profile | undefined>) {
+  const client = useQueryClient()
   const mutations = useProfileMutations()
   const current = () => toValue(profile)
+  const latest = () => client.getQueryData<Profile>(profileKeys.me) ?? current()
   const experience = computed(() => current()?.experience ?? [])
   const projects = computed(() => current()?.projects ?? [])
 
-  function entryOf(place: Place): { list: List, entry: Experience | Project } | null {
+  function find(person: Profile | undefined, place: Place): { list: List, entry: Experience | Project } | null {
     const [list, id] = place.split(':') as [List, string]
-    const entries: (Experience | Project)[] = list === 'experience' ? experience.value : list === 'projects' ? projects.value : []
+    const entries: (Experience | Project)[] = list === 'experience' ? person?.experience ?? [] : list === 'projects' ? person?.projects ?? [] : []
     const entry = entries.find(item => item.id === id)
     return entry ? { list, entry } : null
   }
-  async function putEntry(list: List, entry: Experience | Project, change: Partial<Pick<Experience, 'bullets' | 'notes'>>) {
-    const body = { ...withoutId(entry), ...change }
-    if (list === 'experience') await mutations.experience.update.mutateAsync({ id: entry.id, body: body as Omit<Experience, 'id'> as never })
-    else await mutations.projects.update.mutateAsync({ id: entry.id, body: body as Omit<Project, 'id'> as never })
+  const entryOf = (place: Place) => find(current(), place)
+
+  /** Changes one role or project, from its latest saved state; nothing when it is gone. */
+  function updateEntry(place: Place, change: (entry: Experience | Project) => EntryChange) {
+    return serial(async () => {
+      const target = find(latest(), place)
+      if (!target) return
+      const body = { ...withoutId(target.entry), ...change(target.entry) }
+      if (target.list === 'experience') await mutations.experience.update.mutateAsync({ id: target.entry.id, body: body as Omit<Experience, 'id'> as never })
+      else await mutations.projects.update.mutateAsync({ id: target.entry.id, body: body as Omit<Project, 'id'> as never })
+    })
   }
   function whereLabel(place: Place): string {
     const target = entryOf(place)
@@ -44,25 +65,29 @@ export function useNotes(profile: MaybeRefOrGetter<Profile | undefined>) {
   /** An answer becomes a note of the role or project it is about, or of the person: material Claude writes from. */
   async function remember(place: Place, text: string, skills: string[]): Promise<Remembered> {
     const note: Note = { text, skills }
-    const target = entryOf(place)
-    if (!target) {
-      await mutations.patch.mutateAsync({ notes: [...(current()?.notes ?? []), note] })
+    if (!find(latest(), place)) {
+      await serial(() => mutations.patch.mutateAsync({ notes: [...(latest()?.notes ?? []), note] }))
       return { place: OTHER, text, skills }
     }
-    await putEntry(target.list, target.entry, { notes: [...target.entry.notes, note] })
+    await updateEntry(place, entry => ({ notes: [...entry.notes, note] }))
     return { place, text, skills }
   }
   async function forget({ place, text, skills }: Remembered) {
-    const target = entryOf(place)
-    const notes = target ? target.entry.notes : (current()?.notes ?? [])
-    let at = -1
-    notes.forEach((note, index) => {
-      if (note.text === text && sameSkills(note.skills, skills)) at = index
+    const without = (notes: Note[]) => {
+      let at = -1
+      notes.forEach((note, index) => {
+        if (note.text === text && sameSkills(note.skills, skills)) at = index
+      })
+      return at < 0 ? null : notes.filter((_, index) => index !== at)
+    }
+    if (find(latest(), place)) {
+      await updateEntry(place, entry => ({ notes: without(entry.notes) ?? entry.notes }))
+      return
+    }
+    await serial(async () => {
+      const kept = without(latest()?.notes ?? [])
+      if (kept) await mutations.patch.mutateAsync({ notes: kept })
     })
-    if (at < 0) return
-    const kept = notes.filter((_, index) => index !== at)
-    if (target) await putEntry(target.list, target.entry, { notes: kept })
-    else await mutations.patch.mutateAsync({ notes: kept })
   }
-  return { experience, projects, entryOf, putEntry, whereLabel, remember, forget, mutations }
+  return { experience, projects, entryOf, updateEntry, whereLabel, remember, forget, mutations }
 }
