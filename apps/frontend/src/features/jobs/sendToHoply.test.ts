@@ -9,7 +9,7 @@ function run(origin = 'http://app.localhost') {
   // eslint-disable-next-line no-new-func -- the bookmark's own code, run as the browser would
   new Function(decodeURIComponent(href.slice('javascript:'.length)))()
   expect(open).toHaveBeenCalledWith(expect.any(String), '_blank')
-  return new URL(String(open.mock.calls[0]![0]))
+  return new URL(String(open.mock.calls.at(-1)![0]))
 }
 
 afterEach(() => {

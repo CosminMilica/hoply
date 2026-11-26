@@ -23,13 +23,14 @@ export function sentJob(hash: string): SentJob | null {
 export function bookmarklet(origin: string): string {
   const script = [
     '(()=>{',
-    'const pick=(...s)=>s.map(x=>document.querySelector(x)).find(e=>e&&e.innerText.trim());',
-    'const text=String(getSelection()).trim()||(pick("#job-details",".jobs-description__content","[class*=job-description]","[class*=jobDescription]","main","article")||document.body).innerText;',
+    'const read=e=>e?(e.innerText||e.textContent||"").trim():"";',
+    'const pick=(...s)=>read(s.map(x=>document.querySelector(x)).find(e=>read(e)));',
+    'const text=String(getSelection()).trim()||pick("#job-details",".jobs-description__content","[class*=job-description]","[class*=jobDescription]","main","article")||read(document.body);',
     'const title=pick(".job-details-jobs-unified-top-card__job-title","h1");',
     'const company=pick(".job-details-jobs-unified-top-card__company-name","[class*=company-name]","[class*=companyName]");',
-    'const p=new URLSearchParams({text:text.trim().slice(0,50000),url:location.href});',
-    'if(title)p.set("title",title.innerText.trim());',
-    'if(company)p.set("company",company.innerText.trim());',
+    'const p=new URLSearchParams({text:text.slice(0,50000),url:location.href});',
+    'if(title)p.set("title",title);',
+    'if(company)p.set("company",company);',
     `open(${JSON.stringify(`${origin}/jobs/add`)}+"#"+p,"_blank");`,
     '})()',
   ].join('')

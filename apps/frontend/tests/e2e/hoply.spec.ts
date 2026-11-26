@@ -192,3 +192,36 @@ test('a saved job is still in Saved after a reload', async ({ page }) => {
   await expect(page.getByRole('link', { name: /^Platform Engineer/ }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('the Send to Hoply bookmark brings a LinkedIn job to Add a job in one click', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await mockProfileService(page);
+  await mockJobsService(page);
+  await mockApplicationsService(page);
+  await page.goto('/jobs/add');
+  const href = await page.locator('[data-test="send-to-hoply"] a').getAttribute('href');
+  expect(href).toMatch(/^javascript:/);
+
+  // LinkedIn opens in its own tab, so this page stays on Hoply for the coverage saved after each test.
+  const linkedin = 'https://www.linkedin.com/jobs/view/42/';
+  const site = await page.context().newPage();
+  await site.route(linkedin, route => route.fulfill({ contentType: 'text/html', body: [
+    '<html><head><title>DevOps Engineer | spektr | LinkedIn</title></head><body><main>',
+    '<h1 class="job-details-jobs-unified-top-card__job-title">DevOps Engineer</h1>',
+    '<div class="job-details-jobs-unified-top-card__company-name">spektr</div>',
+    '<div id="job-details">About the job<br>We run Kubernetes on AWS for a compliance platform.<br>Requirements<br>',
+    '- Kubernetes<br>- Terraform<br>- 3 years of DevOps work in a product team.</div>',
+    '</main></body></html>',
+  ].join('') }));
+  await site.goto(linkedin);
+  const opened = site.waitForEvent('popup');
+  await site.evaluate(code => new Function(code)(), decodeURIComponent(href!.slice('javascript:'.length)));
+  const app = await opened;
+  app.on('pageerror', error => errors.push(error.message));
+  await expect(app.getByText('Read from the text you pasted')).toBeVisible();
+  await expect(app.getByLabel('Job title', { exact: true })).toHaveValue('DevOps Engineer');
+  await expect(app.getByLabel('Company', { exact: true })).toHaveValue('spektr');
+  expect(new URL(app.url()).hash).toBe('');
+  expect(errors).toEqual([]);
+});
