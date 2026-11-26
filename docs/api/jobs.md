@@ -187,9 +187,10 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
   `Backend`, `Frontend`, `Full stack`, `Mobile`, `Data`, `AI`, `QA`, `Security`, `Embedded`, `Sysadmin`, `Product`,
   `Design` (a generic developer title is `Backend` unless it names a narrower area). Where the list has no descriptions, only those jobs are read, a quarter of a second
   apart. Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
-- A job is keyed by its platform and the platform's id: a later run updates it and keeps requirements Claude's
+- A job is keyed by its platform, its board and the platform's id: a later run updates it and keeps requirements Claude's
   analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
-  answers with no jobs, or whose descriptions could not all be read, closes nothing. A run that read the followed
+  answers with no jobs, whose list stopped at its cap (Workday 400, SmartRecruiters 500, a sitemap 5000), or whose
+  descriptions could not all be read, closes nothing. A run that read the followed
   boards also closes the jobs of every board no longer listed or followed.
 - A board that fails is logged and skipped; the others still run. Answers are capped at 32 MB and 30 s.
 

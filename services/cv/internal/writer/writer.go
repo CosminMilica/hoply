@@ -246,7 +246,8 @@ func (w *Writer) Questions(ctx context.Context, job models.Job, profile models.P
 	}
 	logID := "probe " + job.ID.String()
 	analysis, stop := w.analyze(ctx, logID, job.ID, cvdoc.ReadJob(job))
-	if stop != nil {
+	// Without the analysis the questions would not be about this job.
+	if stop != nil || analysis == nil {
 		return nil, ErrNoQuestions
 	}
 	read := cvdoc.ReadJob(analysis.Apply(job))

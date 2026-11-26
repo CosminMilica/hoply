@@ -88,6 +88,14 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		t.Fatalf("a job listed again opens again: %q", titles(open))
 	}
 
+	samePath := importedJob("2", "Another company's SRE")
+	samePath.Board = "another"
+	if created, err := repo.Import(ctx, samePath, time.Now()); err != nil || !created {
+		t.Fatalf("the same job id on another company's board is another job: %v %v", created, err)
+	}
+	if closed, err := repo.Close(ctx, "greenhouse", "another", time.Now().Add(time.Minute)); err != nil || closed != 1 {
+		t.Fatalf("closing one board leaves the other's job open: %d %v", closed, err)
+	}
 	other := importedJob("9", "Data Engineer")
 	other.Origin, other.Board = "lever", "elsewhere"
 	if _, err := repo.Import(ctx, other, time.Now()); err != nil {

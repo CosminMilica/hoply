@@ -188,7 +188,7 @@ func (r *PgJobRepository) Import(ctx context.Context, j models.ImportedJob, seen
 			"nice_to_have, responsibilities, about, areas, url, source, read_from, origin, external_id, board, posted_at, last_seen_at, "+
 			"qualifications, bonuses, about_company, perks) "+
 			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) "+
-			"ON CONFLICT (origin, external_id) WHERE source = 'import' DO UPDATE SET title = EXCLUDED.title, "+
+			"ON CONFLICT (origin, board, external_id) WHERE source = 'import' DO UPDATE SET title = EXCLUDED.title, "+
 			"company = EXCLUDED.company, city = EXCLUDED.city, country = EXCLUDED.country, work_mode = EXCLUDED.work_mode, "+
 			"level = EXCLUDED.level, years_required = EXCLUDED.years_required, "+
 			"must_have = CASE WHEN jobs.requirements_from = 'analysis' THEN jobs.must_have ELSE EXCLUDED.must_have END, "+

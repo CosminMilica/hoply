@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -199,37 +200,42 @@ func (r *PgCvRepository) Delete(ctx context.Context, ident identity.IdentityCont
 	return removed, err
 }
 
+// Claim takes the oldest queued CV for the worker. Its snapshots are read after the claim is committed, so a CV
+// whose snapshots cannot be read is marked failed instead of being claimed again on every poll.
 func (r *PgCvRepository) Claim(ctx context.Context) (*Task, error) {
-	var task *Task
-	err := pgx.BeginFunc(ctx, r.pool, func(tx pgx.Tx) error {
-		var (
-			claimed                  Task
-			request, profile, jobRaw []byte
-		)
-		err := tx.QueryRow(ctx, `UPDATE cvs SET status = 'writing', attempts = attempts + 1, updated_at = NOW()
+	var (
+		task                     Task
+		request, profile, jobRaw []byte
+	)
+	err := r.pool.QueryRow(ctx, `UPDATE cvs SET status = 'writing', attempts = attempts + 1, updated_at = NOW()
 WHERE id = (SELECT id FROM cvs WHERE status = 'queued' ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
-RETURNING id, request, profile_snapshot, job_snapshot, created_at`).Scan(&claimed.ID, &request, &profile, &jobRaw, &claimed.CreatedAt)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		for _, part := range []struct {
-			raw    []byte
-			target any
-		}{{request, &claimed.Request}, {profile, &claimed.Profile}, {jobRaw, &claimed.Job}} {
-			if err := json.Unmarshal(part.raw, part.target); err != nil {
-				return err
-			}
-		}
-		task = &claimed
-		return nil
-	})
+RETURNING id, request, profile_snapshot, job_snapshot, created_at`).Scan(&task.ID, &request, &profile, &jobRaw, &task.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, apperrors.FromDatabase(err)
 	}
-	return task, nil
+	if err := task.decode(request, profile, jobRaw); err != nil {
+		if failErr := r.Fail(ctx, task.ID); failErr != nil {
+			return nil, errors.Join(err, failErr)
+		}
+		return nil, fmt.Errorf("cv %s has unreadable snapshots and is failed: %w", task.ID, err)
+	}
+	return &task, nil
+}
+
+// decode reads a CV's request and its profile and job snapshots.
+func (t *Task) decode(request, profile, job []byte) error {
+	for _, part := range []struct {
+		raw    []byte
+		target any
+	}{{request, &t.Request}, {profile, &t.Profile}, {job, &t.Job}} {
+		if err := json.Unmarshal(part.raw, part.target); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *PgCvRepository) Checking(ctx context.Context, id uuid.UUID, preview *models.Preview) error {
@@ -372,13 +378,8 @@ func (r *PgCvRepository) Source(ctx context.Context, ident identity.IdentityCont
 		if err != nil {
 			return err
 		}
-		for _, part := range []struct {
-			raw    []byte
-			target any
-		}{{request, &task.Request}, {profile, &task.Profile}, {jobRaw, &task.Job}} {
-			if err := json.Unmarshal(part.raw, part.target); err != nil {
-				return err
-			}
+		if err := task.decode(request, profile, jobRaw); err != nil {
+			return err
 		}
 		found = &task
 		return nil

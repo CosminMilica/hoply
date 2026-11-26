@@ -83,9 +83,9 @@ export function matchJob(job: Requirements, skills: string[]): JobMatch {
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-/** The keywords a text names as whole words, ignoring case. */
+/** The keywords a text names as whole words, ignoring case; "C++" and ".NET" count, and "C" is not in "C++". */
 export function keywordsIn(text: string, keywords: string[]): string[] {
-  return keywords.filter(keyword => new RegExp(`\\b${escape(keyword)}\\b`, 'i').test(text))
+  return keywords.filter(keyword => new RegExp(`(^|[^\\p{L}\\p{N}_+#])${escape(keyword)}($|[^\\p{L}\\p{N}_+#])`, 'iu').test(text))
 }
 
 export function verdictFor(score: number): string {

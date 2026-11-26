@@ -30,7 +30,7 @@ interface PrepInputs {
  * responsibilities confirmed.
  */
 export function usePrep({ job, profile, questions, probe }: PrepInputs) {
-  const { experience, projects, entryOf, putEntry, whereLabel, remember, forget, mutations } = useNotes(profile)
+  const { experience, projects, entryOf, updateEntry, whereLabel, remember, forget, mutations } = useNotes(profile)
   const state = reactive({
     skip: {} as Record<string, boolean>,
     focus: null as string[] | null,
@@ -71,8 +71,6 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   function pickRole(key: string, id: Place) {
     state.places[key] = id
   }
-
-  const putBullets = (list: 'experience' | 'projects', entry: Parameters<typeof putEntry>[1], bullets: Bullet[]) => putEntry(list, entry, { bullets })
 
   /** Runs one save for a question, keeping its error next to it. */
   async function saving(key: string, work: () => Promise<void>) {
@@ -208,8 +206,9 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     const target = row && entryOf(`experience:${row.roleId}`)
     const bullet = target?.entry.bullets[row!.index]
     if (!target || !bullet || bullet.text !== row!.bullet || bullet.result === value.trim()) return
-    await saving(`i:${key}`, () => putBullets('experience', target.entry, target.entry.bullets.map((item, index) =>
-      (index === row!.index ? { ...item, result: value.trim() } : item))))
+    await saving(`i:${key}`, () => updateEntry(`experience:${row!.roleId}`, entry => ({
+      bullets: entry.bullets.map((item, index) => (index === row!.index && item.text === row!.bullet ? { ...item, result: value.trim() } : item)),
+    })))
   }
 
   const note = ref('')

@@ -5,6 +5,7 @@ import { isReady, type Cv } from '../api/cv.schema'
 
 export const cvKeys = {
   questions: (jobId: string) => ['cv', 'questions', jobId] as const,
+  all: ['cv', 'all'] as const,
   forJob: (jobId: string) => ['cv', 'job', jobId] as const,
   one: (id: string) => ['cv', 'one', id] as const,
   probe: (jobId: string) => ['cv', 'probe', jobId] as const,

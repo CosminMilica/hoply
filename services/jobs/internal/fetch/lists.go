@@ -67,10 +67,11 @@ func CheckBoard(platform, board string) error {
 }
 
 // List reads every job a company's board lists on platform; Workday and
-// SmartRecruiters keep to country.
-func (r *Reader) List(ctx context.Context, platform, board string, country Country) ([]Posting, error) {
+// SmartRecruiters keep to country. complete is false when a board had more jobs
+// than a list reads, so the jobs missing from it may still be open.
+func (r *Reader) List(ctx context.Context, platform, board string, country Country) (postings []Posting, complete bool, err error) {
 	if err := CheckBoard(platform, board); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	switch platform {
 	case "workday":
@@ -96,16 +97,15 @@ func (r *Reader) List(ctx context.Context, platform, board string, country Count
 	}
 	body, err := r.json(ctx, http.MethodGet, api, nil)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	postings, err := read(body)
-	if err != nil {
-		return nil, fail(NoJobData, err)
+	if postings, err = read(body); err != nil {
+		return nil, false, fail(NoJobData, err)
 	}
 	for i := range postings {
 		postings[i].Page.ReadFrom = "ats_api"
 	}
-	return postings, nil
+	return postings, true, nil
 }
 
 // Describe reads a posting's description when its list had none; it does

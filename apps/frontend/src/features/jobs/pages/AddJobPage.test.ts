@@ -76,6 +76,23 @@ describe('AddJobPage', () => {
     expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: jobs.jobs[0]!.id } })
   })
 
+  it('saves the job once when only saving its status failed, then retries the status', async () => {
+    const { jobs, applications } = useServices()
+    let failures = 1
+    server.use(http.put('*/api/applications/v1/applications/:jobId', () => (failures-- > 0 ? HttpResponse.json({ error: { code: 'DEPENDENCY_UNAVAILABLE', message: 'down' } }, { status: 503 }) : undefined)))
+    await mountPage(AddJobPage, { at: '/jobs/add' })
+    await readLink('https://careers.northwind.example/jobs/platform-engineer')
+    const before = jobs.jobs.length
+    await click(button('Save to my jobs'))
+    await settle()
+    expect(document.querySelector('[role="alert"]')).toBeTruthy()
+    expect(jobs.jobs.length).toBe(before + 1)
+    await click(button('Save to my jobs'))
+    await settle()
+    expect(jobs.jobs.length).toBe(before + 1)
+    expect(applications.applications.get(jobs.jobs[0]!.id)?.status).toBe('saved')
+  })
+
   it('reads pasted text with its hints and keeps the link', async () => {
     const { jobs } = useServices(sampleProfile({ work_modes: ['remote'] }))
     await mountPage(AddJobPage, { at: '/jobs/add' })

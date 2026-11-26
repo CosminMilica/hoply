@@ -1,12 +1,15 @@
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { keepPreviousData, useQuery } from '@tanstack/vue-query'
+import { cvApi } from '@/features/cv/api/cvApi'
+import { isReady } from '@/features/cv/api/cv.schema'
+import { cvKeys } from '@/features/cv/composables/useCv'
 import { jobsApi } from '@/features/jobs/api/jobsApi'
 import { jobKeys } from '@/features/jobs/composables/useJobs'
 import { matchJob } from '@/features/jobs/match'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { knownSkills } from '@/features/profile/skills'
 import { statusSince } from '../api/applications.schema'
-import { useApplicationsQuery } from './useApplications'
+import { useApplicationMutations, useApplicationsQuery } from './useApplications'
 
 /** The jobs the person tracks, each with its status and how it matches the profile's skills. */
 export function useTrackedJobs() {
@@ -29,5 +32,20 @@ export function useTrackedJobs() {
     })
   })
   const loading = computed(() => applications.isPending.value || (ids.value.length > 0 && jobs.isPending.value) || profile.isPending.value)
+
+  // A CV finishes in the background: a saved job whose CV is ready moves on to CV ready, even when the person left
+  // Prepare your CV before it was written.
+  const cvs = useQuery({ queryKey: cvKeys.all, queryFn: cvApi.all, meta: { suppressToast: true } })
+  const { setStatus } = useApplicationMutations()
+  const moved = new Set<string>()
+  watch([() => applications.data.value, () => cvs.data.value], ([tracked, written]) => {
+    const ready = new Set((written ?? []).filter(isReady).map(cv => cv.job_id))
+    for (const application of tracked ?? []) {
+      if (application.status === 'saved' && ready.has(application.job_id) && !moved.has(application.job_id)) {
+        moved.add(application.job_id)
+        setStatus.mutate({ jobId: application.job_id, status: 'cv_ready' })
+      }
+    }
+  }, { immediate: true })
   return { tracked, skills, loading }
 }
