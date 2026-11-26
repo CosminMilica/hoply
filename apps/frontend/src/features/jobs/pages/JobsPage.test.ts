@@ -7,11 +7,11 @@ afterEach(() => {
 })
 
 describe('JobsPage', () => {
-  it('finds jobs with filters, and still offers to add one', async () => {
+  it('finds jobs with the filters above them, and still offers to add one', async () => {
     useServices()
     await mountPage(JobsPage)
     expect(document.querySelector('h1')!.textContent).toBe('Find jobs')
-    expect(document.body.textContent).toContain('Position area')
-    expect(button(/^Add a job from a link or its text/).getAttribute('href')).toBe('/jobs/add')
+    expect(document.querySelector('[data-test="filter-bar"]')).toBeTruthy()
+    expect(button('Add a job').getAttribute('href')).toBe('/jobs/add')
   })
 })

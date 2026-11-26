@@ -2,7 +2,13 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useLocalStorage } from '@vueuse/core'
 import type { Profile } from '@/features/profile/api/profile.schema'
-import { LEVELS, type JobFilters } from '../api/jobs.schema'
+import { CITIES, LEVELS, type JobFilters } from '../api/jobs.schema'
+
+/** A city without case or diacritics, its Romanian name folded onto the English one: "București" is "bucharest". */
+const cityKey = (city: string) => {
+  const folded = city.normalize('NFD').replace(/\p{Diacritic}/gu, '').trim().toLowerCase()
+  return folded === 'bucuresti' ? 'bucharest' : folded
+}
 
 /** What the person is looking for, kept while they move between the deck and the jobs it opens. */
 export const useJobSearchStore = defineStore('job-search', () => {
@@ -28,6 +34,9 @@ export const useJobSearchStore = defineStore('job-search', () => {
   }))
 
   const anywhere = computed(() => (country.value ? `Anywhere in ${country.value}` : 'Anywhere'))
+  /** The city chips: anywhere in the country, then the cities Find jobs offers, the chosen one pressed. */
+  const cityOptions = computed(() => [{ label: anywhere.value, value: '' }, ...CITIES.map(city => ({ label: city, value: city }))]
+    .map(city => ({ ...city, pressed: cityKey(location.value) === cityKey(city.value) })))
 
   const summary = computed(() => [
     query.value.trim() ? `“${query.value.trim()}”` : '',
@@ -59,5 +68,5 @@ export const useJobSearchStore = defineStore('job-search', () => {
     if (match) level.value = match
   }
 
-  return { query, location, includeRemote, areas, level, country, stage, view, prefilled, filters, anywhere, summary, toggleArea, reset, prefill }
+  return { query, location, includeRemote, areas, level, country, stage, view, prefilled, filters, anywhere, cityOptions, summary, toggleArea, reset, prefill }
 })

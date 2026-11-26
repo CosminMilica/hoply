@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { button, click, input, mountPage, settle, type, useServices as useAllServices } from '@/test/hoply'
@@ -29,7 +29,9 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('JobSearch', () => {
+describe('JobSearch in swipe view', () => {
+  beforeEach(() => localStorage.setItem('hoply.jobs.view', 'swipe'))
+
   it('filters the jobs, then shows the deck best match first', async () => {
     useServices()
     await mountPage(JobSearch)
@@ -158,72 +160,6 @@ describe('JobSearch', () => {
     expect(router.currentRoute.value.name).toBe('hoply-prep')
   })
 
-  it('shows the jobs as a grid by default, best match first, a page at a time, and remembers the view', async () => {
-    const { jobs, applications } = useServices()
-    const devops = jobs.jobs.find(job => job.id === seedId(2))!
-    for (let i = 0; i < 26; i += 1) jobs.jobs.push({ ...structuredClone(devops), id: `33333333-0000-4000-8000-${String(i).padStart(12, '0')}`, title: `Platform Engineer ${i}` })
-    const { router } = await mountPage(JobSearch)
-    await click(button('Show 30 jobs'))
-    expect(button('Grid').getAttribute('aria-pressed')).toBe('true')
-    expect(document.querySelector('[data-test="job-card"]')).toBeNull()
-    expect(rows()).toHaveLength(24)
-    expect(rows()[0]).toBe('DevOps Engineer at Bitdefender')
-    await click(button('Show 6 more'))
-    expect(rows()).toHaveLength(30)
-
-    await click(button('Save'))
-    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
-    expect(text()).toContain('Saved · DevOps Engineer')
-    expect(rows()).toHaveLength(29)
-    await click(button('Undo'))
-    expect(applications.applications.has(seedId(2))).toBe(false)
-    expect(rows()[0]).toBe('DevOps Engineer at Bitdefender')
-
-    await click(button('Skip'))
-    expect(text()).toContain('Skipped · DevOps Engineer')
-    expect(rows()).not.toContain('DevOps Engineer at Bitdefender')
-    await click(document.querySelector<HTMLButtonElement>('[data-test="job-tile"] button')!)
-    expect(router.currentRoute.value.name).toBe('hoply-job')
-    await router.push('/jobs')
-    await settle()
-    await click(button('Details'))
-    expect(router.currentRoute.value.name).toBe('hoply-job')
-    await router.push('/jobs')
-    await settle()
-    await click(button('Tailor CV'))
-    expect(router.currentRoute.value.name).toBe('hoply-prep')
-
-    await router.push('/jobs')
-    await settle()
-    await click(button('Swipe'))
-    expect(localStorage.getItem('hoply.jobs.view')).toBe('swipe')
-    expect(cardTitle()).toBeTruthy()
-  })
-
-  it('shows a view remembered from before the grid as the grid', async () => {
-    useServices()
-    localStorage.setItem('hoply.jobs.view', 'list')
-    await mountPage(JobSearch)
-    await click(button('Show 4 jobs'))
-    expect(button('Grid').getAttribute('aria-pressed')).toBe('true')
-    expect(rows()).toHaveLength(4)
-  })
-
-  it('says when the grid is all seen, and brings skipped jobs back', async () => {
-    const { applications } = useServices()
-    for (const n of [1, 2, 3, 4] as const) applications.skips.push(seedId(n))
-    await mountPage(JobSearch)
-    useJobSearchStore().stage = 'deck'
-    await settle()
-    expect(text()).toContain('You are all caught up')
-    await click(button('Change filters'))
-    expect(text()).toContain('Position area')
-    useJobSearchStore().stage = 'deck'
-    await settle()
-    await click(button('Bring back skipped jobs'))
-    expect(rows()).toHaveLength(4)
-  })
-
   it('fills the filters from the person’s preferences, once', async () => {
     useAllServices(sampleProfile({ city: 'Bucharest', work_modes: ['hybrid', 'onsite'], target_seniority: ['mid'] }))
     await mountPage(JobSearch)
@@ -273,5 +209,101 @@ describe('JobSearch', () => {
     useJobSearchStore().stage = 'deck'
     await settle()
     expect(text()).toContain('We could not load jobs')
+  })
+})
+
+describe('JobSearch in grid view', () => {
+  it('shows the jobs as a grid by default, best match first, a page at a time, and remembers the view', async () => {
+    const { jobs, applications } = useServices()
+    const devops = jobs.jobs.find(job => job.id === seedId(2))!
+    for (let i = 0; i < 26; i += 1) jobs.jobs.push({ ...structuredClone(devops), id: `33333333-0000-4000-8000-${String(i).padStart(12, '0')}`, title: `Platform Engineer ${i}` })
+    const { router } = await mountPage(JobSearch)
+    await settle()
+    expect(button('Grid').getAttribute('aria-pressed')).toBe('true')
+    expect(document.querySelector('[data-test="job-card"]')).toBeNull()
+    expect(rows()).toHaveLength(24)
+    expect(rows()[0]).toBe('DevOps Engineer at Bitdefender')
+    await click(button('Show 6 more'))
+    expect(rows()).toHaveLength(30)
+
+    await click(button('Save'))
+    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
+    expect(text()).toContain('Saved · DevOps Engineer')
+    expect(rows()).toHaveLength(29)
+    await click(button('Undo'))
+    expect(applications.applications.has(seedId(2))).toBe(false)
+    expect(rows()[0]).toBe('DevOps Engineer at Bitdefender')
+
+    await click(button('Skip'))
+    expect(text()).toContain('Skipped · DevOps Engineer')
+    expect(rows()).not.toContain('DevOps Engineer at Bitdefender')
+    await click(document.querySelector<HTMLButtonElement>('[data-test="job-tile"] button')!)
+    expect(router.currentRoute.value.name).toBe('hoply-job')
+    await router.push('/jobs')
+    await settle()
+    await click(button('Details'))
+    expect(router.currentRoute.value.name).toBe('hoply-job')
+    await router.push('/jobs')
+    await settle()
+    await click(button('Tailor CV'))
+    expect(router.currentRoute.value.name).toBe('hoply-prep')
+
+    await router.push('/jobs')
+    await settle()
+    await click(button('Swipe'))
+    expect(localStorage.getItem('hoply.jobs.view')).toBe('swipe')
+    expect(cardTitle()).toBeTruthy()
+  })
+
+  it('shows a view remembered from before the grid as the grid', async () => {
+    useServices()
+    localStorage.setItem('hoply.jobs.view', 'list')
+    await mountPage(JobSearch)
+    await settle()
+    expect(button('Grid').getAttribute('aria-pressed')).toBe('true')
+    expect(rows()).toHaveLength(4)
+  })
+
+  it('says when the grid is all seen, and brings skipped jobs back', async () => {
+    const { applications } = useServices()
+    for (const n of [1, 2, 3, 4] as const) applications.skips.push(seedId(n))
+    await mountPage(JobSearch)
+    await settle()
+    expect(text()).toContain('You are all caught up')
+    const store = useJobSearchStore()
+    store.query = 'devops'
+    await click(button('Reset filters'))
+    expect(store.query).toBe('')
+    await click(button('Bring back skipped jobs'))
+    expect(rows()).toHaveLength(4)
+  })
+
+  it('presses the chip of the profile’s city, whatever its spelling', async () => {
+    useAllServices(sampleProfile({ city: 'București', work_modes: [], target_seniority: [] }))
+    await mountPage(JobSearch)
+    await settle()
+    expect(button('Bucharest').getAttribute('aria-pressed')).toBe('true')
+    expect(button('Iași').getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('filters from the bar above the grid, and offers to add a job', async () => {
+    useServices()
+    await mountPage(JobSearch)
+    await settle()
+    expect(document.querySelector('[data-test="filter-bar"]')).toBeTruthy()
+    expect(rows()).toHaveLength(4)
+    await click(button('Bucharest'))
+    expect(rows()).toHaveLength(2)
+    expect(button('Include remote').getAttribute('aria-pressed')).toBe('true')
+    await click(button('Include remote'))
+    await click(button('Backend'))
+    expect(rows()).toEqual(['Software Engineer at Amazon'])
+    await click(button('Senior'))
+    expect(text()).toContain('You are all caught up')
+    await click(button('Reset filters'))
+    await type(document.querySelector<HTMLInputElement>('input[placeholder="Job title, skill or company"]')!, 'devops')
+    expect(rows()).toHaveLength(2)
+    expect(button('Add a job').getAttribute('href')).toBe('/jobs/add')
+    expect(() => button('Filters')).toThrow()
   })
 })

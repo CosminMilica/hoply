@@ -68,5 +68,5 @@ const visible = computed(() => props.deck.slice(0, shown.value))
       <UButton variant="ghost" color="neutral" label="Undo" class="text-hoply-400" @click="emit('undo')" />
     </div>
   </template>
-  <CaughtUp v-else @change-filters="emit('changeFilters')" @reset-skipped="emit('resetSkipped')" />
+  <CaughtUp v-else filters-label="Reset filters" @change-filters="emit('changeFilters')" @reset-skipped="emit('resetSkipped')" />
 </template>

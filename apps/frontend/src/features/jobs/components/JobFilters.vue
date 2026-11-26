@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import ToggleChip from '@/features/common/components/ToggleChip.vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
-import { AREAS, CITIES, LEVELS } from '../api/jobs.schema'
+import { AREAS, LEVELS } from '../api/jobs.schema'
 import { marketNote } from '../match'
 import { useJobSearchStore } from '../stores/search'
 
@@ -13,8 +13,6 @@ const search = useJobSearchStore()
 const profile = useProfileQuery()
 const note = computed(() => (profile.data.value ? marketNote(profile.data.value) : ''))
 
-const cities = computed(() => [{ label: search.anywhere, value: '' }, ...CITIES.map(city => ({ label: city, value: city }))]
-  .map(city => ({ ...city, pressed: search.location.trim().toLowerCase() === city.value.toLowerCase() })))
 const showLabel = computed(() => (props.count ? `Show ${props.count} ${props.count === 1 ? 'job' : 'jobs'}` : 'No jobs match yet'))
 </script>
 
@@ -38,7 +36,7 @@ const showLabel = computed(() => (props.count ? `Show ${props.count} ${props.cou
         <UInput v-model="search.location" placeholder="City or country" size="lg" class="w-full" />
       </UFormField>
       <div class="flex flex-wrap gap-2" role="group" aria-label="Where">
-        <ToggleChip v-for="city in cities" :key="city.label" :label="city.label" :pressed="city.pressed" @toggle="search.location = city.value" />
+        <ToggleChip v-for="city in search.cityOptions" :key="city.label" :label="city.label" :pressed="city.pressed" @toggle="search.location = city.value" />
         <ToggleChip v-if="search.location.trim()" label="Include remote" :pressed="search.includeRemote" @toggle="search.includeRemote = !search.includeRemote" />
       </div>
     </div>
