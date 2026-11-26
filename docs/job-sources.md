@@ -63,9 +63,4 @@ People bring these jobs in with **Add a job** (link or text).
 
 ## Plan
 
-1. Importer for the ATS platforms of section 1, over a list of companies kept in the repo (`services/jobs`, a
-   periodic worker). Keep the jobs in the person's market (country and remote, from the profile); close the ones that
-   disappear from the source.
-2. Jooble once a key is granted, and Remote OK, Jobicy and Arbeitnow for remote jobs, each with attribution and a link
-   to the original.
-3. Everything else through **Add a job**.
+See [plans/2026-11-26-find-jobs.md](plans/2026-11-26-find-jobs.md).
