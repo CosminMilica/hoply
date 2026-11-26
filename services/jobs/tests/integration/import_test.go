@@ -82,6 +82,18 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		t.Fatalf("a job listed again opens again: %q", titles(open))
 	}
 
+	other := importedJob("9", "Data Engineer")
+	other.Origin, other.Board = "lever", "elsewhere"
+	if _, err := repo.Import(ctx, other, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if closed, err := repo.CloseUnlisted(ctx, []string{"greenhouse"}, []string{"northwind"}); err != nil || closed != 1 {
+		t.Fatalf("the jobs of a board no longer listed close: %d %v", closed, err)
+	}
+	if open, _ := repo.List(ctx, me, models.JobFilter{}); len(open) != 2 || slices.ContainsFunc(open, func(j models.Job) bool { return j.Title == "Data Engineer" }) {
+		t.Fatalf("open after closing the unlisted: %q", titles(open))
+	}
+
 	if _, err := repo.Import(ctx, models.ImportedJob{JobInput: models.JobInput{Title: "No key"}}, time.Now()); err == nil {
 		t.Fatal("an imported job needs its origin, id and board")
 	}

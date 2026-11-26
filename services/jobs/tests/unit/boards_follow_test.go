@@ -79,7 +79,13 @@ func workdayFixtures(t *testing.T) map[string]answer {
 		}),
 		"/wday/cxs/northwind/Careers/job/Iasi/Data-Engineer_R2": asJSON(t, map[string]any{"jobPostingInfo": map[string]any{}}),
 		"/wday/cxs/elsewhere/Careers/jobs":                      asJSON(t, map[string]any{"total": 1, "facets": []map[string]any{}, "jobPostings": []map[string]any{}}),
-		"/wday/cxs/broken/Careers/jobs":                         {"application/json", "{"},
+		"/wday/cxs/cities/Careers/jobs": asJSON(t, map[string]any{"total": 1, "facets": []map[string]any{
+			{"facetParameter": "timeType", "values": []map[string]any{{"descriptor": "Full time", "id": "ft"}}},
+			{"facetParameter": "locationMainGroup", "values": []map[string]any{{"facetParameter": "locations", "values": []map[string]any{
+				{"descriptor": "Bucharest - Dacia One", "id": "dacia"}, {"descriptor": "Amsterdam", "id": "ams"}, {"descriptor": "Cluj-Napoca, Romania", "id": "cluj"},
+			}}}},
+		}, "jobPostings": []map[string]any{{"title": "SRE", "externalPath": "/job/Bucharest/SRE_R9", "locationsText": "Bucharest - Dacia One", "postedOn": "Posted Today"}}}),
+		"/wday/cxs/broken/Careers/jobs": {"application/json", "{"},
 	}
 }
 
@@ -87,6 +93,7 @@ func TestWorkdayList(t *testing.T) {
 	server := newFixtureServer(t, workdayFixtures(t))
 	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{
 		"northwind.wd3.myworkdayjobs.com": server.URL, "elsewhere.wd1.myworkdayjobs.com": server.URL, "broken.wd1.myworkdayjobs.com": server.URL,
+		"cities.wd1.myworkdayjobs.com": server.URL,
 	}})
 	ctx := context.Background()
 	postings, err := reader.List(ctx, "workday", "northwind.wd3.myworkdayjobs.com/Careers", importer.Romania)
@@ -118,6 +125,15 @@ func TestWorkdayList(t *testing.T) {
 	}
 	if err := reader.Describe(ctx, &postings[2]); err == nil {
 		t.Fatal("a missing job fails")
+	}
+	if jobs, err := reader.List(ctx, "workday", "cities.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || len(jobs) != 1 ||
+		!slices.Contains(server.requests, `POST /wday/cxs/cities/Careers/jobs {"appliedFacets":{"locations":["dacia","cluj"]},"limit":20,"offset":0,"searchText":""}`) {
+		t.Fatalf("a site without a country facet keeps to its locations in Romania: %v %v %v", jobs, err, server.requests)
+	}
+	byName := fetch.Country{Name: "Romania"}
+	if jobs, err := reader.List(ctx, "workday", "cities.wd1.myworkdayjobs.com/Careers", byName); err != nil || len(jobs) != 1 ||
+		!slices.Contains(server.requests, `POST /wday/cxs/cities/Careers/jobs {"appliedFacets":{"locations":["cluj"]},"limit":20,"offset":0,"searchText":""}`) {
+		t.Fatalf("without In, a place is in the country when it names it: %v %v", jobs, err)
 	}
 	if none, err := reader.List(ctx, "workday", "elsewhere.wd1.myworkdayjobs.com/Careers", importer.Romania); err != nil || len(none) != 0 {
 		t.Fatalf("a site without jobs in Romania lists none: %v %v", none, err)
@@ -273,9 +289,15 @@ func TestImporterReadsFollowedBoardsAndOnlyWantedDescriptions(t *testing.T) {
 	if r := im.Import(context.Background(), importer.Board{Company: "B", Platform: "lever", Board: "b"}); r.Kept != 1 || r.New != 0 {
 		t.Fatalf("one board on demand: %+v", r)
 	}
+	if len(store.listed) != 1 || !slices.Equal(store.listed[0], []string{"workday/a.wd1.myworkdayjobs.com/Careers", "lever/b"}) {
+		t.Fatalf("the followed boards count as listed: %v", store.listed)
+	}
 	followed.err = errors.New("database down")
 	if boards := im.Boards(context.Background()); len(boards) != 1 {
 		t.Fatalf("without the followed boards, the listed ones still run: %+v", boards)
+	}
+	if im.RunOnce(context.Background()); len(store.listed) != 1 {
+		t.Fatalf("without the followed boards, no job is closed as unlisted: %v", store.listed)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

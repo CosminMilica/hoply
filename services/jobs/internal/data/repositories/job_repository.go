@@ -41,6 +41,9 @@ type ImportStore interface {
 	Import(ctx context.Context, job models.ImportedJob, seen time.Time) (bool, error)
 	// Close closes the open jobs of a board that it last listed before seen, and returns how many.
 	Close(ctx context.Context, origin, board string, seen time.Time) (int64, error)
+	// CloseUnlisted closes the open jobs of every board but these, given as platform and board pairs, and returns
+	// how many: the jobs of a company taken off the list.
+	CloseUnlisted(ctx context.Context, origins, boards []string) (int64, error)
 }
 
 const (
@@ -202,6 +205,17 @@ func (r *PgJobRepository) Close(ctx context.Context, origin, board string, seen 
 	err := r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
 		tag, err := db.Exec(ctx, "UPDATE jobs SET closed_at = now() WHERE source = 'import' AND origin = $1 AND board = $2 "+
 			"AND closed_at IS NULL AND last_seen_at < $3", origin, board, seen)
+		closed = tag.RowsAffected()
+		return err
+	})
+	return closed, err
+}
+
+func (r *PgJobRepository) CloseUnlisted(ctx context.Context, origins, boards []string) (int64, error) {
+	var closed int64
+	err := r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
+		tag, err := db.Exec(ctx, "UPDATE jobs SET closed_at = now() WHERE source = 'import' AND closed_at IS NULL "+
+			"AND (origin, board) NOT IN (SELECT * FROM unnest($1::text[], $2::text[]))", nonNil(origins), nonNil(boards))
 		closed = tag.RowsAffected()
 		return err
 	})

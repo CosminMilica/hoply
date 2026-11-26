@@ -25,4 +25,26 @@ boards:
   - {company: Endava, platform: smartrecruiters, board: Endava}
   - {company: Continental, platform: smartrecruiters, board: Continental}
   - {company: Ubisoft, platform: smartrecruiters, board: Ubisoft2}
-  - {company: ING, platform: sitemap, board: https://careers.ing.com/sitemap.xml}
+  - {company: ING, platform: workday, board: ing.wd3.myworkdayjobs.com/ICSGBLCOR}
+  - {company: Flutter, platform: workday, board: flutterbe.wd3.myworkdayjobs.com/BFRomania_External}
+  - {company: TSYS, platform: workday, board: tsys.wd1.myworkdayjobs.com/TSYS}
+  - {company: Copeland, platform: workday, board: copeland.wd5.myworkdayjobs.com/Copeland_External_Careers_Page}
+  - {company: Trimble, platform: workday, board: trimble.wd1.myworkdayjobs.com/TrimbleCareers}
+  - {company: Flex, platform: workday, board: flextronics.wd1.myworkdayjobs.com/Careers}
+  - {company: Yes Energy, platform: greenhouse, board: yesenergy}
+  - {company: Cresta, platform: greenhouse, board: cresta}
+  - {company: Webbing, platform: greenhouse, board: webbing}
+  - {company: Ubiquiti, platform: greenhouse, board: ubiquiti}
+  - {company: Brillio, platform: lever, board: brillio-2}
+  - {company: Caseware, platform: lever, board: caseware}
+  - {company: Qualysoft, platform: lever, board: qualysoft}
+  - {company: Smart Working Solutions, platform: lever, board: smart-working-solutions}
+  - {company: Clera, platform: ashby, board: clera}
+  - {company: Kraken, platform: ashby, board: kraken.com}
+  - {company: Ashby, platform: ashby, board: ashby}
+  - {company: voize, platform: ashby, board: voize}
+  - {company: Romanian Software, platform: smartrecruiters, board: ROMANIANSOFTWARE}
+  - {company: Deloitte Romania, platform: smartrecruiters, board: DeloitteRomania}
+  - {company: Frequentis, platform: smartrecruiters, board: Frequentis}
+  - {company: P3 Digital Services, platform: smartrecruiters, board: P3DigitalServices}
+  - {company: Greppy Systems, platform: smartrecruiters, board: GreppySystems}

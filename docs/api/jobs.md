@@ -172,7 +172,7 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `lever`, `lever-eu` | `api.lever.co/v0/postings/{board}?mode=json` (`api.eu.lever.co` for `lever-eu`) |
 | `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
 | `smartrecruiters` | `api.smartrecruiters.com/v1/companies/{board}/postings?country=ro`, 100 a page; each wanted job's description from `/postings/{id}` |
-| `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently; none means no jobs in Romania), then 20 a page with it; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
+| `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
 | `sitemap` | the career site's sitemap; its links with a `/job/` or `/jobs/` segment, each wanted page read like a link (JSON-LD first) |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
@@ -181,6 +181,7 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
   apart. Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform and the platform's id: a later run updates it and keeps requirements Claude's
   analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
-  answers with no jobs, or whose descriptions could not all be read, closes nothing.
+  answers with no jobs, or whose descriptions could not all be read, closes nothing. A run that read the followed
+  boards also closes the jobs of every board no longer listed or followed.
 - A board that fails is logged and skipped; the others still run. Answers are capped at 32 MB and 30 s.
 
