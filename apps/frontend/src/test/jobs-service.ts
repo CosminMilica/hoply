@@ -43,6 +43,11 @@ export function createJobsBackend() {
       const remote = params.get('include_remote') === 'true'
       const areas = params.getAll('area')
       const level = params.get('level') ?? ''
+      const ids = (params.get('ids') ?? '').split(',').filter(Boolean)
+      if (ids.length) {
+        const picked = jobs.filter(job => ids.includes(job.id))
+        return { status: 200, body: { items: picked, total: picked.length } }
+      }
       const items = jobs.filter((job) => {
         const hay = plain(`${job.title} ${job.company} ${job.must_have.join(' ')} ${job.nice_to_have.join(' ')}`)
         return (!q || hay.includes(q))

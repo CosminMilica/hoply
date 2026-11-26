@@ -21,7 +21,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('JobSearch (parked)', () => {
+describe('JobSearch', () => {
   it('filters the jobs, then shows the deck best match first', async () => {
     useServices()
     await mountPage(JobSearch)
@@ -43,7 +43,8 @@ describe('JobSearch (parked)', () => {
   })
 
   it('saves, skips and undoes, until everything is seen', async () => {
-    const { applications } = useServices()
+    const { applications, jobs, cvs } = useServices()
+    jobs.jobs.find(job => job.id === seedId(2))!.source = 'import'
     await mountPage(JobSearch)
     await click(button('Show 4 jobs'))
     expect(cardTitle()).toBe('DevOps Engineer')
@@ -51,6 +52,7 @@ describe('JobSearch (parked)', () => {
     await click(button('Save this job'))
     await wait(260)
     expect(applications.applications.get(seedId(2))?.status).toBe('saved')
+    expect(cvs.analyses).toEqual([seedId(2)])
     expect(text()).toContain('Saved · DevOps Engineer')
     await click(button('Undo'))
     expect(applications.applications.has(seedId(2))).toBe(false)

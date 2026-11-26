@@ -19,6 +19,7 @@ func registerJobs(router chi.Router, jobs *services.JobService) {
 		list, err := jobs.List(r.Context(), requestIdentity(r), services.JobQuery{
 			Q: query.Get("q"), City: query.Get("city"), Country: query.Get("country"),
 			IncludeRemote: query.Get("include_remote"), Areas: query["area"], Level: query.Get("level"),
+			IDs: query.Get("ids"), Limit: query.Get("limit"),
 		})
 		if err != nil {
 			return err

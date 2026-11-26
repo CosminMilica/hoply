@@ -7,7 +7,7 @@ import ScoreTile from '@/features/common/components/ScoreTile.vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { knownSkills } from '@/features/profile/skills'
-import { useJobQuery } from '../composables/useJobs'
+import { analyzeImported, useJobQuery } from '../composables/useJobs'
 import { lookFor, matchJob, placeOf, sourceLine, tagline } from '../match'
 
 const props = defineProps<{ id: string }>()
@@ -29,7 +29,10 @@ const prepareLabel = computed(() => (status.value === 'cv_ready' || status.value
 
 function toggleSave() {
   if (status.value === 'saved') remove.mutate(props.id)
-  else if (!status.value) setStatus.mutate({ jobId: props.id, status: 'saved' })
+  else if (!status.value) {
+    setStatus.mutate({ jobId: props.id, status: 'saved' })
+    if (job.value) analyzeImported(job.value)
+  }
 }
 </script>
 
@@ -43,6 +46,7 @@ function toggleSave() {
         <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ job.title }}</h1>
         <p class="m-0 text-base font-medium text-muted">{{ [job.company, placeOf(job)].filter(Boolean).join(' · ') }}</p>
         <p class="m-0 text-[13px] font-bold">{{ [sourceLine(job), tagline(job)].filter(Boolean).join(' · ') }}</p>
+        <UAlert v-if="job.closed_at" color="neutral" variant="subtle" icon="i-lucide-archive" title="The company no longer lists this job" data-test="closed" />
         <a v-if="job.url" :href="job.url" target="_blank" rel="noopener noreferrer" class="self-start text-[13px] font-bold text-hoply-400 underline-offset-2 hover:underline">View the original ad ↗</a>
       </div>
 

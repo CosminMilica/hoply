@@ -26,6 +26,14 @@ export function useJobQuery(id: MaybeRefOrGetter<string>) {
   })
 }
 
+/**
+ * Asks Claude to read an imported job's ad when the person saves it, so its requirements are the analysis's
+ * by the time they look at it again; the rules read it on import.
+ */
+export function analyzeImported(job: Pick<Job, 'id' | 'source' | 'requirements_from'>) {
+  if (job.source === 'import' && job.requirements_from === 'rules') cvApi.analyze(job.id).catch(() => {})
+}
+
 /** Reading an ad, and saving the job the person checked; a saved job joins the lists. */
 export function useAddJob() {
   const client = useQueryClient()

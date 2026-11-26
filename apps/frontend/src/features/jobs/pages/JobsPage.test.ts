@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { button, mountPage } from '@/test/hoply'
+import { button, mountPage, useServices } from '@/test/hoply'
 import JobsPage from './JobsPage.vue'
 
 afterEach(() => {
@@ -7,12 +7,11 @@ afterEach(() => {
 })
 
 describe('JobsPage', () => {
-  it('says finding jobs is coming, and offers to add a job instead', async () => {
+  it('finds jobs with filters, and still offers to add one', async () => {
+    useServices()
     await mountPage(JobsPage)
-    expect(document.querySelector('h1')!.textContent).toBe('Finding jobs is coming soon')
-    expect(document.body.textContent).toContain('We will search job boards for you, based on your profile')
+    expect(document.querySelector('h1')!.textContent).toBe('Find jobs')
+    expect(document.body.textContent).toContain('Position area')
     expect(button(/^Add a job from a link or its text/).getAttribute('href')).toBe('/jobs/add')
-    expect(document.body.textContent).not.toContain('Position area')
-    expect(document.querySelector('[data-test="job-card"]')).toBeNull()
   })
 })

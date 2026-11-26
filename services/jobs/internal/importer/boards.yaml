@@ -1,0 +1,15 @@
+# Companies whose public job boards the importer reads. Only jobs based in Romania, in the areas Find jobs
+# filters on, are kept. platform is one of greenhouse, lever, lever-eu, ashby; board is the company's name on it, as
+# in its board's links (job-boards.greenhouse.io/<board>, jobs.lever.co/<board>, jobs.eu.lever.co/<board>,
+# jobs.ashbyhq.com/<board>).
+boards:
+  - {company: Bitdefender, platform: greenhouse, board: scbitdefendersrl}
+  - {company: IONOS, platform: greenhouse, board: ionos2}
+  - {company: Awin, platform: greenhouse, board: awin}
+  - {company: Elastic, platform: greenhouse, board: elastic}
+  - {company: UiPath, platform: ashby, board: uipath}
+  - {company: Snyk, platform: ashby, board: snyk}
+  - {company: n8n, platform: ashby, board: n8n}
+  - {company: eMAG, platform: greenhouse, board: emag}
+  - {company: Hootsuite, platform: greenhouse, board: hootsuite}
+  - {company: OLX, platform: lever-eu, board: olx}

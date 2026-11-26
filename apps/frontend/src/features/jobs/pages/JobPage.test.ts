@@ -11,7 +11,7 @@ afterEach(() => {
 
 describe('JobPage', () => {
   it('shows the job, the match and lets the person save it or not', async () => {
-    const { applications } = useServices()
+    const { applications, cvs } = useServices()
     await mountPage(JobPage, { at: `/jobs/${seedId(2)}`, props: { id: seedId(2) } })
     expect(text()).toContain('Bitdefender · Bucharest, hybrid')
     expect(text()).toContain('Sample listing, not a real posting · DevOps · Mid')
@@ -25,6 +25,20 @@ describe('JobPage', () => {
     expect(applications.applications.get(seedId(2))?.status).toBe('saved')
     await click(button('Saved · tap to remove'))
     expect(applications.applications.has(seedId(2))).toBe(false)
+    expect(cvs.analyses).toEqual([])
+  })
+
+  it('has Claude read an imported job once it is saved, and says when its board no longer lists it', async () => {
+    const { applications, jobs, cvs } = useServices()
+    Object.assign(jobs.jobs.find(job => job.id === seedId(2))!, {
+      source: 'import', origin: 'greenhouse', sample: false, posted_at: null, closed_at: '2026-11-25T10:00:00Z',
+    })
+    await mountPage(JobPage, { at: `/jobs/${seedId(2)}`, props: { id: seedId(2) } })
+    expect(text()).toContain('via Greenhouse · DevOps · Mid')
+    expect(document.querySelector('[data-test="closed"]')?.textContent).toContain('The company no longer lists this job')
+    await click(button('Save for later'))
+    expect(applications.applications.get(seedId(2))?.status).toBe('saved')
+    expect(cvs.analyses).toEqual([seedId(2)])
   })
 
   it('offers a new CV once one is made, and no save button', async () => {

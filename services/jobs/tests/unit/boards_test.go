@@ -122,6 +122,7 @@ func TestBoardAPIs(t *testing.T) {
 		{"https://job-boards.greenhouse.io/northwind/jobs/4001", "Platform Engineer | Remote", "Northwind Cloud",
 			"Cluj-Napoca, Romania (Hybrid)", "", "", "", "What You’ll Be Doing\n- Run Kubernetes clusters on AWS"},
 		{"https://boards.greenhouse.io/embed/job_app?for=northwind&token=4001", "Platform Engineer | Remote", "Northwind Cloud", "", "", "", "", ""},
+		{"https://job-boards.eu.greenhouse.io/northwind/jobs/4001", "Platform Engineer | Remote", "Northwind Cloud", "", "", "", "", ""},
 		{"https://careers.northwind.example/open?gh_jid=4001&for=northwind", "Platform Engineer | Remote", "Northwind Cloud", "", "", "", "", ""},
 		{"https://jobs.lever.co/northwind-cloud/aa11", "Site Reliability Engineer", "Northwind Cloud", "Bucharest, Romania", "", "RO",
 			"hybrid", "The Role\nKeep payments up.\nRequirements\n- Linux"},

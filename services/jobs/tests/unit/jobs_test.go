@@ -275,12 +275,24 @@ func TestCleanQuery(t *testing.T) {
 	if filter, err := services.CleanQuery(services.JobQuery{}); err != nil || filter.Cities != nil || filter.IncludeRemote {
 		t.Fatalf("empty: %+v %v", filter, err)
 	}
+	id := uuid.New()
+	if filter, err := services.CleanQuery(services.JobQuery{IDs: " " + id.String() + ",,", Limit: "20"}); err != nil ||
+		!slices.Equal(filter.IDs, []uuid.UUID{id}) || filter.Limit != 20 {
+		t.Fatalf("ids: %+v %v", filter, err)
+	}
+	if filter, _ := services.CleanQuery(services.JobQuery{}); filter.Limit != services.MaxList || filter.IDs != nil {
+		t.Fatalf("defaults: %+v", filter)
+	}
+	tooMany := strings.Repeat(id.String()+",", services.MaxIDs+1)
 	for field, query := range map[string]services.JobQuery{
-		"include_remote": {IncludeRemote: "maybe"}, "level": {Level: "Senior"},
+		"include_remote": {IncludeRemote: "maybe"}, "level": {Level: "Senior"}, "ids": {IDs: "not-an-id"}, "limit": {Limit: "0"},
 	} {
 		if _, err := services.CleanQuery(query); apperrors.As(err).Context["field"] != field {
 			t.Errorf("%s: %v", field, err)
 		}
+	}
+	if _, err := services.CleanQuery(services.JobQuery{IDs: tooMany}); apperrors.As(err).Context["field"] != "ids" {
+		t.Errorf("too many ids: %v", err)
 	}
 }
 

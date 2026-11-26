@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { catalogJob } from '@/test/jobs'
 import { sampleProfile } from '@/test/profile-service'
-import { keywordsIn, knockoutFor, levelLabel, lookFor, marketNote, matchJob, placeOf, requirementsOf, sourceLine, tagline, verdictFor, yearsLine } from './match'
+import { keywordsIn, knockoutFor, levelLabel, lookFor, marketNote, matchJob, placeOf, postedAgo, requirementsOf, sourceLine, tagline, verdictFor, yearsLine } from './match'
 
 describe('matchJob', () => {
   it('scores the requirements the skills cover, ignoring case, a must-have twice a nice-to-have', () => {
@@ -72,6 +72,11 @@ describe('job lines', () => {
     expect(sourceLine(catalogJob(1, { sample: false }))).toBe('From the catalog')
     expect(sourceLine(catalogJob(1, { source: 'link', added_by_me: true }))).toBe('Added by you · from a link')
     expect(sourceLine(catalogJob(1, { source: 'text', added_by_me: true }))).toBe('Added by you · from pasted text')
+    const now = new Date('2026-11-26T12:00:00Z')
+    const imported = catalogJob(1, { source: 'import', origin: 'greenhouse', url: 'https://job-boards.eu.greenhouse.io/x/jobs/1', posted_at: '2026-11-23T09:00:00Z' })
+    expect(sourceLine(imported, now)).toBe('via Greenhouse · posted 3 days ago')
+    expect(sourceLine({ ...imported, origin: 'workday', posted_at: null })).toBe('via job-boards.eu.greenhouse.io')
+    expect(['2026-11-26T08:00:00Z', '2026-11-25T08:00:00Z', '2026-09-01T08:00:00Z'].map(at => postedAgo(at, now))).toEqual(['today', 'yesterday', '1 Sept'])
     expect(placeOf(catalogJob(0))).toBe('Iași, on-site')
     expect(placeOf({ city: '', work_mode: '' })).toBe('Location not given')
     expect(tagline(catalogJob(0))).toBe('DevOps, Data · Senior')

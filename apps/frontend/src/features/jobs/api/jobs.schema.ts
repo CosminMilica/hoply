@@ -36,6 +36,10 @@ export const jobSchema = z.object({
   sample: z.boolean().nullish().transform(value => value ?? false),
   added_by_me: z.boolean().nullish().transform(value => value ?? false),
   created_at: text,
+  /** The job board platform an imported job comes from. */
+  origin: text,
+  posted_at: z.string().nullish().transform(value => value || null),
+  closed_at: z.string().nullish().transform(value => value || null),
 })
 
 export type Job = z.infer<typeof jobSchema>
@@ -80,6 +84,8 @@ export interface JobFilters {
   areas?: string[]
   /** One of the filter's levels, `Any` for none. */
   level?: string
+  /** These jobs only, closed ones included. */
+  ids?: string[]
 }
 
 export const AREAS = ['DevOps', 'Backend', 'Data', 'Sysadmin'] as const

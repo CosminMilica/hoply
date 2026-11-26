@@ -38,6 +38,9 @@ const (
 	maxYears    = 40
 	maxSkill    = 60
 	maxLocation = 120
+	// MaxList caps the jobs GET /jobs returns, newest first; MaxIDs caps the ids one request asks for.
+	MaxList = 500
+	MaxIDs  = 200
 )
 
 // PageReader fetches and reads a job link; *fetch.Reader implements it.
@@ -62,6 +65,8 @@ type JobQuery struct {
 	IncludeRemote string
 	Areas         []string
 	Level         string
+	IDs           string
+	Limit         string
 }
 
 func (s *JobService) List(ctx context.Context, ident identity.IdentityContext, query JobQuery) (*models.JobList, error) {
@@ -252,6 +257,27 @@ func CleanQuery(q JobQuery) (models.JobFilter, error) {
 	filter.Level = strings.TrimSpace(q.Level)
 	if filter.Level != "" && !slices.Contains(Levels, filter.Level) {
 		return filter, invalid("level", "'level' must be one of "+strings.Join(Levels, ", "))
+	}
+	for _, raw := range strings.Split(q.IDs, ",") {
+		if raw = strings.TrimSpace(raw); raw == "" {
+			continue
+		}
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			return filter, invalid("ids", "'ids' must be job ids separated by commas")
+		}
+		filter.IDs = append(filter.IDs, id)
+	}
+	if len(filter.IDs) > MaxIDs {
+		return filter, invalid("ids", fmt.Sprintf("'ids' must have at most %d entries", MaxIDs))
+	}
+	filter.Limit = MaxList
+	if raw := strings.TrimSpace(q.Limit); raw != "" {
+		limit, err := strconv.Atoi(raw)
+		if err != nil || limit < 1 || limit > MaxList {
+			return filter, invalid("limit", fmt.Sprintf("'limit' must be from 1 to %d", MaxList))
+		}
+		filter.Limit = limit
 	}
 	return filter, nil
 }

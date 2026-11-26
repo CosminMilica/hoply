@@ -32,6 +32,11 @@ type Job struct {
 	Sample           bool      `json:"sample"`
 	AddedByMe        bool      `json:"added_by_me"`
 	CreatedAt        time.Time `json:"created_at"`
+	// Origin is the job board platform an imported job was read from; empty for the others.
+	Origin   string     `json:"origin"`
+	PostedAt *time.Time `json:"posted_at"`
+	// ClosedAt is when the job's board stopped listing it; closed jobs leave GET /jobs unless asked by id.
+	ClosedAt *time.Time `json:"closed_at"`
 }
 
 type JobInput struct {
@@ -74,6 +79,9 @@ type JobFilter struct {
 	IncludeRemote bool
 	Areas         []string
 	Level         string
+	// IDs asks for these jobs only, closed ones included.
+	IDs   []uuid.UUID
+	Limit int
 }
 
 type JobList struct {
@@ -85,4 +93,14 @@ type JobList struct {
 type RequirementsInput struct {
 	MustHave   []string `json:"must_have"`
 	NiceToHave []string `json:"nice_to_have"`
+}
+
+// ImportedJob is a job read from a company's board, as the importer stores it.
+type ImportedJob struct {
+	JobInput
+	Areas      []string
+	Origin     string
+	ExternalID string
+	Board      string
+	PostedAt   *time.Time
 }

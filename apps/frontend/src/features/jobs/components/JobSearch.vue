@@ -1,8 +1,5 @@
 <script setup lang="ts">
-/**
- * Finding jobs: filters, then the swipe deck. Parked while jobs only come in through Add a job;
- * Find jobs renders it again once the service finds jobs.
- */
+/** Finding jobs: filters, then the swipe deck. */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApplicationMutations } from '@/features/applications/composables/useApplications'
@@ -10,6 +7,7 @@ import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import JobFilters from './JobFilters.vue'
 import SwipeDeck from './SwipeDeck.vue'
 import { useDeck, type Decision, type ScoredJob } from '../composables/useDeck'
+import { analyzeImported } from '../composables/useJobs'
 import { useJobSearchStore } from '../stores/search'
 
 const UNDO_MS = 3500
@@ -44,6 +42,7 @@ function onDecide(decision: Decision, job: ScoredJob) {
     return
   }
   setStatus.mutate({ jobId: job.id, status: 'saved' })
+  analyzeImported(job)
   if (decision === 'save') remember(job, 'save')
   else router.push({ name: 'hoply-prep', params: { id: job.id } })
 }

@@ -1,0 +1,261 @@
+package unit_test
+
+import (
+	"context"
+	"errors"
+	stdhtml "html"
+	"slices"
+	"strings"
+	"testing"
+	"time"
+
+	"jobs/internal/extract"
+	"jobs/internal/fetch"
+	"jobs/internal/importer"
+	"jobs/internal/models"
+)
+
+// The list fixtures are synthetic, shaped like each platform's public list answer.
+func listFixtures(t *testing.T) map[string]string {
+	return map[string]string{
+		"/v1/boards/northwind/jobs": jsonBody(t, map[string]any{"jobs": []map[string]any{
+			{"id": 4001, "title": "DevOps Engineer", "company_name": "Northwind Cloud", "location": map[string]any{"name": "Hybrid"},
+				"offices": []map[string]any{{"location": "Cluj-Napoca, Romania"}}, "content": stdhtml.EscapeString(boardDescription),
+				"absolute_url": "https://job-boards.eu.greenhouse.io/northwind/jobs/4001", "first_published": "2026-11-20T10:00:00-05:00"},
+			{"id": 4002, "title": "Account Executive", "location": map[string]any{"name": "Bucharest"}, "updated_at": "bad"},
+		}}),
+		"/v0/postings/northwind-cloud": jsonBody(t, []map[string]any{
+			{"id": "aa11", "text": "Site Reliability Engineer", "hostedUrl": "https://jobs.lever.co/northwind-cloud/aa11", "createdAt": 1763650800000,
+				"categories": map[string]any{"location": "Remote", "allLocations": []string{"Remote"}}, "country": "RO", "workplaceType": "remote",
+				"description": "<div>Keep payments up.</div>", "lists": []map[string]any{{"text": "Requirements", "content": "<li>Linux</li>"}}},
+		}),
+		"/posting-api/job-board/northwind": jsonBody(t, map[string]any{"jobs": []map[string]any{
+			{"id": "bb22", "title": "Data Engineer", "jobUrl": "https://jobs.ashbyhq.com/northwind/bb22", "publishedAt": "2026-11-01T08:00:00.000+00:00",
+				"location": "Berlin", "secondaryLocations": []map[string]any{{"location": "Iași, Romania"}}, "isListed": true,
+				"descriptionHtml": "<h2>What you'll do</h2><ul><li>Model data in Snowflake</li></ul>"},
+			{"id": "cc33", "title": "Hidden Engineer", "isListed": false},
+		}}),
+		"/posting-api/job-board/broken": "[",
+	}
+}
+
+func listReader(api *boardServer) *fetch.Reader {
+	return fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{
+		"boards-api.greenhouse.io": api.URL, "api.lever.co": api.URL, "api.eu.lever.co": api.URL, "api.ashbyhq.com": api.URL,
+	}})
+}
+
+func TestBoardLists(t *testing.T) {
+	api := newBoardServer(t, listFixtures(t))
+	reader := listReader(api)
+	ctx := context.Background()
+
+	greenhouse, err := reader.List(ctx, "greenhouse", "northwind")
+	if err != nil || len(greenhouse) != 2 {
+		t.Fatalf("greenhouse: %v %v", greenhouse, err)
+	}
+	first := greenhouse[0]
+	if first.ID != "4001" || first.URL != "https://job-boards.eu.greenhouse.io/northwind/jobs/4001" || first.PostedAt.Format(time.RFC3339) != "2026-11-20T15:00:00Z" ||
+		!slices.Equal(first.Places, []string{"Hybrid", "Cluj-Napoca, Romania"}) || first.Page.ReadFrom != "ats_api" ||
+		!strings.Contains(first.Page.Text, "Run Kubernetes clusters on AWS") || greenhouse[1].PostedAt != nil {
+		t.Fatalf("greenhouse posting: %+v", first)
+	}
+	if !slices.Contains(api.hits, "/v1/boards/northwind/jobs?content=true") {
+		t.Fatalf("greenhouse asks for the content: %v", api.hits)
+	}
+
+	lever, err := reader.List(ctx, "lever", "northwind-cloud")
+	if err != nil || len(lever) != 1 || lever[0].ID != "aa11" || lever[0].Page.Company != "Northwind Cloud" || lever[0].Page.Country != "RO" ||
+		lever[0].PostedAt.Format(time.DateOnly) != "2025-11-20" || lever[0].Page.WorkMode != "remote" || !strings.Contains(lever[0].Page.Text, "Linux") {
+		t.Fatalf("lever: %+v %v", lever, err)
+	}
+
+	ashby, err := reader.List(ctx, "ashby", "northwind")
+	if err != nil || len(ashby) != 1 || ashby[0].ID != "bb22" || !slices.Contains(ashby[0].Places, "Iași, Romania") ||
+		ashby[0].PostedAt.Format(time.DateOnly) != "2026-11-01" {
+		t.Fatalf("ashby lists only listed jobs: %+v %v", ashby, err)
+	}
+
+	var unreadable *fetch.Error
+	if _, err := reader.List(ctx, "ashby", "broken"); !errors.As(err, &unreadable) || unreadable.Reason != fetch.NoJobData {
+		t.Fatalf("a broken answer: %v", err)
+	}
+	if eu, err := reader.List(ctx, "lever-eu", "northwind-cloud"); err != nil || len(eu) != 1 || !slices.Contains(api.hits, "/v0/postings/northwind-cloud?mode=json") {
+		t.Fatalf("lever's EU host: %+v %v", eu, err)
+	}
+	if _, err := reader.List(ctx, "lever", "missing"); !errors.As(err, &unreadable) || unreadable.Reason != fetch.FetchFailed {
+		t.Fatalf("a missing board: %v", err)
+	}
+	if _, err := reader.List(ctx, "workday", "northwind"); err == nil {
+		t.Fatal("an unknown platform fails")
+	}
+}
+
+func TestAreasFromTheTitle(t *testing.T) {
+	for title, want := range map[string][]string{
+		"Senior DevOps Engineer":                        {"DevOps"},
+		"Principal Software Engineer, Site Reliability": {"DevOps", "Backend"},
+		"Backend Developer (NodeJS)":                    {"Backend"},
+		"Senior Golang Engineer":                        {"Backend"},
+		"Frontend Software Engineer":                    {},
+		"Full-Stack Engineer (React)":                   {"Backend"},
+		"Lead Data Scientist":                           {"Data"},
+		"Linux Systems Engineer":                        {"Sysadmin"},
+		"Junior Network Administrator":                  {"Sysadmin"},
+		"Senior Sales Engineer":                         {},
+		"Account Executive":                             {},
+	} {
+		if got := extract.Areas(title); !slices.Equal(got, want) {
+			t.Errorf("%s: %v, want %v", title, got, want)
+		}
+	}
+}
+
+func TestBoardsFile(t *testing.T) {
+	boards, err := importer.ParseBoards([]byte("boards:\n  - {company: Northwind, platform: greenhouse, board: northwind}\n  - {company: Northwind, platform: ashby, board: northwind}\n"))
+	if err != nil || len(boards) != 2 || boards[1] != (importer.Board{Company: "Northwind", Platform: "ashby", Board: "northwind"}) {
+		t.Fatalf("boards: %+v %v", boards, err)
+	}
+	for _, bad := range []string{
+		"boards: [",
+		"boards:\n  - {company: Northwind, platform: workday, board: northwind}\n",
+		"boards:\n  - {company: ' ', platform: lever, board: northwind}\n",
+		"boards:\n  - {company: A, platform: lever, board: a}\n  - {company: B, platform: lever, board: a}\n",
+	} {
+		if _, err := importer.ParseBoards([]byte(bad)); err == nil {
+			t.Errorf("%q fails", bad)
+		}
+	}
+
+	t.Setenv("JOBS_IMPORT", "")
+	if im, _, err := importer.FromEnv(nil, nil); im != nil || err != nil {
+		t.Fatalf("off by default: %v %v", im, err)
+	}
+	t.Setenv("JOBS_IMPORT", "on")
+	if im, interval, err := importer.FromEnv(nil, nil); im == nil || interval != importer.Interval || err != nil {
+		t.Fatalf("on, over the boards file in the repo: %v %v %v", im, interval, err)
+	}
+	t.Setenv("JOBS_IMPORT_INTERVAL", "30m")
+	if _, interval, err := importer.FromEnv(nil, nil); interval != 30*time.Minute || err != nil {
+		t.Fatalf("interval: %v %v", interval, err)
+	}
+	t.Setenv("JOBS_IMPORT_INTERVAL", "10s")
+	if _, _, err := importer.FromEnv(nil, nil); err == nil {
+		t.Fatal("an interval under a minute fails")
+	}
+}
+
+func TestJobsKeptFromABoard(t *testing.T) {
+	board := importer.Board{Company: "Northwind Cloud", Platform: "greenhouse", Board: "northwind"}
+	posted := time.Date(2026, 11, 20, 0, 0, 0, 0, time.UTC)
+	posting := fetch.Posting{ID: "4001", URL: "https://example.com/4001", PostedAt: &posted, Places: []string{"Hybrid", "Iasi, Romania"},
+		Page: fetch.Page{Title: "Senior DevOps Engineer", ReadFrom: "ats_api", Text: "We run Kubernetes.\nRequirements\n- Kubernetes\n- Terraform"}}
+	job, ok := importer.Job(board, posting)
+	if !ok || job.Title != "Senior DevOps Engineer" || job.Company != "Northwind Cloud" || job.City != "Iași" || job.Country != "Romania" ||
+		job.WorkMode != "hybrid" || job.Level != "senior" || !slices.Equal(job.Areas, []string{"DevOps"}) || !slices.Contains(job.MustHave, "Kubernetes") ||
+		job.Source != "import" || job.Origin != "greenhouse" || job.ExternalID != "4001" || job.Board != "northwind" || job.PostedAt != &posted {
+		t.Fatalf("job: %+v %v", job, ok)
+	}
+
+	remote := posting
+	remote.Places, remote.Page.Country, remote.Page.WorkMode = []string{"Remote"}, "RO", "remote"
+	if job, ok := importer.Job(board, remote); !ok || job.Country != "Romania" || job.City != "" || job.WorkMode != "remote" {
+		t.Fatalf("a remote job in Romania: %+v %v", job, ok)
+	}
+	for name, mutate := range map[string]func(*fetch.Posting){
+		"outside Romania": func(p *fetch.Posting) { p.Places = []string{"Berlin, Germany"} },
+		"in no area":      func(p *fetch.Posting) { p.Page.Title = "Account Executive" },
+		"without an id":   func(p *fetch.Posting) { p.ID = "" },
+	} {
+		p := posting
+		mutate(&p)
+		if _, ok := importer.Job(board, p); ok {
+			t.Errorf("a job %s is not kept", name)
+		}
+	}
+}
+
+// memoryImports records what the importer stores.
+type memoryImports struct {
+	jobs     map[string]models.ImportedJob
+	closed   []string
+	failWith error
+}
+
+func (m *memoryImports) Import(_ context.Context, job models.ImportedJob, _ time.Time) (bool, error) {
+	if m.failWith != nil {
+		return false, m.failWith
+	}
+	_, known := m.jobs[job.ExternalID]
+	m.jobs[job.ExternalID] = job
+	return !known, nil
+}
+
+func (m *memoryImports) Close(_ context.Context, origin, board string, _ time.Time) (int64, error) {
+	m.closed = append(m.closed, origin+"/"+board)
+	return 1, nil
+}
+
+// fakeLister answers each board with its postings, or fails for the boards in fail.
+type fakeLister struct {
+	postings map[string][]fetch.Posting
+	fail     map[string]bool
+	calls    []string
+}
+
+func (f *fakeLister) List(_ context.Context, platform, board string) ([]fetch.Posting, error) {
+	f.calls = append(f.calls, platform+"/"+board)
+	if f.fail[board] {
+		return nil, errors.New("board down")
+	}
+	return f.postings[board], nil
+}
+
+func freeLock(context.Context) (func(), bool, error) { return func() {}, true, nil }
+
+func TestImporterRunsEveryBoard(t *testing.T) {
+	devops := fetch.Posting{ID: "1", Places: []string{"Bucharest"}, Page: fetch.Page{Title: "DevOps Engineer"}}
+	sales := fetch.Posting{ID: "2", Places: []string{"Bucharest"}, Page: fetch.Page{Title: "Account Executive"}}
+	boards := []importer.Board{
+		{Company: "A", Platform: "greenhouse", Board: "a"}, {Company: "B", Platform: "lever", Board: "b"},
+		{Company: "C", Platform: "ashby", Board: "c"}, {Company: "D", Platform: "ashby", Board: "d"},
+	}
+	lister := &fakeLister{postings: map[string][]fetch.Posting{"a": {devops, sales}, "d": {}}, fail: map[string]bool{"b": true}}
+	store := &memoryImports{jobs: map[string]models.ImportedJob{}}
+	im := importer.New(store, lister, boards, freeLock, time.Millisecond)
+
+	results := im.RunOnce(context.Background())
+	if len(results) != 4 || results[0].Listed != 2 || results[0].Kept != 1 || results[0].New != 1 || results[0].Closed != 1 ||
+		results[1].Err == nil || results[2].Listed != 0 || results[3].Closed != 0 {
+		t.Fatalf("results: %+v", results)
+	}
+	if !slices.Equal(store.closed, []string{"greenhouse/a"}) {
+		t.Fatalf("only a board that listed jobs closes the missing ones: %v", store.closed)
+	}
+	if again := im.RunOnce(context.Background()); again[0].New != 0 || again[0].Kept != 1 {
+		t.Fatalf("a known job is not new: %+v", again[0])
+	}
+
+	store.failWith = errors.New("database down")
+	if failed := im.RunOnce(context.Background()); failed[0].Err == nil || failed[0].Kept != 0 {
+		t.Fatalf("a failed write stops that board: %+v", failed[0])
+	}
+
+	busy := importer.New(store, lister, boards, func(context.Context) (func(), bool, error) { return nil, false, nil }, 0)
+	broken := importer.New(store, lister, boards, func(context.Context) (func(), bool, error) { return nil, false, errors.New("no db") }, 0)
+	if busy.RunOnce(context.Background()) != nil || broken.RunOnce(context.Background()) != nil {
+		t.Fatal("no run without the lock")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	stopped := importer.New(store, &fakeLister{}, boards, freeLock, time.Hour)
+	if results := stopped.RunOnce(ctx); len(results) != 1 {
+		t.Fatalf("a stopped run ends between boards: %+v", results)
+	}
+	lister.calls = nil
+	importer.New(store, lister, boards[:1], freeLock, 0).Run(ctx, time.Hour)
+	if !slices.Equal(lister.calls, []string{"greenhouse/a"}) {
+		t.Fatalf("Run imports at once, then stops with its context: %v", lister.calls)
+	}
+}

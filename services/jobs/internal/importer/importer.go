@@ -1,0 +1,255 @@
+// Package importer reads the jobs of the companies in boards.yaml from their
+// public job boards, on a schedule, and keeps the ones based in Romania in the
+// areas Find jobs filters on.
+package importer
+
+import (
+	"context"
+	_ "embed"
+	"fmt"
+	"log/slog"
+	"os"
+	"slices"
+	"strings"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"gopkg.in/yaml.v3"
+
+	"jobs/internal/data/repositories"
+	"jobs/internal/extract"
+	"jobs/internal/fetch"
+	"jobs/internal/models"
+)
+
+//go:embed boards.yaml
+var boardsYAML []byte
+
+// Board is a company's job board on one of fetch.Platforms.
+type Board struct {
+	Company  string `yaml:"company"`
+	Platform string `yaml:"platform"`
+	Board    string `yaml:"board"`
+}
+
+// Lister reads every job a board lists; *fetch.Reader implements it.
+type Lister interface {
+	List(ctx context.Context, platform, board string) ([]fetch.Posting, error)
+}
+
+// Lock takes a lock only one importer holds at a time; ok is false when
+// another holds it.
+type Lock func(ctx context.Context) (unlock func(), ok bool, err error)
+
+// Result is what one board's run did.
+type Result struct {
+	Board  Board
+	Listed int
+	Kept   int
+	New    int
+	Closed int64
+	Err    error
+}
+
+type Importer struct {
+	store  repositories.ImportStore
+	lister Lister
+	boards []Board
+	lock   Lock
+	pause  time.Duration
+	now    func() time.Time
+}
+
+// New imports boards through lister into store, pausing between boards.
+func New(store repositories.ImportStore, lister Lister, boards []Board, lock Lock, pause time.Duration) *Importer {
+	return &Importer{store: store, lister: lister, boards: boards, lock: lock, pause: pause, now: time.Now}
+}
+
+// Interval is how often the importer runs unless JOBS_IMPORT_INTERVAL says otherwise.
+const Interval = 6 * time.Hour
+
+// FromEnv returns the importer JOBS_IMPORT=on asks for, over the boards in
+// boards.yaml, and how often it runs; nil without JOBS_IMPORT=on.
+func FromEnv(store repositories.ImportStore, pool *pgxpool.Pool) (*Importer, time.Duration, error) {
+	if os.Getenv("JOBS_IMPORT") != "on" {
+		return nil, 0, nil
+	}
+	interval := Interval
+	if raw := os.Getenv("JOBS_IMPORT_INTERVAL"); raw != "" {
+		parsed, err := time.ParseDuration(raw)
+		if err != nil || parsed < time.Minute {
+			return nil, 0, fmt.Errorf("JOBS_IMPORT_INTERVAL must be a duration of at least 1m, got %q", raw)
+		}
+		interval = parsed
+	}
+	boards, err := ParseBoards(boardsYAML)
+	if err != nil {
+		return nil, 0, err
+	}
+	reader := fetch.New(fetch.Options{Timeout: 30 * time.Second, MaxAPIBytes: 32 << 20})
+	return New(store, reader, boards, PgLock(pool), time.Second), interval, nil
+}
+
+// ParseBoards reads a boards file and checks every entry.
+func ParseBoards(raw []byte) ([]Board, error) {
+	var file struct {
+		Boards []Board `yaml:"boards"`
+	}
+	if err := yaml.Unmarshal(raw, &file); err != nil {
+		return nil, fmt.Errorf("boards: %w", err)
+	}
+	seen := map[string]bool{}
+	for _, b := range file.Boards {
+		key := b.Platform + "/" + b.Board
+		switch {
+		case strings.TrimSpace(b.Company) == "" || strings.TrimSpace(b.Board) == "":
+			return nil, fmt.Errorf("boards: %q needs a company and a board", key)
+		case !slices.Contains(fetch.Platforms, b.Platform):
+			return nil, fmt.Errorf("boards: %q is on an unknown platform", key)
+		case seen[key]:
+			return nil, fmt.Errorf("boards: %q is listed twice", key)
+		}
+		seen[key] = true
+	}
+	return file.Boards, nil
+}
+
+// Run imports every board at once, then every interval, until ctx ends.
+func (im *Importer) Run(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		im.RunOnce(ctx)
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+	}
+}
+
+// RunOnce imports the boards in turn, unless another importer holds the lock.
+// A board that fails is logged and skipped; the others still run.
+func (im *Importer) RunOnce(ctx context.Context) []Result {
+	unlock, ok, err := im.lock(ctx)
+	if err != nil || !ok {
+		if err != nil {
+			slog.Error("job import could not take its lock", "error", err)
+		}
+		return nil
+	}
+	defer unlock()
+	results := []Result{}
+	for i, b := range im.boards {
+		if i > 0 && !sleep(ctx, im.pause) {
+			break
+		}
+		r := im.board(ctx, b)
+		if r.Err != nil {
+			slog.Warn("job board import failed", "company", b.Company, "platform", b.Platform, "error", r.Err)
+		} else {
+			slog.Info("job board imported", "company", b.Company, "listed", r.Listed, "kept", r.Kept, "new", r.New, "closed", r.Closed)
+		}
+		results = append(results, r)
+	}
+	return results
+}
+
+// board imports one board. A board that lists no jobs closes nothing, since an
+// empty answer is more likely a fault than every job filled at once.
+func (im *Importer) board(ctx context.Context, b Board) Result {
+	r := Result{Board: b}
+	postings, err := im.lister.List(ctx, b.Platform, b.Board)
+	if err != nil {
+		r.Err = err
+		return r
+	}
+	r.Listed = len(postings)
+	seen := im.now().UTC()
+	for _, posting := range postings {
+		job, ok := Job(b, posting)
+		if !ok {
+			continue
+		}
+		created, err := im.store.Import(ctx, job, seen)
+		if err != nil {
+			r.Err = err
+			return r
+		}
+		r.Kept++
+		if created {
+			r.New++
+		}
+	}
+	if r.Listed > 0 {
+		r.Closed, r.Err = im.store.Close(ctx, b.Platform, b.Board, seen)
+	}
+	return r
+}
+
+// Job turns a posting into the job to keep, or reports false when the job is
+// not based in Romania or its title names none of the areas.
+func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
+	where := strings.Join(append(slices.Clone(p.Places), p.Page.Location, p.Page.City), " · ")
+	city, country := extract.Place(where)
+	if code := extract.Fold(strings.TrimSpace(p.Page.Country)); country == "" && (code == "ro" || code == "rou") {
+		country = "Romania"
+	}
+	areas := extract.Areas(p.Page.Title)
+	if country != "Romania" || len(areas) == 0 || p.ID == "" {
+		return models.ImportedJob{}, false
+	}
+	read := extract.Read(p.Page.Text, extract.Hints{Title: p.Page.Title, Company: b.Company})
+	return models.ImportedJob{
+		JobInput: models.JobInput{
+			Title: read.Title, Company: b.Company, City: city, Country: country,
+			WorkMode: firstOf(p.Page.WorkMode, extract.WorkMode(where+" "+p.Page.Title), read.WorkMode),
+			Level:    read.Level, YearsRequired: read.YearsRequired, MustHave: read.MustHave, NiceToHave: read.NiceToHave,
+			Responsibilities: read.Responsibilities, About: read.About, URL: p.URL, Source: "import", ReadFrom: p.Page.ReadFrom,
+		},
+		Areas: areas, Origin: b.Platform, ExternalID: p.ID, Board: b.Board, PostedAt: p.PostedAt,
+	}, true
+}
+
+// PgLock is a Postgres advisory lock, held on one pooled connection.
+func PgLock(pool *pgxpool.Pool) Lock {
+	const key = 0x686f706c79 // "hoply"
+	return func(ctx context.Context) (func(), bool, error) {
+		conn, err := pool.Acquire(ctx)
+		if err != nil {
+			return nil, false, err
+		}
+		var ok bool
+		if err := conn.QueryRow(ctx, "SELECT pg_try_advisory_lock($1)", key).Scan(&ok); err != nil || !ok {
+			conn.Release()
+			return nil, false, err
+		}
+		return func() {
+			if _, err := conn.Exec(context.Background(), "SELECT pg_advisory_unlock($1)", key); err != nil {
+				// Closing the session releases its locks.
+				_ = conn.Conn().Close(context.Background())
+			}
+			conn.Release()
+		}, true, nil
+	}
+}
+
+func sleep(ctx context.Context, d time.Duration) bool {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
+func firstOf(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}

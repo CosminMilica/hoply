@@ -4,29 +4,32 @@ Service: `services/jobs` (Go). The browser calls `/api/jobs/v1/...`; Traefik and
 `/api/v1/...` on the service. JSON is `snake_case`. Errors use the service's existing error envelope, with
 `context.field` on validation errors. No login yet: the dev identity owns the jobs it adds.
 
-The service holds two kinds of jobs: the **catalog** (jobs to discover; for now the seeded sample jobs, later
-imports from public job boards) and the jobs a person **adds** from a link or pasted text. It reads job ads with rules
+The service holds three kinds of jobs: the **catalog** (empty for now), the jobs it **imports** from company job
+boards (see Importing below), and the jobs a person **adds** from a link or pasted text. It reads job ads with rules
 and a skills dictionary only, never with an LLM. Matching against the profile stays in the web app for now.
 
 ## Endpoints
 
 | Method | Path (service side) | Body | Response |
 | --- | --- | --- | --- |
-| GET | `/api/v1/jobs` | query: `q`, `city`, `country`, `include_remote`, `area`, `level` | 200 `{ items: [Job], total }` |
+| GET | `/api/v1/jobs` | query: `q`, `city`, `country`, `include_remote`, `area`, `level`, `ids`, `limit` | 200 `{ items: [Job], total }` |
 | GET | `/api/v1/jobs/{id}` | | 200 `Job` |
 | POST | `/api/v1/jobs/read` | `{ url }` or `{ text, title?, company?, url? }` | 200 `JobDraft` |
 | POST | `/api/v1/jobs` | `JobInput` | 201 `Job` |
 | PUT | `/api/v1/jobs/{id}/requirements` | `{ must_have, nice_to_have }` | 200 `Job` |
 | DELETE | `/api/v1/jobs/{id}` | | 204 |
 
-- `GET /jobs` returns the catalog plus the caller's own jobs (`added_by_me: true`), newest first; other people's added
-  jobs are never visible. Filters: `q` matches title, company and requirements (case-insensitive); `city` matches the
-  city (case- and diacritics-insensitive: `Iasi` finds `Iași`); `include_remote=true` also keeps remote jobs when
-  `city` is set; `country` matches the country; `area` may repeat; `level` is one of the level values.
+- `GET /jobs` returns the catalog, the imported jobs still open and the caller's own jobs (`added_by_me: true`),
+  newest first (by `posted_at`, else `created_at`), at most `limit` (1–500, 500 by default); other people's added jobs
+  are never visible. Filters: `q` matches title, company and requirements (case-insensitive); `city` matches the city
+  (case- and diacritics-insensitive: `Iasi` finds `Iași`); `include_remote=true` also keeps remote jobs when `city` is
+  set; `country` matches the country; `area` may repeat; `level` is one of the level values. `ids` (comma-separated, at
+  most 200) returns those jobs only, closed ones included: Saved uses it.
 - `GET /jobs/{id}` and `DELETE /jobs/{id}`: an unknown id, a non-UUID id or another person's job is 404; deleting a
   catalog job is 404 too.
-- `PUT /jobs/{id}/requirements` replaces the requirements of the caller's own job with the cv service's analysis of
-  the ad, cleaned by the same rules as `POST /jobs`, and sets `requirements_from: analysis`. Any other job is 404.
+- `PUT /jobs/{id}/requirements` replaces the requirements of a job the caller sees with the cv service's analysis of
+  the ad, cleaned by the same rules as `POST /jobs`, and sets `requirements_from: analysis`. A catalog or imported
+  job's ad is the same for everyone, so its analysis is shared. Another person's job is 404.
 - `POST /jobs/read` saves nothing. It returns what the rules read, for the person to check and edit.
 
 ## Shapes
@@ -35,7 +38,8 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 Job       { id, title, company, city, country, work_mode, level, years_required,
             must_have: [string], nice_to_have: [string], responsibilities: [string],
             about, about_company, product, perks: [string], areas: [string],
-            url, source, read_from, requirements_from, sample, added_by_me, created_at }
+            url, source, read_from, requirements_from, sample, added_by_me, created_at,
+            origin, posted_at, closed_at }
 JobInput  { title, company, city, country, work_mode, level, years_required, must_have, nice_to_have,
             responsibilities, about, url, source, read_from }
 JobDraft  JobInput + { host }
@@ -46,7 +50,10 @@ JobDraft  JobInput + { host }
 | `work_mode` | `""`, `remote`, `hybrid`, `onsite` |
 | `level` | `""`, `junior`, `mid`, `senior`, `lead` |
 | `years_required` | `null` or 0–40 |
-| `source` | `catalog`, `link`, `text` |
+| `source` | `catalog`, `import`, `link`, `text` |
+| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`), else `""` |
+| `posted_at` | when the board published an imported job, else `null` |
+| `closed_at` | when the board stopped listing an imported job, else `null` |
 | `read_from` | `ats_api` (the job board's public API, see below), `json_ld` (the page's schema.org `JobPosting`), `page_text` (the page's main text), `text` (pasted), `""` for catalog jobs |
 | `requirements_from` | `rules` (read when the job was added) or `analysis` (Claude's reading of the ad, through the cv service) |
 | `host` | the link's host name, or `""` |
@@ -81,7 +88,7 @@ addresses (no SSRF). The link is read in this order:
 
    | Link | API call |
    | --- | --- |
-   | `boards.greenhouse.io/{board}/jobs/{id}`, `job-boards.greenhouse.io/{board}/jobs/{id}`, any URL with `gh_jid={id}` and a known board | `boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}` |
+   | `boards.greenhouse.io/{board}/jobs/{id}`, `job-boards.greenhouse.io/{board}/jobs/{id}` (also their `.eu.` hosts), any URL with `gh_jid={id}` and a known board | `boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}` |
    | `jobs.lever.co/{site}/{id}` (also `jobs.eu.lever.co`) | `api.lever.co/v0/postings/{site}/{id}` (`api.eu.lever.co` for the EU host) |
    | `jobs.ashbyhq.com/{board}/{id}` | `api.ashbyhq.com/posting-api/job-board/{board}`, the posting with that id |
    | `jobs.smartrecruiters.com/{company}/{id}` | `api.smartrecruiters.com/v1/companies/{company}/postings/{id}` |
@@ -142,5 +149,26 @@ Failures are 422 with `code: PAGE_UNREADABLE` and `context.reason`:
 
 ## Catalog
 
-The catalog is empty until finding jobs is built (`docs/job-sources.md`): migration `00100_jobs.sql` creates the table
-and seeds nothing, so `GET /jobs` returns only the caller's own jobs for now.
+Migration `00100_jobs.sql` creates the table and seeds nothing, so the catalog is empty; Find jobs shows the imported
+jobs. The sample jobs exist only in the web app's test doubles.
+
+## Importing
+
+With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards listed in
+`services/jobs/internal/importer/boards.yaml` at start, then every `JOBS_IMPORT_INTERVAL` (6 h by default, at least
+1 m), one board after another with a second between them. A Postgres advisory lock keeps it to one replica.
+
+| Platform | List call (public, no key) |
+| --- | --- |
+| `greenhouse` | `boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true` (EU boards answer here too) |
+| `lever`, `lever-eu` | `api.lever.co/v0/postings/{board}?mode=json` (`api.eu.lever.co` for `lever-eu`) |
+| `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
+
+- A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, or the
+  country code `RO`) and its title names one of the areas (`DevOps`, `Backend`, `Data`, `Sysadmin`). Its text goes
+  through the same rules as a link; the company is the one in `boards.yaml`.
+- A job is keyed by its platform and the platform's id: a later run updates it and keeps requirements Claude's
+  analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
+  answers with no jobs closes nothing.
+- A board that fails is logged and skipped; the others still run. Answers are capped at 32 MB and 30 s.
+

@@ -3,7 +3,6 @@ package fetch
 import (
 	"encoding/json"
 	"errors"
-	"html"
 	"net/url"
 	"regexp"
 	"strings"
@@ -22,7 +21,7 @@ var (
 	digits          = regexp.MustCompile(`^\d+$`)
 	leadingDigits   = regexp.MustCompile(`^(\d+)`)
 	errNoSuchJob    = errors.New("the board does not list this job")
-	greenhouseHosts = map[string]bool{"boards.greenhouse.io": true, "job-boards.greenhouse.io": true}
+	greenhouseHosts = map[string]bool{"boards.greenhouse.io": true, "job-boards.greenhouse.io": true, "boards.eu.greenhouse.io": true, "job-boards.eu.greenhouse.io": true}
 	leverAPIs       = map[string]string{"jobs.lever.co": "https://api.lever.co", "jobs.eu.lever.co": "https://api.eu.lever.co"}
 )
 
@@ -54,19 +53,11 @@ func greenhouse(boardToken, id string) *board {
 	return &board{
 		api: "https://boards-api.greenhouse.io/v1/boards/" + url.PathEscape(boardToken) + "/jobs/" + id,
 		read: func(body []byte) (*Page, error) {
-			var job struct {
-				Title       string `json:"title"`
-				CompanyName string `json:"company_name"`
-				Location    struct {
-					Name string `json:"name"`
-				} `json:"location"`
-				Content string `json:"content"`
-			}
+			var job greenhouseJob
 			if err := json.Unmarshal(body, &job); err != nil || job.Title == "" {
 				return nil, firstError(err, errNoSuchJob)
 			}
-			return &Page{Title: text(job.Title), Company: text(job.CompanyName), Location: text(job.Location.Name),
-				Text: strings.Join(descriptionLines(job.Content), "\n")}, nil
+			return job.page(), nil
 		},
 	}
 }
@@ -75,31 +66,11 @@ func lever(api, site, id string) *board {
 	return &board{
 		api: api + "/v0/postings/" + url.PathEscape(site) + "/" + url.PathEscape(id),
 		read: func(body []byte) (*Page, error) {
-			var posting struct {
-				Text       string `json:"text"`
-				Categories struct {
-					Location string `json:"location"`
-				} `json:"categories"`
-				WorkplaceType string `json:"workplaceType"`
-				Country       string `json:"country"`
-				Description   string `json:"description"`
-				Lists         []struct {
-					Text    string `json:"text"`
-					Content string `json:"content"`
-				} `json:"lists"`
-				Additional string `json:"additional"`
-			}
+			var posting leverPosting
 			if err := json.Unmarshal(body, &posting); err != nil || posting.Text == "" {
 				return nil, firstError(err, errNoSuchJob)
 			}
-			description := posting.Description
-			for _, list := range posting.Lists {
-				description += "<h3>" + html.EscapeString(list.Text) + "</h3><ul>" + list.Content + "</ul>"
-			}
-			description += posting.Additional
-			return &Page{Title: text(posting.Text), Company: slugName(site), Location: text(posting.Categories.Location),
-				Country: text(posting.Country), WorkMode: workplace(posting.WorkplaceType),
-				Text: strings.Join(descriptionLines(description), "\n")}, nil
+			return posting.page(site), nil
 		},
 	}
 }
@@ -108,34 +79,13 @@ func ashby(boardName, id string) *board {
 	return &board{
 		api: "https://api.ashbyhq.com/posting-api/job-board/" + url.PathEscape(boardName),
 		read: func(body []byte) (*Page, error) {
-			var listing struct {
-				Jobs []struct {
-					ID            string `json:"id"`
-					Title         string `json:"title"`
-					Location      string `json:"location"`
-					IsRemote      bool   `json:"isRemote"`
-					WorkplaceType string `json:"workplaceType"`
-					Address       struct {
-						PostalAddress struct {
-							AddressLocality string `json:"addressLocality"`
-							AddressCountry  string `json:"addressCountry"`
-						} `json:"postalAddress"`
-					} `json:"address"`
-					DescriptionHTML string `json:"descriptionHtml"`
-				} `json:"jobs"`
-			}
+			var listing ashbyBoard
 			if err := json.Unmarshal(body, &listing); err != nil {
 				return nil, err
 			}
 			for _, job := range listing.Jobs {
 				if strings.EqualFold(job.ID, id) {
-					mode := workplace(job.WorkplaceType)
-					if mode == "" && job.IsRemote {
-						mode = "remote"
-					}
-					return &Page{Title: text(job.Title), Company: slugName(boardName), Location: text(job.Location),
-						City: text(job.Address.PostalAddress.AddressLocality), Country: text(job.Address.PostalAddress.AddressCountry),
-						WorkMode: mode, Text: strings.Join(descriptionLines(job.DescriptionHTML), "\n")}, nil
+					return job.page(boardName), nil
 				}
 			}
 			return nil, errNoSuchJob

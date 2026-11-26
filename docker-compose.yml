@@ -118,6 +118,7 @@ services:
       PORT: "5020"
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/jobs"
       APP__SECURITY__AUTH__ENABLED: "false"
+      JOBS_IMPORT: "on"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jobs.rule=Host(`app.localhost`) && PathPrefix(`/api/jobs`)"

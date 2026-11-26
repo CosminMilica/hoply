@@ -41,7 +41,8 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   await mockCvService(page, profile, jobs);
   await mockApplicationsService(page);
   await page.goto('/jobs');
-  await expect(page.getByRole('heading', { name: 'Finding jobs is coming soon' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Find jobs' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Show \d+ jobs?$/ })).toBeEnabled();
   await page.getByRole('link', { name: /Add a job from a link or its text/ }).click();
   await page.getByLabel('Link to the job ad').fill('https://careers.northwind.example/jobs/platform-engineer');
   await page.getByRole('button', { name: 'Read the job' }).click();

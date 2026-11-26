@@ -123,7 +123,23 @@ export function yearsLine(job: Pick<Job, 'years_required'>, profile: Pick<Profil
 
 const hostOf = (url: string) => url.replace(/^https?:\/\//i, '').split('/')[0] ?? ''
 
-export function sourceLine(job: Pick<Job, 'sample' | 'source' | 'url' | 'added_by_me'>): string {
+const PLATFORMS: Record<string, string> = { 'greenhouse': 'Greenhouse', 'lever': 'Lever', 'lever-eu': 'Lever', 'ashby': 'Ashby' }
+
+/** "today", "yesterday", "3 days ago", or the date after a month. */
+export function postedAgo(at: string, now = new Date()): string {
+  const date = new Date(at)
+  const days = Math.floor((now.getTime() - date.getTime()) / 86_400_000)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 31) return `${days} days ago`
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+export function sourceLine(job: Pick<Job, 'sample' | 'source' | 'url' | 'added_by_me'> & Partial<Pick<Job, 'origin' | 'posted_at'>>, now = new Date()): string {
+  if (job.source === 'import') {
+    const via = `via ${PLATFORMS[job.origin ?? ''] ?? hostOf(job.url)}`
+    return job.posted_at ? `${via} · posted ${postedAgo(job.posted_at, now)}` : via
+  }
   if (job.added_by_me || job.source === 'link' || job.source === 'text') return `Added by you · ${job.source === 'link' ? 'from a link' : 'from pasted text'}`
   if (job.sample) return 'Sample listing, not a real posting'
   return job.url ? `via ${hostOf(job.url)}` : 'From the catalog'

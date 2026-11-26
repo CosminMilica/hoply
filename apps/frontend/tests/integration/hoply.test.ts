@@ -43,11 +43,10 @@ it('starts on the profile, read from the profile service', async () => {
   expect(text()).toContain('Andrei Popescu')
 })
 
-it('opens Find jobs on the coming-soon page, which leads to adding a job', async () => {
+it('opens Find jobs on its filters, which also lead to adding a job', async () => {
   useServices()
   await open('/jobs')
-  expect(text()).toContain('Finding jobs is coming soon')
-  expect(text()).not.toContain('Position area')
+  expect(text()).toContain('Position area')
   await click(button(/^Add a job from a link or its text/))
   await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('hoply-job-add'))
 })

@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { useQuery } from '@tanstack/vue-query'
+import { keepPreviousData, useQuery } from '@tanstack/vue-query'
 import { jobsApi } from '@/features/jobs/api/jobsApi'
 import { jobKeys } from '@/features/jobs/composables/useJobs'
 import { matchJob } from '@/features/jobs/match'
@@ -11,7 +11,13 @@ import { useApplicationsQuery } from './useApplications'
 /** The jobs the person tracks, each with its status and how it matches the profile's skills. */
 export function useTrackedJobs() {
   const applications = useApplicationsQuery()
-  const jobs = useQuery({ queryKey: jobKeys.list({}), queryFn: () => jobsApi.list() })
+  const ids = computed(() => (applications.data.value ?? []).map(application => application.job_id).sort())
+  const jobs = useQuery({
+    queryKey: computed(() => jobKeys.list({ ids: ids.value })),
+    queryFn: () => jobsApi.list({ ids: ids.value }),
+    enabled: computed(() => ids.value.length > 0),
+    placeholderData: keepPreviousData,
+  })
   const profile = useProfileQuery()
   const skills = computed(() => (profile.data.value ? knownSkills(profile.data.value) : []))
 
@@ -22,6 +28,6 @@ export function useTrackedJobs() {
       return job ? [{ job, status: application.status, since: statusSince(application), ...matchJob(job, skills.value) }] : []
     })
   })
-  const loading = computed(() => applications.isPending.value || jobs.isPending.value || profile.isPending.value)
+  const loading = computed(() => applications.isPending.value || (ids.value.length > 0 && jobs.isPending.value) || profile.isPending.value)
   return { tracked, skills, loading }
 }
