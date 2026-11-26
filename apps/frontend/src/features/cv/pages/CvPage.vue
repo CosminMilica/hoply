@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLocalStorage } from '@vueuse/core'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
+import { saveFile } from '@/features/common/download'
 import AtsCard from '../components/AtsCard.vue'
 import CvPaper from '../components/CvPaper.vue'
 import LetterCard from '../components/LetterCard.vue'
@@ -10,6 +11,7 @@ import TailoringCard from '../components/TailoringCard.vue'
 import { authorshipLine } from '../authorship'
 import { useLatestCvQuery } from '../composables/useCv'
 import { CV_TEMPLATES, type CvTemplate } from '../api/cv.schema'
+import { cvApi } from '../api/cvApi'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -27,9 +29,23 @@ const templates = Object.entries(CV_TEMPLATES) as [CvTemplate, string][]
 const applied = computed(() => statuses.value.get(props.id) === 'applied')
 const document = computed(() => (cv.value ? cv.value[mode.value] : null))
 
-/** The file of the version on screen, as the cv service renders it. */
-const fileUrl = (format: 'pdf' | 'docx') =>
-  cv.value ? `/api/cv/v1/cvs/${encodeURIComponent(cv.value.id)}/file?format=${format}&version=${mode.value}&template=${template.value}` : ''
+const downloading = ref<'pdf' | 'docx' | ''>('')
+const downloadFailed = ref(false)
+/** Downloads the version on screen, as the cv service renders it. */
+async function download(format: 'pdf' | 'docx') {
+  if (!cv.value) return
+  downloading.value = format
+  downloadFailed.value = false
+  try {
+    saveFile(await cvApi.file(cv.value.id, format, mode.value, template.value))
+  }
+  catch {
+    downloadFailed.value = true
+  }
+  finally {
+    downloading.value = ''
+  }
+}
 </script>
 
 <template>
@@ -81,9 +97,10 @@ const fileUrl = (format: 'pdf' | 'docx') =>
         <TailoringCard v-if="mode === 'tailored' && cv.tailoring" :tailoring="cv.tailoring" class="order-3" />
         <div class="order-6 flex flex-col gap-2.5">
           <div class="flex gap-2">
-            <UButton :to="fileUrl('pdf')" external download label="Download PDF" size="lg" class="flex-1 justify-center" />
-            <UButton :to="fileUrl('docx')" external download label="DOCX" color="neutral" variant="outline" size="lg" class="justify-center" />
+            <UButton label="Download PDF" :loading="downloading === 'pdf'" size="lg" class="flex-1 justify-center" @click="download('pdf')" />
+            <UButton label="DOCX" :loading="downloading === 'docx'" color="neutral" variant="outline" size="lg" class="justify-center" @click="download('docx')" />
           </div>
+          <p v-if="downloadFailed" role="alert" class="m-0 text-center text-[13px] font-bold text-ember-400">We could not download the CV. Try again.</p>
           <span class="text-center text-xs font-medium text-muted">{{ cv.file_name }}</span>
           <UButton
             :label="applied ? 'Marked as applied ✓' : 'I applied to this job'"

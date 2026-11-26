@@ -25,6 +25,14 @@ var probeSchema []byte
 //go:embed prompts/profile-probe-system.md
 var ProfileProbeSystem string
 
+//go:embed prompts/probe-answer.md
+var probeAnswerFields string
+
+func init() {
+	ProbeSystem = strings.Replace(ProbeSystem, "{{answer_fields}}", strings.TrimSpace(probeAnswerFields), 1)
+	ProfileProbeSystem = strings.Replace(ProfileProbeSystem, "{{answer_fields}}", strings.TrimSpace(probeAnswerFields), 1)
+}
+
 // ProbeSchema is the questions' JSON schema on one line.
 func ProbeSchema() string { return compact(probeSchema) }
 

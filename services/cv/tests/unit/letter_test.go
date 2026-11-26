@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 
 	"cv/internal/claude"
+	"cv/internal/cvdoc"
 	"cv/internal/data/repositories"
 	"cv/internal/grounding"
 	"cv/internal/identity"
@@ -346,5 +347,24 @@ func TestLettersWithoutAWriter(t *testing.T) {
 	}
 	if _, body := testutil.Do(t, handler, http.MethodPost, cvsPath+"/"+id+"/letter", map[string]any{}); body["status"] != "failed" || body["reason"] != "off" {
 		t.Fatalf("off: %v", body)
+	}
+}
+
+func TestPromptsNameTheCheckedPhrases(t *testing.T) {
+	for name, prompt := range map[string]string{"cv": grounding.System, "letter": grounding.LetterSystem,
+		"probe": grounding.ProbeSystem, "profile probe": grounding.ProfileProbeSystem} {
+		if strings.Contains(prompt, "{{") {
+			t.Fatalf("%s prompt keeps a placeholder", name)
+		}
+	}
+	for _, word := range cvdoc.StockWords {
+		if !strings.Contains(grounding.System, `"`+word+`"`) {
+			t.Fatalf("cv prompt does not forbid %q", word)
+		}
+	}
+	for _, cliche := range cvdoc.LetterCliches {
+		if !strings.Contains(grounding.LetterSystem, `"`+cliche+`"`) {
+			t.Fatalf("letter prompt does not forbid %q", cliche)
+		}
 	}
 }

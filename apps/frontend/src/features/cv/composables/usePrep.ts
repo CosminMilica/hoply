@@ -1,16 +1,17 @@
 import { computed, reactive, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
-import { serviceErrorMessage } from '@/features/common/errors'
 import type { Job } from '@/features/jobs/api/jobs.schema'
 import { keywordsIn, matchJob, requirementsOf } from '@/features/jobs/match'
 import type { Bullet, Profile } from '@/features/profile/api/profile.schema'
 import { monthRange } from '@/features/profile/format'
 import { bulletLine, knownSkills } from '@/features/profile/skills'
 import type { CvRequest, PrepQuestions, ProbeQuestion } from '../api/cv.schema'
-import { OTHER, useNotes, type Place, type Remembered } from './useNotes'
+import { useAnswers } from './useAnswers'
+import { OTHER, useNotes, type Place } from './useNotes'
 
-export const MIN_ANSWER = 10
-type GapAnswer = { status: 'added', remembered: Remembered } | { status: 'skipped' }
-type ClaimAnswer = { status: 'added', remembered: Remembered } | { status: 'picked', text: string } | { status: 'no' }
+/** The keys of a page's answers: a gap by its skill, a responsibility by its index, one of Claude's questions by its. */
+export const gapKey = (skill: string) => `g:${skill}`
+export const claimKey = (index: number) => `c:${index}`
+export const probeKey = (index: number) => `p:${index}`
 
 const joinList = (items: string[]) =>
   items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
@@ -29,18 +30,16 @@ interface PrepInputs {
  * information. What stays with this CV is the roles to feature, the skills up front and the
  * responsibilities confirmed.
  */
+export type Prep = ReturnType<typeof usePrep>
+
 export function usePrep({ job, profile, questions, probe }: PrepInputs) {
-  const { experience, projects, entryOf, updateEntry, whereLabel, remember, forget, mutations } = useNotes(profile)
+  const notes = useNotes(profile)
+  const { experience, projects, entryOf, updateEntry, whereLabel, mutations } = notes
+  const answers = useAnswers(notes)
   const state = reactive({
     skip: {} as Record<string, boolean>,
     focus: null as string[] | null,
-    drafts: {} as Record<string, string>,
     places: {} as Record<string, Place>,
-    gaps: {} as Record<string, GapAnswer>,
-    claims: {} as Record<number, ClaimAnswer>,
-    probes: {} as Record<number, GapAnswer>,
-    saving: {} as Record<string, boolean>,
-    errors: {} as Record<string, string | undefined>,
   })
 
   const current = () => toValue(profile)
@@ -48,12 +47,6 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   const known = computed(() => (current() ? knownSkills(current()!) : []))
   const match = computed(() => matchJob(toValue(job) ?? { must_have: [], nice_to_have: [] }, known.value))
   const includedRoles = computed(() => experience.value.filter(role => !state.skip[role.id]))
-
-  const draft = (key: string) => state.drafts[key] ?? ''
-  const setDraft = (key: string, value: string) => {
-    state.drafts[key] = value
-  }
-  const canAdd = (key: string) => draft(key).trim().length >= MIN_ANSWER && !state.saving[key]
 
   const choices = computed(() => [
     ...includedRoles.value.map(role => ({ id: `experience:${role.id}`, label: role.company || role.role, where: `${role.role}${role.company ? ` at ${role.company}` : ''}` })),
@@ -72,95 +65,11 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     state.places[key] = id
   }
 
-  /** Runs one save for a question, keeping its error next to it. */
-  async function saving(key: string, work: () => Promise<void>) {
-    state.saving[key] = true
-    state.errors[key] = undefined
-    try {
-      await work()
-    }
-    catch (error) {
-      state.errors[key] = await serviceErrorMessage(error)
-    }
-    finally {
-      state.saving[key] = false
-    }
-  }
-
-  async function addGap(skill: string) {
-    const key = `g:${skill}`
-    if (!canAdd(key)) return
-    await saving(key, async () => {
-      const remembered = await remember(whereOf(key), draft(key).trim(), [skill])
-      state.gaps[skill] = { status: 'added', remembered }
-    })
-  }
-  function skipGap(skill: string) {
-    state.gaps[skill] = { status: 'skipped' }
-  }
-  async function undoGap(skill: string) {
-    const answer = state.gaps[skill]
-    if (answer?.status !== 'added') {
-      delete state.gaps[skill]
-      return
-    }
-    await saving(`g:${skill}`, async () => {
-      await forget(answer.remembered)
-      delete state.gaps[skill]
-    })
-  }
-
+  const addGap = (skill: string) => answers.add(gapKey(skill), whereOf(gapKey(skill)), () => [skill])
   /** An answer to one of Claude's questions becomes a note of the role or project it is about. */
-  async function answerProbe(index: number, question: ProbeQuestion) {
-    const key = `p:${index}`
-    if (!canAdd(key)) return
-    const text = draft(key).trim()
-    await saving(key, async () => {
-      const remembered = await remember(question.place, text, keywordsIn(text, keywords.value))
-      state.probes[index] = { status: 'added', remembered }
-    })
-  }
-  function skipProbe(index: number) {
-    state.probes[index] = { status: 'skipped' }
-  }
-  async function undoProbe(index: number) {
-    const answer = state.probes[index]
-    if (answer?.status !== 'added') {
-      delete state.probes[index]
-      return
-    }
-    await saving(`p:${index}`, async () => {
-      await forget(answer.remembered)
-      delete state.probes[index]
-    })
-  }
-
-  async function claimYes(index: number) {
-    const key = `c:${index}`
-    if (!canAdd(key)) return
-    const text = draft(key).trim()
-    await saving(key, async () => {
-      const remembered = await remember(whereOf(key), text, keywordsIn(text, keywords.value))
-      state.claims[index] = { status: 'added', remembered }
-    })
-  }
-  function claimNo(index: number) {
-    state.claims[index] = { status: 'no' }
-  }
-  function claimPick(index: number, text: string) {
-    state.claims[index] = { status: 'picked', text }
-  }
-  async function claimUndo(index: number) {
-    const answer = state.claims[index]
-    if (answer?.status !== 'added') {
-      delete state.claims[index]
-      return
-    }
-    await saving(`c:${index}`, async () => {
-      await forget(answer.remembered)
-      delete state.claims[index]
-    })
-  }
+  const answerProbe = (index: number, question: ProbeQuestion) =>
+    answers.add(probeKey(index), question.place, text => keywordsIn(text, keywords.value))
+  const claimYes = (index: number) => answers.add(claimKey(index), whereOf(claimKey(index)), text => keywordsIn(text, keywords.value))
 
   /** The person's own highlights that share one of the job's keywords with a responsibility. */
   function suggestionsFor(responsibility: string) {
@@ -185,14 +94,13 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     const asked = toValue(probe) ?? []
     // Claude's questions cover the job's responsibilities; the rules' questions about them are asked only without Claude.
     const claims = asked.length ? [] : (toValue(questions)?.responsibilities ?? [])
-    const answered = gaps.filter(gap => state.gaps[gap.skill]).length + claims.filter(claim => state.claims[claim.index]).length
-      + asked.filter((_, index) => state.probes[index]).length
+    const answered = [...gaps.map(gap => gapKey(gap.skill)), ...claims.map(claim => claimKey(claim.index)), ...asked.map((_, index) => probeKey(index))]
+      .filter(key => answers.answer(key)).length
     return `${answered} of ${gaps.length + claims.length + asked.length} questions answered`
   })
 
   // The highlights to strengthen are chosen once, so that a saved result does not move them.
   const impactRows = ref<{ key: string, roleId: string, index: number, bullet: string }[] | null>(null)
-  const impacts = reactive<Record<string, string>>({})
   watch(() => includedRoles.value[0], (role) => {
     if (impactRows.value || !current()) return
     impactRows.value = (role?.bullets ?? [])
@@ -206,7 +114,7 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     const target = row && entryOf(`experience:${row.roleId}`)
     const bullet = target?.entry.bullets[row!.index]
     if (!target || !bullet || bullet.text !== row!.bullet || bullet.result === value.trim()) return
-    await saving(`i:${key}`, () => updateEntry(`experience:${row!.roleId}`, entry => ({
+    await answers.saving(`i:${key}`, () => updateEntry(`experience:${row!.roleId}`, entry => ({
       bullets: entry.bullets.map((item, index) => (index === row!.index && item.text === row!.bullet ? { ...item, result: value.trim() } : item)),
     })))
   }
@@ -216,7 +124,7 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   async function saveNote() {
     const lines = note.value.split('\n').map(line => line.trim()).filter(Boolean).slice(0, 10)
     if (lines.join('\n') === (current()?.additional_info ?? []).join('\n')) return
-    await saving('note', async () => {
+    await answers.saving('note', async () => {
       await mutations.patch.mutateAsync({ additional_info: lines })
     })
   }
@@ -249,17 +157,18 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
       job_id: jobId,
       skip_roles: Object.keys(state.skip).filter(id => state.skip[id]),
       focus: state.focus ?? [],
-      confirmed: Object.entries(state.claims)
-        .filter(([, answer]) => answer.status !== 'no')
-        .map(([index]) => Number(index)),
+      confirmed: (toValue(questions)?.responsibilities ?? [])
+        .filter((claim) => {
+          const kept = answers.answer(claimKey(claim.index))
+          return kept && kept.status !== 'skipped'
+        })
+        .map(claim => claim.index),
     }
   }
 
   return {
     state,
-    draft,
-    setDraft,
-    canAdd,
+    answers,
     whereLabel,
     roleChoices,
     pickRole,
@@ -268,19 +177,11 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     known,
     matchLabel,
     addGap,
-    skipGap,
-    undoGap,
     answerProbe,
-    skipProbe,
-    undoProbe,
     claimYes,
-    claimNo,
-    claimPick,
-    claimUndo,
     suggestionsFor,
     progress,
     impactRows: computed(() => impactRows.value ?? []),
-    impacts,
     saveImpact,
     note,
     saveNote,

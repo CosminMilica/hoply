@@ -64,8 +64,7 @@ Then write the CV from the plan:
     solved, some are short. Bullets of the same length and build read as generated.
   - Present tense for a role marked `current`, past tense otherwise; a specific verb first, never the same first word
     on more than two bullets of the CV. Keep every number the facts give; add none. At most 180 characters.
-  - Plain words: never "leverage", "spearhead", "orchestrate", "robust", "seamless", "end-to-end", "full-stack
-    observability", "utilize", "facilitate", "ensure", "streamline", "comprehensive", "successfully", "effectively".
+  - Plain words: never {{stock_words}}.
   - Read each bullet aloud. If it sounds like a list of tasks, a job description or a keyword was attached to it,
     rewrite it.
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ProbeQuestionCard, { type ProbeAnswer } from '../components/ProbeQuestionCard.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
@@ -12,11 +11,14 @@ import { requirementsOf } from '@/features/jobs/match'
 import { cleanList } from '@/features/profile/api/profile.schema'
 import { useProfileMutations, useProfileQuery } from '@/features/profile/composables/useProfile'
 import type { CvStatus } from '../api/cv.schema'
+import ClaimCard from '../components/ClaimCard.vue'
+import CloseCard from '../components/CloseCard.vue'
+import GapCard from '../components/GapCard.vue'
 import GeneratingSteps from '../components/GeneratingSteps.vue'
-import RolePicker from '../components/RolePicker.vue'
-import StatusTag from '../components/StatusTag.vue'
+import ImpactRows from '../components/ImpactRows.vue'
+import ProbeQuestionCard from '../components/ProbeQuestionCard.vue'
 import { useCvProbeQuery, useCvProgress, useCvQuestionsQuery, useGenerateCv } from '../composables/useCv'
-import { usePrep } from '../composables/usePrep'
+import { probeKey, usePrep } from '../composables/usePrep'
 
 const props = defineProps<{ id: string }>()
 const STEP_AT = [900, 1800, 2700, 3600]
@@ -94,15 +96,6 @@ watch([elapsed, () => cv.value?.status], ([done, status]) => {
 })
 onBeforeUnmount(clearTimers)
 
-type Answer = { status: string, remembered?: { text: string, place: string }, text?: string }
-const addedText = (answer: Answer) => answer.remembered?.text ?? answer.text ?? ''
-const addedPlace = (answer: Answer) => answer.remembered?.place ?? ''
-function probeAnswer(index: number): ProbeAnswer {
-  const answer = prep.state.probes[index]
-  if (!answer) return undefined
-  return answer.status === 'added' ? { status: 'added', text: addedText(answer), where: prep.whereLabel(addedPlace(answer)) } : { status: 'skipped' }
-}
-
 function addToProfile(skill: string) {
   setSkills.mutate(cleanList([...(profile.data.value?.skills ?? []), skill]))
 }
@@ -165,166 +158,42 @@ function addToProfile(skill: string) {
             v-for="(item, index) in asked"
             :key="index"
             :item="item"
-            :answer="probeAnswer(index)"
-            :draft="prep.draft(`p:${index}`)"
-            :can-add="prep.canAdd(`p:${index}`)"
-            :saving="prep.state.saving[`p:${index}`]"
-            :error="prep.state.errors[`p:${index}`]"
+            :answer="prep.answers.shown(probeKey(index))"
+            :draft="prep.answers.draft(probeKey(index))"
+            :can-add="prep.answers.canAdd(probeKey(index))"
+            :saving="prep.answers.state.saving[probeKey(index)]"
+            :error="prep.answers.state.errors[probeKey(index)]"
             add-label="Add to my CV"
-            @update:draft="(value: string) => prep.setDraft(`p:${index}`, value)"
+            @update:draft="(value: string) => prep.answers.setDraft(probeKey(index), value)"
             @add="prep.answerProbe(index, item)"
-            @skip="prep.skipProbe(index)"
-            @undo="prep.undoProbe(index)"
+            @skip="prep.answers.skip(probeKey(index))"
+            @undo="prep.answers.undo(probeKey(index))"
           />
         </section>
 
         <section v-if="questions.data.value.related.length" class="flex flex-col gap-2.5">
           <SectionLabel>Close to what you know</SectionLabel>
-          <div v-for="close in questions.data.value.related" :key="close.skill" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="close">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="m-0 text-[17px] font-extrabold tracking-tight">{{ close.skill }}</h3>
-              <StatusTag v-if="prep.state.gaps[close.skill]?.status === 'added'" label="Added" tone="added" />
-              <StatusTag v-else label="Close" tone="close" />
-            </div>
-            <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ close.note }}</p>
-            <template v-if="prep.state.gaps[close.skill]?.status === 'added'">
-              <p class="m-0 text-sm leading-snug font-medium">{{ addedText(prep.state.gaps[close.skill]!) }}</p>
-              <UButton label="Change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="prep.state.saving[`g:${close.skill}`]" @click="prep.undoGap(close.skill)" />
-            </template>
-            <details v-else class="flex flex-col gap-2">
-              <summary class="cursor-pointer text-[13px] font-bold text-hoply-300">I have used {{ close.skill }} myself</summary>
-              <div class="mt-2 flex flex-col gap-2">
-                <UTextarea
-                  :model-value="prep.draft(`g:${close.skill}`)"
-                  :aria-label="`Your experience with ${close.skill}`"
-                  :placeholder="`Where you used ${close.skill} and what you did with it`"
-                  :rows="3"
-                  class="w-full"
-                  @update:model-value="(value: string) => prep.setDraft(`g:${close.skill}`, String(value))"
-                />
-                <RolePicker :name="close.skill" :choices="prep.roleChoices(`g:${close.skill}`)" @pick="id => prep.pickRole(`g:${close.skill}`, id)" />
-                <UButton label="Add to my CV" class="self-start" :disabled="!prep.canAdd(`g:${close.skill}`)" :loading="prep.state.saving[`g:${close.skill}`]" @click="prep.addGap(close.skill)" />
-              </div>
-            </details>
-            <p v-if="prep.state.errors[`g:${close.skill}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`g:${close.skill}`] }}</p>
-          </div>
+          <CloseCard v-for="close in questions.data.value.related" :key="close.skill" :close="close" :prep="prep" />
         </section>
 
         <section v-if="questions.data.value.gaps.length" class="flex flex-col gap-2.5">
           <SectionLabel>Fill the gaps</SectionLabel>
-          <div v-for="gap in questions.data.value.gaps" :key="gap.skill" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="gap">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="m-0 text-[17px] font-extrabold tracking-tight">{{ gap.skill }}</h3>
-              <StatusTag v-if="!prep.state.gaps[gap.skill]" label="Missing" tone="missing" />
-              <StatusTag v-else-if="prep.state.gaps[gap.skill]!.status === 'added'" label="Added" tone="added" />
-              <StatusTag v-else label="Skipped" tone="muted" />
-            </div>
-            <template v-if="!prep.state.gaps[gap.skill]">
-              <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ gap.ask }}</p>
-              <UTextarea
-                :model-value="prep.draft(`g:${gap.skill}`)"
-                :aria-label="`Your experience with ${gap.skill}`"
-                :placeholder="gap.example"
-                :rows="3"
-                class="w-full"
-                @update:model-value="(value: string) => prep.setDraft(`g:${gap.skill}`, String(value))"
-              />
-              <RolePicker :name="gap.skill" :choices="prep.roleChoices(`g:${gap.skill}`)" @pick="id => prep.pickRole(`g:${gap.skill}`, id)" />
-              <div class="flex items-center gap-2.5">
-                <UButton label="Add to my CV" :disabled="!prep.canAdd(`g:${gap.skill}`)" :loading="prep.state.saving[`g:${gap.skill}`]" @click="prep.addGap(gap.skill)" />
-                <UButton label="Skip" color="neutral" variant="outline" @click="prep.skipGap(gap.skill)" />
-              </div>
-            </template>
-            <template v-else-if="prep.state.gaps[gap.skill]!.status === 'added'">
-              <p class="m-0 text-sm leading-snug font-medium">{{ addedText(prep.state.gaps[gap.skill]!) }}</p>
-              <p class="m-0 text-[13px] font-medium text-muted">Saved in your profile under {{ prep.whereLabel(addedPlace(prep.state.gaps[gap.skill]!)) }}</p>
-              <div class="flex flex-wrap items-center gap-3">
-                <span v-if="skills.includes(gap.skill.toLowerCase())" class="text-[13px] font-bold text-hoply-300">In your profile skills</span>
-                <UButton v-else :label="`Also add ${gap.skill} to my skills`" color="neutral" variant="outline" size="sm" @click="addToProfile(gap.skill)" />
-                <UButton label="Change" variant="link" color="neutral" size="sm" class="px-1 text-[13px] text-muted underline" :loading="prep.state.saving[`g:${gap.skill}`]" @click="prep.undoGap(gap.skill)" />
-              </div>
-            </template>
-            <UButton v-else label="Change my mind" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" @click="prep.undoGap(gap.skill)" />
-            <p v-if="prep.state.errors[`g:${gap.skill}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`g:${gap.skill}`] }}</p>
-          </div>
+          <GapCard
+            v-for="gap in questions.data.value.gaps"
+            :key="gap.skill"
+            :gap="gap"
+            :prep="prep"
+            :in-skills="skills.includes(gap.skill.toLowerCase())"
+            @add-skill="addToProfile"
+          />
         </section>
 
         <section v-if="!asked.length" class="flex flex-col gap-2.5">
           <SectionLabel>What this job will ask you to do</SectionLabel>
-          <div v-for="claim in questions.data.value.responsibilities" :key="claim.index" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="claim">
-            <h3 class="m-0 text-sm leading-snug font-bold">{{ claim.question }}</h3>
-            <template v-if="!prep.state.claims[claim.index]">
-              <div v-if="prep.suggestionsFor(claim.text).length" class="flex flex-col gap-1.5" role="group" :aria-label="`From your profile: ${claim.question}`">
-                <SectionLabel as="span">From your profile</SectionLabel>
-                <button
-                  v-for="suggestion in prep.suggestionsFor(claim.text)"
-                  :key="suggestion.text"
-                  type="button"
-                  :aria-pressed="false"
-                  class="flex min-h-11 items-start gap-2 rounded-lg border border-default px-3 py-2 text-left text-[13px] font-medium hover:bg-accented"
-                  @click="prep.claimPick(claim.index, suggestion.text)"
-                >
-                  <UIcon name="i-lucide-check" class="mt-0.5 size-3.5 shrink-0 text-hoply-400" />
-                  <span><span class="font-bold">{{ suggestion.label }}:</span> {{ suggestion.text }}</span>
-                </button>
-              </div>
-              <UTextarea
-                :model-value="prep.draft(`c:${claim.index}`)"
-                aria-label="What exactly did you do?"
-                placeholder="In your own words: what did you do, where, and what changed? Numbers help."
-                :rows="3"
-                class="w-full"
-                @update:model-value="(value: string) => prep.setDraft(`c:${claim.index}`, String(value))"
-              />
-              <UButton
-                v-if="!prep.draft(`c:${claim.index}`).trim()"
-                label="Start from the job’s wording, then make it yours"
-                variant="link"
-                size="sm"
-                class="self-start px-1 text-[13px] text-hoply-400 underline"
-                @click="prep.setDraft(`c:${claim.index}`, claim.prefill)"
-              />
-              <RolePicker :name="claim.question" :choices="prep.roleChoices(`c:${claim.index}`)" @pick="id => prep.pickRole(`c:${claim.index}`, id)" />
-              <div class="flex flex-wrap items-center gap-2.5">
-                <UButton label="Add to my CV" :disabled="!prep.canAdd(`c:${claim.index}`)" :loading="prep.state.saving[`c:${claim.index}`]" @click="prep.claimYes(claim.index)" />
-                <UButton label="Not really" color="neutral" variant="outline" @click="prep.claimNo(claim.index)" />
-              </div>
-            </template>
-            <template v-else>
-              <div class="flex items-center justify-between gap-2">
-                <StatusTag
-                  :label="{ added: 'Added', picked: 'From your profile', no: 'Left out' }[prep.state.claims[claim.index]!.status]"
-                  :tone="prep.state.claims[claim.index]!.status === 'no' ? 'muted' : 'added'"
-                />
-                <UButton label="Change" variant="link" color="neutral" size="sm" class="px-1 text-[13px] text-muted underline" :loading="prep.state.saving[`c:${claim.index}`]" @click="prep.claimUndo(claim.index)" />
-              </div>
-              <template v-if="prep.state.claims[claim.index]!.status !== 'no'">
-                <p class="m-0 text-sm leading-snug font-medium">{{ addedText(prep.state.claims[claim.index]!) }}</p>
-                <p v-if="prep.state.claims[claim.index]!.status === 'added'" class="m-0 text-[13px] font-medium text-muted">
-                  Saved in your profile under {{ prep.whereLabel(addedPlace(prep.state.claims[claim.index]!)) }}
-                </p>
-              </template>
-            </template>
-            <p v-if="prep.state.errors[`c:${claim.index}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`c:${claim.index}`] }}</p>
-          </div>
+          <ClaimCard v-for="claim in questions.data.value.responsibilities" :key="claim.index" :claim="claim" :prep="prep" />
         </section>
 
-        <section v-if="prep.impactRows.value.length" class="flex flex-col gap-2.5">
-          <SectionLabel>Make your bullets hit harder</SectionLabel>
-          <p class="m-0 text-[13px] leading-snug font-medium text-muted">Screening favors results you can measure. What changed because of each of these? A number, a time saved, a cost, a count of people. We save it with the highlight in your profile.</p>
-          <div v-for="row in prep.impactRows.value" :key="row.key" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3">
-            <p class="m-0 text-sm leading-snug font-bold">{{ row.bullet }}</p>
-            <UInput
-              v-model="prep.impacts[row.key]"
-              aria-label="What changed because of it"
-              placeholder="e.g. cut release time from 2 hours to 15 minutes"
-              maxlength="200"
-              class="w-full"
-              @change="prep.saveImpact(row.key, prep.impacts[row.key] ?? '')"
-            />
-            <p v-if="prep.state.errors[`i:${row.key}`]" role="alert" class="m-0 text-sm font-bold text-error">{{ prep.state.errors[`i:${row.key}`] }}</p>
-          </div>
-        </section>
+        <ImpactRows :prep="prep" />
 
         <section class="flex flex-col gap-2">
           <SectionLabel>Roles to feature</SectionLabel>
@@ -358,7 +227,7 @@ function addToProfile(skill: string) {
         <UFormField
           label="Anything else that makes you a better fit?"
           description="Certifications, side projects, awards, relocation. One per line. We keep them in your profile’s additional information."
-          :error="prep.state.errors.note"
+          :error="prep.answers.state.errors.note"
           :ui="{ label: 'text-xs font-extrabold tracking-wider text-muted uppercase', description: 'text-[13px] leading-snug font-medium' }"
         >
           <UTextarea

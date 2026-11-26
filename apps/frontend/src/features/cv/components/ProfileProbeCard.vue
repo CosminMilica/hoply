@@ -3,13 +3,14 @@ import { computed } from 'vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { useProfileProbeQuery } from '../composables/useCv'
-import { useProbeAnswers } from '../composables/useProbeAnswers'
+import { useAnswers } from '../composables/useAnswers'
+import { useNotes } from '../composables/useNotes'
 import ProbeQuestionCard from './ProbeQuestionCard.vue'
 
 const props = defineProps<{ profile: Profile }>()
 const probe = useProfileProbeQuery()
 const asked = computed(() => (probe.data.value?.status === 'ready' ? probe.data.value.questions : []))
-const answers = useProbeAnswers(() => props.profile)
+const answers = useAnswers(useNotes(() => props.profile))
 </script>
 
 <template>
@@ -27,16 +28,16 @@ const answers = useProbeAnswers(() => props.profile)
       v-for="(item, index) in asked"
       :key="index"
       :item="item"
-      :answer="answers.answerOf(index)"
-      :draft="answers.draft(index)"
-      :can-add="answers.canAdd(index)"
+      :answer="answers.shown(`${index}`)"
+      :draft="answers.draft(`${index}`)"
+      :can-add="answers.canAdd(`${index}`)"
       :saving="answers.state.saving[index]"
       :error="answers.state.errors[index]"
       add-label="Add to my profile"
-      @update:draft="(value: string) => answers.setDraft(index, value)"
-      @add="answers.answer(index, item)"
-      @skip="answers.skip(index)"
-      @undo="answers.undo(index)"
+      @update:draft="(value: string) => answers.setDraft(`${index}`, value)"
+      @add="answers.add(`${index}`, item.place)"
+      @skip="answers.skip(`${index}`)"
+      @undo="answers.undo(`${index}`)"
     />
   </section>
 </template>

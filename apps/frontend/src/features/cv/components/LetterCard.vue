@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { saveFile } from '@/features/common/download'
 import { computed, ref, watch } from 'vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import { cvApi } from '../api/cvApi'
@@ -67,13 +68,7 @@ async function download(format: 'pdf' | 'docx') {
   downloading.value = true
   downloadFailed.value = false
   try {
-    const file = await cvApi.letterFile(props.cvId, format, props.template, drafts.value.letter.body)
-    const url = URL.createObjectURL(file.blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = file.name
-    link.click()
-    URL.revokeObjectURL(url)
+    saveFile(await cvApi.letterFile(props.cvId, format, props.template, drafts.value.letter.body))
   }
   catch {
     downloadFailed.value = true

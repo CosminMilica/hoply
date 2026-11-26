@@ -34,8 +34,8 @@ Read the draft the way you would in your first minute with it, then make it bett
   the sentence belongs in `skills`, not in a bullet.
 - Are the verbs strong and varied, the tense right (present for a `current` role), every bullet at most 180
   characters, the summary at most 330 and free of "seeking", "passionate" and similar filler?
-- Does it fit `page_limit` pages with the bullet limits of the draft's instructions (one page: at most 5 bullets for
-  the first role, 3 for the others, 2 projects of 2 bullets)?
+- Does it fit `page_limit` pages with these bullet limits: one page, at most 5 bullets for the first role and 3 for
+  each other; two pages, at most 6 and 4; and at most 2 projects of 2 bullets either way?
 
 Return the improved CV in the same shape as the draft, with its `plan` updated to match, and in `changes` up to 8
 short notes on what you changed and why. Keep what is already strong. The same rules bind you: every sentence cites

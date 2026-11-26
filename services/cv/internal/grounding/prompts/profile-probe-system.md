@@ -17,12 +17,7 @@ Each question:
 Return `questions`, each with:
 - `target`: the id of the fact it is about (`E1.N3`), or of the role or project (`E1`, `P2`);
 - `theme`: the area of work, in a few words ("Infrastructure as code", "Newsletter");
-- `question`: the question, addressed to the person ("you");
 - `why`: one short sentence the person reads, on what the answer adds to every CV;
-- `example`: a short sample answer with placeholders in angle brackets ("Used by <number> teams"), never a made-up
-  fact;
-- `choices`: when the answer is a count, a size, a frequency or a before and after, 2 to 4 answers the person can
-  pick, as ranges in their field's terms, each a whole phrase that could stand in their CV ("Used by 5–20 teams").
-  Ranges that do not overlap, from small to large. [] for a question that needs a story.
+{{answer_fields}}
 
 Write in English.

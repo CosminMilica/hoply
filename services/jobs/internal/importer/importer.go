@@ -25,7 +25,7 @@ import (
 //go:embed boards.yaml
 var boardsYAML []byte
 
-// Board is a company's job board on one of fetch.Platforms.
+// Board is a company's job board on one of the platforms fetch.List reads.
 type Board struct {
 	Company  string `yaml:"company"`
 	Platform string `yaml:"platform"`
@@ -313,12 +313,7 @@ func wanted(p fetch.Posting) bool {
 		return false
 	}
 	_, country := extract.Place(strings.Join(append(slices.Clone(p.Places), p.Page.Location, p.Page.City), " · "))
-	return p.InCountry || country == "Romania" || romaniaCode(p.Page.Country)
-}
-
-func romaniaCode(value string) bool {
-	code := extract.Fold(strings.TrimSpace(value))
-	return code == "ro" || code == "rou" || code == "romania"
+	return p.InCountry || country == "Romania" || extract.IsRomania(p.Page.Country)
 }
 
 // Job turns a posting into the job to keep, or reports false when the job is
@@ -326,7 +321,7 @@ func romaniaCode(value string) bool {
 func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 	where := strings.Join(append(slices.Clone(p.Places), p.Page.Location, p.Page.City), " · ")
 	city, country := extract.Place(where)
-	if country == "" && (p.InCountry || romaniaCode(p.Page.Country)) {
+	if country == "" && (p.InCountry || extract.IsRomania(p.Page.Country)) {
 		country = "Romania"
 	}
 	areas := extract.AreasOf(p.Page.Title)
@@ -337,7 +332,7 @@ func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 	return models.ImportedJob{
 		JobInput: models.JobInput{
 			Title: read.Title, Company: b.Company, City: city, Country: country,
-			WorkMode: firstOf(p.Page.WorkMode, extract.WorkMode(where+" "+p.Page.Title), read.WorkMode),
+			WorkMode: extract.FirstOf(p.Page.WorkMode, extract.WorkMode(where+" "+p.Page.Title), read.WorkMode),
 			Level:    read.Level, YearsRequired: read.YearsRequired, MustHave: read.MustHave, NiceToHave: read.NiceToHave,
 			Responsibilities: read.Responsibilities, Qualifications: read.Qualifications, Bonuses: read.Bonuses, About: read.About,
 			AboutCompany: read.AboutCompany, Perks: read.Perks, URL: p.URL, Source: "import", ReadFrom: p.Page.ReadFrom,
@@ -378,13 +373,4 @@ func sleep(ctx context.Context, d time.Duration) bool {
 	case <-timer.C:
 		return true
 	}
-}
-
-func firstOf(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
 }

@@ -38,10 +38,8 @@ How to write:
   sentences.
 - Name at most two tools in a sentence. Never tack a participle onto the end of a sentence (", delivering…",
   ", which fits your aim to…"): give it its own sentence or drop it.
-- Never write: "passionate", "team player", "hard-working", "results-driven", "detail-oriented", "perfect fit",
-  "dream job", "excited to apply", "I am writing to", "I believe I would be", "I look forward to hearing from you",
-  "would love the opportunity", "hit the ground running", "add value", "To whom it may concern", "robust",
-  "leverage", flattery, or praise of a culture the ad does not describe. No em dashes, no exclamation marks, no lists.
+- Never write {{letter_cliches}}, flattery, or praise of a culture the ad does not describe. No em dashes, no
+  exclamation marks, no lists.
 - Every sentence cites, in `facts`, the facts it rests on; a sentence about the company cites J facts, a sentence
   about the person cites theirs, a request for a call cites the role's J fact. Write only what the cited facts say: no
   number, tool, result, title or responsibility they do not hold.

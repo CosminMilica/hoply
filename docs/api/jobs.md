@@ -61,7 +61,7 @@ Board     { company, platform, board, followed_at }
 | `level` | `""`, `junior`, `mid`, `senior`, `lead` |
 | `years_required` | `null` or 0–40 |
 | `source` | `catalog`, `import`, `link`, `text` |
-| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`, `sitemap`), else `""` |
+| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`), else `""` |
 | `posted_at` | when the board published an imported job, else `null` |
 | `closed_at` | when the board stopped listing an imported job, else `null` |
 | `read_from` | `ats_api` (the job board's public API, see below), `json_ld` (the page's schema.org `JobPosting`), `page_text` (the page's main text), `text` (pasted), `""` for catalog jobs |
@@ -181,7 +181,6 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
 | `smartrecruiters` | `api.smartrecruiters.com/v1/companies/{board}/postings?country=ro`, 100 a page; each wanted job's description from `/postings/{id}` |
 | `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
-| `sitemap` | the career site's sitemap; its links with a `/job/` or `/jobs/` segment, each wanted page read like a link (JSON-LD first) |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
   country code `RO`, or a list the platform kept to Romania) and its title names one of the tech areas: `DevOps`,
@@ -191,7 +190,7 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
   (the job is only marked as still listed). Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform, its board and the platform's id: a later run updates it and keeps requirements Claude's
   analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
-  answers with no jobs, whose list stopped at its cap (Workday 400, SmartRecruiters 500, a sitemap 5000), or whose
+  answers with no jobs, whose list stopped at its cap (Workday 400, SmartRecruiters 500), or whose
   descriptions could not all be read, closes nothing. A run that read the followed
   boards also closes the jobs of every board no longer listed or followed.
 - A board that fails is logged and skipped; the others still run. Answers are capped at 32 MB and 30 s.

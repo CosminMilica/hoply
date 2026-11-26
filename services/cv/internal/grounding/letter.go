@@ -18,6 +18,10 @@ import (
 //go:embed prompts/letter-system.md
 var LetterSystem string
 
+func init() {
+	LetterSystem = strings.Replace(LetterSystem, "{{letter_cliches}}", cvdoc.Quoted(cvdoc.LetterCliches), 1)
+}
+
 //go:embed prompts/letter.schema.json
 var letterSchema []byte
 
@@ -26,13 +30,6 @@ func LetterSchema() string { return compact(letterSchema) }
 
 // MaxConnectionNote is LinkedIn's limit for the note of a connection request.
 const MaxConnectionNote = 300
-
-// cliches are what recruiters skip and what reads as written by a machine.
-var cliches = []string{"passionate", "team player", "hard-working", "hardworking", "results-driven", "detail-oriented",
-	"perfect fit", "perfect candidate", "dream job", "i am writing to", "i'm writing to", "i believe i would be",
-	"to whom it may concern", "just checking in", "look forward to hearing", "please find attached",
-	"would love the opportunity", "excited to apply", "exceptional addition", "uniquely positions", "hit the ground running",
-	"one more reason i fit", "!"}
 
 // WithJob is the catalogue with what the ad says about the role and the company
 // as facts J1, J2…, which the letter's sentences about the company cite.
@@ -145,10 +142,13 @@ func ParseLetter(raw json.RawMessage) (LetterAnswer, error) {
 // when it can: Check's rules, where the company may be named, and no cliché.
 func (c Catalogue) CheckLetter(sentence Sentence) string {
 	lower := strings.ToLower(sentence.Text)
-	for _, cliche := range cliches {
+	for _, cliche := range cvdoc.LetterCliches {
 		if strings.Contains(lower, cliche) {
 			return fmt.Sprintf("says %q", cliche)
 		}
+	}
+	if strings.Contains(lower, "!") {
+		return `says "!"`
 	}
 	// The job's own title may name a skill the person lacks; saying it is not claiming it.
 	if title := strings.TrimSpace(c.JobTitle); title != "" {

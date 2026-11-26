@@ -147,7 +147,7 @@ func TestWorkdayList(t *testing.T) {
 	}
 }
 
-func TestSmartRecruitersAndSitemapLists(t *testing.T) {
+func TestSmartRecruitersList(t *testing.T) {
 	api := newFixtureServer(t, map[string]answer{
 		"/v1/companies/NorthwindGroup/postings": asJSON(t, map[string]any{"totalFound": 1, "content": []map[string]any{
 			{"id": "7440001", "name": "Junior Network Administrator", "releasedDate": "2026-11-18T08:00:00.000Z", "company": map[string]any{"name": "Northwind Group"},
@@ -156,17 +156,7 @@ func TestSmartRecruitersAndSitemapLists(t *testing.T) {
 		"/v1/companies/NorthwindGroup/postings/7440001": {"application/json", boardFixtures(t)["/v1/companies/NorthwindGroup/postings/7440001"]},
 		"/v1/companies/Broken/postings":                 {"application/json", "["},
 	})
-	posting := `<html><head><script type="application/ld+json">{"@type":"JobPosting","title":"Platform Engineer","hiringOrganization":{"name":"Northwind Bank"},` +
-		`"jobLocation":{"address":{"addressLocality":"Bucharest","addressCountry":"RO"}},"description":"<p>Requirements</p><ul><li>Kubernetes</li></ul>"}</script></head><body></body></html>`
-	site := newFixtureServer(t, map[string]answer{
-		"/sitemap.xml": {"text/xml", `<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
-			`<url><loc>https://careers.northwind.example/en/job/bucharest/platform-engineer-northwind-bank/1</loc></url>` +
-			`<url><loc>https://careers.northwind.example/en/category/it-jobs</loc></url>` +
-			`<url><loc>https://elsewhere.example/en/job/bucharest/x/2</loc></url></urlset>`},
-		"/en/job/bucharest/platform-engineer-northwind-bank/1": {"text/html", posting},
-		"/broken.xml": {"application/xml", "<urlset><url>"},
-	})
-	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"api.smartrecruiters.com": api.URL, "careers.northwind.example": site.URL}})
+	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"api.smartrecruiters.com": api.URL}})
 	ctx := context.Background()
 
 	jobs, _, err := reader.List(ctx, "smartrecruiters", "NorthwindGroup", importer.Romania)
@@ -182,26 +172,6 @@ func TestSmartRecruitersAndSitemapLists(t *testing.T) {
 	}
 	if _, _, err := reader.List(ctx, "smartrecruiters", "Broken", importer.Romania); err == nil {
 		t.Fatal("a broken answer fails")
-	}
-
-	pages, _, err := reader.List(ctx, "sitemap", "https://careers.northwind.example/sitemap.xml", importer.Romania)
-	if err != nil || len(pages) != 1 || pages[0].Page.Title != "platform engineer northwind bank" || !strings.Contains(pages[0].Places[0], "bucharest") {
-		t.Fatalf("sitemap: %+v %v", pages, err)
-	}
-	if err := reader.Describe(ctx, &pages[0]); err != nil || pages[0].Page.Title != "Platform Engineer" || pages[0].Page.ReadFrom != "json_ld" ||
-		!slices.Contains(pages[0].Places, "Bucharest") {
-		t.Fatalf("sitemap described: %+v %v", pages[0], err)
-	}
-	if _, _, err := reader.List(ctx, "sitemap", "https://careers.northwind.example/broken.xml", importer.Romania); err == nil {
-		t.Fatal("a broken sitemap fails")
-	}
-	gone := fetch.Posting{}
-	if missing, _, _ := reader.List(ctx, "sitemap", "https://careers.northwind.example/sitemap.xml", importer.Romania); len(missing) == 1 {
-		gone = missing[0]
-	}
-	site.Close()
-	if err := reader.Describe(ctx, &gone); err == nil {
-		t.Fatal("a page that cannot be read fails")
 	}
 }
 
