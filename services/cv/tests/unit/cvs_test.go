@@ -423,13 +423,13 @@ func (m *memoryProbes) SaveProbe(_ context.Context, ident identity.IdentityConte
 
 // fakeProber answers with its questions, or fails.
 type fakeProber struct {
-	mu        sync.Mutex
+	mu           sync.Mutex
 	calls        int
 	profileCalls int
 	analyzed     int
-	fail      bool
-	available bool
-	release   chan struct{}
+	fail         bool
+	available    bool
+	release      chan struct{}
 }
 
 func (f *fakeProber) Questions(context.Context, models.Job, models.Profile) ([]models.ProbeQuestion, error) {
