@@ -88,8 +88,9 @@ func (s *CvService) Analyze(ctx context.Context, ident identity.IdentityContext,
 	return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}, nil
 }
 
-// ProbeTimeout is the longest asking for one job's questions may take.
-const ProbeTimeout = 5 * time.Minute
+// ProbeTimeout is the longest asking for one job's questions may take: the job's analysis and two attempts, each
+// up to Claude's 3-minute deadline, plus a margin.
+const ProbeTimeout = 10 * time.Minute
 
 // WithProbes lets the service ask Claude for each job's questions and keep them.
 func (s *CvService) WithProbes(store repositories.Probes, prober Prober) *CvService {
@@ -103,6 +104,9 @@ func (s *CvService) WithProbes(store repositories.Probes, prober Prober) *CvServ
 func (s *CvService) Probe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*models.Probe, error) {
 	if err := requireSubject(ident); err != nil {
 		return nil, err
+	}
+	if pending := s.stillAsking(ident, jobID); pending != nil {
+		return pending, nil
 	}
 	job, _, err := s.sources.Job(ctx, jobID)
 	if err != nil {
@@ -124,6 +128,9 @@ func (s *CvService) ProfileProbe(ctx context.Context, ident identity.IdentityCon
 	if err := requireSubject(ident); err != nil {
 		return nil, err
 	}
+	if pending := s.stillAsking(ident, uuid.Nil); pending != nil {
+		return pending, nil
+	}
 	profile, _, err := s.sources.Profile(ctx)
 	if err != nil {
 		return nil, err
@@ -132,6 +139,19 @@ func (s *CvService) ProfileProbe(ctx context.Context, ident identity.IdentityCon
 	return s.probe(ctx, ident, uuid.Nil, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
 		return s.prober.ProfileQuestions(ctx, profile)
 	})
+}
+
+func probeKey(ident identity.IdentityContext, jobID uuid.UUID) string {
+	return ident.TenantID.String() + "/" + ident.Subject + "/" + jobID.String()
+}
+
+// stillAsking answers pending while the questions are being asked, before the job and the profile are read: the
+// page polls every few seconds until they are ready.
+func (s *CvService) stillAsking(ident identity.IdentityContext, jobID uuid.UUID) *models.Probe {
+	if s.probes == nil || s.prober == nil || !s.isAsking(probeKey(ident, jobID)) {
+		return nil
+	}
+	return &models.Probe{Status: models.ProbePending, Questions: []models.ProbeQuestion{}}
 }
 
 // probe answers the kept questions when they were asked for the facts as they
@@ -146,7 +166,7 @@ func (s *CvService) probe(ctx context.Context, ident identity.IdentityContext, j
 	if err != nil {
 		return nil, err
 	}
-	key := ident.TenantID.String() + "/" + ident.Subject + "/" + jobID.String()
+	key := probeKey(ident, jobID)
 	if stored != nil && stored.Fingerprint == fingerprint {
 		switch {
 		case stored.Status == models.ProbeReady:

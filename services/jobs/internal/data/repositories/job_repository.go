@@ -28,6 +28,7 @@ import (
 // job the caller cannot see; Delete removes only the caller's own job.
 type JobRepository interface {
 	List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.Job, error)
+	Count(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) (int, error)
 	Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error)
 	Create(ctx context.Context, ident identity.IdentityContext, data models.JobInput) (*models.Job, error)
 	Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error)
@@ -41,6 +42,10 @@ type ImportStore interface {
 	Import(ctx context.Context, job models.ImportedJob, seen time.Time) (bool, error)
 	// Close closes the open jobs of a board that it last listed before seen, and returns how many.
 	Close(ctx context.Context, origin, board string, seen time.Time) (int64, error)
+	// Fresh returns the ids of a board's open jobs whose description was read at or after since.
+	Fresh(ctx context.Context, origin, board string, since time.Time) (map[string]bool, error)
+	// Seen marks a board's jobs as listed at seen, without reading them again.
+	Seen(ctx context.Context, origin, board string, ids []string, seen time.Time) error
 	// CloseUnlisted closes the open jobs of every board but these, given as platform and board pairs, and returns
 	// how many: the jobs of a company taken off the list.
 	CloseUnlisted(ctx context.Context, origins, boards []string) (int64, error)
@@ -90,7 +95,8 @@ func (r *PgJobRepository) WithScope(scope Scope) *PgJobRepository {
 	return &scoped
 }
 
-func (r *PgJobRepository) List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.Job, error) {
+// filtered is the WHERE clause and its arguments for a filter, as the caller sees the jobs.
+func filtered(ident identity.IdentityContext, filter models.JobFilter) (string, []any) {
 	where, args := []string{visible}, []any{ident.TenantID, ident.Subject}
 	arg := func(value any) string {
 		args = append(args, value)
@@ -126,13 +132,19 @@ func (r *PgJobRepository) List(ctx context.Context, ident identity.IdentityConte
 	} else {
 		where = append(where, "closed_at IS NULL")
 	}
+	return strings.Join(where, " AND "), args
+}
+
+func (r *PgJobRepository) List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.Job, error) {
+	where, args := filtered(ident, filter)
 	limit := ""
 	if filter.Limit > 0 {
-		limit = " LIMIT " + arg(filter.Limit)
+		args = append(args, filter.Limit)
+		limit = fmt.Sprintf(" LIMIT $%d", len(args))
 	}
 	var jobs []models.Job
 	err := r.run(ctx, ident, func(db DBTX) error {
-		rows, err := db.Query(ctx, "SELECT "+jobColumns+" FROM jobs WHERE "+strings.Join(where, " AND ")+
+		rows, err := db.Query(ctx, "SELECT "+jobColumns+" FROM jobs WHERE "+where+
 			" ORDER BY COALESCE(posted_at, created_at) DESC, id"+limit, args...)
 		if err != nil {
 			return err
@@ -144,6 +156,16 @@ func (r *PgJobRepository) List(ctx context.Context, ident identity.IdentityConte
 		return nil, err
 	}
 	return nonNil(jobs), nil
+}
+
+// Count is how many jobs the filter finds, its limit aside.
+func (r *PgJobRepository) Count(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) (int, error) {
+	where, args := filtered(ident, filter)
+	total := 0
+	err := r.run(ctx, ident, func(db DBTX) error {
+		return db.QueryRow(ctx, "SELECT count(*) FROM jobs WHERE "+where, args...).Scan(&total)
+	})
+	return total, err
 }
 
 func (r *PgJobRepository) Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error) {
@@ -186,8 +208,8 @@ func (r *PgJobRepository) Import(ctx context.Context, j models.ImportedJob, seen
 	err := r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
 		return db.QueryRow(ctx, "INSERT INTO jobs (title, company, city, country, work_mode, level, years_required, must_have, "+
 			"nice_to_have, responsibilities, about, areas, url, source, read_from, origin, external_id, board, posted_at, last_seen_at, "+
-			"qualifications, bonuses, about_company, perks) "+
-			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) "+
+			"qualifications, bonuses, about_company, perks, read_at) "+
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $19) "+
 			"ON CONFLICT (origin, board, external_id) WHERE source = 'import' DO UPDATE SET title = EXCLUDED.title, "+
 			"company = EXCLUDED.company, city = EXCLUDED.city, country = EXCLUDED.country, work_mode = EXCLUDED.work_mode, "+
 			"level = EXCLUDED.level, years_required = EXCLUDED.years_required, "+
@@ -196,7 +218,7 @@ func (r *PgJobRepository) Import(ctx context.Context, j models.ImportedJob, seen
 			"responsibilities = EXCLUDED.responsibilities, about = EXCLUDED.about, areas = EXCLUDED.areas, url = EXCLUDED.url, "+
 			"qualifications = EXCLUDED.qualifications, bonuses = EXCLUDED.bonuses, about_company = EXCLUDED.about_company, perks = EXCLUDED.perks, "+
 			"read_from = EXCLUDED.read_from, board = EXCLUDED.board, posted_at = COALESCE(EXCLUDED.posted_at, jobs.posted_at), "+
-			"last_seen_at = EXCLUDED.last_seen_at, closed_at = NULL RETURNING xmax = 0",
+			"last_seen_at = EXCLUDED.last_seen_at, read_at = EXCLUDED.read_at, closed_at = NULL RETURNING xmax = 0",
 			j.Title, j.Company, j.City, j.Country, j.WorkMode, j.Level, j.YearsRequired, nonNil(j.MustHave), nonNil(j.NiceToHave),
 			nonNil(j.Responsibilities), j.About, nonNil(j.Areas), j.URL, j.ReadFrom, j.Origin, j.ExternalID, j.Board, j.PostedAt, seen,
 			nonNil(j.Qualifications), nonNil(j.Bonuses), j.AboutCompany, nonNil(j.Perks),
@@ -214,6 +236,31 @@ func (r *PgJobRepository) Close(ctx context.Context, origin, board string, seen 
 		return err
 	})
 	return closed, err
+}
+
+func (r *PgJobRepository) Fresh(ctx context.Context, origin, board string, since time.Time) (map[string]bool, error) {
+	fresh := map[string]bool{}
+	err := r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
+		rows, err := db.Query(ctx, "SELECT external_id FROM jobs WHERE source = 'import' AND origin = $1 AND board = $2 "+
+			"AND closed_at IS NULL AND read_at >= $3", origin, board, since)
+		if err != nil {
+			return err
+		}
+		ids, err := pgx.CollectRows(rows, pgx.RowTo[string])
+		for _, id := range ids {
+			fresh[id] = true
+		}
+		return err
+	})
+	return fresh, err
+}
+
+func (r *PgJobRepository) Seen(ctx context.Context, origin, board string, ids []string, seen time.Time) error {
+	return r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
+		_, err := db.Exec(ctx, "UPDATE jobs SET last_seen_at = $4 WHERE source = 'import' AND origin = $1 AND board = $2 "+
+			"AND external_id = ANY($3)", origin, board, nonNil(ids), seen)
+		return err
+	})
 }
 
 func (r *PgJobRepository) CloseUnlisted(ctx context.Context, origins, boards []string) (int64, error) {

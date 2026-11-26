@@ -336,8 +336,10 @@ var levelWords = []string{"senior", "sr", "staff", "lead", "principal", "junior"
 // level or what follows a separator: "Senior / Staff Fullstack Engineer" is
 // "fullstack engineer", "DevOps Engineer- Senior Associate- Public Sector" is
 // "devops engineer".
+var titleSeparator = regexp.MustCompile(`\s*(?:\s-|-\s|\(|,|\|)`)
+
 func coreTitle(title string) string {
-	if at := regexp.MustCompile(`\s*(?:\s-|-\s|\(|,|\|)`).FindStringIndex(title); at != nil {
+	if at := titleSeparator.FindStringIndex(title); at != nil {
 		title = title[:at[0]]
 	}
 	kept := []string{}

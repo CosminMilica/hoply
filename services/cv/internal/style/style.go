@@ -65,8 +65,11 @@ type linter struct {
 	skills []string
 }
 
+// newLinter checks sentences against the known skills, the longest name first (see tools).
 func newLinter(known []string) *linter {
-	return &linter{report: Report{Findings: []Finding{}, ByRule: map[string]int{}}, skills: known}
+	ordered := slices.Clone(known)
+	slices.SortStableFunc(ordered, func(a, b string) int { return len(b) - len(a) })
+	return &linter{report: Report{Findings: []Finding{}, ByRule: map[string]int{}}, skills: ordered}
 }
 
 func (l *linter) add(where, rule, text string) {
@@ -194,14 +197,12 @@ func LintLetter(texts models.LetterTexts, known []string) Report {
 	return l.done()
 }
 
-// tools are the skills a sentence names, each once, the longest name first so
+// tools are the skills a sentence names, each once; skills come longest first so
 // "GitHub Actions" is not also counted as "GitHub".
 func tools(text string, skills []string) []string {
-	ordered := slices.Clone(skills)
-	slices.SortStableFunc(ordered, func(a, b string) int { return len(b) - len(a) })
 	named := []string{}
 	rest := " " + text + " "
-	for _, skill := range ordered {
+	for _, skill := range skills {
 		skill = strings.TrimSpace(skill)
 		if skill == "" || !cvdoc.HasWord(rest, skill) || slices.ContainsFunc(named, func(seen string) bool { return cvdoc.SameSkill(seen, skill) }) {
 			continue

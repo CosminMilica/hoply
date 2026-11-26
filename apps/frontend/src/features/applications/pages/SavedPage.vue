@@ -24,7 +24,7 @@ const BADGE: Record<ApplicationStatus, string> = {
 
 const router = useRouter()
 const tab = ref<Tab>('all')
-const { tracked, loading } = useTrackedJobs()
+const { tracked, loading, error } = useTrackedJobs()
 const { setStatus, remove } = useApplicationMutations()
 
 const tabs = computed(() => TABS.map(item => ({
@@ -62,6 +62,7 @@ function primary(jobId: string, status: ApplicationStatus) {
     </div>
 
     <USkeleton v-if="loading" class="h-40 w-full rounded-[14px]" />
+    <UAlert v-else-if="error" color="error" variant="subtle" title="We could not load your saved jobs" description="Try again in a moment." />
     <ul v-else-if="visible.length" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 min-[900px]:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
       <li v-for="entry in visible" :key="entry.job.id" class="flex flex-col gap-2.5 rounded-[14px] border border-default bg-elevated p-3.5">
         <div class="flex items-center gap-3">

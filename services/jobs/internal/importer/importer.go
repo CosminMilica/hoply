@@ -127,6 +127,9 @@ func (im *Importer) Import(ctx context.Context, b Board) Result {
 // Interval is how often the importer runs unless JOBS_IMPORT_INTERVAL says otherwise.
 const Interval = 6 * time.Hour
 
+// Refresh is how long a description read with an extra request stays: a job still listed is not read again before.
+const Refresh = 7 * 24 * time.Hour
+
 // FromEnv returns the importer JOBS_IMPORT=on asks for, over the boards in
 // boards.yaml and the followed ones, and how often it runs; nil without
 // JOBS_IMPORT=on.
@@ -236,7 +239,8 @@ func logResult(r Result) {
 }
 
 // board imports one board. The description of a job whose list has none is
-// read only for the jobs the list already shows as wanted. A board that lists
+// read only for the jobs the list already shows as wanted, and not again within
+// Refresh. A board that lists
 // no jobs, whose list was cut short, or whose descriptions could not all be
 // read closes nothing: the jobs missing from its answer may still be open.
 func (im *Importer) board(ctx context.Context, b Board) Result {
@@ -249,16 +253,28 @@ func (im *Importer) board(ctx context.Context, b Board) Result {
 	r.Partial = !complete
 	r.Listed = len(postings)
 	seen := im.now().UTC()
+	fresh, err := im.store.Fresh(ctx, b.Platform, b.Board, seen.Add(-Refresh))
+	if err != nil {
+		r.Err = err
+		return r
+	}
 	described := 0
+	unchanged := []string{}
 	for _, posting := range postings {
 		if !wanted(posting) {
 			continue
 		}
-		if described > 0 && !sleep(ctx, im.pause/4) {
-			r.Err = ctx.Err()
-			return r
+		if posting.NeedsDescribe() {
+			if fresh[posting.ID] {
+				unchanged = append(unchanged, posting.ID)
+				continue
+			}
+			if described > 0 && !sleep(ctx, im.pause/4) {
+				r.Err = ctx.Err()
+				return r
+			}
+			described++
 		}
-		described++
 		if err := im.lister.Describe(ctx, &posting); err != nil {
 			r.Unread++
 			continue
@@ -276,6 +292,12 @@ func (im *Importer) board(ctx context.Context, b Board) Result {
 		if created {
 			r.New++
 		}
+	}
+	if len(unchanged) > 0 {
+		if r.Err = im.store.Seen(ctx, b.Platform, b.Board, unchanged, seen); r.Err != nil {
+			return r
+		}
+		r.Kept += len(unchanged)
 	}
 	if r.Listed > 0 && r.Unread == 0 && !r.Partial {
 		r.Closed, r.Err = im.store.Close(ctx, b.Platform, b.Board, seen)

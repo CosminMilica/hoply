@@ -64,7 +64,22 @@ func (m *memoryJobs) List(_ context.Context, ident identity.IdentityContext, fil
 			jobs = append(jobs, job)
 		}
 	}
+	if filter.Limit > 0 && len(jobs) > filter.Limit {
+		jobs = jobs[:filter.Limit]
+	}
 	return jobs, nil
+}
+
+func (m *memoryJobs) Count(_ context.Context, ident identity.IdentityContext, _ models.JobFilter) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	total := 0
+	for _, job := range m.jobs {
+		if m.visible(ident, job) {
+			total++
+		}
+	}
+	return total, nil
 }
 
 func (m *memoryJobs) Get(_ context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error) {
@@ -299,6 +314,14 @@ func TestCleanQuery(t *testing.T) {
 func TestJobsThroughRoutes(t *testing.T) {
 	repo := newMemoryJobs()
 	handler := devJobs(repo, &fakeReader{})
+	another := repo.jobs[0]
+	another.ID = uuid.New()
+	repo.jobs = append(repo.jobs, another)
+	if status, list := testutil.Do(t, handler, http.MethodGet, jobsPath+"?limit=1", nil); status != http.StatusOK || len(list["items"].([]any)) != 1 ||
+		list["total"] != float64(2) {
+		t.Fatalf("a list cut at its limit counts every job: %d %v", status, list)
+	}
+	repo.jobs = repo.jobs[:1]
 	status, list := testutil.Do(t, handler, http.MethodGet, jobsPath+"?q=go&city=Iasi&include_remote=1&area=DevOps&area=Data&level=mid&country=RO", nil)
 	if status != http.StatusOK || list["total"] != float64(1) || len(list["items"].([]any)) != 1 ||
 		repo.filter.Q != "go" || !slices.Equal(repo.filter.Areas, []string{"devops", "data"}) || !repo.filter.IncludeRemote {

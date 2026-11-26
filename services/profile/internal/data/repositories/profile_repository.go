@@ -124,6 +124,7 @@ type DBTX interface {
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	SendBatch(ctx context.Context, batch *pgx.Batch) pgx.BatchResults
 }
 
 // Scope runs fn with the connection a caller's queries use.
@@ -378,18 +379,21 @@ func (r *PgProfileRepository) run(ctx context.Context, ident identity.IdentityCo
 	return nil
 }
 
-// ensureID creates the caller's profile unless it exists and returns its id.
-// The select runs as its own statement so it sees a row a concurrent request
-// committed while the insert waited on the conflict.
+// ensureID returns the caller's profile id, creating the profile when it is missing. The select after the insert
+// runs as its own statement so it sees a row a concurrent request committed while the insert waited on the conflict.
 func ensureID(ctx context.Context, db DBTX, ident identity.IdentityContext) (uuid.UUID, error) {
+	var id uuid.UUID
+	find := func() error {
+		return db.QueryRow(ctx, "SELECT id FROM profiles WHERE customer_id = $1 AND subject = $2", ident.TenantID, ident.Subject).Scan(&id)
+	}
+	if err := find(); !errors.Is(err, pgx.ErrNoRows) {
+		return id, err
+	}
 	if _, err := db.Exec(ctx, "INSERT INTO profiles (customer_id, subject) VALUES ($1, $2) "+
 		"ON CONFLICT (customer_id, subject) DO NOTHING", ident.TenantID, ident.Subject); err != nil {
 		return uuid.Nil, err
 	}
-	var id uuid.UUID
-	err := db.QueryRow(ctx, "SELECT id FROM profiles WHERE customer_id = $1 AND subject = $2",
-		ident.TenantID, ident.Subject).Scan(&id)
-	return id, err
+	return id, find()
 }
 
 func touch(ctx context.Context, db DBTX, ident identity.IdentityContext) error {
@@ -398,8 +402,16 @@ func touch(ctx context.Context, db DBTX, ident identity.IdentityContext) error {
 	return err
 }
 
+// load reads the profile and its lists in one round trip.
 func load(ctx context.Context, db DBTX, id uuid.UUID) (*models.Profile, error) {
-	rows, err := db.Query(ctx, "SELECT "+profileColumns+" FROM profiles WHERE id = $1", id)
+	batch := &pgx.Batch{}
+	batch.Queue("SELECT "+profileColumns+" FROM profiles WHERE id = $1", id)
+	for _, table := range []child{experienceTable, projectTable, educationTable, certificationTable, languageTable} {
+		batch.Queue(table.list(), id)
+	}
+	results := db.SendBatch(ctx, batch)
+	defer results.Close()
+	rows, err := results.Query()
 	if err != nil {
 		return nil, err
 	}
@@ -407,26 +419,27 @@ func load(ctx context.Context, db DBTX, id uuid.UUID) (*models.Profile, error) {
 	if err != nil {
 		return nil, err
 	}
-	if profile.Experience, err = children(ctx, db, experienceTable, scanExperience, id); err != nil {
+	if profile.Experience, err = children(results, scanExperience); err != nil {
 		return nil, err
 	}
-	if profile.Projects, err = children(ctx, db, projectTable, scanProject, id); err != nil {
+	if profile.Projects, err = children(results, scanProject); err != nil {
 		return nil, err
 	}
-	if profile.Education, err = children(ctx, db, educationTable, scanEducation, id); err != nil {
+	if profile.Education, err = children(results, scanEducation); err != nil {
 		return nil, err
 	}
-	if profile.Certifications, err = children(ctx, db, certificationTable, scanCertification, id); err != nil {
+	if profile.Certifications, err = children(results, scanCertification); err != nil {
 		return nil, err
 	}
-	if profile.Languages, err = children(ctx, db, languageTable, scanLanguage, id); err != nil {
+	if profile.Languages, err = children(results, scanLanguage); err != nil {
 		return nil, err
 	}
-	return &profile, nil
+	return &profile, results.Close()
 }
 
-func children[T any](ctx context.Context, db DBTX, table child, scan pgx.RowToFunc[T], id uuid.UUID) ([]T, error) {
-	rows, err := db.Query(ctx, table.list(), id)
+// children reads the next list of a batch.
+func children[T any](results pgx.BatchResults, scan pgx.RowToFunc[T]) ([]T, error) {
+	rows, err := results.Query()
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ const UNDO_MS = 3500
 const VIEWS = [{ id: 'grid', label: 'Grid', icon: 'i-lucide-layout-grid' }, { id: 'swipe', label: 'Swipe', icon: 'i-lucide-layers' }] as const
 const router = useRouter()
 const search = useJobSearchStore()
-const { deck, loading, error } = useDeck()
+const { deck, beyond, loading, error } = useDeck()
 const profile = useProfileQuery()
 watch([() => profile.data.value, () => search.stage], ([person, stage]) => {
   if (!person) return
@@ -30,7 +30,10 @@ let timer: number | undefined
 const toast = computed(() => (last.value ? `${last.value.decision === 'save' ? 'Saved' : 'Skipped'} · ${last.value.job.title}` : ''))
 // A view this device remembered from before the grid (the list) shows as the grid.
 const shownView = computed(() => (search.view === 'swipe' ? 'swipe' : 'grid'))
-const results = computed(() => `${deck.value.length} ${deck.value.length === 1 ? 'job' : 'jobs'} left`)
+const results = computed(() => [
+  `${deck.value.length} ${deck.value.length === 1 ? 'job' : 'jobs'} left`,
+  beyond.value ? `from the newest ${beyond.value.sent} of ${beyond.value.total}: narrow the filters to see the rest` : '',
+].filter(Boolean).join(', '))
 
 function remember(job: ScoredJob, decision: 'save' | 'skip') {
   window.clearTimeout(timer)

@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/shared/mocks/node'
 import { mountPage, useServices } from '@/test/hoply'
 import { seedId } from '@/test/jobs-seed'
 import { sampleProfile } from '@/test/profile-service'
@@ -29,6 +31,15 @@ describe('SkillGapsPage', () => {
     expect(text()).toContain('Learned one? Add it to your profile and it leaves this list.')
     await router.push(link.getAttribute('href')!)
     expect(router.currentRoute.value.name).toBe('hoply-job')
+  })
+
+  it('says when the saved jobs cannot be loaded', async () => {
+    const { applications } = useServices()
+    applications.track(seedId(1), 'saved')
+    server.use(http.get('*/api/jobs/v1/jobs', () => HttpResponse.json({ message: 'down' }, { status: 503 })))
+    await mountPage(SkillGapsPage)
+    await vi.waitFor(() => expect(text()).toContain('We could not load your saved jobs'))
+    expect(text()).not.toContain('Save a few jobs first')
   })
 
   it('asks for saved jobs first, and says when the profile covers them all', async () => {

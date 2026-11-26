@@ -11,13 +11,21 @@ import { knownSkills } from '@/features/profile/skills'
 import { statusSince } from '../api/applications.schema'
 import { useApplicationMutations, useApplicationsQuery } from './useApplications'
 
+/** The most job ids the jobs service takes in one request (services/jobs MaxIDs). */
+const MAX_IDS = 200
+
 /** The jobs the person tracks, each with its status and how it matches the profile's skills. */
 export function useTrackedJobs() {
   const applications = useApplicationsQuery()
   const ids = computed(() => (applications.data.value ?? []).map(application => application.job_id).sort())
   const jobs = useQuery({
     queryKey: computed(() => jobKeys.list({ ids: ids.value })),
-    queryFn: () => jobsApi.list({ ids: ids.value }),
+    queryFn: async () => {
+      const batches = []
+      for (let at = 0; at < ids.value.length; at += MAX_IDS) batches.push(ids.value.slice(at, at + MAX_IDS))
+      const answers = await Promise.all(batches.map(batch => jobsApi.list({ ids: batch })))
+      return { items: answers.flatMap(answer => answer.items), total: answers.reduce((sum, answer) => sum + answer.total, 0) }
+    },
     enabled: computed(() => ids.value.length > 0),
     placeholderData: keepPreviousData,
   })
@@ -47,5 +55,6 @@ export function useTrackedJobs() {
       }
     }
   }, { immediate: true })
-  return { tracked, skills, loading }
+  const error = computed(() => applications.isError.value || jobs.isError.value)
+  return { tracked, skills, loading, error }
 }

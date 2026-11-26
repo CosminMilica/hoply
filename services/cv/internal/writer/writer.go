@@ -44,6 +44,16 @@ type Writer struct {
 
 	analyses repositories.Analyses
 	jobs     JobRequirements
+
+	flying  sync.Mutex
+	flights map[uuid.UUID]*flight
+}
+
+// flight is an analysis running now: callers asking for the same job while it runs share its result.
+type flight struct {
+	done     chan struct{}
+	analysis *grounding.Analysis
+	stop     *stop
 }
 
 // JobRequirements keeps a job's requirements as the analysis read them; the
@@ -183,7 +193,35 @@ func (w *Writer) run(ctx context.Context, logID, step string, request claude.Req
 
 // analyze is what the job needs: kept from an earlier CV for the job, or read
 // now and kept. Without one the CV is still written, from the job alone.
+// analyze returns the job's analysis: the one kept, else Claude's, run once for callers asking at the same time.
 func (w *Writer) analyze(ctx context.Context, logID string, jobID uuid.UUID, job cvdoc.Job) (*grounding.Analysis, *stop) {
+	w.flying.Lock()
+	if running, ok := w.flights[jobID]; ok {
+		w.flying.Unlock()
+		select {
+		case <-running.done:
+			return running.analysis, running.stop
+		case <-ctx.Done():
+			return nil, nil
+		}
+	}
+	if w.flights == nil {
+		w.flights = map[uuid.UUID]*flight{}
+	}
+	running := &flight{done: make(chan struct{})}
+	w.flights[jobID] = running
+	w.flying.Unlock()
+	defer func() {
+		w.flying.Lock()
+		delete(w.flights, jobID)
+		w.flying.Unlock()
+		close(running.done)
+	}()
+	running.analysis, running.stop = w.analyzeOnce(ctx, logID, jobID, job)
+	return running.analysis, running.stop
+}
+
+func (w *Writer) analyzeOnce(ctx context.Context, logID string, jobID uuid.UUID, job cvdoc.Job) (*grounding.Analysis, *stop) {
 	if w.analyses != nil {
 		if raw, err := w.analyses.Analysis(ctx, jobID); err == nil && raw != nil {
 			// An analysis kept before it read requirements is read again.

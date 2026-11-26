@@ -37,7 +37,7 @@ type probeMessage struct {
 
 // ProbePrompt is the message of the questions: the job's analysis and the facts.
 func (c Catalogue) ProbePrompt(analysis *Analysis) string {
-	raw, err := json.MarshalIndent(probeMessage{Analysis: analysis, Roles: nonEmpty(c.Roles), Projects: nonEmpty(c.Projects), Facts: c.FactList()}, "", "  ")
+	raw, err := json.Marshal(probeMessage{Analysis: analysis, Roles: nonEmpty(c.Roles), Projects: nonEmpty(c.Projects), Facts: c.FactList()})
 	if err != nil {
 		panic(err)
 	}

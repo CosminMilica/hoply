@@ -108,6 +108,10 @@ func (r *Reader) List(ctx context.Context, platform, board string, country Count
 	return postings, true, nil
 }
 
+// NeedsDescribe reports whether the posting's list had no description, so
+// Describe reads it with one more request.
+func (p *Posting) NeedsDescribe() bool { return p.describe != nil }
+
 // Describe reads a posting's description when its list had none; it does
 // nothing for a posting that has it.
 func (r *Reader) Describe(ctx context.Context, p *Posting) error {

@@ -152,7 +152,7 @@ func TestWriterWritesTheLetterFromTheCV(t *testing.T) {
 	equal(t, letter.Refused, 5)
 	equal(t, strings.HasPrefix(letter.Texts.CoverLetter, "Dear Ana Pop,"), true)
 	equal(t, strings.Contains(model.last.System, "cover letter"), true)
-	equal(t, strings.Contains(model.last.Prompt, `"positioning": "The automation engineer"`), true)
+	equal(t, strings.Contains(model.last.Prompt, `"positioning":"The automation engineer"`), true)
 
 	off := writer.New(nil).Letter(context.Background(), letterTask(t), readyCv(t), "")
 	equal(t, off, models.Letter{Status: models.LetterFailed, Reason: models.RulesOff})

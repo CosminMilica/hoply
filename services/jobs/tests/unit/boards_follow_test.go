@@ -246,19 +246,19 @@ type followedBoards struct {
 
 func (f *followedBoards) Followed(context.Context) ([]models.Board, error) { return f.boards, f.err }
 
-func (f *followedBoards) Follow(_ context.Context, b models.Board) (models.Board, error) {
+func (f *followedBoards) Follow(_ context.Context, b models.Board) (models.Board, bool, error) {
 	if f.err != nil {
-		return models.Board{}, f.err
+		return models.Board{}, false, f.err
 	}
 	for _, known := range f.boards {
 		if known.Platform == b.Platform && known.Board == b.Board {
-			return known, nil
+			return known, false, nil
 		}
 	}
 	at := time.Now()
 	b.FollowedAt = &at
 	f.boards = append(f.boards, b)
-	return b, nil
+	return b, true, nil
 }
 
 func TestImporterReadsFollowedBoardsAndOnlyWantedDescriptions(t *testing.T) {
@@ -299,11 +299,6 @@ func TestImporterReadsFollowedBoardsAndOnlyWantedDescriptions(t *testing.T) {
 	}
 	if im.RunOnce(context.Background()); len(store.listed) != 1 {
 		t.Fatalf("without the followed boards, no job is closed as unlisted: %v", store.listed)
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	if r := importer.New(store, lister, listed, nil, freeLock, time.Hour).Import(ctx, listed[0]); r.Err == nil {
-		t.Fatalf("a stopped import between descriptions: %+v", r)
 	}
 }
 
@@ -358,6 +353,10 @@ func TestFollowingABoardThroughRoutes(t *testing.T) {
 	status, body = testutil.Do(t, handler, http.MethodPost, "/api/v1/boards", map[string]any{"url": "https://jobs.lever.co/northwind/1", "company": " Northwind "})
 	if status != http.StatusCreated || body["company"] != "Northwind" || body["followed_at"] == nil || !slices.Equal(imports.imported, []string{"lever/northwind"}) {
 		t.Fatalf("follow: %d %v %v", status, body, imports.imported)
+	}
+	if status, _ := testutil.Do(t, handler, http.MethodPost, "/api/v1/boards", map[string]any{"url": "https://jobs.lever.co/northwind/2", "company": "Northwind"}); status != http.StatusCreated ||
+		len(imports.imported) != 1 {
+		t.Fatalf("a board followed again is not imported again: %d %v", status, imports.imported)
 	}
 	if _, body := testutil.Do(t, handler, http.MethodGet, of+"https://jobs.lever.co/northwind/2", nil); body["imported"] != true {
 		t.Fatalf("a followed board is imported: %v", body)
@@ -424,5 +423,31 @@ func TestListsCutShortSayTheyAreIncomplete(t *testing.T) {
 	}
 	if jobs, complete, err := reader.List(context.Background(), "smartrecruiters", "Big", importer.Romania); err != nil || complete || len(jobs) != 500 {
 		t.Fatalf("smartrecruiters stops at 500 jobs: %d %v %v", len(jobs), complete, err)
+	}
+}
+
+func TestImporterSkipsDescriptionsItReadLately(t *testing.T) {
+	server := newFixtureServer(t, workdayFixtures(t))
+	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"northwind.wd3.myworkdayjobs.com": server.URL}})
+	boards := []importer.Board{{Company: "Northwind", Platform: "workday", Board: "northwind.wd3.myworkdayjobs.com/Careers"}}
+	store := &memoryImports{jobs: map[string]models.ImportedJob{}, fresh: map[string]bool{"/job/Bucharest/DevOps-Engineer_R1": true}}
+	r := importer.New(store, reader, boards, nil, freeLock, time.Millisecond).RunOnce(context.Background())[0]
+	if !slices.Equal(store.seen, []string{"/job/Bucharest/DevOps-Engineer_R1"}) || r.Kept != 1 || r.Unread != 2 || r.Closed != 0 {
+		t.Fatalf("a job read lately is only marked seen: %+v %v", r, store.seen)
+	}
+	for _, request := range server.requests {
+		if strings.Contains(request, "DevOps-Engineer_R1") {
+			t.Fatalf("its description is not read again: %v", server.requests)
+		}
+	}
+	store.fresh = nil
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+	if r := importer.New(store, reader, boards, nil, freeLock, time.Hour).Import(ctx, boards[0]); !errors.Is(r.Err, context.DeadlineExceeded) || r.Kept != 1 {
+		t.Fatalf("an import stopped while it waits between descriptions: %+v", r)
+	}
+	store.freshErr = errors.New("database down")
+	if r := importer.New(store, reader, boards, nil, freeLock, time.Millisecond).RunOnce(context.Background())[0]; r.Err == nil {
+		t.Fatalf("a board whose recent reads cannot be known fails: %+v", r)
 	}
 }

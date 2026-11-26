@@ -98,7 +98,7 @@ func (c Catalogue) message(job cvdoc.Job, request models.CvRequest, skills []str
 		Projects: nonEmpty(c.Projects),
 		Facts:    c.FactList(),
 	}
-	raw, err := json.MarshalIndent(message, "", "  ")
+	raw, err := json.Marshal(message)
 	if err != nil {
 		panic(err)
 	}

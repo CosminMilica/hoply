@@ -535,7 +535,10 @@ func TestProbeIsAskedInTheBackgroundAndKeptForTheFacts(t *testing.T) {
 		if status, body := testutil.Do(t, handler, http.MethodGet, path, nil); status != http.StatusOK || body["status"] != "pending" {
 			t.Fatalf("pending while asked: %d %v", status, body)
 		}
+		// While they are asked, a poll reads neither the job nor the profile.
+		h.sources.jobErr, h.sources.profileErr = errors.New("jobs down"), errors.New("profile down")
 	}
+	h.sources.jobErr, h.sources.profileErr = nil, nil
 	close(prober.release)
 	<-settled
 	status, body := testutil.Do(t, handler, http.MethodGet, path, nil)

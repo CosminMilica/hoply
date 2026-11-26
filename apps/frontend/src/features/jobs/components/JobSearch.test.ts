@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { button, click, input, mountPage, settle, type, useServices as useAllServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
+import { SEARCH_DELAY_MS } from '../composables/useDeck'
 import { useJobSearchStore } from '../stores/search'
 import JobSearch from './JobSearch.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -44,6 +45,7 @@ describe('JobSearch in swipe view', () => {
     expect(button('No jobs match yet').disabled).toBe(true)
     await click(button('Reset filters'))
     await type(input('What'), 'devops')
+    await wait(SEARCH_DELAY_MS + 50)
     await showDeck('Show 2 jobs')
     expect(text()).toContain('“devops” · All areas · Anywhere')
     expect(text()).toContain('2 jobs left')
@@ -286,6 +288,17 @@ describe('JobSearch in grid view', () => {
     expect(button('Iași').getAttribute('aria-pressed')).toBe('false')
   })
 
+  it('says when the service sent only the newest of the jobs found', async () => {
+    const { jobs } = useServices()
+    server.use(http.get('*/api/jobs/v1/jobs', ({ request }) => {
+      const answer = jobs.list(new URL(request.url).searchParams).body as { items: unknown[] }
+      return HttpResponse.json({ ...answer, total: 900 })
+    }))
+    await mountPage(JobSearch)
+    await settle()
+    expect(text()).toContain('4 jobs left, from the newest 4 of 900: narrow the filters to see the rest')
+  })
+
   it('filters from the bar above the grid, and offers to add a job', async () => {
     useServices()
     await mountPage(JobSearch)
@@ -302,6 +315,8 @@ describe('JobSearch in grid view', () => {
     expect(text()).toContain('You are all caught up')
     await click(button('Reset filters'))
     await type(document.querySelector<HTMLInputElement>('input[placeholder="Job title, skill or company"]')!, 'devops')
+    expect(rows()).toHaveLength(4)
+    await wait(SEARCH_DELAY_MS + 50)
     expect(rows()).toHaveLength(2)
     expect(button('Add a job').getAttribute('href')).toBe('/jobs/add')
     expect(() => button('Filters')).toThrow()

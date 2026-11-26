@@ -103,7 +103,7 @@ func (c Catalogue) LetterPrompt(analysis *Analysis, job cvdoc.Job, cv models.CvD
 		message.Positioning = tailoring.Positioning
 		message.Priorities = tailoring.Priorities
 	}
-	raw, err := json.MarshalIndent(message, "", "  ")
+	raw, err := json.Marshal(message)
 	if err != nil {
 		panic(err)
 	}

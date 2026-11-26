@@ -186,13 +186,25 @@ func TestJobsKeptFromABoard(t *testing.T) {
 	}
 }
 
-// memoryImports records what the importer stores.
+// memoryImports records what the importer stores; fresh holds the ids whose descriptions count as recent.
 type memoryImports struct {
 	jobs        map[string]models.ImportedJob
 	closed      []string
 	listed      [][]string
+	fresh       map[string]bool
+	seen        []string
 	failWith    error
+	freshErr    error
 	unlistedErr error
+}
+
+func (m *memoryImports) Fresh(context.Context, string, string, time.Time) (map[string]bool, error) {
+	return m.fresh, m.freshErr
+}
+
+func (m *memoryImports) Seen(_ context.Context, _, _ string, ids []string, _ time.Time) error {
+	m.seen = append(m.seen, ids...)
+	return m.failWith
 }
 
 func (m *memoryImports) CloseUnlisted(_ context.Context, origins, boards []string) (int64, error) {

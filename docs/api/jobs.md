@@ -26,7 +26,8 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
   are never visible. Filters: `q` matches title, company and requirements (case-insensitive); `city` matches the city
   (case- and diacritics-insensitive: `Iasi` finds `Iași`); `include_remote=true` also keeps remote jobs when `city` is
   set; `country` matches the country; `area` may repeat; `level` is one of the level values. `ids` (comma-separated, at
-  most 200) returns those jobs only, closed ones included: Saved uses it.
+  most 200) returns those jobs only, closed ones included: Saved uses it. `total` is how many jobs the filters find,
+  also when `items` stops at `limit`.
 - `GET /jobs/{id}` and `DELETE /jobs/{id}`: an unknown id, a non-UUID id or another person's job is 404; deleting a
   catalog job is 404 too.
 - `PUT /jobs/{id}/requirements` replaces the requirements of a job the caller sees with the cv service's analysis of
@@ -35,7 +36,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 - `POST /jobs/read` saves nothing. It returns what the rules read, for the person to check and edit.
 - `POST /boards` follows the board of a job link (company required, at most 120 characters; a link on no board Hoply
   reads is 422 on `url`). The importer reads followed boards with the listed ones, and imports a newly followed board
-  at once in the background. Following a listed or followed board again returns it as it is. Followed boards are
+  at once in the background. Following a listed or followed board again returns it as it is and imports nothing. Followed boards are
   shared, like the jobs imported from them.
 
 ## Shapes
@@ -185,8 +186,9 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
   country code `RO`, or a list the platform kept to Romania) and its title names one of the tech areas: `DevOps`,
   `Backend`, `Frontend`, `Full stack`, `Mobile`, `Data`, `AI`, `QA`, `Security`, `Embedded`, `Sysadmin`, `Product`,
-  `Design` (a generic developer title is `Backend` unless it names a narrower area). Where the list has no descriptions, only those jobs are read, a quarter of a second
-  apart. Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
+  `Design` (a generic developer title is `Backend` unless it names a narrower area). Where the list has no descriptions,
+  only those jobs are read, a quarter of a second apart, and a description read in the last 7 days is not read again
+  (the job is only marked as still listed). Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform, its board and the platform's id: a later run updates it and keeps requirements Claude's
   analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
   answers with no jobs, whose list stopped at its cap (Workday 400, SmartRecruiters 500, a sitemap 5000), or whose

@@ -108,6 +108,20 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		t.Fatalf("open after closing the unlisted: %q", titles(open))
 	}
 
+	fresh, err := repo.Fresh(ctx, "greenhouse", "northwind", time.Now().Add(-time.Hour))
+	if err != nil || !fresh["1"] || !fresh["2"] || len(fresh) != 2 {
+		t.Fatalf("the jobs read in the last hour: %v %v", fresh, err)
+	}
+	if stale, _ := repo.Fresh(ctx, "greenhouse", "northwind", time.Now().Add(time.Hour)); len(stale) != 0 {
+		t.Fatalf("none read after now: %v", stale)
+	}
+	later := time.Now().Add(2 * time.Hour)
+	if err := repo.Seen(ctx, "greenhouse", "northwind", []string{"1"}, later); err != nil {
+		t.Fatal(err)
+	}
+	if closed, err := repo.Close(ctx, "greenhouse", "northwind", later); err != nil || closed != 1 {
+		t.Fatalf("a job marked seen stays open, the other closes: %d %v", closed, err)
+	}
 	if _, err := repo.Import(ctx, models.ImportedJob{JobInput: models.JobInput{Title: "No key"}}, time.Now()); err == nil {
 		t.Fatal("an imported job needs its origin, id and board")
 	}
@@ -144,13 +158,13 @@ func TestFollowedBoardsAgainstPostgres(t *testing.T) {
 	if boards, err := repo.Followed(ctx); err != nil || len(boards) != 0 {
 		t.Fatalf("none followed yet: %v %v", boards, err)
 	}
-	first, err := repo.Follow(ctx, models.Board{Company: "Northwind", Platform: "lever", Board: "northwind"})
-	if err != nil || first.FollowedAt == nil || first.Company != "Northwind" {
-		t.Fatalf("follow: %+v %v", first, err)
+	first, created, err := repo.Follow(ctx, models.Board{Company: "Northwind", Platform: "lever", Board: "northwind"})
+	if err != nil || !created || first.FollowedAt == nil || first.Company != "Northwind" {
+		t.Fatalf("follow: %+v %v %v", first, created, err)
 	}
-	again, err := repo.Follow(ctx, models.Board{Company: "Renamed", Platform: "lever", Board: "northwind"})
-	if err != nil || again.Company != "Northwind" || !again.FollowedAt.Equal(*first.FollowedAt) {
-		t.Fatalf("a board followed again stays as it was: %+v %v", again, err)
+	again, created, err := repo.Follow(ctx, models.Board{Company: "Renamed", Platform: "lever", Board: "northwind"})
+	if err != nil || created || again.Company != "Northwind" || !again.FollowedAt.Equal(*first.FollowedAt) {
+		t.Fatalf("a board followed again stays as it was: %+v %v %v", again, created, err)
 	}
 	if boards, _ := repo.Followed(ctx); len(boards) != 1 {
 		t.Fatalf("followed: %+v", boards)
@@ -169,7 +183,7 @@ func TestFollowedBoardsAgainstPostgres(t *testing.T) {
 	if _, err := repo.Followed(cancelled); err == nil {
 		t.Fatal("a cancelled read fails")
 	}
-	if _, err := repo.Follow(cancelled, models.Board{Company: "X", Platform: "lever", Board: "x"}); err == nil {
+	if _, _, err := repo.Follow(cancelled, models.Board{Company: "X", Platform: "lever", Board: "x"}); err == nil {
 		t.Fatal("a cancelled follow fails")
 	}
 }
