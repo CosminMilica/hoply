@@ -1,13 +1,35 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { jobsApi } from '../api/jobsApi'
-import type { Job, JobFilters } from '../api/jobs.schema'
+import type { BoardOf, Job, JobFilters } from '../api/jobs.schema'
 import { cvApi } from '@/features/cv/api/cvApi'
 
 export const jobKeys = {
   all: ['jobs'] as const,
   list: (filters: JobFilters) => ['jobs', 'list', filters] as const,
   detail: (id: string) => ['jobs', 'detail', id] as const,
+  boardOf: (url: string) => ['jobs', 'board-of', url] as const,
+}
+
+/** The board a job link belongs to; null for a link on no board Hoply reads, and a failure stays quiet. */
+export function useBoardOfQuery(url: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: computed(() => jobKeys.boardOf(toValue(url))),
+    queryFn: () => jobsApi.boardOf(toValue(url)),
+    enabled: computed(() => Boolean(toValue(url))),
+    retry: false,
+    meta: { suppressToast: true },
+  })
+}
+
+/** Follows a job link's board: Hoply then imports its jobs in Romania. */
+export function useFollowBoard() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: jobsApi.follow,
+    onError: () => {},
+    onSuccess: (board, { url }) => client.setQueryData<BoardOf | null>(jobKeys.boardOf(url), current => current && { ...current, company: board.company, imported: true }),
+  })
 }
 
 export function useJobsQuery(filters: MaybeRefOrGetter<JobFilters> = {}) {

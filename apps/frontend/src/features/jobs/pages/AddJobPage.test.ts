@@ -95,6 +95,22 @@ describe('AddJobPage', () => {
     expect(jobs.jobs[0]).toMatchObject({ source: 'text', read_from: 'text', url: 'https://ejobs.ro/123', responsibilities: ['Administrezi servere Linux.', 'Automatizezi infrastructura cu Terraform.', 'Minimum 3 ani experiență în DevOps.'] })
   })
 
+  it('reads a job the Send to Hoply bookmark sent, and offers the bookmark', async () => {
+    useServices()
+    const sent = new URLSearchParams({ text: AD, url: 'https://www.linkedin.com/jobs/view/42', title: 'Platform Engineer', company: 'spektr' })
+    const { router } = await mountPage(AddJobPage, { at: `/jobs/add#${sent}` })
+    await vi.waitFor(() => expect(text()).toContain('Read from the text you pasted'))
+    expect((input('Job title') as HTMLInputElement).value).toBe('Platform Engineer')
+    expect((input('Company') as HTMLInputElement).value).toBe('spektr')
+    expect(router.currentRoute.value.hash).toBe('')
+    await click(button('Back'))
+    expect((input('Link to the ad (optional, to find it again)') as HTMLInputElement).value).toBe('https://www.linkedin.com/jobs/view/42')
+    const bookmark = document.querySelector<HTMLAnchorElement>('[data-test="send-to-hoply"] a')!
+    expect(bookmark.getAttribute('href')).toMatch(/^javascript:/)
+    bookmark.click()
+    expect(router.currentRoute.value.name).toBe('hoply-job-add')
+  })
+
   it.each([
     ['https://www.linkedin.com/jobs/view/1', 'LinkedIn shows job pages only to signed-in members'],
     ['https://empty.example.org/jobs', 'We found no job ad on this page'],

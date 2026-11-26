@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApplicationMutations } from '@/features/applications/composables/useApplications'
 import { serviceErrorMessage } from '@/features/common/errors'
@@ -7,8 +7,10 @@ import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { unreadableReason } from '../api/jobsApi'
 import { jobInputSchema, type JobDraft, type ReadRequest, type UnreadableReason } from '../api/jobs.schema'
 import JobDraftPreview from '../components/JobDraftPreview.vue'
+import SendToHoplyCard from '../components/SendToHoplyCard.vue'
 import { useAddJob } from '../composables/useJobs'
 import { isLink, MIN_AD_LENGTH, unreadableMessage } from '../reading'
+import { sentJob } from '../sendToHoply'
 
 type Phase = 'input' | 'loading' | 'failed' | 'preview'
 
@@ -95,6 +97,16 @@ function tryAnother() {
   phase.value = 'input'
 }
 
+// A job the Send to Hoply bookmark sent is read at once; the hash leaves the address.
+onMounted(() => {
+  const sent = sentJob(route.hash)
+  if (!sent) return
+  router.replace({ query: route.query, hash: '' })
+  tab.value = 'text'
+  Object.assign(form, { text: sent.text, title: sent.title, company: sent.company, link: sent.url })
+  readText()
+})
+
 async function save(tailor: boolean) {
   if (!draft.value) return
   const { host: _host, ...job } = draft.value
@@ -180,6 +192,7 @@ async function save(tailor: boolean) {
         <p v-if="error" role="alert" class="m-0 text-[13px] font-bold text-ember-400">{{ error }}</p>
         <UButton type="submit" label="Read the job" size="lg" block class="mt-1 justify-center" />
       </form>
+      <SendToHoplyCard />
     </template>
 
     <div v-else-if="phase === 'loading'" role="status" class="flex items-center gap-3.5 rounded-[14px] border border-default bg-elevated p-5">

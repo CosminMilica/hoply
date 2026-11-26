@@ -32,10 +32,11 @@ type Info struct {
 // Deps are the collaborators the routes use. Pool is nil in tests that do
 // not touch the database.
 type Deps struct {
-	Pool *pgxpool.Pool
-	DB   Pinger
-	Jobs *services.JobService
-	Info Info
+	Pool   *pgxpool.Pool
+	DB     Pinger
+	Jobs   *services.JobService
+	Boards *services.BoardService
+	Info   Info
 }
 
 // Register mounts every route on router.
@@ -47,6 +48,7 @@ func Register(router chi.Router, deps Deps) {
 		registerHome(api, deps.Info)
 		api.Route("/health", func(health chi.Router) { registerHealth(health, deps.DB) })
 		api.Route("/jobs", func(jobs chi.Router) { registerJobs(jobs, deps.Jobs) })
+		api.Route("/boards", func(boards chi.Router) { registerBoards(boards, deps.Boards) })
 		// FORGE:BEGIN enhanced_health:ROUTES_REGISTRATION fp:770d7b6d
 		registerDeepHealth(api)
 		// FORGE:END enhanced_health:ROUTES_REGISTRATION

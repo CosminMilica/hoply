@@ -104,3 +104,27 @@ type ImportedJob struct {
 	Board      string
 	PostedAt   *time.Time
 }
+
+// Board is a company's job board the importer reads. FollowedAt is when a
+// person followed it; nil for the boards Hoply lists itself.
+type Board struct {
+	Company    string     `json:"company"`
+	Platform   string     `json:"platform"`
+	Board      string     `json:"board"`
+	FollowedAt *time.Time `json:"followed_at"`
+}
+
+// BoardOf is the board a job link belongs to, and whether its jobs are
+// imported already.
+type BoardOf struct {
+	Platform string `json:"platform"`
+	Board    string `json:"board"`
+	Company  string `json:"company"`
+	Imported bool   `json:"imported"`
+}
+
+// FollowInput follows the board of a job link.
+type FollowInput struct {
+	URL     string `json:"url"`
+	Company string `json:"company"`
+}

@@ -74,6 +74,12 @@ export const jobDraftSchema = jobSchema
 
 export type JobDraft = z.infer<typeof jobDraftSchema>
 
+/** The board a job link belongs to, and whether Hoply imports its jobs already. */
+export const boardOfSchema = z.object({ platform: z.string(), board: z.string(), company: text, imported: z.boolean() })
+export type BoardOf = z.infer<typeof boardOfSchema>
+
+export const boardSchema = z.object({ company: z.string(), platform: z.string(), board: z.string(), followed_at: z.string().nullish() })
+
 export type ReadRequest = { url: string } | { text: string, title?: string, company?: string, url?: string }
 
 export interface JobFilters {

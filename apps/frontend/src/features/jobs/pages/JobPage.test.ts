@@ -1,5 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { button, click, mountPage, useServices } from '@/test/hoply'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/shared/mocks/node'
+import { button, click, mountPage, settle, useServices } from '@/test/hoply'
 import JobPage from './JobPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
@@ -39,6 +41,40 @@ describe('JobPage', () => {
     await click(button('Save for later'))
     expect(applications.applications.get(seedId(2))?.status).toBe('saved')
     expect(cvs.analyses).toEqual([seedId(2)])
+  })
+
+  it('follows the company of a job added from its board, so its jobs come to Find jobs', async () => {
+    const { jobs } = useServices()
+    const added = (id: string, url: string) => jobs.jobs.push({ ...structuredClone(jobs.jobs[1]!), id, url, source: 'link', added_by_me: true, sample: false, company: 'Northwind' })
+    added('11111111-0000-4000-8000-000000000001', 'https://jobs.lever.co/northwind/aa11')
+    added('11111111-0000-4000-8000-000000000002', 'https://www.linkedin.com/jobs/view/42')
+    added('11111111-0000-4000-8000-000000000003', 'https://job-boards.greenhouse.io/awin/jobs/1')
+    jobs.boards.push({ platform: 'greenhouse', board: 'awin', company: 'Awin', followed_at: '' })
+
+    await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000001', props: { id: '11111111-0000-4000-8000-000000000001' } })
+    await vi.waitFor(() => expect(text()).toContain('Northwind posts its jobs on Lever.'))
+    await click(button('Follow Northwind'))
+    expect(jobs.boards.map(board => `${board.platform}/${board.board}/${board.company}`)).toEqual(['greenhouse/awin/Awin', 'lever/northwind/Northwind'])
+    expect(text()).toContain('Following Northwind. Its jobs in Romania show up in Find jobs in a few minutes.')
+    document.body.innerHTML = ''
+
+    await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000003', props: { id: '11111111-0000-4000-8000-000000000003' } })
+    await vi.waitFor(() => expect(text()).toContain('Hoply brings Awin’s jobs in Romania to Find jobs.'))
+    document.body.innerHTML = ''
+
+    await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000002', props: { id: '11111111-0000-4000-8000-000000000002' } })
+    await settle()
+    expect(document.querySelector('[data-test="follow-company"]')).toBeNull()
+  })
+
+  it('says when following a company fails', async () => {
+    const { jobs } = useServices()
+    jobs.jobs.push({ ...structuredClone(jobs.jobs[1]!), id: '11111111-0000-4000-8000-000000000001', url: 'https://jobs.ashbyhq.com/linear/1', source: 'link', added_by_me: true, company: '' })
+    server.use(http.post('*/api/jobs/v1/boards', () => HttpResponse.json({ error: { code: 'INTERNAL' } }, { status: 500 })))
+    await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000001', props: { id: '11111111-0000-4000-8000-000000000001' } })
+    await vi.waitFor(() => expect(text()).toContain('This company posts its jobs on Ashby.'))
+    await click(button('Follow This company'))
+    await vi.waitFor(() => expect(document.querySelector('[role="alert"]')?.textContent).toContain('We could not follow This company. Try again.'))
   })
 
   it('offers a new CV once one is made, and no save button', async () => {

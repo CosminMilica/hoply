@@ -18,6 +18,8 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 | POST | `/api/v1/jobs` | `JobInput` | 201 `Job` |
 | PUT | `/api/v1/jobs/{id}/requirements` | `{ must_have, nice_to_have }` | 200 `Job` |
 | DELETE | `/api/v1/jobs/{id}` | | 204 |
+| GET | `/api/v1/boards/of` | query: `url` | 200 `BoardOf`; 404 when the link is on no board Hoply reads |
+| POST | `/api/v1/boards` | `{ url, company }` | 201 `Board` |
 
 - `GET /jobs` returns the catalog, the imported jobs still open and the caller's own jobs (`added_by_me: true`),
   newest first (by `posted_at`, else `created_at`), at most `limit` (1–500, 500 by default); other people's added jobs
@@ -31,6 +33,10 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
   the ad, cleaned by the same rules as `POST /jobs`, and sets `requirements_from: analysis`. A catalog or imported
   job's ad is the same for everyone, so its analysis is shared. Another person's job is 404.
 - `POST /jobs/read` saves nothing. It returns what the rules read, for the person to check and edit.
+- `POST /boards` follows the board of a job link (company required, at most 120 characters; a link on no board Hoply
+  reads is 422 on `url`). The importer reads followed boards with the listed ones, and imports a newly followed board
+  at once in the background. Following a listed or followed board again returns it as it is. Followed boards are
+  shared, like the jobs imported from them.
 
 ## Shapes
 
@@ -43,6 +49,8 @@ Job       { id, title, company, city, country, work_mode, level, years_required,
 JobInput  { title, company, city, country, work_mode, level, years_required, must_have, nice_to_have,
             responsibilities, about, url, source, read_from }
 JobDraft  JobInput + { host }
+BoardOf   { platform, board, company, imported }
+Board     { company, platform, board, followed_at }
 ```
 
 | Field | Values |
@@ -51,7 +59,7 @@ JobDraft  JobInput + { host }
 | `level` | `""`, `junior`, `mid`, `senior`, `lead` |
 | `years_required` | `null` or 0–40 |
 | `source` | `catalog`, `import`, `link`, `text` |
-| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`), else `""` |
+| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`, `sitemap`), else `""` |
 | `posted_at` | when the board published an imported job, else `null` |
 | `closed_at` | when the board stopped listing an imported job, else `null` |
 | `read_from` | `ats_api` (the job board's public API, see below), `json_ld` (the page's schema.org `JobPosting`), `page_text` (the page's main text), `text` (pasted), `""` for catalog jobs |
@@ -163,12 +171,16 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `greenhouse` | `boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true` (EU boards answer here too) |
 | `lever`, `lever-eu` | `api.lever.co/v0/postings/{board}?mode=json` (`api.eu.lever.co` for `lever-eu`) |
 | `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
+| `smartrecruiters` | `api.smartrecruiters.com/v1/companies/{board}/postings?country=ro`, 100 a page; each wanted job's description from `/postings/{id}` |
+| `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently; none means no jobs in Romania), then 20 a page with it; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
+| `sitemap` | the career site's sitemap; its links with a `/job/` or `/jobs/` segment, each wanted page read like a link (JSON-LD first) |
 
-- A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, or the
-  country code `RO`) and its title names one of the areas (`DevOps`, `Backend`, `Data`, `Sysadmin`). Its text goes
-  through the same rules as a link; the company is the one in `boards.yaml`.
+- A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
+  country code `RO`, or a list the platform kept to Romania) and its title names one of the areas (`DevOps`,
+  `Backend`, `Data`, `Sysadmin`). Where the list has no descriptions, only those jobs are read, a quarter of a second
+  apart. Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform and the platform's id: a later run updates it and keeps requirements Claude's
   analysis wrote. A job the board no longer lists is closed (`closed_at`); listed again, it opens again. A board that
-  answers with no jobs closes nothing.
+  answers with no jobs, or whose descriptions could not all be read, closes nothing.
 - A board that fails is logged and skipped; the others still run. Answers are capped at 32 MB and 30 s.
 

@@ -1,8 +1,9 @@
 import { HTTPError } from 'ky'
 import { getApiClient } from '@/shared/api/client'
-import { jobDraftSchema, jobListSchema, jobSchema, UNREADABLE_REASONS, type JobFilters, type JobInput, type ReadRequest, type UnreadableReason } from './jobs.schema'
+import { boardOfSchema, boardSchema, jobDraftSchema, jobListSchema, jobSchema, UNREADABLE_REASONS, type JobFilters, type JobInput, type ReadRequest, type UnreadableReason } from './jobs.schema'
 
 const BASE = '/api/jobs/v1/jobs'
+const BOARDS = '/api/jobs/v1/boards'
 
 export function jobSearchParams(filters: JobFilters): URLSearchParams {
   const params = new URLSearchParams()
@@ -41,5 +42,18 @@ export const jobsApi = {
   },
   async remove(id: string) {
     await getApiClient().delete(`${BASE}/${encodeURIComponent(id)}`)
+  },
+  /** The board a job link belongs to; null when Hoply cannot read that board. */
+  async boardOf(url: string) {
+    try {
+      return boardOfSchema.parse(await getApiClient().get(`${BOARDS}/of`, { searchParams: { url } }).json())
+    }
+    catch (error) {
+      if (error instanceof HTTPError && error.response.status === 404) return null
+      throw error
+    }
+  },
+  async follow(body: { url: string, company: string }) {
+    return boardSchema.parse(await getApiClient().post(BOARDS, { json: body }).json())
   },
 }

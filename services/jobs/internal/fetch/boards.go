@@ -217,3 +217,44 @@ func firstError(errs ...error) error {
 	}
 	return nil
 }
+
+var workdayLocale = regexp.MustCompile(`^[a-z]{2}-[A-Z]{2}$`)
+
+// BoardOf returns the platform and board a job link belongs to, when List can
+// read that board: "https://jobs.lever.co/northwind/aa11" is lever,
+// "northwind".
+func BoardOf(link string) (platform, board string, ok bool) {
+	u, err := url.Parse(strings.TrimSpace(link))
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+		return "", "", false
+	}
+	host := strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
+	parts := strings.FieldsFunc(u.Path, func(r rune) bool { return r == '/' })
+	first := ""
+	if len(parts) > 0 {
+		first = parts[0]
+	}
+	switch {
+	case greenhouseHosts[host] && first != "" && first != "embed":
+		platform, board = "greenhouse", first
+	case greenhouseHosts[host] || u.Query().Get("gh_jid") != "":
+		platform, board = "greenhouse", firstOf(u.Query().Get("for"), u.Query().Get("board"))
+	case host == "jobs.lever.co" || host == "jobs.eu.lever.co":
+		platform, board = map[string]string{"jobs.lever.co": "lever", "jobs.eu.lever.co": "lever-eu"}[host], first
+	case host == "jobs.ashbyhq.com":
+		platform, board = "ashby", first
+	case host == "jobs.smartrecruiters.com":
+		platform, board = "smartrecruiters", first
+	case workdayHost.MatchString(host):
+		if len(parts) > 1 && workdayLocale.MatchString(first) {
+			first = parts[1]
+		}
+		platform, board = "workday", host+"/"+first
+	default:
+		return "", "", false
+	}
+	if CheckBoard(platform, board) != nil {
+		return "", "", false
+	}
+	return platform, board, true
+}

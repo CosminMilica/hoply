@@ -42,6 +42,20 @@ describe('JobSearch', () => {
     expect(text()).toContain('Position area')
   })
 
+  it('shows a job a company posts in several cities once, and leaves it once one is decided', async () => {
+    const { applications, jobs } = useServices()
+    const devops = jobs.jobs.find(job => job.id === seedId(2))!
+    jobs.jobs.push({ ...structuredClone(devops), id: '22222222-0000-4000-8000-000000000001', city: 'Iași' })
+    await mountPage(JobSearch)
+    await click(button('Show 4 jobs'))
+    expect(text()).toContain('4 jobs left')
+    await click(button('Save this job'))
+    await wait(260)
+    expect(applications.applications.has(seedId(2)) || applications.applications.has('22222222-0000-4000-8000-000000000001')).toBe(true)
+    expect(text()).toContain('3 jobs left')
+    expect(cardTitle()).not.toBe('DevOps Engineer')
+  })
+
   it('saves, skips and undoes, until everything is seen', async () => {
     const { applications, jobs, cvs } = useServices()
     jobs.jobs.find(job => job.id === seedId(2))!.source = 'import'

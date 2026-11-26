@@ -138,8 +138,8 @@ version in `services/cv/tests/testdata/claude/`.
 
 | Done | Next |
 | --- | --- |
-| Profile, adding jobs from links and text, matching, saved jobs and applications | More job boards: Workday, SmartRecruiters, career sites ([plan](docs/plans/2026-11-26-find-jobs.md)) |
-| Finding jobs in Romania from the job boards of 10 companies (Greenhouse, Lever, Ashby) | |
+| Profile, adding jobs from links and text, matching, saved jobs and applications | Remote job boards and a Send to Hoply bookmarklet ([plan](docs/plans/2026-11-26-find-jobs.md)) |
+| Finding jobs in Romania from the job boards of 19 companies (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, career sitemaps), and of the companies people follow | |
 | CVs tailored by Claude in three steps, checked sentence by sentence | An evaluation set to tune the prompts on more people and jobs |
 | PDF and DOCX export, ATS checks | CVs in Romanian |
 

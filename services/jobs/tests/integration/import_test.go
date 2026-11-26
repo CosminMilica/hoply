@@ -2,16 +2,20 @@ package integration_test
 
 import (
 	"context"
+	"net/http"
 	"slices"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 
+	"jobs/internal/app"
+	"jobs/internal/config"
 	"jobs/internal/data/repositories"
 	"jobs/internal/identity"
 	"jobs/internal/importer"
 	"jobs/internal/models"
+	"jobs/tests/testutil"
 )
 
 func importedJob(id, title string) models.ImportedJob {
@@ -104,5 +108,60 @@ func TestImportLockAgainstPostgres(t *testing.T) {
 	cancel()
 	if _, ok, err := lock(cancelled); err == nil || ok {
 		t.Fatalf("no lock without a connection: %v %v", ok, err)
+	}
+}
+
+func TestFollowedBoardsAgainstPostgres(t *testing.T) {
+	handler, pool := application(t, isolatedSchema(t))
+	ctx := context.Background()
+	repo := repositories.NewPgBoardRepository(pool)
+	if boards, err := repo.Followed(ctx); err != nil || len(boards) != 0 {
+		t.Fatalf("none followed yet: %v %v", boards, err)
+	}
+	first, err := repo.Follow(ctx, models.Board{Company: "Northwind", Platform: "lever", Board: "northwind"})
+	if err != nil || first.FollowedAt == nil || first.Company != "Northwind" {
+		t.Fatalf("follow: %+v %v", first, err)
+	}
+	again, err := repo.Follow(ctx, models.Board{Company: "Renamed", Platform: "lever", Board: "northwind"})
+	if err != nil || again.Company != "Northwind" || !again.FollowedAt.Equal(*first.FollowedAt) {
+		t.Fatalf("a board followed again stays as it was: %+v %v", again, err)
+	}
+	if boards, _ := repo.Followed(ctx); len(boards) != 1 {
+		t.Fatalf("followed: %+v", boards)
+	}
+
+	status, body := testutil.Do(t, handler, http.MethodPost, "/api/v1/boards", map[string]any{"url": "https://jobs.ashbyhq.com/linear/1", "company": "Linear"})
+	if status != http.StatusCreated || body["board"] != "linear" {
+		t.Fatalf("follow through the API: %d %v", status, body)
+	}
+	if status, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/boards/of?url=https://jobs.ashbyhq.com/linear/2", nil); status != http.StatusOK || body["imported"] != true {
+		t.Fatalf("of: %d %v", status, body)
+	}
+
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := repo.Followed(cancelled); err == nil {
+		t.Fatal("a cancelled read fails")
+	}
+	if _, err := repo.Follow(cancelled, models.Board{Company: "X", Platform: "lever", Board: "x"}); err == nil {
+		t.Fatal("a cancelled follow fails")
+	}
+}
+
+func TestBuildStartsTheImporterOnlyWhenAsked(t *testing.T) {
+	_, pool := application(t, isolatedSchema(t))
+	cfg := config.Defaults()
+	t.Setenv("JOBS_IMPORT", "")
+	if service, err := app.Build(&cfg, pool); err != nil || service.Importer != nil || service.Handler == nil {
+		t.Fatalf("off: %+v %v", service, err)
+	}
+	t.Setenv("JOBS_IMPORT", "on")
+	service, err := app.Build(&cfg, pool)
+	if err != nil || service.Importer == nil || service.Interval != importer.Interval || len(service.Importer.Listed()) == 0 {
+		t.Fatalf("on: %+v %v", service, err)
+	}
+	t.Setenv("JOBS_IMPORT_INTERVAL", "soon")
+	if _, err := app.Build(&cfg, pool); err == nil {
+		t.Fatal("a bad interval fails")
 	}
 }

@@ -10,7 +10,10 @@ import { useJobsQuery } from './useJobs'
 export type ScoredJob = Job & JobMatch
 export type Decision = 'save' | 'skip' | 'tailor'
 
-/** The jobs the filters find, best match first, without the ones already saved or skipped. */
+/** A company posts one job once per city: those postings are one job in the deck. */
+const sameJob = (job: Pick<Job, 'company' | 'title'>) => `${job.company.trim().toLowerCase()}\n${job.title.trim().toLowerCase()}`
+
+/** The jobs the filters find, best match first, one per company and title, without the ones already saved or skipped. */
 export function useDeck() {
   const search = useJobSearchStore()
   const jobs = useJobsQuery(() => search.filters)
@@ -22,10 +25,19 @@ export function useDeck() {
     const tracked = new Set((applications.data.value ?? []).map(item => item.job_id))
     const skipped = new Set(skips.data.value ?? [])
     const skills = profile.data.value ? knownSkills(profile.data.value) : []
-    return (jobs.data.value?.items ?? [])
-      .filter(job => !tracked.has(job.id) && !skipped.has(job.id))
+    const items = jobs.data.value?.items ?? []
+    const decided = new Set(items.filter(job => tracked.has(job.id) || skipped.has(job.id)).map(sameJob))
+    const shown = new Set<string>()
+    return items
+      .filter(job => !decided.has(sameJob(job)))
       .map(job => ({ ...job, ...matchJob(job, skills) }))
       .sort((a, b) => b.score - a.score)
+      .filter((job) => {
+        const key = sameJob(job)
+        if (shown.has(key)) return false
+        shown.add(key)
+        return true
+      })
   })
   const loading = computed(() => jobs.isPending.value || applications.isPending.value || skips.isPending.value)
 

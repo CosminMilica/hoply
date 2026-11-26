@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -254,6 +255,13 @@ func (r *Reader) readBoard(ctx context.Context, board *board) (*Page, error) {
 // get fetches target and returns its body when the response is a 2xx of the
 // media type wanted, of at most limit bytes.
 func (r *Reader) get(ctx context.Context, target *url.URL, media string, limit int64) ([]byte, *url.URL, error) {
+	return r.send(ctx, http.MethodGet, target, nil, limit, media)
+}
+
+// send makes a request, with a JSON body when body is not nil, and returns the
+// response body when it is a 2xx of one of the media types, of at most limit
+// bytes.
+func (r *Reader) send(ctx context.Context, method string, target *url.URL, body []byte, limit int64, media ...string) ([]byte, *url.URL, error) {
 	address := target.String()
 	if base, ok := r.opts.Hosts[target.Host]; ok {
 		rewritten := *target
@@ -262,12 +270,19 @@ func (r *Reader) get(ctx context.Context, target *url.URL, media string, limit i
 		}
 		address = rewritten.String()
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, address, nil)
+	var payload io.Reader
+	if body != nil {
+		payload = bytes.NewReader(body)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, address, payload)
 	if err != nil {
 		return nil, nil, fail(FetchFailed, err)
 	}
 	req.Header.Set("User-Agent", r.opts.UserAgent)
-	req.Header.Set("Accept", media)
+	req.Header.Set("Accept", strings.Join(media, ", "))
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	resp, err := r.client.Do(req)
 	if err != nil {
 		var unreadable *Error
@@ -280,18 +295,18 @@ func (r *Reader) get(ctx context.Context, target *url.URL, media string, limit i
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, nil, fail(FetchFailed, fmt.Errorf("status %d", resp.StatusCode))
 	}
-	if got, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type")); err != nil || got != media {
-		return nil, nil, fail(FetchFailed, fmt.Errorf("content type %q is not %s", resp.Header.Get("Content-Type"), media))
+	if got, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type")); err != nil || !slices.Contains(media, got) {
+		return nil, nil, fail(FetchFailed, fmt.Errorf("content type %q is not %s", resp.Header.Get("Content-Type"), strings.Join(media, " or ")))
 	}
 	if resp.ContentLength > limit {
 		return nil, nil, fail(TooLarge, nil)
 	}
-	var body bytes.Buffer
-	if _, err := io.Copy(&body, io.LimitReader(resp.Body, limit+1)); err != nil {
+	var answer bytes.Buffer
+	if _, err := io.Copy(&answer, io.LimitReader(resp.Body, limit+1)); err != nil {
 		return nil, nil, fail(FetchFailed, err)
 	}
-	if int64(body.Len()) > limit {
+	if int64(answer.Len()) > limit {
 		return nil, nil, fail(TooLarge, nil)
 	}
-	return body.Bytes(), resp.Request.URL, nil
+	return answer.Bytes(), resp.Request.URL, nil
 }

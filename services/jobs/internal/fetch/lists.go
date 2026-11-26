@@ -5,28 +5,71 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 )
 
-// Platforms are the job board platforms List reads.
-var Platforms = []string{"greenhouse", "lever", "lever-eu", "ashby"}
+// Platforms are the job board platforms List reads. A sitemap board is a
+// career site's sitemap; its job pages are read like a link.
+var Platforms = []string{"greenhouse", "lever", "lever-eu", "ashby", "workday", "smartrecruiters", "sitemap"}
 
-// Posting is one job a company's board lists. Places are every location the
-// board gives the job, the page's own first.
-type Posting struct {
-	ID       string
-	URL      string
-	PostedAt *time.Time
-	Places   []string
-	Page     Page
+// Country is the market a list keeps to on the platforms that filter by
+// country (Workday, SmartRecruiters): its ISO code and its English name.
+type Country struct {
+	Code string
+	Name string
 }
 
-// List reads every job a company's board lists on platform, in one call to
-// the platform's public API.
-func (r *Reader) List(ctx context.Context, platform, board string) ([]Posting, error) {
+// Posting is one job a company's board lists. Places are every location the
+// board gives the job. InCountry is set when the platform itself kept the list
+// to the country. A posting whose list has no description is read by Describe.
+type Posting struct {
+	ID        string
+	URL       string
+	PostedAt  *time.Time
+	Places    []string
+	InCountry bool
+	Page      Page
+	describe  func(ctx context.Context, r *Reader) (*Page, []string, *time.Time, error)
+}
+
+// CheckBoard reports whether board is a valid board name on platform.
+func CheckBoard(platform, board string) error {
+	switch platform {
+	case "workday":
+		_, _, err := workdaySite(board)
+		return err
+	case "sitemap":
+		if u, err := url.Parse(board); err != nil || u.Scheme != "https" || u.Hostname() == "" {
+			return fmt.Errorf("a sitemap board is an https link, got %q", board)
+		}
+		return nil
+	case "greenhouse", "lever", "lever-eu", "ashby", "smartrecruiters":
+		if board == "" || strings.ContainsAny(board, "/?# ") {
+			return fmt.Errorf("a %s board is a name without slashes, got %q", platform, board)
+		}
+		return nil
+	}
+	return fmt.Errorf("unknown platform %q", platform)
+}
+
+// List reads every job a company's board lists on platform; Workday and
+// SmartRecruiters keep to country.
+func (r *Reader) List(ctx context.Context, platform, board string, country Country) ([]Posting, error) {
+	if err := CheckBoard(platform, board); err != nil {
+		return nil, err
+	}
+	switch platform {
+	case "workday":
+		return r.workday(ctx, board, country)
+	case "smartrecruiters":
+		return r.smartRecruitersList(ctx, board, country)
+	case "sitemap":
+		return r.sitemap(ctx, board)
+	}
 	var api string
 	var read func([]byte) ([]Posting, error)
 	switch platform {
@@ -38,16 +81,10 @@ func (r *Reader) List(ctx context.Context, platform, board string) ([]Posting, e
 			host = leverAPIs["jobs.eu.lever.co"]
 		}
 		api, read = host+"/v0/postings/"+url.PathEscape(board)+"?mode=json", func(body []byte) ([]Posting, error) { return leverList(body, board) }
-	case "ashby":
-		api, read = "https://api.ashbyhq.com/posting-api/job-board/"+url.PathEscape(board), func(body []byte) ([]Posting, error) { return ashbyList(body, board) }
 	default:
-		return nil, fmt.Errorf("unknown platform %q", platform)
+		api, read = "https://api.ashbyhq.com/posting-api/job-board/"+url.PathEscape(board), func(body []byte) ([]Posting, error) { return ashbyList(body, board) }
 	}
-	target, err := url.Parse(api)
-	if err != nil {
-		return nil, fail(FetchFailed, err)
-	}
-	body, _, err := r.get(ctx, target, "application/json", r.opts.MaxAPIBytes)
+	body, err := r.json(ctx, http.MethodGet, api, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +96,41 @@ func (r *Reader) List(ctx context.Context, platform, board string) ([]Posting, e
 		postings[i].Page.ReadFrom = "ats_api"
 	}
 	return postings, nil
+}
+
+// Describe reads a posting's description when its list had none; it does
+// nothing for a posting that has it.
+func (r *Reader) Describe(ctx context.Context, p *Posting) error {
+	if p.describe == nil {
+		return nil
+	}
+	page, places, posted, err := p.describe(ctx, r)
+	if err != nil {
+		return err
+	}
+	page.Title, page.Company = firstOf(page.Title, p.Page.Title), firstOf(page.Company, p.Page.Company)
+	page.City, page.Country, page.WorkMode = firstOf(page.City, p.Page.City), firstOf(page.Country, p.Page.Country), firstOf(page.WorkMode, p.Page.WorkMode)
+	p.Page, p.Places, p.describe = *page, append(p.Places, places...), nil
+	if posted != nil {
+		p.PostedAt = posted
+	}
+	return nil
+}
+
+// json calls a board API and returns its JSON answer.
+func (r *Reader) json(ctx context.Context, method, api string, body any) ([]byte, error) {
+	target, err := url.Parse(api)
+	if err != nil {
+		return nil, fail(FetchFailed, err)
+	}
+	var payload []byte
+	if body != nil {
+		if payload, err = json.Marshal(body); err != nil {
+			return nil, fail(FetchFailed, err)
+		}
+	}
+	answer, _, err := r.send(ctx, method, target, payload, r.opts.MaxAPIBytes, "application/json")
+	return answer, err
 }
 
 type greenhouseJob struct {

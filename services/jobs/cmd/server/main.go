@@ -11,9 +11,7 @@ import (
 
 	"jobs/internal/app"
 	"jobs/internal/config"
-	"jobs/internal/data/repositories"
 	"jobs/internal/db"
-	"jobs/internal/importer"
 	// FORGE:IMPORTS
 )
 
@@ -50,13 +48,13 @@ func run() int {
 	defer pool.Close()
 	// FORGE:POOL_READY
 
-	jobImporter, interval, err := importer.FromEnv(repositories.NewPgJobRepository(pool), pool)
+	service, err := app.Build(cfg, pool)
 	if err != nil {
 		slog.Error("job import configuration error", "error", err)
 		return 1
 	}
-	if jobImporter != nil {
-		go jobImporter.Run(ctx, interval)
+	if service.Importer != nil {
+		go service.Importer.Run(ctx, service.Interval)
 	}
 
 	listener, err := app.Listen(cfg.Server.Port)
@@ -64,7 +62,7 @@ func run() int {
 		slog.Error("listen failed", "error", err)
 		return 1
 	}
-	if err := app.Serve(ctx, listener, app.New(cfg, pool)); err != nil {
+	if err := app.Serve(ctx, listener, service.Handler); err != nil {
 		slog.Error("server failed", "error", err)
 		return 1
 	}

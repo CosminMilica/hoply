@@ -102,3 +102,25 @@ func pathID(r *http.Request) (uuid.UUID, error) {
 	}
 	return id, nil
 }
+
+// registerBoards mounts the job boards people follow (docs/api/jobs.md).
+func registerBoards(router chi.Router, boards *services.BoardService) {
+	router.Get("/of", handle(func(w http.ResponseWriter, r *http.Request) error {
+		of, err := boards.Of(r.Context(), requestIdentity(r), r.URL.Query().Get("url"))
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, of)
+	}))
+	router.Post("/", handle(func(w http.ResponseWriter, r *http.Request) error {
+		var body models.FollowInput
+		if err := decode(r, &body); err != nil {
+			return err
+		}
+		board, err := boards.Follow(r.Context(), requestIdentity(r), body)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusCreated, board)
+	}))
+}

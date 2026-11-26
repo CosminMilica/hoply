@@ -123,7 +123,14 @@ export function yearsLine(job: Pick<Job, 'years_required'>, profile: Pick<Profil
 
 const hostOf = (url: string) => url.replace(/^https?:\/\//i, '').split('/')[0] ?? ''
 
-const PLATFORMS: Record<string, string> = { 'greenhouse': 'Greenhouse', 'lever': 'Lever', 'lever-eu': 'Lever', 'ashby': 'Ashby' }
+const PLATFORMS: Record<string, string> = {
+  'greenhouse': 'Greenhouse', 'lever': 'Lever', 'lever-eu': 'Lever', 'ashby': 'Ashby', 'workday': 'Workday', 'smartrecruiters': 'SmartRecruiters',
+}
+
+/** "Greenhouse" for greenhouse; the platform as it is for one without a name. */
+export function platformLabel(platform: string): string {
+  return PLATFORMS[platform] ?? platform
+}
 
 /** "today", "yesterday", "3 days ago", or the date after a month. */
 export function postedAgo(at: string, now = new Date()): string {

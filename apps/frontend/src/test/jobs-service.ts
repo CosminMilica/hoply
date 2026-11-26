@@ -34,8 +34,11 @@ export function createJobsBackend() {
   let sequence = 0
   const find = (id: string) => jobs.find(job => job.id === id)
 
+  const boards: { platform: string, board: string, company: string, followed_at: string }[] = []
+
   return {
     jobs,
+    boards,
     list(params: URLSearchParams): Answer {
       const q = plain(params.get('q') ?? '')
       const city = plain(params.get('city') ?? '')
@@ -98,6 +101,19 @@ export function createJobsBackend() {
       jobs.unshift(job)
       return { status: 201, body: job }
     },
+    boardOf(link: string): Answer {
+      const found = boardOfLink(link)
+      if (!found) return { status: 404, body: { error: { code: 'NOT_FOUND', message: 'Board not found' } } }
+      const followed = boards.find(item => item.platform === found.platform && item.board === found.board)
+      return { status: 200, body: { ...found, company: followed?.company ?? '', imported: Boolean(followed) } }
+    },
+    follow(body: { url?: string, company?: string }): Answer {
+      const found = boardOfLink(body.url ?? '')
+      if (!found) return invalid('url', "'url' must be a job link on a board Hoply reads")
+      const board = { ...found, company: (body.company ?? '').trim(), followed_at: new Date().toISOString() }
+      boards.push(board)
+      return { status: 201, body: board }
+    },
     remove(id: string): Answer {
       const job = find(id)
       if (!job || !job.added_by_me) return { status: 404, body: { error: { code: 'NOT_FOUND', message: 'Job not found' } } }
@@ -105,6 +121,25 @@ export function createJobsBackend() {
       return { status: 204 }
     },
   }
+}
+
+/** The board platforms the service reads, by the link's host: a simpler reading of the service's rules. */
+function boardOfLink(link: string): { platform: string, board: string } | null {
+  let url: URL
+  try {
+    url = new URL(link)
+  }
+  catch {
+    return null
+  }
+  const first = url.pathname.split('/').filter(Boolean)[0] ?? ''
+  const platform = /greenhouse\.io$/.test(url.hostname) ? 'greenhouse'
+    : url.hostname === 'jobs.lever.co' ? 'lever'
+      : url.hostname === 'jobs.ashbyhq.com' ? 'ashby'
+        : url.hostname === 'jobs.smartrecruiters.com' ? 'smartrecruiters'
+          : /\.myworkdayjobs\.com$/.test(url.hostname) ? 'workday' : ''
+  if (!platform || !first) return null
+  return { platform, board: platform === 'workday' ? `${url.hostname}/${first}` : first }
 }
 
 export type JobsBackend = ReturnType<typeof createJobsBackend>
@@ -122,6 +157,8 @@ export function jobsServiceHandlers(backend: JobsBackend = createJobsBackend()) 
       http.get(`${BASE}/:id`, ({ params }) => reply(backend.get(String(params.id)))),
       http.post(BASE, async ({ request }) => reply(backend.create(await request.json() as never))),
       http.delete(`${BASE}/:id`, ({ params }) => reply(backend.remove(String(params.id)))),
+      http.get('*/api/jobs/v1/boards/of', ({ request }) => reply(backend.boardOf(new URL(request.url).searchParams.get('url') ?? ''))),
+      http.post('*/api/jobs/v1/boards', async ({ request }) => reply(backend.follow(await request.json() as never))),
     ],
   }
 }

@@ -1,7 +1,11 @@
 # Companies whose public job boards the importer reads. Only jobs based in Romania, in the areas Find jobs
-# filters on, are kept. platform is one of greenhouse, lever, lever-eu, ashby; board is the company's name on it, as
-# in its board's links (job-boards.greenhouse.io/<board>, jobs.lever.co/<board>, jobs.eu.lever.co/<board>,
-# jobs.ashbyhq.com/<board>).
+# filters on, are kept. board is the company's name on its platform, as in its board's links:
+#   greenhouse        job-boards.greenhouse.io/<board>
+#   lever, lever-eu   jobs.lever.co/<board>, jobs.eu.lever.co/<board>
+#   ashby             jobs.ashbyhq.com/<board>
+#   smartrecruiters   jobs.smartrecruiters.com/<board>
+#   workday           <tenant>.wdN.myworkdayjobs.com/<site>, the board being that host and site
+#   sitemap           a career site's sitemap link, when its robots.txt allows the job pages
 boards:
   - {company: Bitdefender, platform: greenhouse, board: scbitdefendersrl}
   - {company: IONOS, platform: greenhouse, board: ionos2}
@@ -13,3 +17,12 @@ boards:
   - {company: eMAG, platform: greenhouse, board: emag}
   - {company: Hootsuite, platform: greenhouse, board: hootsuite}
   - {company: OLX, platform: lever-eu, board: olx}
+  - {company: CrowdStrike, platform: workday, board: crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers}
+  - {company: LSEG, platform: workday, board: lseg.wd3.myworkdayjobs.com/Careers}
+  - {company: Adobe, platform: workday, board: adobe.wd5.myworkdayjobs.com/external_experienced}
+  - {company: Accenture, platform: workday, board: accenture.wd103.myworkdayjobs.com/AccentureCareers}
+  - {company: Bosch, platform: smartrecruiters, board: BoschGroup}
+  - {company: Endava, platform: smartrecruiters, board: Endava}
+  - {company: Continental, platform: smartrecruiters, board: Continental}
+  - {company: Ubisoft, platform: smartrecruiters, board: Ubisoft2}
+  - {company: ING, platform: sitemap, board: https://careers.ing.com/sitemap.xml}
