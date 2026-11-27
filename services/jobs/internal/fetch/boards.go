@@ -44,6 +44,8 @@ func boardFor(u *url.URL) *board {
 		return ashby(parts[0], parts[1])
 	case host == "jobs.smartrecruiters.com" && len(parts) >= 2 && leadingDigits.MatchString(parts[1]):
 		return smartRecruiters(parts[0], leadingDigits.FindString(parts[1]))
+	case bambooHRCompany(host) != "" && len(parts) >= 2 && parts[0] == "careers" && digits.MatchString(parts[1]):
+		return bambooHR(bambooHRCompany(host), parts[1])
 	case host == "apply.workable.com" && len(parts) >= 3 && parts[1] == "j":
 		return workable(parts[0], parts[2])
 	}

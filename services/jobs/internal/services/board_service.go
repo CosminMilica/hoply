@@ -77,7 +77,7 @@ func (s *BoardService) Follow(ctx context.Context, ident identity.IdentityContex
 	}
 	platform, board, ok := fetch.BoardOf(in.URL)
 	if !ok {
-		return nil, invalid("url", "'url' must be a job link on a board Hoply reads: Greenhouse, Lever, Ashby, SmartRecruiters or Workday")
+		return nil, invalid("url", "'url' must be a job link on a board Hoply reads: Greenhouse, Lever, Ashby, SmartRecruiters, Workday or BambooHR")
 	}
 	if s.importer != nil {
 		for _, listed := range s.importer.Listed() {
