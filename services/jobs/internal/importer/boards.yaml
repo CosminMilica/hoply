@@ -58,3 +58,31 @@ boards:
   - {company: Speechify, platform: greenhouse, board: speechify}
   - {company: Showpad, platform: greenhouse, board: showpad}
   - {company: Sand Technologies, platform: greenhouse, board: sandtechholdingslimited}
+  - {company: Marsh McLennan, platform: workday, board: mmc.wd1.myworkdayjobs.com/MMC}
+  - {company: Thales, platform: workday, board: thales.wd3.myworkdayjobs.com/Careers}
+  - {company: GE Vernova, platform: workday, board: gevernova.wd5.myworkdayjobs.com/Vernova_ExternalSite}
+  - {company: Wolters Kluwer, platform: workday, board: wk.wd3.myworkdayjobs.com/External}
+  - {company: Hewlett Packard Enterprise, platform: workday, board: hpe.wd5.myworkdayjobs.com/Jobsathpe}
+  - {company: NVIDIA, platform: workday, board: nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite}
+  - {company: Veeam, platform: greenhouse, board: veeamsoftware}
+  - {company: Axon, platform: greenhouse, board: axon}
+  - {company: Suvoda, platform: greenhouse, board: suvoda}
+  - {company: Bitpanda, platform: greenhouse, board: bitpanda}
+  - {company: N-iX, platform: greenhouse, board: nix}
+  - {company: Stripe, platform: greenhouse, board: stripe}
+  - {company: In The Pocket, platform: greenhouse, board: inthepocket}
+  - {company: Legion Technologies, platform: greenhouse, board: legion}
+  - {company: Wizeline, platform: greenhouse, board: wizeline}
+  - {company: TechQuarter, platform: lever, board: techquarter}
+  - {company: Everseen, platform: lever-eu, board: everseen}
+  - {company: Patrianna, platform: ashby, board: patrianna}
+  - {company: 3Y Health, platform: ashby, board: 3y-health}
+  - {company: Sophos, platform: ashby, board: sophos}
+  - {company: Masabi, platform: ashby, board: masabi}
+  - {company: SugarAI, platform: ashby, board: sugarai}
+  - {company: qlub, platform: ashby, board: qlub}
+  - {company: Coface, platform: smartrecruiters, board: coface}
+  - {company: Steelcase, platform: smartrecruiters, board: steelcaseinc}
+  - {company: Swissquote, platform: smartrecruiters, board: swissquote}
+  - {company: Pitech, platform: smartrecruiters, board: pitechplus}
+  - {company: Softex, platform: smartrecruiters, board: SoftexCompany}
