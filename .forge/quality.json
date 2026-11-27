@@ -99,15 +99,27 @@
       "layouts": [
         {
           "menus": {
-            "primary": [
+            "account": [
               {
                 "items": [
                   {
                     "icon": "i-lucide-user",
                     "id": "profile",
-                    "label": "Profile",
+                    "label": "Your profile",
                     "to": "hoply-profile"
                   },
+                  {
+                    "icon": "i-lucide-target",
+                    "id": "skills",
+                    "label": "Skill gaps",
+                    "to": "hoply-skills"
+                  }
+                ]
+              }
+            ],
+            "primary": [
+              {
+                "items": [
                   {
                     "icon": "i-lucide-search",
                     "id": "jobs",
@@ -120,6 +132,13 @@
                     "id": "saved",
                     "label": "Saved",
                     "to": "hoply-saved"
+                  },
+                  {
+                    "badge": "applications",
+                    "icon": "i-lucide-briefcase",
+                    "id": "applications",
+                    "label": "Applications",
+                    "to": "hoply-applications"
                   }
                 ]
               }
@@ -170,15 +189,27 @@
         "layouts": [
           {
             "menus": {
-              "primary": [
+              "account": [
                 {
                   "items": [
                     {
                       "icon": "i-lucide-user",
                       "id": "profile",
-                      "label": "Profile",
+                      "label": "Your profile",
                       "to": "hoply-profile"
                     },
+                    {
+                      "icon": "i-lucide-target",
+                      "id": "skills",
+                      "label": "Skill gaps",
+                      "to": "hoply-skills"
+                    }
+                  ]
+                }
+              ],
+              "primary": [
+                {
+                  "items": [
                     {
                       "icon": "i-lucide-search",
                       "id": "jobs",
@@ -191,6 +222,13 @@
                       "id": "saved",
                       "label": "Saved",
                       "to": "hoply-saved"
+                    },
+                    {
+                      "badge": "applications",
+                      "icon": "i-lucide-briefcase",
+                      "id": "applications",
+                      "label": "Applications",
+                      "to": "hoply-applications"
                     }
                   ]
                 }

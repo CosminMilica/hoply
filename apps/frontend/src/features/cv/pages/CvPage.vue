@@ -58,7 +58,7 @@ async function download(format: 'pdf' | 'docx') {
     </div>
     <div v-else class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[380px_minmax(0,1fr)] min-[900px]:items-start min-[900px]:gap-x-12">
       <div class="contents min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4">
-        <UButton :to="{ name: 'hoply-saved' }" label="Saved jobs" icon="i-lucide-chevron-left" variant="ghost" color="neutral" class="order-0 self-start px-1 text-toned" />
+        <UButton :to="{ name: 'hoply-applications' }" label="Applications" icon="i-lucide-chevron-left" variant="ghost" color="neutral" class="order-0 self-start px-1 text-toned" />
         <div class="order-1 -mt-2.5 flex flex-col gap-1">
           <h1 class="m-0 text-[26px] leading-tight font-extrabold tracking-tight">Your CV is ready</h1>
           <p class="m-0 text-[15px] font-medium text-muted">For {{ cv.job_title }} at {{ cv.company }}</p>

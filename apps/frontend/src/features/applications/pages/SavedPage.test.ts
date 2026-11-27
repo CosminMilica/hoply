@@ -6,38 +6,33 @@ import SavedPage from './SavedPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
 const text = () => document.body.textContent ?? ''
+const titles = () => [...document.querySelectorAll('[data-test="saved-job"] h2')].map(title => title.textContent)
 
 afterEach(() => {
   document.body.innerHTML = ''
 })
 
 describe('SavedPage', () => {
-  it('lists tracked jobs by status, with what each needs next', async () => {
+  it('lists only the saved jobs, best match first or newest first, with what each needs', async () => {
     const { applications } = useServices()
     applications.track(seedId(1), 'saved')
+    applications.track(seedId(4), 'saved')
     applications.track(seedId(2), 'cv_ready')
     applications.track(seedId(3), 'applied')
-    const { router } = await mountPage(SavedPage)
-    expect(button('All 3').getAttribute('aria-pressed')).toBe('true')
-    expect([...document.querySelectorAll('[data-test="since"]')].map(line => line.textContent)).toEqual(['Applied 25 Nov', 'CV ready 25 Nov', 'Saved 25 Nov'])
+    await mountPage(SavedPage)
+    expect(button('Best match').getAttribute('aria-pressed')).toBe('true')
+    const byMatch = titles()
+    expect(byMatch).toHaveLength(2)
+    expect([...document.querySelectorAll('[data-test="since"]')].map(line => line.textContent)).toEqual(['Saved 25 Nov', 'Saved 25 Nov'])
     expect(text()).toContain('Missing: Snowflake, Terraform, Infrastructure as Code, RBAC')
-    expect([...document.querySelectorAll('a')].find(link => link.textContent?.trim() === 'Skill gaps')?.getAttribute('href')).toBe('/saved/skills')
+    expect(text()).not.toContain('Skill gaps')
 
-    await click(button('Saved 1'))
-    expect(text()).toContain('Snowflake Administrator DevOps')
-    expect(text()).not.toContain('Software Engineer')
-
-    await click(button('CV ready 1'))
-    await click(button('I applied with this CV'))
-    expect(applications.applications.get(seedId(2))?.status).toBe('applied')
-    expect(text()).toContain('No jobs with this status yet.')
-
-    await click(button('Applied 2'))
-    await click(button('View CV'))
-    expect(router.currentRoute.value.name).toBe('hoply-cv')
+    await click(button('Newest'))
+    expect(button('Newest').getAttribute('aria-pressed')).toBe('true')
+    expect(titles()).toEqual([...byMatch].reverse())
   })
 
-  it('moves a saved job whose CV got ready in the background on to CV ready', async () => {
+  it('moves a saved job whose CV got ready in the background on to Applications', async () => {
     const { applications, cvs } = useServices()
     applications.track(seedId(1), 'saved')
     applications.track(seedId(4), 'saved')
@@ -45,7 +40,7 @@ describe('SavedPage', () => {
     await mountPage(SavedPage)
     await vi.waitFor(() => expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready'))
     expect(applications.applications.get(seedId(4))?.status).toBe('saved')
-    expect(button('CV ready 1')).toBeTruthy()
+    await vi.waitFor(() => expect(titles()).toHaveLength(1))
   })
 
   it('says when the saved jobs cannot be loaded, and asks for them 200 at a time', async () => {
@@ -68,13 +63,19 @@ describe('SavedPage', () => {
     applications.track(seedId(4), 'saved')
     const { router } = await mountPage(SavedPage)
     expect(text()).toContain('Missing: Windows Server')
+    expect(() => button('Best match')).toThrow()
     await click(button('Prepare CV'))
     expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: seedId(4) } })
     await click(button('Remove from saved'))
     expect(applications.applications.size).toBe(0)
     expect(text()).toContain('Nothing saved yet. Add a job you found, from its link or its text, and it lands here.')
-    const adds = [...document.querySelectorAll('a')].filter(link => link.textContent?.trim() === 'Add a job')
-    expect(adds.map(link => link.getAttribute('href'))).toEqual(['/jobs/add?from=saved', '/jobs/add?from=saved'])
-    expect(text()).not.toContain('Find jobs')
+    expect(button('Add a job').getAttribute('href')).toBe('/jobs/add?from=saved')
+  })
+
+  it('says every saved job has a CV once they all moved on', async () => {
+    const { applications } = useServices()
+    applications.track(seedId(2), 'applied')
+    await mountPage(SavedPage)
+    expect(text()).toContain('Every saved job has a CV now.')
   })
 })

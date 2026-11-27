@@ -3,7 +3,7 @@ import router, { hoplyRoutes } from './index'
 
 describe('the application router', () => {
   it('composes hoply’s pages into the app layout, starting on the profile', async () => {
-    expect(hoplyRoutes.map(route => route.name)).toEqual(['hoply-profile', 'hoply-jobs', 'hoply-job-add', 'hoply-job', 'hoply-prep', 'hoply-cv', 'hoply-saved', 'hoply-skills'])
+    expect(hoplyRoutes.map(route => route.name)).toEqual(['hoply-profile', 'hoply-jobs', 'hoply-job-add', 'hoply-job', 'hoply-prep', 'hoply-cv', 'hoply-saved', 'hoply-applications', 'hoply-skills'])
     expect(router.resolve({ name: 'hoply-prep', params: { id: '3' } }).path).toBe('/jobs/3/prepare')
     expect(router.resolve({ name: 'hoply-cv', params: { id: '3' } }).path).toBe('/jobs/3/cv')
     await router.push('/')
@@ -16,6 +16,9 @@ describe('the application router', () => {
     expect(add.meta.menu).toBe('saved')
     await router.push('/jobs/1')
     expect(router.currentRoute.value.matched.at(-1)!.meta.menu).toBe('saved')
+    await router.push('/jobs/1/cv')
+    expect(router.currentRoute.value.matched.at(-1)!.meta.menu).toBe('applications')
+    expect(router.resolve({ name: 'hoply-skills' }).path).toBe('/skills')
     for (const route of hoplyRoutes) {
       const component = (route as { component: () => Promise<unknown> }).component
       expect(await component()).toBeTruthy()

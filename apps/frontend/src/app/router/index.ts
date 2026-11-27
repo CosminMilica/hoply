@@ -19,9 +19,10 @@ export const hoplyRoutes: RouteRecordRaw[] = [
   },
   { path: 'jobs/:id', name: 'hoply-job', component: () => import('@/features/jobs/pages/JobPage.vue'), props: true, meta: { title: 'Job', menu: 'saved' } },
   { path: 'jobs/:id/prepare', name: 'hoply-prep', component: () => import('@/features/cv/pages/PrepPage.vue'), props: true, meta: { title: 'Prepare your CV', menu: 'saved' } },
-  { path: 'jobs/:id/cv', name: 'hoply-cv', component: () => import('@/features/cv/pages/CvPage.vue'), props: true, meta: { title: 'Your CV', menu: 'saved' } },
+  { path: 'jobs/:id/cv', name: 'hoply-cv', component: () => import('@/features/cv/pages/CvPage.vue'), props: true, meta: { title: 'Your CV', menu: 'applications' } },
   { path: 'saved', name: 'hoply-saved', component: () => import('@/features/applications/pages/SavedPage.vue'), meta: { title: 'Saved jobs', menu: 'saved' } },
-  { path: 'saved/skills', name: 'hoply-skills', component: () => import('@/features/applications/pages/SkillGapsPage.vue'), meta: { title: 'Skill gaps', menu: 'saved' } },
+  { path: 'applications', name: 'hoply-applications', component: () => import('@/features/applications/pages/ApplicationsPage.vue'), meta: { title: 'Applications', menu: 'applications' } },
+  { path: 'skills', name: 'hoply-skills', component: () => import('@/features/applications/pages/SkillGapsPage.vue'), meta: { title: 'Skill gaps', menu: 'skills' } },
 ]
 
 const router = createApplicationRouter({

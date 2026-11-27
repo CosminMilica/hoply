@@ -38,8 +38,7 @@ test('the application shell boots on the landing route with its menus', async ({
   expect(shade).not.toBe('');
   const main = page.getByRole('navigation', { name: 'Main' });
   for (const label of topLevel) await expect(main.getByText(label, { exact: true }).first()).toBeVisible();
-  await page.locator('[data-shell="sidebar-toggle"]').click();
-  await page.locator('[data-shell="sidebar-toggle"]').click();
+  await expect(page.locator('[data-shell="sidebar-toggle"]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -87,14 +86,16 @@ if (placeholder) test('an item without a destination opens the placeholder route
   expect(errors).toEqual([]);
 });
 
-// Collapsed to icons, the sidebar's links and sub-menu buttons keep their names.
-test('the collapsed sidebar keeps the names of its items', async ({ page }) => {
+// From 900px the primary menu is tabs in the header, with no sidebar, and the avatar opens the account menu.
+test('on a wide screen the primary menu is tabs in the header, and the avatar opens the account menu', async ({ page }) => {
   await mockSession(page);
   await page.goto('/');
-  await page.locator('[data-shell="sidebar-toggle"]').click();
-  const main = page.getByRole('navigation', { name: 'Main' });
-  for (const label of topLevel) {
-    await expect(main.getByRole('link', { name: label, exact: true }).or(main.getByRole('button', { name: label, exact: true }))).toBeVisible();
+  const header = page.locator('[data-shell="header"]');
+  for (const label of topLevel) await expect(header.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: label })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Open sidebar' })).toBeHidden();
+  await header.getByRole('button', { name: 'Your profile and menu' }).click();
+  for (const item of layout.menus.account.flatMap(section => section.items)) {
+    await expect(page.getByRole('menuitem', { name: item.label })).toBeVisible();
   }
 });
 

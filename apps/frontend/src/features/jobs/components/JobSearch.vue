@@ -102,7 +102,6 @@ onBeforeUnmount(() => window.clearTimeout(timer))
           />
         </div>
         <UButton v-if="shownView === 'swipe'" label="Filters" color="neutral" variant="outline" @click="search.stage = 'filters'" />
-        <UButton v-else :to="{ name: 'hoply-job-add' }" icon="i-lucide-plus" label="Add a job" color="neutral" variant="outline" />
       </div>
     </div>
     <JobFilterBar v-if="shownView === 'grid'" />

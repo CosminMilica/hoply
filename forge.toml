@@ -166,930 +166,930 @@ dev_server = true
 "streaming.sse" = "default"
 
 [forge.provenance.".agents/skills/forge-platform/SKILL.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "778c0d24eb6739182c671d78abd752f4b7c40053eff7d03ba1bef241e9277af5"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/forge-platform/references/workloads.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "29d746e3b1958d391f74d715815d9e40de7506d8fe4546ae45e12b4905bdcb59"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/LICENSE.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6ccc347b162c046440394e641e4ab2ac7238b3c7b81bb77c39435e7540ac7748"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/SKILL.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "98f11149fc566b2826c15f1ce78b031bdd0476413b35b22bd0edb6df02ddb95e"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/components.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9648870284476354c4073f559c8892c670f67ecfed8a43af2ae7e8c0cca75526"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/guidelines/component-selection.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b4a7bd45aad3376848eca5a2b872365c0224bf06623f9453ce4f6a4d253f811c"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/guidelines/conventions.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "3c9f73e7bf6625af90f457494282dc94db005d50a6e56086ca91da7cf31f2316"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/guidelines/design-system.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e6e42bd531f82fcc6ed4375edc704b4f7d19ae0d63fde52f0f418e5b6564ade6"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/guidelines/forms.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2d98511a0c12729cb7ffbe75913fd71ad33c0dadc1936489a98891e1d5feefab"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/layouts/chat.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5326a5ec3a10545014be8d348619535fd820c4c633df4dcd63503f7280a62b41"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/layouts/dashboard.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fee6235a7cc3b08d2a2344d6980763c6613a8201ebf6c37998b4467443263e57"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/layouts/docs.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "761190a26517a3084a7cabd673a84b040766ce15c6ae53378ab4519e3b419510"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/layouts/editor.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7bc96dd3b88e97adc70a8f124a46c256e36dccf17c0e1233bf88238f10d18d8d"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/layouts/landing.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c9732e93e82e9d9fb95d5d7e21e1104797ab19d8f66c244a1362862c307cefca"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/recipes/auth.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "85721c3eac6d9d7ad5a882b9f7e124ba4ffc7368e5d8c3e06342017a1276fad0"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/recipes/data-tables.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7e39fb215dec6eb50d69a4515b807ad5d301304e5cedbc9b4673075b70311d3c"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/recipes/navigation.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5c6a7ee61a6938596c12800e2647dec7e72dbc2c1149c84ee3cd9c4aee15755b"
 template_name = "_common"
 
 [forge.provenance.".agents/skills/nuxt-ui/references/recipes/overlays.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "109556d0a67687312bc3e462ed1b921cd0356309bfc07eef527c3ca4fc780063"
 template_name = "_common"
 
 [forge.provenance.".claude/settings.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "062d78308067ddd107b600808e738b716553e6ee8f909fd648df304c49268138"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/forge-platform/SKILL.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "778c0d24eb6739182c671d78abd752f4b7c40053eff7d03ba1bef241e9277af5"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/forge-platform/references/workloads.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "29d746e3b1958d391f74d715815d9e40de7506d8fe4546ae45e12b4905bdcb59"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/LICENSE.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6ccc347b162c046440394e641e4ab2ac7238b3c7b81bb77c39435e7540ac7748"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/SKILL.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "98f11149fc566b2826c15f1ce78b031bdd0476413b35b22bd0edb6df02ddb95e"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/components.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9648870284476354c4073f559c8892c670f67ecfed8a43af2ae7e8c0cca75526"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/guidelines/component-selection.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b4a7bd45aad3376848eca5a2b872365c0224bf06623f9453ce4f6a4d253f811c"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/guidelines/conventions.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "3c9f73e7bf6625af90f457494282dc94db005d50a6e56086ca91da7cf31f2316"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/guidelines/design-system.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e6e42bd531f82fcc6ed4375edc704b4f7d19ae0d63fde52f0f418e5b6564ade6"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/guidelines/forms.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2d98511a0c12729cb7ffbe75913fd71ad33c0dadc1936489a98891e1d5feefab"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/layouts/chat.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5326a5ec3a10545014be8d348619535fd820c4c633df4dcd63503f7280a62b41"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/layouts/dashboard.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fee6235a7cc3b08d2a2344d6980763c6613a8201ebf6c37998b4467443263e57"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/layouts/docs.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "761190a26517a3084a7cabd673a84b040766ce15c6ae53378ab4519e3b419510"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/layouts/editor.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7bc96dd3b88e97adc70a8f124a46c256e36dccf17c0e1233bf88238f10d18d8d"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/layouts/landing.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c9732e93e82e9d9fb95d5d7e21e1104797ab19d8f66c244a1362862c307cefca"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/recipes/auth.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "85721c3eac6d9d7ad5a882b9f7e124ba4ffc7368e5d8c3e06342017a1276fad0"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/recipes/data-tables.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7e39fb215dec6eb50d69a4515b807ad5d301304e5cedbc9b4673075b70311d3c"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/recipes/navigation.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5c6a7ee61a6938596c12800e2647dec7e72dbc2c1149c84ee3cd9c4aee15755b"
 template_name = "_common"
 
 [forge.provenance.".claude/skills/nuxt-ui/references/recipes/overlays.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "109556d0a67687312bc3e462ed1b921cd0356309bfc07eef527c3ca4fc780063"
 template_name = "_common"
 
 [forge.provenance.".codex/config.toml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "f29e41415b522f66508d19568d5d348626075ed8904baae316f107f952d439ab"
 template_name = "_common"
 
 [forge.provenance.".editorconfig"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2ac15b8600196a9b1121807eea898e7d612306878e979cddb5610012a355ec50"
 template_name = "_common"
 
 [forge.provenance.".github/workflows/ci.yml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ebddcacb606658f51f5ad13c159d4ce6a147af42131364813211bb9e2a236bcb"
 template_name = "_common"
 
 [forge.provenance.".github/workflows/quality.yml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7c2d78f2bc68408be114ab13982341acc02dd364c8fbf9322df992919ff259f7"
 template_name = "_common"
 
 [forge.provenance.".gitignore"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "99517caa29227052d2e80216ce7f51b0e495d4ebee5afa48a9c34114929525f1"
 template_name = "_common"
 
 [forge.provenance.".mcp.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "22e05c81e7fe5963b926ccea2cd841468ef1170c80f47ffd42db9568824a4339"
 template_name = "_common"
 
 [forge.provenance.".pre-commit-config.yaml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2552d9d4633a0a8d0b9f5300162e912783abae05a146369129f74b9b69276eed"
 template_name = "_common"
 
 [forge.provenance."AGENTS.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 fragment_name = "agents_md"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "9d1d4cc2595631d1f62d446551c4b1818ada64a4cae195394cad2ae5c59cdad7"
 
 [forge.provenance."CLAUDE.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 fragment_name = "agents_md"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "77ac9733140f48bb3b1cea9b62c475dd63f8c3deb29d0da0112c40bad7ce030e"
 
 [forge.provenance."apps/frontend/.copier-answers.yml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
-sha256 = "9235d63e4b109ec5018a9e5a7c8c550f028e5d0e6cc57c534dc8250a7de8bfcc"
+sha256 = "532b836848befb1559719e80f78ae77da9ca9ca2880a7525b183b53867d78791"
 
 [forge.provenance."apps/frontend/.dockerignore"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "35cfb7ec48840d8f67bc80a43ef51d4aeedd9d7c8a01c30c786ba6f94d1983a2"
 
 [forge.provenance."apps/frontend/.env"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ad3542391aaa7726f2cb17832399aead5cad70a09af85353b5ca3c0485ce9921"
 
 [forge.provenance."apps/frontend/.env.development"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ef70b936f826a0cc8da401a2ed931c054a280a41c1c205cd90050f39e0552de6"
 
 [forge.provenance."apps/frontend/.gitignore"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "291694b56d67a6e671a8402d386e4fd7b69624968ba8453347ec6a6c62a6626e"
 
 [forge.provenance."apps/frontend/Dockerfile"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "8c2e951a7a4f1cd454cb719a9bfbfcdf84f7b792407d2a4407e1fda3bfbeb3e5"
 
 [forge.provenance."apps/frontend/README.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a384faf936b670c676389f4ea5ae7ae7589c5ef38baf98f5d5d20f6f58ae676a"
 
 [forge.provenance."apps/frontend/env.d.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4686677aaf56ca688418fcb579044bfc25233fa6d2333d6b36e1abf5fae256c1"
 
 [forge.provenance."apps/frontend/eslint.config.js"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4c3d4296d9064a68cf70d717ae115fd50bd29c6e156cae5364416ec665c9a4fa"
 
 [forge.provenance."apps/frontend/index.html"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "1aeaf982c7d3291ffc07444d1c088a368c6cfd6765110fc300940c199b42e1e0"
 
 [forge.provenance."apps/frontend/nginx.conf"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c00a25cf996153d52feb3b4c17db1464a049402023a229dae8222109eec79427"
 
 [forge.provenance."apps/frontend/package.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0c872d907c1ad7667e036550d4d2285604d6b8a5f49ebe6dae4eac857f3d336c"
 
 [forge.provenance."apps/frontend/playwright.csp.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "49bd83a59187126cf77625360377ec0a47bb84cd5fbc9ad39a01f79f72fa37ba"
 template_name = "_common"
 
 [forge.provenance."apps/frontend/playwright.quality.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c0eb8437ca2d36714ba5bb0edc7e09f314c2cfc23ca3851f3a5453a8cec41130"
 
 [forge.provenance."apps/frontend/public/canvas.manifest.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d73104adb44ccb057a82a338efd2e7a0ea9883e22ce1a880180580aa672f58e6"
 template_name = "_codegen"
 
 [forge.provenance."apps/frontend/scripts/browser-coverage.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0f61424bd6ad73f8e31026bf95b9d7f4149665a71ead39cc222b5c0ff5da6d7b"
 template_name = "_common"
 
 [forge.provenance."apps/frontend/scripts/post_generate.py"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0ea069dd616c849154408b14de542743107ba4067e0ffacab10ad69a1990ad06"
 
 [forge.provenance."apps/frontend/scripts/remap-browser.mjs"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "078da64f2ee555a7d25c831ff808c17445b7d35023214d3e1aa2ad6fecde48c2"
 template_name = "_common"
 
 [forge.provenance."apps/frontend/scripts/serve-csp.mjs"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c4946887ec1ee5c0a092e31b5829b3c22a62fedcb1b74149655ce2100096de21"
 template_name = "_common"
 
 [forge.provenance."apps/frontend/src/app/App.vue"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2e76013f8c1b19e284f04cd7ea46a26267911e77d612ef92c2be678d37c7b028"
 
 [forge.provenance."apps/frontend/src/app/auth.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c7268a35adc2f5baa65e405972ed78b92ab3ef66179c65982ae4d1f6e86f7ebc"
 
 [forge.provenance."apps/frontend/src/app/main.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "49141504e9fa488082ee85eacbcce5bb1190f16eb2a15f6c18a7b736f337b199"
 
 [forge.provenance."apps/frontend/src/app/providers/csp.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9b455141166e42591728270e1f7a83b4ae72b8471ebe8955e960863cdee896b7"
 
 [forge.provenance."apps/frontend/src/app/providers/csp.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e97822f3320470d32f5696ac9d1621d3c4d65e61996f223dbae9acf28ad7cd4f"
 
 [forge.provenance."apps/frontend/src/app/providers/head.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "186d780f6e83d5a4fc986348e868476e8cb085fd046db53d9b5314ef0f321abf"
 
 [forge.provenance."apps/frontend/src/app/providers/head.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7202836ae6d581ab0f108876c3cc608cb7359bee9c8ad2d7fbe5d5dd41f349c2"
 
 [forge.provenance."apps/frontend/src/app/providers/query-client.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "efd3e7b49f41c1c6e75a3bcf4db9f36f614c11d14a12a00890750314ccc36fc0"
 
 [forge.provenance."apps/frontend/src/app/providers/query-client.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "817e7301af074b0f35b87c8bdecf5b265d42dd478b266d2f29b2ec5e1f9e6d8d"
 
 [forge.provenance."apps/frontend/src/app/router/index.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "da3d3cd104f45e6a58ed9aef45834374b4f989c8286aacc243b40dcf8338f25f"
 
 [forge.provenance."apps/frontend/src/app/styles/main.css"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "116d1f92db82f98ae9023ea5364184c62ff59b8349784110c6207cb6c05a1b09"
 
 [forge.provenance."apps/frontend/src/custom/theme/nuxt-ui.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a0341d785997a7e8176ae7b1683c460568a227e0ac2fc5b0aa224ade710e0072"
 
 [forge.provenance."apps/frontend/src/custom/theme/tokens.css"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "027d68c5c8fe4e98d98bf1416a36e4c65e5ba1b635741cebc56d3acb41505296"
 
 [forge.provenance."apps/frontend/src/shared/api/client-refresh.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "8515c9629e1e185efb13364379dadba5eff98e4a4960cfb91063494b717108c6"
 
 [forge.provenance."apps/frontend/src/shared/api/client.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6c59d4e6116b89e08dda37998be327b3c6de2de8c0bdfb94383408b6b776e640"
 
 [forge.provenance."apps/frontend/src/shared/api/client.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e8b652c208a0f6e7413b71a9753bbc9c8154f680f70a63b1b50937fa1800b2d0"
 
 [forge.provenance."apps/frontend/src/shared/api/errors.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d35f0952ee350bc8883cb8198df815f72a71955c5e874adaf9dfd3de6b14411b"
 
 [forge.provenance."apps/frontend/src/shared/api/errors.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e047e1050de992c1c03064620412c90a0708854330109f205da45010d9c2233d"
 
 [forge.provenance."apps/frontend/src/shared/api/schemas/common.schema.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9c6c5f9fcb8097dae6eee75e5be280af4027cbe57a4c28ac0519e1cd30044a39"
 
 [forge.provenance."apps/frontend/src/shared/api/schemas/common.schema.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "c0b6e4e8ea4c75aa0700b05fcc7b457cc2726ef96ce8019ba3ab2aa414f12e31"
 
 [forge.provenance."apps/frontend/src/shared/api/schemas/health.schema.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "14dcfc66ba6343010507cf1502b3d8688615331a6bc8a6b78555e511794fd0f7"
 
 [forge.provenance."apps/frontend/src/shared/api/schemas/index.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "2c2974eedd71057993725cdb69819912309377083a317d9922b2df41d43dfd3b"
 
 [forge.provenance."apps/frontend/src/shared/application/config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
-sha256 = "6e93120e824445b595e2f65fd0818c81f5de4a70cb2a5c7ed9966c119fb134ae"
+sha256 = "1d491065d0ddf9b63472dd6d147da753638cf14d4e3ceb427f5bc3725a55b59b"
 
 [forge.provenance."apps/frontend/src/shared/application/context.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e1a714fea57248363a6c55217c5ee9fbe373505b532c2c03ce937331918c30d9"
 
 [forge.provenance."apps/frontend/src/shared/application/context.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "6f657a5d9e187f09931cea0efbd19d721ba16e9e2f628cebe1300d2258859ba1"
 
 [forge.provenance."apps/frontend/src/shared/application/contracts.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "d6098360b8282e0c9e99dd237eb134be6a2f370d01eca572b54a46b2d1031520"
 
 [forge.provenance."apps/frontend/src/shared/application/forgeAuth.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b8ac606ecfb889ed63916c58a7521583d84054152e49ff2450923ed7b8c2d0f0"
 
 [forge.provenance."apps/frontend/src/shared/application/forgeAuth.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "64735be39fef4cd4e674ebd987016b92cab886c55eb41937847cb80af55d0f2f"
 
 [forge.provenance."apps/frontend/src/shared/application/guards.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c10828307537b4f5f4a5b655109976f46cdec851537cc5495ce3b372996e77cb"
 
 [forge.provenance."apps/frontend/src/shared/application/guards.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "a45d4e9656c346568742d30ccdcd955369b1ed919f80fccbc4e630f5dc72d85e"
 
 [forge.provenance."apps/frontend/src/shared/application/menus.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a0240f6b966a8920e67f325c0edab9d5903c332d8b9bd585e3afb110e7c38f36"
 
 [forge.provenance."apps/frontend/src/shared/application/menus.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "7fb788aa0538e49e0cc119010c7891f0fe59189125d16d6fbd4c9e5ff7b8b235"
 
 [forge.provenance."apps/frontend/src/shared/application/pages.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e17f659157c04222a06ebf6b377a11ead8cc950b19639398fcbe8aad345c38e3"
 
 [forge.provenance."apps/frontend/src/shared/application/router.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dceb118b895697508336df32e4ca01dcf72c955f631b536bec36dfeb5ae09eaa"
 
 [forge.provenance."apps/frontend/src/shared/application/router.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "04888206774476284a2f4f13ae2002d12ce2ae23abfa9b3ae27b577837d36902"
 
 [forge.provenance."apps/frontend/src/shared/application/testing.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "001517c4a913c58c8068252d25357e4bf013321cde6e09c2809ffd2111f2eb8b"
 
 [forge.provenance."apps/frontend/src/shared/components/ConfirmDialog.vue"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "f4ac9c8de265697a3ba2d7b8c263f1e0cbe90cf1bad6882516e40bd18201792f"
 
 [forge.provenance."apps/frontend/src/shared/components/ConfirmHost.vue"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "bcc71408af51e6b363d50a6ed5c832148dc4c9d13970f9f3424e4b74d5ce2983"
 
 [forge.provenance."apps/frontend/src/shared/composables/useApiClient.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "262f478a4556736f1666ad14afc2815a8b60605846e6eb6cc4a9fd0ff8e0a078"
 
 [forge.provenance."apps/frontend/src/shared/composables/useAuth.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "96a1356515777b0d8417efe016292352c7d432382065f33bbe5e3be02bc34bd6"
 
 [forge.provenance."apps/frontend/src/shared/composables/useAuth.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "57bd0aa73125f6faa3df91da6b1e864e5003851619d1dafc5034c70e60c06a3d"
 
 [forge.provenance."apps/frontend/src/shared/composables/useConfirm.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ae45f3ba709983976929f3d03196cce7deb1ca4e2e0bf2bc76c6c0a422b5f14f"
 
 [forge.provenance."apps/frontend/src/shared/composables/useConfirm.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "fc7e2a6064bbd12c65dd279ca3184be506ec2a3c51db5fa6e83a96d312a444cf"
 
 [forge.provenance."apps/frontend/src/shared/composables/useZodForm.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "8281a74223ebd06246b7a83fe6d21bf77b7bd80ff67bcb63327f89440a0acf44"
 
 [forge.provenance."apps/frontend/src/shared/composables/useZodForm.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "9cc38aed121517bda4b58e76d06e1c3460ef030209e433ca5463f5206846ee5c"
 
 [forge.provenance."apps/frontend/src/shared/config/runtime.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "58cb17a5fc1fdf53565e861c62772e0a4bf5d22e46042106eb510051c2730aa9"
 
 [forge.provenance."apps/frontend/src/shared/config/runtime.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "a8c704eef9441ad1bcb1509184c65d01d846d278ddd6c22655b8e99f191465aa"
 
 [forge.provenance."apps/frontend/src/shared/enums/approval_mode.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "614efe149a0be14bc0d306c00d4c19df133368e708d56a3ecf06de246c2a5382"
 template_name = "_codegen"
 
 [forge.provenance."apps/frontend/src/shared/enums/item_status.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "d93d8731bb37d0abffa649ae2ae9c68df2d9094b347aeb5d70d7174e421f7bf4"
 template_name = "_codegen"
 
 [forge.provenance."apps/frontend/src/shared/layouts/HeaderSidebarShell.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "1e364b026500a174baa34aeebe130186d1c0e358ba927755683f5a04c25cdee5"
 
 [forge.provenance."apps/frontend/src/shared/layouts/HeaderSidebarShell.vue"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "62470c1064026672dba860c0e120666c81070b4958722d9a9e3f6dcaacb9503a"
 
 [forge.provenance."apps/frontend/src/shared/mocks/browser.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "fb850d02c8328e6d35644179bcb1da40e05574a1085d49c5b2922837486a2607"
 
 [forge.provenance."apps/frontend/src/shared/mocks/handlers.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4ed42d68574233ef75cf61b5b62fd69ffcf7d15fb69fca4a49f904a7b22cf031"
 
 [forge.provenance."apps/frontend/src/shared/mocks/handlers.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "a0a5598bb994e380587d0c38060e4f8a8bc7a7b236e2e584e8e7d5c2f5920f90"
 
 [forge.provenance."apps/frontend/src/shared/mocks/node.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "ee73808045d6c550bac3eba9cd199001d887853e1a0602e8e6979db282563c7b"
 
 [forge.provenance."apps/frontend/src/shared/mocks/scenarios.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "00a6a11aafe3b2db1e5172bfa6e50af54f9efe1a85921320df48ace0fc29f563"
 
 [forge.provenance."apps/frontend/src/shared/observability/sentry.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "cfcf25b01ef4e411cb4277d8860de77d441413184796af7792c440b4c8c1c1b5"
 
 [forge.provenance."apps/frontend/src/shared/observability/sentry.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "546780df05447bbfd04a5a170806e4379940b669408bba5921216f5992abc911"
 
 [forge.provenance."apps/frontend/src/shared/observability/telemetry.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "3ae169381114ec464eba5a00333c987384fca6e5cfd0fcab5a7695d4ec71c121"
 
 [forge.provenance."apps/frontend/src/shared/observability/telemetry.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "20b2cae43f6c27285fa21767065614023f7210a0616e90f18319dee3911d2ec8"
 
 [forge.provenance."apps/frontend/src/shared/system/ForbiddenPage.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "f01dd05f58e480d930bb2bd7e703b20f9e570760840c75e0b5a063d179a9f22c"
 
 [forge.provenance."apps/frontend/src/shared/system/ForbiddenPage.vue"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e995f88f798d054d66cb6a11704582883299e71dd9c1321a72271ef79121e230"
 
 [forge.provenance."apps/frontend/src/shared/system/NotFoundPage.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9775a5211c3d4c68ad9f2abcda682c87eb45a51f811016808a7f7ee909178012"
 
 [forge.provenance."apps/frontend/src/shared/system/NotFoundPage.vue"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "41d196d0d1730d79b4508d4617fe216bd0de8689b807207af9005cb36f309941"
 
 [forge.provenance."apps/frontend/src/test/setup.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "08119ff1ade5af91c97c0fd737e632c2204166d2208e0cf60d2d91a435748a1d"
 
 [forge.provenance."apps/frontend/tests/e2e/application.spec.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "59d71d90ed6d708599920cce50f5d457524e82a8bcbb64737c597eca0c6e384e"
 
 [forge.provenance."apps/frontend/tests/e2e/health.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "063adfff636cfecf3867873a6d2654bec27b48a33f05ee50668b329c2643658a"
 
 [forge.provenance."apps/frontend/tests/e2e/session.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5b26cc9727297977d174e4fcd8e0bace588d280db701b9c8aadadadf5b62661c"
 
 [forge.provenance."apps/frontend/tests/integration/application.test.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "38822fb560a0c8bec523aec9a31c9018c63b58956080cb1438063fd303048f37"
 
 [forge.provenance."apps/frontend/tsconfig.app.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "575b81d10ab3952d9279803e367e154a60ea78b790b29c92812b1d3f6429ff76"
 
 [forge.provenance."apps/frontend/tsconfig.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808"
 
 [forge.provenance."apps/frontend/tsconfig.node.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c349e29338b32ce42b19aada6ca142e8cb051fe07a159008243bd1899fde59d8"
 
 [forge.provenance."apps/frontend/vite.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "f25d4579f2291e956b9c87aa84ae3bda3d3084c339d038ca580502122ad36535"
 
 [forge.provenance."apps/frontend/vite.dev.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "622933a595ab5ae6296348af9ad135f330ed1b0a86e1b20549cabeff3889168c"
 
 [forge.provenance."apps/frontend/vitest.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "265be468dd68260addd14128f789f206e37de7e411e5aabdcfd4be101ab0b836"
 
 [forge.provenance."apps/frontend/vitest.integration.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "121f68f0347a578881bc4ce24f88496b27b13980aa3415716dc22c8c55705c30"
 
 [forge.provenance."deploy/compose/init-db.sh"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "aa69a56e21ffa6653f77542cc50b8b0ed609deec07ad1d912efdbe5babba8eb2"
 
 [forge.provenance."docker-compose.dev.yaml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fea2296738d4dc0699ecbde95df8c1c48ee4e269feeee8f58c69fa7b7c24d431"
 
 [forge.provenance."docker-compose.yml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5bfb26ad2e9890af507ef81101b3f8b76d5bced676d079393435404dede49332"
 
 [forge.provenance."package.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9fd63d01368381c3ef3670fb385b97dbda66b9f898bd6b1b105098ca195fe413"
 
 [forge.provenance."services/applications/.copier-answers.yml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "789adb72b78ae36228db2c4da0817da461dc0a4eab8f19867aa987202f922216"
@@ -1097,7 +1097,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/.env.example"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "359905b3dd03bd3e6bdc6c7bddadac003c9b0489dfa21324015c4f971c7091da"
@@ -1105,7 +1105,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/.gitignore"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c2e4a62dedec014f4265d80f3e3657b6a911c3778a4767ad683f219f46812d99"
@@ -1113,7 +1113,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/Dockerfile"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d58651db4ba86691741dafe602a62b41a63dc036807ec71ac6f85bcb0977458a"
@@ -1121,7 +1121,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/OBSERVABILITY.md"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4fb4f14f4f5d5f6b4540c85515462b7e58594d5cc21e1c22dcf31c9525040b60"
@@ -1129,7 +1129,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/OPERATIONS.md"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e233b6dcec30aff367af88c41ba7b0a29de0dd4ed5d42ba0d83b70268ed32482"
@@ -1137,7 +1137,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/README.md"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "bebf58714bd22e4b501d40f4e724854717ec2ec2e72080a6527fef6d2c6c25bf"
@@ -1145,7 +1145,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/cmd/migrate/main.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "833c9113fe93eedaaa7865596db7e0098132e3d983965da27fc0fcba90ddc5b2"
@@ -1153,7 +1153,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/cmd/server/main.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "48fb20a2179638932ac2a0d3733e37b9329ee016db71d0206a7c5760c11361b8"
@@ -1161,7 +1161,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/config/defaults.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fd88d56ede5860080d3c70b73a409f7f831740d79f6536150ed41784271b62ab"
@@ -1169,7 +1169,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/config/development.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4c8620f1d38662ce4ca4a9de4582e008d36f0fd52883877404ce726a7e62a573"
@@ -1177,7 +1177,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/config/production.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b1dfccfa0a386c09c3fa4f188e8925193f5aa73aede5efbc95b7f71fc9854528"
@@ -1185,7 +1185,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/config/testing.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9b51fdea024facffda29c4b6b4dbafdc5b5b5b84482f4269ab1ad1281c21981c"
@@ -1193,7 +1193,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/docker-compose.fragment.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "35732b5e6d3803a46ad99f7c5ca112273c4429028b5527347a4e4f7eb681185f"
@@ -1201,7 +1201,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/docker-compose.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a576e7677719a9e05ecc62b0e11e1a6ad6e86f5483010c15f2fe63a2c2bd92bd"
@@ -1209,7 +1209,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/go.mod"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "80eac667cefb7a3e15ed58fbcad761f875324947922741bf281f48d7857f7eb2"
@@ -1217,20 +1217,20 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/go.sum"]
-emitted_at = "2026-11-25T16:16:58Z"
+emitted_at = "2026-11-27T18:23:42Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4ae8a8cf764f0c79ce244e16a086fb0af5b687bcdb54cca0cee6510c1657b457"
 
 [forge.provenance."services/applications/internal/adapters/error_default.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "53a4dde2f67927bfa1cea9df80fd1ffc2e8c9e772b726247f47e65a040548063"
 
 [forge.provenance."services/applications/internal/app/app.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a27665b688e22a9a0cec60f65fc3ad9342920fd05fcf0518818748a208ec5c15"
@@ -1238,21 +1238,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/app/error_port.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "0eed12e2efabc552fb936c28ce3b47d512bd08317e30a1cc868246ca693634b8"
 
 [forge.provenance."services/applications/internal/app/pii_redaction.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "5b273a1595248d650aa2f0ffa003618ed7e0df3977ed92a471881713db963d8a"
 
 [forge.provenance."services/applications/internal/app/server.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d12ab61d0e67ebbd891c1d83ce8a150d6fe5e7028b645138e4b869bc9c9ac47e"
@@ -1260,7 +1260,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/apperrors/apperrors.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d67140c5e1defc58e9308aa0c488bd559a262eeaa3a41561e4ebb2e1ee289dd1"
@@ -1268,7 +1268,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/config/config.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d47605a769f37b2d21669d99d4c823e02fa0eadc0e537312695bf51aa361c0b5"
@@ -1276,7 +1276,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/data/repositories/item_repository.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c04016caaa4f837f69debe1ec3b4995eb59835600bba54813d041ce82d950549"
@@ -1284,7 +1284,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/db/db.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c42af440ad0e3d02f76a2a64282afbc38aa355e4274fa88350ef32df71e7a76d"
@@ -1292,28 +1292,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/db/pool_tuning.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8c5803f5c4c74248f1e091779e85f1c5021e731f35144af6affd6329895cc61e"
 
 [forge.provenance."services/applications/internal/domain/enums/approval_mode.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e7f461bd52c35e87a1c6fcf21466d382968b1f586de748c70ecbbb4bbb24e28b"
 template_name = "_codegen"
 
 [forge.provenance."services/applications/internal/domain/enums/item_status.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "0674b8d33149edad617b0b539670c9a5adf6457e48d11a4710d235ea4e7fe343"
 template_name = "_codegen"
 
 [forge.provenance."services/applications/internal/identity/identity.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0aba54e632b19f9d32229d8b61b3415ba271c8d31a7a31549d05ff58203a693a"
@@ -1321,7 +1321,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/middleware/correlation.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "defd9087fd45a6475e96b495565aa7f307a4d74e26b26f6a0ba358034c263a5d"
@@ -1329,7 +1329,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/middleware/cors.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "27c6c6bb03836fbfd721dcd2acb5a5776b09400e26483a380d32ece4bdba54be"
@@ -1337,7 +1337,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/middleware/middleware.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "2f472cdb84c6ebdf2e9cecf544d19c4cb9deba2d44597c801426ede8b19fe9c9"
@@ -1345,14 +1345,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/middleware/rate_limit.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "generated"
 sha256 = "e0a20bfddf92d5814c0f4acb9f7a8516349c739a38fc9e7589e11ed994b1dc6a"
 
 [forge.provenance."services/applications/internal/middleware/recover.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "6b18347396baf9b036da13c34c83d828ddf990c6a17aa758460ab6dc1b58a3d1"
@@ -1360,14 +1360,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/middleware/security_headers.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "generated"
 sha256 = "6b07d67b2714ed741366cbbf35b3e140b1d24ecb949be51e70e52adccc558e7a"
 
 [forge.provenance."services/applications/internal/models/item.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6a3c2fbdc83eacd581948cd967c4ba6651d78f12b9ad13109e018a3f500e0cc3"
@@ -1375,21 +1375,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/pii/redaction.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "9b38ac908e187e1fe5581810c9bc0c25b9784451f5cceb2dcac302a5488ab854"
 
 [forge.provenance."services/applications/internal/ports/error_port.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "246d24adec4c4ed75dd3a4e6f992c196729a1da38d968c200abbb2ef4c6fb066"
 
 [forge.provenance."services/applications/internal/routes/health.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ef55b46bf3ceeee19e8dec9c26bcc0579955aca0465d53a41864f4eee131f6cd"
@@ -1397,14 +1397,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/routes/health_deep.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8bce9d1aeabcaac5e5fafac2a30ea30803b91923efdfac7ab8510ef45e8c8627"
 
 [forge.provenance."services/applications/internal/routes/home.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b053c210ef23468a281a3a4a6b0134573af8316ed7a4a86c3b182c9ca32e6f9e"
@@ -1412,7 +1412,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/routes/items.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "340c934d30264cef40912d5a8ae0f5124fd26ccb6d2b982917e83222d55ffec3"
@@ -1420,7 +1420,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/routes/routes.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "bd171fa47dfd54b0f89ff5891f33b02776b695ed59e3bec834af8bd7c583333d"
@@ -1428,7 +1428,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/internal/services/item_service.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "49038ed7c42a1e71fee3deb3839a047def9899a5e6d2c4454a82df2e13d6d120"
@@ -1436,7 +1436,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/migrations/00001_initial.sql"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dbad7654427c4e042f6ddd1a7dbf5aa12feeaf16c19ff15396831f9fd9a2c4ce"
@@ -1444,7 +1444,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/migrations/migrations.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7772706243e88be93cfbb59ad6ef509a5280c8b289ec625a159aa2d258d6e4f3"
@@ -1452,7 +1452,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/e2e/e2e_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0b3cc525f5158ec89cf01a744ffc58ee480c1dd60aac069d81b9fba0bcc9fef3"
@@ -1460,7 +1460,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/e2e/migrate_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9abfbd8bc604e04a8e973bdff21b3f8137bd4b034ea7dfbc64d1c26f36b3087c"
@@ -1468,21 +1468,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/e2e/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "cb95f8ffbf3eb053405bfa1c3e5d09f3aceebd7cad98e4b91e3137fa4ea53eaf"
 
 [forge.provenance."services/applications/tests/integration/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "772bbd3854af1c06343427c9946d8a0b2898048df27b627360d16a7b7a660e25"
 
 [forge.provenance."services/applications/tests/integration/database_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "55b26893a88edb4f7fb21a5166501f39928031b863123477e1ca110d13ef6724"
@@ -1490,7 +1490,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/integration/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c74b3fe3ceb277bd6a115d6938ba9dda03ec807504227129bab2a3be95c09499"
@@ -1498,7 +1498,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/testutil/testutil.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b13a8193e844d5341d46ac73ba132447a0eca77d29c9a78a1a255bc74ac01a36"
@@ -1506,7 +1506,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/app_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6bef32617ffddf3b8ce13444017f8c710052f1f591e4b59696a0cb003563bfe9"
@@ -1514,7 +1514,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/config_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fdb901dfd2524832681635ac829ece6234d5d8143b7467cb4a9fa7afca8a2881"
@@ -1522,28 +1522,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "c6f43df6e450af96d1762f6af9236348fcd274f4c86cd545702ec44fc1d7d630"
 
 [forge.provenance."services/applications/tests/unit/enhanced_health_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "b4a29f68333976b0ee1b36cdf716e32d4c1d3eef4c0ee2bdca0c48abd1f1f555"
 
 [forge.provenance."services/applications/tests/unit/error_port_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "bb74cd1cef1c59c241b5b2a0c46b304b986312970a326bd35673529280fcf191"
 
 [forge.provenance."services/applications/tests/unit/errors_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "29f4341c247867f68521284b5fd0caa7b319e824ad9d9be34ce0745d529146b8"
@@ -1551,7 +1551,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/items_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2d56261da0b415cd40ae6ca1bffd6037b35e921afaaaa9335c52e965a0f05a15"
@@ -1559,7 +1559,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/middleware_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d0cbef63e0c5ee55e1f5fd8a5cfe36e770e73263f81972fb484ce0c51b4570f7"
@@ -1567,7 +1567,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a71c48d1c5060df90ab8a900084a77f7a4d4030ded0e4eff247b481e322cc9ea"
@@ -1575,28 +1575,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/applications/tests/unit/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "b70155c832aab33f48c131d2e4ebd2ce5fea27ab9dcb0b4d9f0384a3efaa7870"
 
 [forge.provenance."services/applications/tests/unit/rate_limit_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "90717e5f29cdd0b1dd153eba06a82a350540feaceae1298a46ebe803972d8aa7"
 
 [forge.provenance."services/applications/tests/unit/security_headers_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "636678386ec3f470cb863133939ab8ef087e604b483531f3f6eebb058b3e6dd0"
 
 [forge.provenance."services/cv/.copier-answers.yml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "947a0efc8c780171a2df3895c3ee39bf804e6bdca664421efe79748b9be9c0cf"
@@ -1604,7 +1604,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/.env.example"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "359905b3dd03bd3e6bdc6c7bddadac003c9b0489dfa21324015c4f971c7091da"
@@ -1612,7 +1612,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/.gitignore"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c2e4a62dedec014f4265d80f3e3657b6a911c3778a4767ad683f219f46812d99"
@@ -1620,7 +1620,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/Dockerfile"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d2916ec2c7a75acc1accd1de6b0f98814dcb6fb9d79188fd7557d732272ce447"
@@ -1628,7 +1628,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/OBSERVABILITY.md"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4fb4f14f4f5d5f6b4540c85515462b7e58594d5cc21e1c22dcf31c9525040b60"
@@ -1636,7 +1636,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/OPERATIONS.md"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e233b6dcec30aff367af88c41ba7b0a29de0dd4ed5d42ba0d83b70268ed32482"
@@ -1644,7 +1644,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/README.md"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "83006a1fc1b00a139b185e883e0da319121ac793efc66100f4a0bf67a5870d6e"
@@ -1652,7 +1652,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/cmd/migrate/main.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4673b44fe5858b55cf36a7657f696b2abd4c5d97f8f11366e7c0c6e146b6399c"
@@ -1660,7 +1660,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/cmd/server/main.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "51f0f383674541eee79cc35d4a9de9a0e89ac65de81fb5c4ebe3f9ec045e1226"
@@ -1668,7 +1668,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/config/defaults.yaml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e38828646bc4cf8e1149018322f6e56a5b7d9298fa473f2796e6500ecf53cf24"
@@ -1676,7 +1676,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/config/development.yaml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4c8620f1d38662ce4ca4a9de4582e008d36f0fd52883877404ce726a7e62a573"
@@ -1684,7 +1684,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/config/production.yaml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b1dfccfa0a386c09c3fa4f188e8925193f5aa73aede5efbc95b7f71fc9854528"
@@ -1692,7 +1692,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/config/testing.yaml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9dfaa77a41ca38086f7896c2db2c2b0c5f9060d32fc3673b3494c77962b85a8b"
@@ -1700,7 +1700,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/docker-compose.fragment.yaml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "84af66ec8fc55fd2dc8ec58fc251c618bc78d3f0ab55d77a6787b0d34627aa85"
@@ -1708,7 +1708,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/docker-compose.yaml"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b24133fc9451bc1924fa52cba3c11a692baa0932999c435fef4d49deb2c4a724"
@@ -1716,7 +1716,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/go.mod"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0389ca369cb8c8f01ad307bbe50097b67d88ebdbdc30041b0f3f213ed746abde"
@@ -1724,20 +1724,20 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/go.sum"]
-emitted_at = "2026-11-25T16:16:58Z"
+emitted_at = "2026-11-27T18:23:42Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4ae8a8cf764f0c79ce244e16a086fb0af5b687bcdb54cca0cee6510c1657b457"
 
 [forge.provenance."services/cv/internal/adapters/error_default.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "c198303a1dd441720f19e70422a13ba3163fef49d870eda2c0b4f5d946e97b01"
 
 [forge.provenance."services/cv/internal/app/app.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "262487cef3a37fe704b7cfca055656e1b3def009911cf65d41412fc6d9048f0b"
@@ -1745,21 +1745,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/app/error_port.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "4da8e5fe259adae1197c8e5a71487ec37756283f602ad3e755770a68f956a391"
 
 [forge.provenance."services/cv/internal/app/pii_redaction.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "ab3697f8d2d7a54c2033805f7cd6ad1828d90731a722f93476c3658193bc001f"
 
 [forge.provenance."services/cv/internal/app/server.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d12ab61d0e67ebbd891c1d83ce8a150d6fe5e7028b645138e4b869bc9c9ac47e"
@@ -1767,7 +1767,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/apperrors/apperrors.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d67140c5e1defc58e9308aa0c488bd559a262eeaa3a41561e4ebb2e1ee289dd1"
@@ -1775,7 +1775,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/config/config.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d47605a769f37b2d21669d99d4c823e02fa0eadc0e537312695bf51aa361c0b5"
@@ -1783,7 +1783,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/data/repositories/item_repository.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6d3837068fc36225765137e126f6c06bd5df2ab69762f60b4a797c1664cf2852"
@@ -1791,7 +1791,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/db/db.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c42af440ad0e3d02f76a2a64282afbc38aa355e4274fa88350ef32df71e7a76d"
@@ -1799,28 +1799,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/db/pool_tuning.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8c5803f5c4c74248f1e091779e85f1c5021e731f35144af6affd6329895cc61e"
 
 [forge.provenance."services/cv/internal/domain/enums/approval_mode.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e7f461bd52c35e87a1c6fcf21466d382968b1f586de748c70ecbbb4bbb24e28b"
 template_name = "_codegen"
 
 [forge.provenance."services/cv/internal/domain/enums/item_status.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "0674b8d33149edad617b0b539670c9a5adf6457e48d11a4710d235ea4e7fe343"
 template_name = "_codegen"
 
 [forge.provenance."services/cv/internal/identity/identity.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0aba54e632b19f9d32229d8b61b3415ba271c8d31a7a31549d05ff58203a693a"
@@ -1828,7 +1828,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/middleware/correlation.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "defd9087fd45a6475e96b495565aa7f307a4d74e26b26f6a0ba358034c263a5d"
@@ -1836,7 +1836,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/middleware/cors.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "27c6c6bb03836fbfd721dcd2acb5a5776b09400e26483a380d32ece4bdba54be"
@@ -1844,7 +1844,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/middleware/middleware.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "2f472cdb84c6ebdf2e9cecf544d19c4cb9deba2d44597c801426ede8b19fe9c9"
@@ -1852,14 +1852,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/middleware/rate_limit.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "generated"
 sha256 = "048185a816531fc0ca9a3c42d1968cb4d861eac34349939ab1bb8099817da04d"
 
 [forge.provenance."services/cv/internal/middleware/recover.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "6b18347396baf9b036da13c34c83d828ddf990c6a17aa758460ab6dc1b58a3d1"
@@ -1867,14 +1867,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/middleware/security_headers.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "generated"
 sha256 = "6b07d67b2714ed741366cbbf35b3e140b1d24ecb949be51e70e52adccc558e7a"
 
 [forge.provenance."services/cv/internal/models/item.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6a3c2fbdc83eacd581948cd967c4ba6651d78f12b9ad13109e018a3f500e0cc3"
@@ -1882,21 +1882,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/pii/redaction.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "9b38ac908e187e1fe5581810c9bc0c25b9784451f5cceb2dcac302a5488ab854"
 
 [forge.provenance."services/cv/internal/ports/error_port.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "a8763ad591cf56a90dcb158679865bec0dcf600d8b75d60feb82a28b0c5e47d1"
 
 [forge.provenance."services/cv/internal/routes/health.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ef55b46bf3ceeee19e8dec9c26bcc0579955aca0465d53a41864f4eee131f6cd"
@@ -1904,14 +1904,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/routes/health_deep.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8bce9d1aeabcaac5e5fafac2a30ea30803b91923efdfac7ab8510ef45e8c8627"
 
 [forge.provenance."services/cv/internal/routes/home.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b053c210ef23468a281a3a4a6b0134573af8316ed7a4a86c3b182c9ca32e6f9e"
@@ -1919,7 +1919,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/routes/items.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "21b6f5fd9f6169c8d7fada3165cbc7345ceab891a8a84608e4a2bc6d3100720a"
@@ -1927,7 +1927,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/routes/routes.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "789ed605f13e6bbf38ebaff0316b3d642878006c1b482d8d53f5b949238eef74"
@@ -1935,7 +1935,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/internal/services/item_service.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fbafbb5130ef3be654d2c01ea68e130ec42e377bb83f1b240cb6f75bf3a1e16b"
@@ -1943,7 +1943,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/migrations/00001_initial.sql"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dbad7654427c4e042f6ddd1a7dbf5aa12feeaf16c19ff15396831f9fd9a2c4ce"
@@ -1951,7 +1951,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/migrations/migrations.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7772706243e88be93cfbb59ad6ef509a5280c8b289ec625a159aa2d258d6e4f3"
@@ -1959,7 +1959,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/e2e/e2e_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "77c0fbec307ad7bd67ba350c0461793f44f4a49a74e2ac25e337ea4e092df36b"
@@ -1967,7 +1967,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/e2e/migrate_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a720ec84021f03542eebb3805788752174f8b5bde685172d3254a81e949ee48c"
@@ -1975,21 +1975,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/e2e/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "cb95f8ffbf3eb053405bfa1c3e5d09f3aceebd7cad98e4b91e3137fa4ea53eaf"
 
 [forge.provenance."services/cv/tests/integration/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "0dc4791220045b880808c62f45ac822ebd9fd1c002b5059013e63aeb54484542"
 
 [forge.provenance."services/cv/tests/integration/database_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "53e91a7996ccc3831fb8680e1d7129aeb72cc698b7b65b3ac4e9ee7034a24b76"
@@ -1997,7 +1997,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/integration/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "611a331004743701659cf6a76f68e7ff78b3f960d5019dae7ef00e5d9c40b74f"
@@ -2005,7 +2005,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/testutil/testutil.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "1d921a06db98141c449d3567fd8613a21f69770a85ab311be460c38449fd8b8a"
@@ -2013,7 +2013,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/app_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2af228557d880a1631f1de32dca88d06552aacbc5523748b8fc22b3dd0e8b298"
@@ -2021,7 +2021,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/config_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2a24db875ba263ee86e8e04cd566988fb124da9ca2a08260cae7ecfb1bf8122c"
@@ -2029,28 +2029,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "5adbf4a854cf07514e76619931c58e4bf780cc9c6e905e3c88818ab3bbf56eaf"
 
 [forge.provenance."services/cv/tests/unit/enhanced_health_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "ff4c434d787ca8ad8630590d4905c249ef359de5226d84abd66559d52e5c8daa"
 
 [forge.provenance."services/cv/tests/unit/error_port_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "4586c4c4bf733c9ac4984944e4d697f5ac41f81e609eb3e402ebedbbf93bc4d7"
 
 [forge.provenance."services/cv/tests/unit/errors_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dd367a508d34301a821e0276cb74102c614f495d7bac5041aa7cfa96e4112805"
@@ -2058,7 +2058,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/items_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c2ad50d996342d4dcab465cf2528ea0d79423f256e8c7faf6d3590610badd4b9"
@@ -2066,7 +2066,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/middleware_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c5bee50741d127692ca3462f1d5bb1a09ca216a447aa0fd278b8ab9fca7109cd"
@@ -2074,7 +2074,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "28546ffd35d5fc16a29c864a333157e51821482dd66772dcb0cd3883ddaf536a"
@@ -2082,28 +2082,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/cv/tests/unit/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "f9a8d7775ea4d08ab0f0f45b1021e08bff2816927880546ea6c119ba78df76c6"
 
 [forge.provenance."services/cv/tests/unit/rate_limit_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "af04b8ef34a2bbfedb59914da7a50b653c4afef44fa07bfb652e74d83e461d71"
 
 [forge.provenance."services/cv/tests/unit/security_headers_test.go"]
-emitted_at = "2026-11-25T16:16:54Z"
+emitted_at = "2026-11-27T18:23:39Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "38b0910b4c6a81288d3b8d67b01f594c50e88a1ebeded0426e52c64239f5d524"
 
 [forge.provenance."services/jobs/.copier-answers.yml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0fd88a155ba701c342a64219cefd7750adc70372b2295368199d41c9e9ce9a21"
@@ -2111,7 +2111,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/.env.example"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "359905b3dd03bd3e6bdc6c7bddadac003c9b0489dfa21324015c4f971c7091da"
@@ -2119,7 +2119,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/.gitignore"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c2e4a62dedec014f4265d80f3e3657b6a911c3778a4767ad683f219f46812d99"
@@ -2127,7 +2127,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/Dockerfile"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "8795ab80fcc9e6f3ad668676e35fb9997585d96399c306d4f60a6d5cdd5b10e9"
@@ -2135,7 +2135,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/OBSERVABILITY.md"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4fb4f14f4f5d5f6b4540c85515462b7e58594d5cc21e1c22dcf31c9525040b60"
@@ -2143,7 +2143,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/OPERATIONS.md"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e233b6dcec30aff367af88c41ba7b0a29de0dd4ed5d42ba0d83b70268ed32482"
@@ -2151,7 +2151,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/README.md"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "33abf4677d6352c1b61ec65381980de6a750625da9e1493119ce25aa9639310e"
@@ -2159,7 +2159,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/cmd/migrate/main.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "07cf994e1f4c143993fc9b021a8df76d55a4284aae67d96994a3fb3b09d1698c"
@@ -2167,7 +2167,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/cmd/server/main.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fa3856ff0ac228e487b11ddb94e7892ee8ecfcad6fc8979e87473dbf8f4435a2"
@@ -2175,7 +2175,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/config/defaults.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "68ceffe2dce510366c90839f190bf80d89b71b5c84e5dc8d0ba38b87d7c115be"
@@ -2183,7 +2183,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/config/development.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4c8620f1d38662ce4ca4a9de4582e008d36f0fd52883877404ce726a7e62a573"
@@ -2191,7 +2191,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/config/production.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b1dfccfa0a386c09c3fa4f188e8925193f5aa73aede5efbc95b7f71fc9854528"
@@ -2199,7 +2199,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/config/testing.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "3ea83a0f0845b2dc2ec2a15a04bb42e677996ad937db0a032950318be25b51f5"
@@ -2207,7 +2207,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/docker-compose.fragment.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0f12749d0f394965df7d48d21fe35b16236f663f04b9fc5ed5c15d5d5f0e9621"
@@ -2215,7 +2215,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/docker-compose.yaml"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "82ca36d82dd18d13180881a32fc18d610ebc3fddd44c9f52a51e121c1068b81a"
@@ -2223,7 +2223,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/go.mod"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "8f2b4fd0f169222735a6baf3ee96bee76020a572b4c3e11d5691625ceacbbb0c"
@@ -2231,20 +2231,20 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/go.sum"]
-emitted_at = "2026-11-25T16:16:58Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4ae8a8cf764f0c79ce244e16a086fb0af5b687bcdb54cca0cee6510c1657b457"
 
 [forge.provenance."services/jobs/internal/adapters/error_default.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "ce5c8883e749926b7e5a078fa3564f35a94d2df8ce5112b158efb69ad9d43ee0"
 
 [forge.provenance."services/jobs/internal/app/app.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d7cdcce664a990455af55bc0883e9f9a3327cc43b1b45809481cab04094dbe22"
@@ -2252,21 +2252,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/app/error_port.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "9fe26e92763d580991a4726866686af3a3037a1d5c9290dd08c129ff8337662d"
 
 [forge.provenance."services/jobs/internal/app/pii_redaction.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "c110404d0d55978e9820580ac98c8b4a4a43be7356128e68166b01163acf4f5f"
 
 [forge.provenance."services/jobs/internal/app/server.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d12ab61d0e67ebbd891c1d83ce8a150d6fe5e7028b645138e4b869bc9c9ac47e"
@@ -2274,7 +2274,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/apperrors/apperrors.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d67140c5e1defc58e9308aa0c488bd559a262eeaa3a41561e4ebb2e1ee289dd1"
@@ -2282,7 +2282,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/config/config.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d47605a769f37b2d21669d99d4c823e02fa0eadc0e537312695bf51aa361c0b5"
@@ -2290,7 +2290,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/data/repositories/item_repository.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d5bd77707fac5037ecdc303358f764b9cd1588cca23bbf623f755dcc68f42c98"
@@ -2298,7 +2298,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/db/db.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c42af440ad0e3d02f76a2a64282afbc38aa355e4274fa88350ef32df71e7a76d"
@@ -2306,28 +2306,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/db/pool_tuning.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8c5803f5c4c74248f1e091779e85f1c5021e731f35144af6affd6329895cc61e"
 
 [forge.provenance."services/jobs/internal/domain/enums/approval_mode.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e7f461bd52c35e87a1c6fcf21466d382968b1f586de748c70ecbbb4bbb24e28b"
 template_name = "_codegen"
 
 [forge.provenance."services/jobs/internal/domain/enums/item_status.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "0674b8d33149edad617b0b539670c9a5adf6457e48d11a4710d235ea4e7fe343"
 template_name = "_codegen"
 
 [forge.provenance."services/jobs/internal/identity/identity.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0aba54e632b19f9d32229d8b61b3415ba271c8d31a7a31549d05ff58203a693a"
@@ -2335,7 +2335,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/middleware/correlation.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "defd9087fd45a6475e96b495565aa7f307a4d74e26b26f6a0ba358034c263a5d"
@@ -2343,7 +2343,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/middleware/cors.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "27c6c6bb03836fbfd721dcd2acb5a5776b09400e26483a380d32ece4bdba54be"
@@ -2351,7 +2351,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/middleware/middleware.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "2f472cdb84c6ebdf2e9cecf544d19c4cb9deba2d44597c801426ede8b19fe9c9"
@@ -2359,14 +2359,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/middleware/rate_limit.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "generated"
 sha256 = "0237a4d1655fcb787692a744107915c96092f3f6f6330f4a5c5e2a56c3960299"
 
 [forge.provenance."services/jobs/internal/middleware/recover.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "6b18347396baf9b036da13c34c83d828ddf990c6a17aa758460ab6dc1b58a3d1"
@@ -2374,14 +2374,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/middleware/security_headers.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "generated"
 sha256 = "6b07d67b2714ed741366cbbf35b3e140b1d24ecb949be51e70e52adccc558e7a"
 
 [forge.provenance."services/jobs/internal/models/item.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6a3c2fbdc83eacd581948cd967c4ba6651d78f12b9ad13109e018a3f500e0cc3"
@@ -2389,21 +2389,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/pii/redaction.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "9b38ac908e187e1fe5581810c9bc0c25b9784451f5cceb2dcac302a5488ab854"
 
 [forge.provenance."services/jobs/internal/ports/error_port.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "acc4a0b7e3164c725da5197794e89fb6a3461a127762ac024119280c4918291d"
 
 [forge.provenance."services/jobs/internal/routes/health.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ef55b46bf3ceeee19e8dec9c26bcc0579955aca0465d53a41864f4eee131f6cd"
@@ -2411,14 +2411,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/routes/health_deep.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8bce9d1aeabcaac5e5fafac2a30ea30803b91923efdfac7ab8510ef45e8c8627"
 
 [forge.provenance."services/jobs/internal/routes/home.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b053c210ef23468a281a3a4a6b0134573af8316ed7a4a86c3b182c9ca32e6f9e"
@@ -2426,7 +2426,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/routes/items.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4430099e0414b9ea603bc42c5d81010a5862fc052bd8c5876c7af242a1ef6930"
@@ -2434,7 +2434,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/routes/routes.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "32b4ec19ea845eb95d3be1feb4fc4bec3bb401976afd20b2c5cd07d8618ede3c"
@@ -2442,7 +2442,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/internal/services/item_service.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "971c6957efa0d806f4efaff849d45fd6acb36b65e7f39f2bfd4acf51e4015990"
@@ -2450,7 +2450,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/migrations/00001_initial.sql"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dbad7654427c4e042f6ddd1a7dbf5aa12feeaf16c19ff15396831f9fd9a2c4ce"
@@ -2458,7 +2458,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/migrations/migrations.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7772706243e88be93cfbb59ad6ef509a5280c8b289ec625a159aa2d258d6e4f3"
@@ -2466,7 +2466,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/e2e/e2e_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a55a0f038d4160c77ce5a5ef5f4dd957ef897f5a580e6789176e521155274dfd"
@@ -2474,7 +2474,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/e2e/migrate_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "f04c567de1d48d6b0c0ee02e3d9f32569cde8107c84b8feea67987e1cd00910a"
@@ -2482,21 +2482,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/e2e/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "cb95f8ffbf3eb053405bfa1c3e5d09f3aceebd7cad98e4b91e3137fa4ea53eaf"
 
 [forge.provenance."services/jobs/tests/integration/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "5aa8a9abb9c7c43043781e62d270706d7df240b0d7a676a76bea231a7820a343"
 
 [forge.provenance."services/jobs/tests/integration/database_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4bf2589b6d66c5ad07b53d797d2b710592b586eef8b58b7d1b26aab224febc63"
@@ -2504,7 +2504,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/integration/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5db83d5b30d9c9217e916cac4a4f194516b709f469d0868aee699976f1e46942"
@@ -2512,7 +2512,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/testutil/testutil.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "cabce2a152bea10d00eb636ac3abf8bb2d50aabe75de6177acc3964e52b5b252"
@@ -2520,7 +2520,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/app_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "549010e1bb7f538cd77a19a6b963a6da5b4d95369f79747c1acfe4996f77ab76"
@@ -2528,7 +2528,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/config_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "82aafd1ef05b8952849eff9e991b9a9efc19d3e148c9c88e1cad7fd73cf6fed4"
@@ -2536,28 +2536,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "44945f484766a273e41e78f0002d65d60267c873b137e5108058ace39389bdaf"
 
 [forge.provenance."services/jobs/tests/unit/enhanced_health_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "bd04de62c812ec682663c2212c36f454ea1920775c9c60875ff64674e213c3e4"
 
 [forge.provenance."services/jobs/tests/unit/error_port_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "3c2d88c3cf13b592edd12a7e9f958aab8706c690912a5c24208fc381ba644e4d"
 
 [forge.provenance."services/jobs/tests/unit/errors_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "be901678e890c8073860c20fa8ea9fdd4ec0471d242f50198711ac29dda68f72"
@@ -2565,7 +2565,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/items_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dbcbb992f05752a8e4728d4670a47a65879f9c489621a1053d056aacb4fce55b"
@@ -2573,7 +2573,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/middleware_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "1bd464fd4be63d0c5bcebdc52f568362db234e72be4ffa259592455b722fa2ec"
@@ -2581,7 +2581,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7bf97517464695ba4a55afc5c8817ecb30dc33b5b91ded692ee228d8a5faf2e4"
@@ -2589,28 +2589,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/jobs/tests/unit/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "c5c01c41464e825dc257795b6dfe9841b593b28715477d827c239292266bb240"
 
 [forge.provenance."services/jobs/tests/unit/rate_limit_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "17c6a37814aafc58a39568f142482ab6e62dcdd83a3b9429bd743f30f5bf5caf"
 
 [forge.provenance."services/jobs/tests/unit/security_headers_test.go"]
-emitted_at = "2026-11-25T16:16:53Z"
+emitted_at = "2026-11-27T18:23:38Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "efb7cae1c4f3e8bddb28563e71a4be9d83215bda5a067495ef43f60c648f5cae"
 
 [forge.provenance."services/profile/.copier-answers.yml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7f6171589ee353aa22513c3c17caeb25562dd167f385d427b573028791144747"
@@ -2618,7 +2618,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/.env.example"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "359905b3dd03bd3e6bdc6c7bddadac003c9b0489dfa21324015c4f971c7091da"
@@ -2626,7 +2626,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/.gitignore"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c2e4a62dedec014f4265d80f3e3657b6a911c3778a4767ad683f219f46812d99"
@@ -2634,7 +2634,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/Dockerfile"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "a8ad441ceb970f876b3151bab9cbf7f7730c6109346c7903313b13ec62814700"
@@ -2642,7 +2642,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/OBSERVABILITY.md"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4fb4f14f4f5d5f6b4540c85515462b7e58594d5cc21e1c22dcf31c9525040b60"
@@ -2650,7 +2650,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/OPERATIONS.md"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e233b6dcec30aff367af88c41ba7b0a29de0dd4ed5d42ba0d83b70268ed32482"
@@ -2658,7 +2658,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/README.md"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "fdf138772d82acda6b814dcdd89da647eef0ec11990d9a16420635958bb8b649"
@@ -2666,7 +2666,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/cmd/migrate/main.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "01620ceeffd21d91a6f2e10cb85eef715ae0954516178101adacb81845cf5bc4"
@@ -2674,7 +2674,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/cmd/server/main.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5e31c681472a52adc413b4c1bf0155ef30682b4e231e0969a33d1b7bf3d1932a"
@@ -2682,7 +2682,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/config/defaults.yaml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7acd5f9f3917db72898f99531a54672e9720d8fb69324a1abe4d71373bcf5726"
@@ -2690,7 +2690,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/config/development.yaml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4c8620f1d38662ce4ca4a9de4582e008d36f0fd52883877404ce726a7e62a573"
@@ -2698,7 +2698,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/config/production.yaml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b1dfccfa0a386c09c3fa4f188e8925193f5aa73aede5efbc95b7f71fc9854528"
@@ -2706,7 +2706,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/config/testing.yaml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c7ac00e90e13719f4732a9f1dbfd33dd92c55faab23578e1ef86da41cedd3bb0"
@@ -2714,7 +2714,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/docker-compose.fragment.yaml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "37114740bccc445537c429ea31291da033a6e3a4aad04ee05b107484f89a1101"
@@ -2722,7 +2722,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/docker-compose.yaml"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5d3c70ad4bc9003027b9fa2dda2d6d90fc8b3dc86f3cfc382928912325422c71"
@@ -2730,7 +2730,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/go.mod"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "47daf4f6bfb7fff08471ca7d204120c3a81d778b2fd8dd71ca4447e9077ce172"
@@ -2738,20 +2738,20 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/go.sum"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4ae8a8cf764f0c79ce244e16a086fb0af5b687bcdb54cca0cee6510c1657b457"
 
 [forge.provenance."services/profile/internal/adapters/error_default.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "5f147eae7ddc8e0ea60759b4a53926948a79e76fa1ac2a0a3245dbd01858216b"
 
 [forge.provenance."services/profile/internal/app/app.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "76cd1d975919e1bee970a102fa47589a849ece0b1e163b4713985a481468cb31"
@@ -2759,21 +2759,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/app/error_port.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "a964f7b8723a663bb1b62235e99de8eea95241972ba7dcf2dfa9d77ce8000ad2"
 
 [forge.provenance."services/profile/internal/app/pii_redaction.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8cda39bcefa09a3112decc7d2ada61e96cd65d78420f78bb80c7260d3e334b72"
 
 [forge.provenance."services/profile/internal/app/server.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d12ab61d0e67ebbd891c1d83ce8a150d6fe5e7028b645138e4b869bc9c9ac47e"
@@ -2781,7 +2781,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/apperrors/apperrors.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d67140c5e1defc58e9308aa0c488bd559a262eeaa3a41561e4ebb2e1ee289dd1"
@@ -2789,7 +2789,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/config/config.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "d47605a769f37b2d21669d99d4c823e02fa0eadc0e537312695bf51aa361c0b5"
@@ -2797,7 +2797,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/data/repositories/item_repository.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4a6c0f146701c96519ba058de89a7f98e088d7cc68d79280c14b6e397584a0e9"
@@ -2805,7 +2805,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/db/db.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "c42af440ad0e3d02f76a2a64282afbc38aa355e4274fa88350ef32df71e7a76d"
@@ -2813,28 +2813,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/db/pool_tuning.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8c5803f5c4c74248f1e091779e85f1c5021e731f35144af6affd6329895cc61e"
 
 [forge.provenance."services/profile/internal/domain/enums/approval_mode.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "e7f461bd52c35e87a1c6fcf21466d382968b1f586de748c70ecbbb4bbb24e28b"
 template_name = "_codegen"
 
 [forge.provenance."services/profile/internal/domain/enums/item_status.go"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "0674b8d33149edad617b0b539670c9a5adf6457e48d11a4710d235ea4e7fe343"
 template_name = "_codegen"
 
 [forge.provenance."services/profile/internal/identity/identity.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0aba54e632b19f9d32229d8b61b3415ba271c8d31a7a31549d05ff58203a693a"
@@ -2842,7 +2842,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/middleware/correlation.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "defd9087fd45a6475e96b495565aa7f307a4d74e26b26f6a0ba358034c263a5d"
@@ -2850,7 +2850,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/middleware/cors.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "27c6c6bb03836fbfd721dcd2acb5a5776b09400e26483a380d32ece4bdba54be"
@@ -2858,7 +2858,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/middleware/middleware.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "2f472cdb84c6ebdf2e9cecf544d19c4cb9deba2d44597c801426ede8b19fe9c9"
@@ -2866,14 +2866,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/middleware/rate_limit.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "generated"
 sha256 = "bee825c038abea0ad27cb2838376b6b82aae0e18287b8c74126bca61055d3f56"
 
 [forge.provenance."services/profile/internal/middleware/recover.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "generated"
 sha256 = "6b18347396baf9b036da13c34c83d828ddf990c6a17aa758460ab6dc1b58a3d1"
@@ -2881,14 +2881,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/middleware/security_headers.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "generated"
 sha256 = "6b07d67b2714ed741366cbbf35b3e140b1d24ecb949be51e70e52adccc558e7a"
 
 [forge.provenance."services/profile/internal/models/item.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6a3c2fbdc83eacd581948cd967c4ba6651d78f12b9ad13109e018a3f500e0cc3"
@@ -2896,21 +2896,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/pii/redaction.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "generated"
 sha256 = "9b38ac908e187e1fe5581810c9bc0c25b9784451f5cceb2dcac302a5488ab854"
 
 [forge.provenance."services/profile/internal/ports/error_port.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "generated"
 sha256 = "557308c56595fd81cf52e583d1211e82c625681bae77a7e4206d3e3698525ede"
 
 [forge.provenance."services/profile/internal/routes/health.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ef55b46bf3ceeee19e8dec9c26bcc0579955aca0465d53a41864f4eee131f6cd"
@@ -2918,14 +2918,14 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/routes/health_deep.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "generated"
 sha256 = "8bce9d1aeabcaac5e5fafac2a30ea30803b91923efdfac7ab8510ef45e8c8627"
 
 [forge.provenance."services/profile/internal/routes/home.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "b053c210ef23468a281a3a4a6b0134573af8316ed7a4a86c3b182c9ca32e6f9e"
@@ -2933,7 +2933,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/routes/items.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "18456a4d2c209030ef5df5748caef99b8c60d56de38dddbac43ec907437055ac"
@@ -2941,7 +2941,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/routes/routes.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "684974633904b098b2b4334a1b8f3c53ae5b9565ffe6918687028c2d92f78759"
@@ -2949,7 +2949,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/internal/services/item_service.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e94d5caf75672ebc3acf9fb035e2fab24f54b32042cefc02585e29232565ac7f"
@@ -2957,7 +2957,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/migrations/00001_initial.sql"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "dbad7654427c4e042f6ddd1a7dbf5aa12feeaf16c19ff15396831f9fd9a2c4ce"
@@ -2965,7 +2965,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/migrations/migrations.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "7772706243e88be93cfbb59ad6ef509a5280c8b289ec625a159aa2d258d6e4f3"
@@ -2973,7 +2973,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/e2e/e2e_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9e3847cb3ee991ac8b2e150b6a2ae35e9238397e950965234fe102b9a70b2ddb"
@@ -2981,7 +2981,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/e2e/migrate_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0520c7c28871cb6595ca1bd954edb0e5cdd521d46c8af31ce11180544b2a12e4"
@@ -2989,21 +2989,21 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/e2e/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "cb95f8ffbf3eb053405bfa1c3e5d09f3aceebd7cad98e4b91e3137fa4ea53eaf"
 
 [forge.provenance."services/profile/tests/integration/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "8086fa953b4330f4828041c0a064d4f021dedc9763e1c0720269f2511339777a"
 
 [forge.provenance."services/profile/tests/integration/database_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0ff9edb5ba9ae1aeffbc69fe9503cda04e5641ab4e65d65e6e94c990ba696000"
@@ -3011,7 +3011,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/integration/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "14700676531a536397dbf03cf07a997831be741118b5943318eb3ccee513129a"
@@ -3019,7 +3019,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/testutil/testutil.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "8918f1998561452ca6a87d170ed9d893c038d7a2086e9a9614db4f6cb80e3e15"
@@ -3027,7 +3027,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/app_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6278dfe97bf87397c377e2091e41d2c7f11963d872df0fc7d78ed89cedef1709"
@@ -3035,7 +3035,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/config_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "317f1972e2b8dbca0e3e8e8b1d067fcafe9e1343e60b94bc83f9883635101a0e"
@@ -3043,28 +3043,28 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/connection_pool_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "reliability_connection_pool"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "0bbb525ba444ce8ef3c5648fb688d08504aeee19d06444c860447309750db960"
 
 [forge.provenance."services/profile/tests/unit/enhanced_health_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "enhanced_health"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "1ce7a3fc66deb9ff8013e1ed99989d01ba85a21ace68b10a907e21c4726e7500"
 
 [forge.provenance."services/profile/tests/unit/error_port_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "error_port"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "476e6636746a752b8f136c0fadaebd615e8418bf7710f4f4b2c253970b67c945"
 
 [forge.provenance."services/profile/tests/unit/errors_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "91d576fbb5479d09415592a8efa7fca8192763950cd35142f17cb27d8efdf03c"
@@ -3072,7 +3072,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/items_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "42c5938dc2544232eaa0f976d8d3b90aa40d5739e6e87a69a4189fbe796acebc"
@@ -3080,7 +3080,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/middleware_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "76c4fe506ec2005c603927f5cb2de86358f6d7e5c2dbdeb6c235ca20cbad35a2"
@@ -3088,7 +3088,7 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/migrations_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "0c4a4dbf38794c8f7c75bbbc9b7fc24c3e39a21371c4fea7c91c25ee1e502e37"
@@ -3096,118 +3096,118 @@ template_name = "services/go-service-template"
 template_version = "1.0.0"
 
 [forge.provenance."services/profile/tests/unit/pii_redaction_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "pii_redaction"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "03cf8e88a5f12c5cb991fe4c881203dc1b36ce520a4a0d085f6a2504b00ba52d"
 
 [forge.provenance."services/profile/tests/unit/rate_limit_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "rate_limit"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "35fa6515e061aa0f95eb4bf1056562b5510dd4d32a94978ed40f0e345e7a4596"
 
 [forge.provenance."services/profile/tests/unit/security_headers_test.go"]
-emitted_at = "2026-11-25T16:16:52Z"
+emitted_at = "2026-11-27T18:23:37Z"
 fragment_name = "security_headers"
 origin = "fragment"
 ownership = "scaffold"
 sha256 = "3dd754d2939cd51fdfc027a5213bf67906e8a97c98dcb43e4ac250dc19fbe854"
 
 [forge.provenance."tests/e2e/.agent-context/prompt.md"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "13140657e1abe94aaae26769c223b795009e10773ffa7d8347acf453c0f272c0"
 
 [forge.provenance."tests/e2e/.copier-answers.yml"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "2a1744b154fae2f8ce03d0f68260b89e92f0f56fc82048cfd849ff0d3a6de390"
 
 [forge.provenance."tests/e2e/Dockerfile"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "804df94be7277607ad41702187bf1781bb7c2658631978c04150572fad042265"
 
 [forge.provenance."tests/e2e/_tasks/answers.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "5815ba5670b368e2e0fe0e108b67110c48211929edbc268673d104b96efb64ad"
 
 [forge.provenance."tests/e2e/_tasks/post_generate.py"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "ce5fbfdb46967c4b3a1ed1cb168e43c6d61e9465c8ef4b0cbacbed6f0d30d1af"
 
 [forge.provenance."tests/e2e/_tasks/spec_templates.py"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "1877d21fe43019e8a2ed58acaff0c417d962748a524b192c74ebebdfac895934"
 
 [forge.provenance."tests/e2e/e2e-platform/actions/ApiHelper.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "4cdf2bbc9caed66227a23d389a4529267eb1ba167b8940cc281a326f5aeaf4d7"
 
 [forge.provenance."tests/e2e/e2e-platform/actions/Assertions.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "f700959984e760969843edfaa8a27b9545971eb9c0f942b06709b3796eb36b41"
 
 [forge.provenance."tests/e2e/e2e-platform/actions/Navigation.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "9480f7f2fd0f9c1a7ca610d2db47633e1c745a8717af349fcd66c6fc2e8bca39"
 
 [forge.provenance."tests/e2e/e2e-platform/auth/AuthManager.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "bdbc6c4dc5192c35146faa9adbdd9512825b5770778fbcc08159d58a9df09fd4"
 
 [forge.provenance."tests/e2e/e2e-platform/auth/global-setup.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "417364421f57de6b12d79e5dde27a02ca0d7969ddb05da6d55dedc3b8e30e297"
 
 [forge.provenance."tests/e2e/e2e-platform/fixtures/app.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "04b170aa1a0a0f679bba6185cd04e04f595d46f488a07a5d929afeba5e5788b5"
 
 [forge.provenance."tests/e2e/package.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "6df46158b3518c659cf82841fe6349f2e38f47654eae87ee67ae743a364ae3fb"
 
 [forge.provenance."tests/e2e/playwright.config.ts"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "09b78610160635559f77ef0930a046bf008cf11787651d103af84e640aec6281"
 
 [forge.provenance."tests/e2e/tests/.gitkeep"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 [forge.provenance."tests/e2e/tsconfig.json"]
-emitted_at = "2026-11-25T16:16:57Z"
+emitted_at = "2026-11-27T18:23:41Z"
 origin = "base-template"
 ownership = "scaffold"
 sha256 = "33ee667c28346d4cfd5fcd1b8f52357b85b8f2738076d6f7f6f3ddc2ce37ced4"

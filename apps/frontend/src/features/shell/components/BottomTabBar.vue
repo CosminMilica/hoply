@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { NavigationMenuItem } from '@nuxt/ui'
-import { useApplicationMenu } from '@/shared/application/menus'
+import { useNavTabs } from '../tabs'
 
 /** The phone's navigation: the layout's primary menu as tabs at the bottom of the screen. */
-const menu = useApplicationMenu('app', 'primary')
-const tabs = computed(() => menu.value.flat().filter((item): item is NavigationMenuItem & { to: NonNullable<NavigationMenuItem['to']> } => Boolean(item.to)))
+const tabs = useNavTabs()
 </script>
 
 <template>
@@ -26,9 +23,10 @@ const tabs = computed(() => menu.value.flat().filter((item): item is NavigationM
         <UIcon v-if="tab.icon" :name="tab.icon" class="size-[22px]" />
         <span
           v-if="tab.badge !== undefined"
-          class="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-hoply-600 px-1 text-[11px] text-white"
+          class="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px]"
+          :class="tab.value === 'saved' ? 'bg-hoply-600 text-white' : 'bg-ink-700 text-ink-50'"
         >
-          {{ tab.badge }}<span class="sr-only"> saved</span>
+          {{ tab.badge }}<span class="sr-only">{{ ` ${String(tab.label).toLowerCase()}` }}</span>
         </span>
       </span>
       {{ tab.label }}

@@ -23,12 +23,6 @@ export const application: ApplicationConfig = {
           {
             "items": [
               {
-                "id": "profile",
-                "label": "Profile",
-                "icon": "i-lucide-user",
-                "to": "hoply-profile"
-              },
-              {
                 "id": "jobs",
                 "label": "Find jobs",
                 "icon": "i-lucide-search",
@@ -40,11 +34,35 @@ export const application: ApplicationConfig = {
                 "icon": "i-lucide-heart",
                 "to": "hoply-saved",
                 "badge": "saved"
+              },
+              {
+                "id": "applications",
+                "label": "Applications",
+                "icon": "i-lucide-briefcase",
+                "to": "hoply-applications",
+                "badge": "applications"
               }
             ]
           }
         ],
-        "account": [],
+        "account": [
+          {
+            "items": [
+              {
+                "id": "profile",
+                "label": "Your profile",
+                "icon": "i-lucide-user",
+                "to": "hoply-profile"
+              },
+              {
+                "id": "skills",
+                "label": "Skill gaps",
+                "icon": "i-lucide-target",
+                "to": "hoply-skills"
+              }
+            ]
+          }
+        ],
         "footer": []
       }
     }
