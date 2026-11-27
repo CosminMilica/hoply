@@ -36,6 +36,7 @@ var platforms = []platform{
 	{name: "workday", boardOf: workdayBoardOf, check: func(board string) error { _, _, err := workdaySite(board); return err },
 		list: (*Reader).workday},
 	{name: "smartrecruiters", boardOf: onHost("jobs.smartrecruiters.com"), list: (*Reader).smartRecruitersList},
+	{name: "bamboohr", boardOf: bambooHRBoardOf, list: (*Reader).bambooHRList},
 }
 
 func leverPlatform(name, host string) platform {

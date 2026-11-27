@@ -63,7 +63,7 @@ Board     { company, platform, board, followed_at }
 | `level` | `""`, `junior`, `mid`, `senior`, `lead` |
 | `years_required` | `null` or 0–40 |
 | `source` | `catalog`, `import`, `link`, `text` |
-| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`), else `""` |
+| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`, `bamboohr`), else `""` |
 | `posted_at` | when the board published an imported job, else `null` |
 | `closed_at` | when the board stopped listing an imported job, else `null` |
 | `read_from` | `ats_api` (the job board's public API, see below), `json_ld` (the page's schema.org `JobPosting`), `page_text` (the page's main text), `text` (pasted), `""` for catalog jobs |
@@ -104,6 +104,7 @@ addresses (no SSRF). The link is read in this order:
    | `jobs.lever.co/{site}/{id}` (also `jobs.eu.lever.co`) | `api.lever.co/v0/postings/{site}/{id}` (`api.eu.lever.co` for the EU host) |
    | `jobs.ashbyhq.com/{board}/{id}` | `api.ashbyhq.com/posting-api/job-board/{board}`, the posting with that id |
    | `jobs.smartrecruiters.com/{company}/{id}` | `api.smartrecruiters.com/v1/companies/{company}/postings/{id}` |
+   | `{company}.bamboohr.com/careers/{id}` | `{company}.bamboohr.com/careers/{id}/detail` |
    | `apply.workable.com/{slug}/j/{shortcode}` | `apply.workable.com/api/v1/widget/accounts/{slug}?details=true`, the job with that shortcode |
 
    Title, company, location and remote flags come from the API's fields; the description HTML (with its section
@@ -182,6 +183,7 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `lever`, `lever-eu` | `api.lever.co/v0/postings/{board}?mode=json` (`api.eu.lever.co` for `lever-eu`) |
 | `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
 | `smartrecruiters` | `api.smartrecruiters.com/v1/companies/{board}/postings?country=ro`, 100 a page; each wanted job's description from `/postings/{id}` |
+| `bamboohr` | `{board}.bamboohr.com/careers/list`, the call the careers page makes (not a documented API), with each job's city and state; each wanted job's description, country and posting date from `/careers/{id}/detail` |
 | `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the

@@ -77,7 +77,7 @@ describe('job lines', () => {
     const imported = catalogJob(1, { source: 'import', origin: 'greenhouse', url: 'https://job-boards.eu.greenhouse.io/x/jobs/1', posted_at: '2026-11-23T09:00:00Z' })
     expect(sourceLine(imported, now)).toBe('via Greenhouse · posted 3 days ago')
     expect(sourceLine({ ...imported, origin: 'workable', url: 'https://careers.ing.com/en/job/1', posted_at: null })).toBe('via careers.ing.com')
-    expect([platformLabel('smartrecruiters'), platformLabel('workable')]).toEqual(['SmartRecruiters', 'workable'])
+    expect([platformLabel('smartrecruiters'), platformLabel('bamboohr'), platformLabel('workable')]).toEqual(['SmartRecruiters', 'BambooHR', 'workable'])
     expect(['2026-11-26T08:00:00Z', '2026-11-25T08:00:00Z', '2026-09-01T08:00:00Z'].map(at => postedAgo(at, now))).toEqual(['today', 'yesterday', '1 Sept'])
     expect(placeOf(catalogJob(0))).toBe('Iași, on-site')
     expect(placeOf({ city: '', work_mode: '' })).toBe('Location not given')
