@@ -21,7 +21,8 @@ export const ROUTE_PATHS: Record<string, string> = {
   'hoply-prep': '/jobs/:id/prepare',
   'hoply-cv': '/jobs/:id/cv',
   'hoply-saved': '/saved',
-  'hoply-skills': '/saved/skills',
+  'hoply-applications': '/applications',
+  'hoply-skills': '/skills',
 }
 
 export function testRouter(pages: Partial<Record<string, Component>> = {}) {

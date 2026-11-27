@@ -318,7 +318,6 @@ describe('JobSearch in grid view', () => {
     expect(rows()).toHaveLength(4)
     await wait(SEARCH_DELAY_MS + 50)
     expect(rows()).toHaveLength(2)
-    expect(button('Add a job').getAttribute('href')).toBe('/jobs/add')
     expect(() => button('Filters')).toThrow()
   })
 })

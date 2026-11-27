@@ -49,7 +49,7 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   await expect(page.getByText('Check what we found')).toBeVisible();
   await page.getByRole('button', { name: 'Save and prepare my CV' }).click();
   await expect(page.getByRole('heading', { name: 'Prepare your CV' })).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Main' }).getByText('1', { exact: true })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: /Saved/ })).toContainText('1 saved');
 
   await page.getByLabel('Your experience with Kubernetes').fill('Ran a Kubernetes cluster with 30 services');
   await page.locator('[data-test="gap"]').filter({ hasText: 'Kubernetes' }).getByRole('button', { name: 'Add to my CV' }).click();
@@ -71,9 +71,8 @@ test('from Find jobs to a tailored CV for an added job, marked as applied', asyn
   await page.getByRole('button', { name: 'I applied to this job' }).click();
   await expect(page.getByRole('button', { name: 'Marked as applied ✓' })).toBeVisible();
 
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: /Saved/ }).click();
-  await page.getByRole('button', { name: 'Applied 1' }).click();
-  await expect(page.getByRole('heading', { name: 'Platform Engineer' })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: /Applications/ }).click();
+  await expect(page.locator('[data-test="stage-applied"]').getByRole('heading', { name: 'Platform Engineer' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -185,9 +184,9 @@ test('a saved job is still in Saved after a reload', async ({ page }) => {
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Platform Engineer' })).toBeVisible();
   await expect(page.locator('[data-test="since"]')).toHaveText(/^Saved \d{1,2} [A-Z][a-z]{2}$/);
-  await expect(page.getByRole('button', { name: 'Saved 1' })).toBeVisible();
   expect([...applications.applications.values()].map(item => item.status)).toEqual(['saved']);
-  await page.getByRole('link', { name: 'Skill gaps' }).click();
+  await page.getByRole('button', { name: 'Your profile and menu' }).click();
+  await page.getByRole('menuitem', { name: 'Skill gaps' }).click();
   await expect(page.getByRole('heading', { name: 'Skill gaps' })).toBeVisible();
   await expect(page.getByRole('link', { name: /^Platform Engineer/ }).first()).toBeVisible();
   expect(errors).toEqual([]);
