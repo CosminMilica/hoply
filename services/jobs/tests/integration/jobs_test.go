@@ -19,7 +19,7 @@ import (
 
 const jobsPath = "/api/v1/jobs"
 
-func titles(jobs []models.Job) []string {
+func titles(jobs []models.JobCard) []string {
 	out := make([]string, len(jobs))
 	for i, job := range jobs {
 		out[i] = job.Title
@@ -68,8 +68,8 @@ func TestCatalogStartsEmpty(t *testing.T) {
 	if err != nil || !slices.Equal(titles(jobs), []string{"Snowflake Administrator DevOps", "DevOps Engineer", "Software Engineer", "System Administrator"}) {
 		t.Fatalf("catalog order: %q %v", titles(jobs), err)
 	}
-	first := jobs[0]
-	if first.ID != ids[0] || first.Sample || first.Source != "catalog" || first.ReadFrom != "" || first.AddedByMe || first.URL != "" ||
+	first, err := repo.Get(ctx, identity.New(uuid.New(), uuid.NewString()), jobs[0].ID)
+	if err != nil || first.ID != ids[0] || first.Sample || first.Source != "catalog" || first.ReadFrom != "" || first.AddedByMe || first.URL != "" ||
 		*first.YearsRequired != 3 || !slices.Equal(first.Areas, []string{"DevOps", "Data"}) || first.NiceToHave == nil ||
 		len(first.NiceToHave) != 0 || first.Product != "a product" || first.AboutCompany == "" || len(first.Perks) != 1 {
 		t.Fatalf("catalog job: %+v", first)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,7 +25,8 @@ func importedJob(id, title string) models.ImportedJob {
 		JobInput: models.JobInput{Title: title, Company: "Northwind", City: "Iași", Country: "Romania", WorkMode: "hybrid",
 			MustHave: []string{"Kubernetes"}, URL: "https://example.com/" + id, ReadFrom: "ats_api",
 			Qualifications: []string{"3+ years running Kubernetes"}, Bonuses: []string{"Terraform"}, AboutCompany: "We build payments.",
-			Perks: []string{"Learning budget"}},
+			Perks: []string{"Learning budget"}, About: strings.Repeat("Payments for shops. ", 30),
+			Responsibilities: []string{"Run clusters", "Write Terraform", "Mind the alerts", "Mentor"}},
 		Areas: []string{"DevOps"}, Origin: "greenhouse", ExternalID: id, Board: "northwind", PostedAt: &posted,
 	}
 }
@@ -46,8 +48,12 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		jobs[0].ClosedAt != nil || jobs[0].AddedByMe {
 		t.Fatalf("imported jobs are listed for everyone: %+v %v", jobs, err)
 	}
-	devops := jobs[slices.IndexFunc(jobs, func(j models.Job) bool { return j.Title == "DevOps Engineer" })]
-	if !slices.Equal(devops.Qualifications, []string{"3+ years running Kubernetes"}) || !slices.Equal(devops.Bonuses, []string{"Terraform"}) ||
+	card := jobs[slices.IndexFunc(jobs, func(j models.JobCard) bool { return j.Title == "DevOps Engineer" })]
+	if len([]rune(card.About)) != models.CardAbout || len(card.Responsibilities) != models.CardResponsibilities {
+		t.Fatalf("the list holds a card, not the whole ad: %+v", card)
+	}
+	devops, err := repo.Get(ctx, me, card.ID)
+	if err != nil || len(devops.Responsibilities) != 4 || !slices.Equal(devops.Qualifications, []string{"3+ years running Kubernetes"}) || !slices.Equal(devops.Bonuses, []string{"Terraform"}) ||
 		devops.AboutCompany != "We build payments." || !slices.Equal(devops.Perks, []string{"Learning budget"}) {
 		t.Fatalf("the ad's own lines are kept: %+v", devops)
 	}
@@ -74,7 +80,7 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 		t.Fatalf("closed jobs leave the list: %q", titles(open))
 	}
 	all, _ := repo.List(ctx, me, models.JobFilter{IDs: []uuid.UUID{devops.ID, jobs[0].ID, jobs[1].ID}})
-	if len(all) != 2 || !slices.ContainsFunc(all, func(j models.Job) bool { return j.ClosedAt != nil }) {
+	if len(all) != 2 || !slices.ContainsFunc(all, func(j models.JobCard) bool { return j.ClosedAt != nil }) {
 		t.Fatalf("asked by id, closed jobs are still there: %+v", all)
 	}
 	if limited, _ := repo.List(ctx, me, models.JobFilter{IDs: []uuid.UUID{jobs[0].ID, jobs[1].ID}, Limit: 1}); len(limited) != 1 {
@@ -104,7 +110,7 @@ func TestImportedJobsAgainstPostgres(t *testing.T) {
 	if closed, err := repo.CloseUnlisted(ctx, []string{"greenhouse"}, []string{"northwind"}); err != nil || closed != 1 {
 		t.Fatalf("the jobs of a board no longer listed close: %d %v", closed, err)
 	}
-	if open, _ := repo.List(ctx, me, models.JobFilter{}); len(open) != 2 || slices.ContainsFunc(open, func(j models.Job) bool { return j.Title == "Data Engineer" }) {
+	if open, _ := repo.List(ctx, me, models.JobFilter{}); len(open) != 2 || slices.ContainsFunc(open, func(j models.JobCard) bool { return j.Title == "Data Engineer" }) {
 		t.Fatalf("open after closing the unlisted: %q", titles(open))
 	}
 

@@ -38,7 +38,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jobs.rule=Host(`app.localhost`) && PathPrefix(`/api/jobs`)"
-      - "traefik.http.routers.jobs.middlewares=jobs-rewrite"
+      - "traefik.http.routers.jobs.middlewares=jobs-rewrite,jobs-compress"
+      - "traefik.http.middlewares.jobs-compress.compress=true"
       - "traefik.http.middlewares.jobs-rewrite.replacepathregex.regex=^/api/jobs/(.*)"
       - "traefik.http.middlewares.jobs-rewrite.replacepathregex.replacement=/api/$$1"
       - "traefik.http.services.jobs.loadbalancer.server.port=5020"

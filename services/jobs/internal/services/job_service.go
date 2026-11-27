@@ -39,7 +39,7 @@ const (
 	maxSkill    = 60
 	maxLocation = 120
 	// MaxList caps the jobs GET /jobs returns, newest first; MaxIDs caps the ids one request asks for.
-	MaxList = 500
+	MaxList = 2000
 	MaxIDs  = 200
 )
 

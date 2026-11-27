@@ -27,7 +27,7 @@ import (
 // JobRepository is the persistence contract for jobs. Get returns nil for a
 // job the caller cannot see; Delete removes only the caller's own job.
 type JobRepository interface {
-	List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.Job, error)
+	List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.JobCard, error)
 	Count(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) (int, error)
 	Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error)
 	Create(ctx context.Context, ident identity.IdentityContext, data models.JobInput) (*models.Job, error)
@@ -55,6 +55,8 @@ const (
 	jobColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
 		"responsibilities, qualifications, bonuses, about, about_company, product, perks, areas, url, source, read_from, requirements_from, sample, " +
 		"customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
+	cardColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
+		"responsibilities, about, areas, url, source, requirements_from, sample, customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
 	// visible keeps the catalog and the jobs of the $1 tenant and $2 subject.
 	visible = "(customer_id IS NULL OR (customer_id = $1 AND subject = $2))"
 )
@@ -135,21 +137,21 @@ func filtered(ident identity.IdentityContext, filter models.JobFilter) (string, 
 	return strings.Join(where, " AND "), args
 }
 
-func (r *PgJobRepository) List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.Job, error) {
+func (r *PgJobRepository) List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.JobCard, error) {
 	where, args := filtered(ident, filter)
 	limit := ""
 	if filter.Limit > 0 {
 		args = append(args, filter.Limit)
 		limit = fmt.Sprintf(" LIMIT $%d", len(args))
 	}
-	var jobs []models.Job
+	var jobs []models.JobCard
 	err := r.run(ctx, ident, func(db DBTX) error {
-		rows, err := db.Query(ctx, "SELECT "+jobColumns+" FROM jobs WHERE "+where+
+		rows, err := db.Query(ctx, "SELECT "+cardColumns+" FROM jobs WHERE "+where+
 			" ORDER BY COALESCE(posted_at, created_at) DESC, id"+limit, args...)
 		if err != nil {
 			return err
 		}
-		jobs, err = pgx.CollectRows(rows, scanJob)
+		jobs, err = pgx.CollectRows(rows, scanCard)
 		return err
 	})
 	if err != nil {
@@ -315,6 +317,17 @@ func scanJob(row pgx.CollectableRow) (models.Job, error) {
 		*list = nonNil(*list)
 	}
 	return j, err
+}
+
+func scanCard(row pgx.CollectableRow) (models.JobCard, error) {
+	var j models.Job
+	err := row.Scan(&j.ID, &j.Title, &j.Company, &j.City, &j.Country, &j.WorkMode, &j.Level, &j.YearsRequired,
+		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.About, &j.Areas, &j.URL, &j.Source, &j.RequirementsFrom,
+		&j.Sample, &j.AddedByMe, &j.CreatedAt, &j.Origin, &j.PostedAt, &j.ClosedAt)
+	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Areas} {
+		*list = nonNil(*list)
+	}
+	return models.CardOf(j), err
 }
 
 // likeEscape makes value match literally inside a LIKE pattern.

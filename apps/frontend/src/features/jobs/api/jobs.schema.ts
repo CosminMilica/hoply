@@ -47,7 +47,16 @@ export const jobSchema = z.object({
 
 export type Job = z.infer<typeof jobSchema>
 
-export const jobListSchema = z.object({ items: z.array(jobSchema), total: z.number() })
+/** A job as the list sends it: what the cards, the match and the filters read; `jobsApi.get` has the whole ad. */
+export const jobCardSchema = jobSchema.pick({
+  id: true, title: true, company: true, city: true, country: true, work_mode: true, level: true, years_required: true,
+  must_have: true, nice_to_have: true, responsibilities: true, about: true, areas: true, url: true, source: true,
+  requirements_from: true, sample: true, added_by_me: true, created_at: true, origin: true, posted_at: true, closed_at: true,
+})
+
+export type JobCard = z.infer<typeof jobCardSchema>
+
+export const jobListSchema = z.object({ items: z.array(jobCardSchema), total: z.number() })
 
 const short = (limit: number) => z.string().trim().max(limit, `At most ${limit} characters`)
 const skills = z.array(short(60)).max(40, 'At most 40 requirements')

@@ -91,9 +91,53 @@ type JobFilter struct {
 	Limit int
 }
 
+// JobCard is a job as GET /jobs lists it: what the cards, the match and the filters read. GET /jobs/{id} has the
+// whole ad.
+type JobCard struct {
+	ID            uuid.UUID `json:"id"`
+	Title         string    `json:"title"`
+	Company       string    `json:"company"`
+	City          string    `json:"city"`
+	Country       string    `json:"country"`
+	WorkMode      string    `json:"work_mode"`
+	Level         string    `json:"level"`
+	YearsRequired *int      `json:"years_required"`
+	MustHave      []string  `json:"must_have"`
+	NiceToHave    []string  `json:"nice_to_have"`
+	// Responsibilities are the ad's first CardResponsibilities, and About its first CardAbout characters.
+	Responsibilities []string   `json:"responsibilities"`
+	About            string     `json:"about"`
+	Areas            []string   `json:"areas"`
+	URL              string     `json:"url"`
+	Source           string     `json:"source"`
+	RequirementsFrom string     `json:"requirements_from"`
+	Sample           bool       `json:"sample"`
+	AddedByMe        bool       `json:"added_by_me"`
+	CreatedAt        time.Time  `json:"created_at"`
+	Origin           string     `json:"origin"`
+	PostedAt         *time.Time `json:"posted_at"`
+	ClosedAt         *time.Time `json:"closed_at"`
+}
+
+const (
+	CardResponsibilities = 3
+	CardAbout            = 300
+)
+
+// CardOf is the job's card.
+func CardOf(j Job) JobCard {
+	about := []rune(j.About)
+	return JobCard{ID: j.ID, Title: j.Title, Company: j.Company, City: j.City, Country: j.Country, WorkMode: j.WorkMode,
+		Level: j.Level, YearsRequired: j.YearsRequired, MustHave: j.MustHave, NiceToHave: j.NiceToHave,
+		Responsibilities: j.Responsibilities[:min(CardResponsibilities, len(j.Responsibilities))],
+		About:            string(about[:min(CardAbout, len(about))]), Areas: j.Areas, URL: j.URL, Source: j.Source,
+		RequirementsFrom: j.RequirementsFrom, Sample: j.Sample, AddedByMe: j.AddedByMe, CreatedAt: j.CreatedAt, Origin: j.Origin,
+		PostedAt: j.PostedAt, ClosedAt: j.ClosedAt}
+}
+
 type JobList struct {
-	Items []Job `json:"items"`
-	Total int   `json:"total"`
+	Items []JobCard `json:"items"`
+	Total int       `json:"total"`
 }
 
 // RequirementsInput replaces a job's requirements with Claude's reading of its ad.

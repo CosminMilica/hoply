@@ -3,16 +3,16 @@ import { refDebounced } from '@vueuse/core'
 import { useApplicationsQuery, useSkipsQuery } from '@/features/applications/composables/useApplications'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { knownSkills } from '@/features/profile/skills'
-import type { Job } from '../api/jobs.schema'
+import type { JobCard } from '../api/jobs.schema'
 import { matchJob, type JobMatch } from '../match'
 import { useJobSearchStore } from '../stores/search'
 import { useJobsQuery } from './useJobs'
 
-export type ScoredJob = Job & JobMatch
+export type ScoredJob = JobCard & JobMatch
 export type Decision = 'save' | 'skip' | 'tailor'
 
 /** A company posts one job once per city: those postings are one job in the deck. */
-const sameJob = (job: Pick<Job, 'company' | 'title'>) => `${job.company.trim().toLowerCase()}\n${job.title.trim().toLowerCase()}`
+const sameJob = (job: Pick<JobCard, 'company' | 'title'>) => `${job.company.trim().toLowerCase()}\n${job.title.trim().toLowerCase()}`
 
 /** How long typing in the search box waits before it searches. */
 export const SEARCH_DELAY_MS = 250

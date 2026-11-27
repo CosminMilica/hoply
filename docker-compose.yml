@@ -125,7 +125,8 @@ services:
       - "traefik.http.routers.jobs.entrypoints=web"
       - "traefik.http.middlewares.jobs-rewrite.replacepathregex.regex=^/api/jobs/(.*)"
       - "traefik.http.middlewares.jobs-rewrite.replacepathregex.replacement=/api/$$1"
-      - "traefik.http.routers.jobs.middlewares=jobs-rewrite"
+      - "traefik.http.routers.jobs.middlewares=jobs-rewrite,jobs-compress"
+      - "traefik.http.middlewares.jobs-compress.compress=true"
       - "traefik.http.services.jobs.loadbalancer.server.port=5020"
     depends_on:
       jobs-migrate:
