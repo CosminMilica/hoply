@@ -2,6 +2,7 @@ package unit_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -51,17 +52,17 @@ func (m *memoryJobs) visible(ident identity.IdentityContext, job models.Job) boo
 	return !owned || o == owner(ident)
 }
 
-func (m *memoryJobs) List(_ context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.Job, error) {
+func (m *memoryJobs) List(_ context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.JobCard, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.fail != nil {
 		return nil, m.fail
 	}
 	m.filter = filter
-	jobs := []models.Job{}
+	jobs := []models.JobCard{}
 	for _, job := range m.jobs {
 		if m.visible(ident, job) {
-			jobs = append(jobs, job)
+			jobs = append(jobs, models.CardOf(job))
 		}
 	}
 	if filter.Limit > 0 && len(jobs) > filter.Limit {
@@ -523,5 +524,23 @@ func TestRequirementsFromTheAnalysisThroughRoutes(t *testing.T) {
 	repo.fail = apperrors.New(apperrors.DatabaseUnavailable, "down")
 	if status, _ := testutil.Do(t, handler, http.MethodPut, path, map[string]any{}); status != http.StatusServiceUnavailable {
 		t.Fatalf("database down: %d", status)
+	}
+}
+
+func TestJobCardsCarryNoWholeAd(t *testing.T) {
+	job := models.Job{Title: "SRE", About: strings.Repeat("ș", models.CardAbout+20), Responsibilities: []string{"a", "b", "c", "d"},
+		Qualifications: []string{"5 years"}, Perks: []string{"Gym"}, AboutCompany: "We build payments."}
+	card := models.CardOf(job)
+	if len([]rune(card.About)) != models.CardAbout || !slices.Equal(card.Responsibilities, []string{"a", "b", "c"}) {
+		t.Fatalf("card: %+v", card)
+	}
+	raw, _ := json.Marshal(models.JobList{Items: []models.JobCard{card}, Total: 1})
+	for _, field := range []string{"qualifications", "perks", "about_company", "bonuses", "product", "read_from"} {
+		if strings.Contains(string(raw), `"`+field+`"`) {
+			t.Fatalf("the list carries %s: %s", field, raw)
+		}
+	}
+	if short := models.CardOf(models.Job{About: "Short."}); short.About != "Short." || len(short.Responsibilities) != 0 {
+		t.Fatalf("a short ad stays whole: %+v", short)
 	}
 }

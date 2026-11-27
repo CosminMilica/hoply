@@ -1,4 +1,4 @@
-import type { Job } from '@/features/jobs/api/jobs.schema'
+import type { JobCard } from '@/features/jobs/api/jobs.schema'
 import { matchJob, skillKey } from '@/features/jobs/match'
 
 export interface GapJob {
@@ -22,7 +22,7 @@ export interface SkillGap {
  * the most asked first (a must-have counts twice a nice-to-have). Missing skills and those the person
  * knows a close equivalent of come apart.
  */
-export function skillGaps(jobs: Job[], skills: string[]): { missing: SkillGap[], close: SkillGap[] } {
+export function skillGaps(jobs: JobCard[], skills: string[]): { missing: SkillGap[], close: SkillGap[] } {
   const gaps = new Map<string, SkillGap>()
   for (const job of jobs) {
     const match = matchJob(job, skills)

@@ -1,8 +1,16 @@
 import { http, HttpResponse } from 'msw'
+import { jobCardSchema } from '@/features/jobs/api/jobs.schema'
 import { CATALOG_JOBS } from './jobs-seed'
 
 type Job = (typeof CATALOG_JOBS)[number] & { qualifications?: string[], bonuses?: string[] }
 interface Answer { status: number, body?: unknown }
+
+/** A job as the list sends it, by docs/api/jobs.md: no whole ad, the first responsibilities and the start of about. */
+const card = (job: Job) => ({
+  ...Object.fromEntries(Object.keys(jobCardSchema.shape).map(field => [field, job[field as keyof Job]])),
+  about: job.about.slice(0, 300),
+  responsibilities: job.responsibilities.slice(0, 3),
+})
 
 const plain = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 const unreadable = (reason: string): Answer => ({
@@ -51,7 +59,7 @@ export function createJobsBackend() {
       const ids = (params.get('ids') ?? '').split(',').filter(Boolean)
       if (ids.length) {
         const picked = jobs.filter(job => ids.includes(job.id))
-        return { status: 200, body: { items: picked, total: picked.length } }
+        return { status: 200, body: { items: picked.map(card), total: picked.length } }
       }
       const items = jobs.filter((job) => {
         const hay = plain(`${job.title} ${job.company} ${job.must_have.join(' ')} ${job.nice_to_have.join(' ')}`)
@@ -61,7 +69,7 @@ export function createJobsBackend() {
           && (!areas.length || job.areas.some(area => areas.includes(area)))
           && (!level || job.level === level)
       }).sort((a, b) => b.created_at.localeCompare(a.created_at))
-      return { status: 200, body: { items, total: items.length } }
+      return { status: 200, body: { items: items.map(card), total: items.length } }
     },
     get(id: string): Answer {
       const job = find(id)

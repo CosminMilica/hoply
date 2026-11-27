@@ -12,7 +12,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 
 | Method | Path (service side) | Body | Response |
 | --- | --- | --- | --- |
-| GET | `/api/v1/jobs` | query: `q`, `city`, `country`, `include_remote`, `area`, `level`, `ids`, `limit` | 200 `{ items: [Job], total }` |
+| GET | `/api/v1/jobs` | query: `q`, `city`, `country`, `include_remote`, `area`, `level`, `ids`, `limit` | 200 `{ items: [JobCard], total }` |
 | GET | `/api/v1/jobs/{id}` | | 200 `Job` |
 | POST | `/api/v1/jobs/read` | `{ url }` or `{ text, title?, company?, url? }` | 200 `JobDraft` |
 | POST | `/api/v1/jobs` | `JobInput` | 201 `Job` |
@@ -22,12 +22,14 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 | POST | `/api/v1/boards` | `{ url, company }` | 201 `Board` |
 
 - `GET /jobs` returns the catalog, the imported jobs still open and the caller's own jobs (`added_by_me: true`),
-  newest first (by `posted_at`, else `created_at`), at most `limit` (1–500, 500 by default); other people's added jobs
+  newest first (by `posted_at`, else `created_at`), at most `limit` (1–2000, 2000 by default); other people's added jobs
   are never visible. Filters: `q` matches title, company and requirements (case-insensitive); `city` matches the city
   (case- and diacritics-insensitive: `Iasi` finds `Iași`); `include_remote=true` also keeps remote jobs when `city` is
   set; `country` matches the country; `area` may repeat; `level` is one of the level values. `ids` (comma-separated, at
   most 200) returns those jobs only, closed ones included: Saved uses it. `total` is how many jobs the filters find,
-  also when `items` stops at `limit`.
+  also when `items` stops at `limit`. Each item is a `JobCard`: a `Job` without the whole ad (`qualifications`,
+  `bonuses`, `about_company`, `product`, `perks`, `read_from`), with its first 3 `responsibilities` and the first 300
+  characters of `about`; `GET /jobs/{id}` has the whole ad. The response is gzip-compressed when the client accepts it.
 - `GET /jobs/{id}` and `DELETE /jobs/{id}`: an unknown id, a non-UUID id or another person's job is 404; deleting a
   catalog job is 404 too.
 - `PUT /jobs/{id}/requirements` replaces the requirements of a job the caller sees with the cv service's analysis of
