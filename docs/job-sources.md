@@ -48,18 +48,29 @@ For a snippet-only source, we open the job's own page with the link reader to ge
 
 | Source | Why not imported |
 | --- | --- |
-| eJobs.ro | no public API (partner tokens are for posting jobs); scraping breaks its terms |
+| eJobs.ro | no public API (partner tokens are for posting jobs); terms 7.2 and 7.5 forbid storing its content and collecting it by bots without written permission (contact@ejobs.ro); its `rss-listings.xml` has titles only |
 | BestJobs, Hipo.ro, OLX Locuri de muncă | no public API or feed found |
 | LinkedIn | no public API; job pages need a login |
 
 People bring these jobs in with **Add a job** (link or text).
+
+## 4b. ANOFM: imported (checked 2026-11-28)
+
+ANOFM, the national employment agency, publishes the vacancies employers register with it on mediere.anofm.ro: about
+9,400 offers in Romania, 315 in Iași, mostly small companies with no job board of their own. Its public search reads an
+undocumented JSON endpoint and each offer has a server-rendered page with its responsibilities; robots.txt is absent,
+and the data is public-sector information (reuse under Legea 179/2022; jobs.ro republishes it too). The importer reads
+Iași, Bucharest, Cluj, Timiș and Brașov (`platform: anofm`), keeps the offers in the domains, and leaves the contact
+details on ANOFM's page. Still to do: ask ANOFM to confirm the reuse and whether a documented export exists.
+
+Also checked: Hipo's RSS feeds answer empty; Jooble's API (a key per country, 100 calls a day) gives snippets only;
+Adzuna has no Romania; Careerjet's terms forbid building a job database; data.gov.ro has no vacancy lists.
 
 ## 5. Not now
 
 | Source | Why |
 | --- | --- |
 | EURES | data exchange for EURES members and partners, not a public API; portal terms are personal use |
-| ANOFM (Romania's public employment agency) | no API found; to check |
 | Google for Jobs via SerpAPI, paid job datasets (TheirStack, Coresignal and similar) | paid; consider once the free sources are not enough |
 
 ## Plan
@@ -79,3 +90,19 @@ centres on Workday.
 Out of reach for now: SuccessFactors (Allianz, Generali, Groupama, Swiss Re, ERGO, Capgemini), Oracle HCM (Chubb,
 Crawford), iCIMS (Aon, Gallagher), Avature (MetLife), Yello (WTW), Phenom (Conduent), mingle.ro (Omniasig), and the
 insurers that post only on their own site or job portals (Signal Iduna, Grawe, Asirom, Uniqa, Euroins).
+
+## Finance employers (checked 2026-11-28)
+
+Added on platforms the importer reads: PwC Romania, Michelin, Iron Mountain, Goodyear, Concentrix, AspenTech, Finastra,
+Hitachi, Renault (Workday) and Envipco (Recruitee). Most Romanian banks, insurers and accounting firms are elsewhere:
+
+| Platform | Employers, Romanian finance jobs |
+| --- | --- |
+| SuccessFactors career sites (sitemap + microdata) | EY 19, BCR 9, Capgemini 5, Groupama 4, Foundever, Tenaris, Lidl |
+| Avature (RSS feed + JSON-LD pages) | UniCredit Bank 60, across the country, Iași included |
+| Oracle Recruiting Cloud (public REST) | Oracle 9, Honeywell 8, Emerson 5 |
+| Phenom | Allianz group 19 |
+| TalentLyft | KPMG 15, Forvis Mazars 5 |
+| Own sites | Banca Transilvania 7, Libra Bank 14, Signal Iduna 7, Netopia 5 |
+
+A SuccessFactors or Avature reader would bring the largest banking and insurance pools.

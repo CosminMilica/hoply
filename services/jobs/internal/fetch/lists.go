@@ -39,6 +39,8 @@ var platforms = []platform{
 	{name: "bamboohr", boardOf: bambooHRBoardOf, list: (*Reader).bambooHRList},
 	{name: "recruitee", boardOf: recruiteeBoardOf, list: (*Reader).recruiteeList},
 	{name: "workable", boardOf: workableBoardOf, list: (*Reader).workableList},
+	{name: "anofm", boardOf: func(string, []string, url.Values) (string, bool) { return "", false }, check: anofmCheck,
+		list: (*Reader).anofmList},
 }
 
 func leverPlatform(name, host string) platform {
@@ -96,8 +98,10 @@ type Posting struct {
 	PostedAt  *time.Time
 	Places    []string
 	InCountry bool
-	Page      Page
-	describe  func(ctx context.Context, r *Reader) (*Page, []string, *time.Time, error)
+	// Employer is the job's own employer on a board that lists many (ANOFM); "" means the board's company.
+	Employer string
+	Page     Page
+	describe func(ctx context.Context, r *Reader) (*Page, []string, *time.Time, error)
 }
 
 // CheckBoard reports whether board is a valid board name on platform.
@@ -156,6 +160,7 @@ func (r *Reader) Describe(ctx context.Context, p *Posting) error {
 	}
 	page.Title, page.Company = extract.FirstOf(page.Title, p.Page.Title), extract.FirstOf(page.Company, p.Page.Company)
 	page.City, page.Country, page.WorkMode = extract.FirstOf(page.City, p.Page.City), extract.FirstOf(page.Country, p.Page.Country), extract.FirstOf(page.WorkMode, p.Page.WorkMode)
+	page.Level = extract.FirstOf(page.Level, p.Page.Level)
 	p.Page, p.Places, p.describe = *page, append(p.Places, places...), nil
 	if posted != nil {
 		p.PostedAt = posted

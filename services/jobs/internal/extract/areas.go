@@ -37,7 +37,7 @@ var (
 	// domainTitles name a domain outside IT; a title in IT is one that names an IT area.
 	domainTitles = map[string]*regexp.Regexp{
 		"banking": regexp.MustCompile(`\bbank|bancar|\bbanca\b|\bbanker\b|relationship manager|` +
-			`credit (?:officer|analyst|specialist|advisor|consultant)|\bloans?\b|mortgage|ipotecar|creditare|teller|casier|` +
+			`credit (?:officer|analyst|specialist|advisor|consultant)|\bloans?\b|mortgage|ipotecar|creditare|teller|casier (?:bancar|valutar)|` +
 			`branch (?:manager|advisor)|consilier (?:bancar|financiar|clienti)|clienti (?:pf|imm|persoane)|specialist (?:pf|imm)|` +
 			`(?:referent|ofiter) (?:credite|bancar)`),
 		"accounting": regexp.MustCompile(`accountant|accounting|contabil|accounts (?:payable|receivable)|\b(?:ap|ar|i2c|p2p|r2r|o2c)\b|` +
@@ -46,12 +46,12 @@ var (
 			`\btax\b|fiscal|referent financiar|economist`),
 		"finance": regexp.MustCompile(`financial (?:analyst|controller|planning|reporting|manager|specialist|officer|assistant)|` +
 			`finance (?:manager|specialist|analyst|business partner|lead|director|officer|associate|assistant)|\bfp&a\b|` +
-			`\bcontroller\b|controlling|treasury|trezorerie|analist financiar|\bcfo\b|` +
+			`\bcontroller\b|controlling|controlor financiar|specialist finance|treasury|trezorerie|analist financiar|\bcfo\b|` +
 			`reporting (?:specialist|analyst)|budget(?:ing)? analyst|management accountant|` +
 			`\brisk\b|\brisc\b|compliance|conformitate|\baml\b|\bkyc\b|money laundering|spalare|fraud|\baudit|\bsox\b|` +
 			`internal control|controllership|regulatory (?:compliance|reporting|affairs|analyst|specialist)|reglementar|sanctions screening`),
 		"insurance": regexp.MustCompile(`insurance|insurer|reinsur|\basigurari\b|asigurator|reasigur|underwrit|subscriere|` +
-			`\bclaims?\b|daune|loss adjust|actuar|bancassurance`),
+			`\bclaims?\b|daune|loss adjust|actuar|bancassurance|(?:agent|broker|inspector|consultant|consilier|referent) (?:de )?asigurar[ei]`),
 		"hr": regexp.MustCompile(`\bhr\b|hrbp|\bhris\b|human resources|resurse umane|recruit|recrut|talent (?:acquisition|sourc|partner)|sourcer|` +
 			`headhunt|people (?:partner|operations|business partner)|learning (?:and|&) development|\bl&d\b|` +
 			`training (?:specialist|coordinator|manager|consultant)|compensation|\bc&b\b|total rewards|payroll|salarizare|` +
@@ -60,18 +60,20 @@ var (
 	}
 	areaTitles = map[string]*regexp.Regexp{
 		"DevOps":     regexp.MustCompile(`devops|dev ops|\bsre\b|site reliability|reliability engineer|platform engineer|infrastructure|\bcloud\b|kubernetes|release engineer|build engineer|mlops`),
-		"Backend":    regexp.MustCompile(`back-?end|back end|software (?:engineer|developer)|\bdeveloper\b|programmer|\b(?:java|golang|go|python|node\.?js|nodejs|\.net|c#|c\+\+|php|ruby|rust|scala|kotlin|salesforce|sap)\b.*\b(?:engineer|developer)\b|\bapi\b`),
+		"Backend":    regexp.MustCompile(`back-?end|back end|software (?:engineer|developer)|\bdeveloper\b|programmer|programator|dezvoltator (?:software|aplicatii|web)|inginer (?:de )?(?:sistem )?software|\b(?:java|golang|go|python|node\.?js|nodejs|\.net|c#|c\+\+|php|ruby|rust|scala|kotlin|salesforce|sap)\b.*\b(?:engineer|developer)\b|\bapi\b`),
 		"Frontend":   regexp.MustCompile(`front-?end|front end|\bui (?:engineer|developer)|\bweb developer|\b(?:react|angular|vue)(?:\.?js)?\b.*\b(?:engineer|developer)\b`),
 		"Full stack": regexp.MustCompile(`full-?stack|full stack`),
 		"Mobile":     regexp.MustCompile(`\bmobile\b|\bios\b|android|react native|flutter (?:engineer|developer)`),
-		"Data":       regexp.MustCompile(`\bdata\b|analytics|\bbi\b|\betl\b|big data|databricks|snowflake`),
+		"Data":       regexp.MustCompile(`\bdata\b|analist (?:de )?date|analytics|\bbi\b|\betl\b|big data|databricks|snowflake`),
 		"AI":         regexp.MustCompile(`\bai\b|\bml\b|machine learning|\bllm|gen ?ai|deep learning|\bnlp\b|computer vision|data scientist|agentic`),
 		"QA":         regexp.MustCompile(`\bqa\b|\btest|\bsdet\b|quality (?:assurance|engineer)`),
-		"Security":   regexp.MustCompile(`security|secops|\bsoc\b|penetration|pentest|cyber|\biam\b|appsec`),
+		"Security":   regexp.MustCompile(`security|securitate cibernetica|securitatea informatiei|secops|\bsoc\b|penetration|pentest|cyber|\biam\b|appsec`),
 		"Embedded":   regexp.MustCompile(`embedded|firmware|autosar|\bfpga\b`),
-		"Sysadmin":   regexp.MustCompile(`administrator|sysadmin|\blinux\b|\bnetwork\b|systems engineer|system engineer|\bnoc\b|it support|help ?desk`),
-		"Product":    regexp.MustCompile(`product (?:manager|owner)|\bproduct lead|technical product`),
-		"Design":     regexp.MustCompile(`\bux\b|\bui\b.*designer|product designer|ux/ui|ui/ux|interaction designer`),
+		"Sysadmin": regexp.MustCompile(`sysadmin|\blinux\b|\bnetwork\b|systems? (?:engineer|administrator)|\bnoc\b|it support|help ?desk|` +
+			`(?:database|cloud|windows|server|it|system) administrator|administrator (?:de )?(?:retea|retele|sistem|sisteme|baze de date)|` +
+			`tehnician (?:retea|retele|echipamente de calcul|calculatoare)`),
+		"Product": regexp.MustCompile(`product (?:manager|owner)|\bproduct lead|technical product`),
+		"Design":  regexp.MustCompile(`\bux\b|\bui\b.*designer|product designer|ux/ui|ui/ux|interaction designer`),
 
 		"Front office": regexp.MustCompile(`teller|casier|ghiseu|branch|sucursal|agenti[ea]|consilier (?:bancar|financiar|clienti)|` +
 			`personal banker|clienti (?:pf|persoane)|specialist pf|retail|front office|customer (?:advisor|service)|relatii cu clientii`),
@@ -86,7 +88,7 @@ var (
 		"Payroll":     regexp.MustCompile(`payroll|salarizare`),
 		"Tax":         regexp.MustCompile(`\btax\b|\btaxe\b|fiscal|\bvat\b|\btva\b|transfer pricing|impozit`),
 
-		"FP&A & controlling": regexp.MustCompile(`\bfp&a\b|financial (?:planning|analyst|reporting)|\bcontroller\b|controlling|budget|forecast|` +
+		"FP&A & controlling": regexp.MustCompile(`\bfp&a\b|financial (?:planning|analyst|reporting)|\bcontroller\b|controlling|controlor|budget|forecast|` +
 			`analist financiar|finance business partner|management accountant|cost (?:analyst|controller|accountant)|reporting (?:specialist|analyst)`),
 		"Treasury": regexp.MustCompile(`treasury|trezorerie|cash management|liquidity|lichiditate`),
 		"Risk & compliance": regexp.MustCompile(`\brisk\b|\brisc\b|compliance|conformitate|\baml\b|\bkyc\b|money laundering|spalare|fraud|` +
@@ -95,7 +97,7 @@ var (
 
 		"Underwriting":    regexp.MustCompile(`underwrit|subscri(?:ere|itor)`),
 		"Claims":          regexp.MustCompile(`\bclaims?\b|daune|loss adjust|adjuster|constatator`),
-		"Insurance sales": regexp.MustCompile(`(?:insurance|asigurari) (?:sales|agent|advisor|consultant|broker)|(?:sales|agent|consultant|broker|vanzari) (?:de )?(?:insurance|asigurari)|bancassurance|account manager|vanzari`),
+		"Insurance sales": regexp.MustCompile(`(?:insurance|asigurari) (?:sales|agent|advisor|consultant|broker)|(?:sales|agent|consultant|broker|vanzari) (?:de )?(?:insurance|asigurari)|bancassurance|account manager|vanzari|agent (?:de )?asigurar[ei]`),
 		"Actuarial":       regexp.MustCompile(`actuar`),
 
 		"Recruitment":             regexp.MustCompile(`recruit|recrut|talent (?:acquisition|sourc|partner)|sourcer|headhunt`),

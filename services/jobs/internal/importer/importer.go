@@ -331,9 +331,9 @@ func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 	read := extract.Read(p.Page.Text, extract.Hints{Title: p.Page.Title, Company: b.Company})
 	return models.ImportedJob{
 		JobInput: models.JobInput{
-			Title: read.Title, Company: b.Company, City: city, Country: country,
+			Title: read.Title, Company: extract.FirstOf(p.Employer, b.Company), City: city, Country: country,
 			WorkMode: extract.FirstOf(p.Page.WorkMode, extract.WorkMode(where+" "+p.Page.Title), read.WorkMode),
-			Level:    read.Level, YearsRequired: read.YearsRequired, MustHave: read.MustHave, NiceToHave: read.NiceToHave,
+			Level:    extract.FirstOf(read.Level, p.Page.Level), YearsRequired: read.YearsRequired, MustHave: read.MustHave, NiceToHave: read.NiceToHave,
 			Responsibilities: read.Responsibilities, Qualifications: read.Qualifications, Bonuses: read.Bonuses, About: read.About,
 			AboutCompany: read.AboutCompany, Perks: read.Perks, URL: p.URL, Source: "import", ReadFrom: p.Page.ReadFrom,
 		},

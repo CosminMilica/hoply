@@ -158,6 +158,19 @@ func TestClassifyTheTitle(t *testing.T) {
 		"HR Administrator":                                      {[]string{"hr"}, []string{"HR administration"}},
 		"Inspector resurse umane":                               {[]string{"hr"}, []string{"HR administration"}},
 		"Specialist asigurarea calității":                       {[]string{}, []string{}},
+		"Contabil":                                              {[]string{"accounting"}, []string{"General accounting"}},
+		"Economist":                                             {[]string{"accounting"}, []string{"General accounting"}},
+		"Casier":                                                {[]string{}, []string{}},
+		"Casier bancar":                                         {[]string{"banking"}, []string{"Front office"}},
+		"Agent de asigurare":                                    {[]string{"insurance"}, []string{"Insurance sales"}},
+		"Controlor financiar":                                   {[]string{"finance"}, []string{"FP&A & controlling"}},
+		"Programator":                                           it("Backend"),
+		"Analist programator":                                   it("Backend"),
+		"Administrator retea de calculatoare":                   it("Sysadmin"),
+		"Administrator imobile":                                 {[]string{}, []string{}},
+		"Office Administrator":                                  {[]string{}, []string{}},
+		"Tester software":                                       it("QA"),
+		"Specialist Finance Retail - French Speaker":            {[]string{"finance"}, []string{}},
 	} {
 		if got := extract.Classify(title); !slices.Equal(got.Domains, want.domains) || !slices.Equal(got.Areas, want.areas) {
 			t.Errorf("%s: %v %v, want %v %v", title, got.Domains, got.Areas, want.domains, want.areas)

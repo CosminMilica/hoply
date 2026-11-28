@@ -8,6 +8,7 @@
 #   bamboohr          <board>.bamboohr.com/careers
 #   recruitee         <board>.recruitee.com
 #   workable          apply.workable.com/<board>
+#   anofm             ANOFM's job matching portal (mediere.anofm.ro), a county by its code; each job keeps its own employer
 boards:
   - {company: Bitdefender, platform: greenhouse, board: scbitdefendersrl}
   - {company: IONOS, platform: greenhouse, board: ionos2}
@@ -111,3 +112,18 @@ boards:
   - {company: Samsung, platform: workday, board: sec.wd3.myworkdayjobs.com/Samsung_Careers}
   - {company: Abbott, platform: workday, board: abbott.wd5.myworkdayjobs.com/abbottcareers}
   - {company: Mars, platform: workday, board: mars.wd3.myworkdayjobs.com/External}
+  - {company: ANOFM, platform: anofm, board: IS}
+  - {company: ANOFM, platform: anofm, board: B}
+  - {company: ANOFM, platform: anofm, board: CJ}
+  - {company: ANOFM, platform: anofm, board: TM}
+  - {company: ANOFM, platform: anofm, board: BV}
+  - {company: PwC Romania, platform: workday, board: pwc.wd3.myworkdayjobs.com/Global_Experienced_Careers}
+  - {company: Michelin, platform: workday, board: michelinhr.wd3.myworkdayjobs.com/Michelin}
+  - {company: Iron Mountain, platform: workday, board: ironmountain.wd5.myworkdayjobs.com/iron-mountain-jobs}
+  - {company: Goodyear, platform: workday, board: goodyear.wd1.myworkdayjobs.com/GoodyearCareers}
+  - {company: Concentrix, platform: workday, board: cnx.wd1.myworkdayjobs.com/external_global}
+  - {company: AspenTech, platform: workday, board: aspentech.wd5.myworkdayjobs.com/AspenTech}
+  - {company: Finastra, platform: workday, board: finastra.wd3.myworkdayjobs.com/FINC}
+  - {company: Hitachi, platform: workday, board: hitachi.wd1.myworkdayjobs.com/hitachi}
+  - {company: Renault, platform: workday, board: alliancewd.wd3.myworkdayjobs.com/renault-group-careers}
+  - {company: Envipco, platform: recruitee, board: envipco}

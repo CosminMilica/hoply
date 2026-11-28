@@ -189,6 +189,7 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `bamboohr` | `{board}.bamboohr.com/careers/list`, the call the careers page makes (not a documented API), with each job's city and state; each wanted job's description, country and posting date from `/careers/{id}/detail` |
 | `recruitee` | `{board}.recruitee.com/api/offers/`: every published offer with its description and requirements |
 | `workable` | `apply.workable.com/api/v1/widget/accounts/{board}?details=true`, the widget its careers pages embed: every job with its description |
+| `anofm` | ANOFM's job matching portal: `POST mediere.anofm.ro/api/entity/vw_public_job_posting` with the county's id, 100 a page, the call its public search makes (not a documented API); a wanted job's responsibilities, requirements and terms from its page `/app/module/mediere/job/{id}`, without the contact person, email, phone or address. A board is a county code (`IS`); each job keeps its own employer, and its level comes from the experience asked |
 | `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
