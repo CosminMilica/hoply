@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Hoply</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #141516; color: #f2f1ec; font: 600 16px/1.5 Nunito, system-ui, sans-serif; }
+    main { max-width: 420px; padding: 32px; text-align: center; }
+    a { color: #8fa2ff; font-weight: 800; }
+    [hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Shown by Traefik when the gatekeeper's /callback fails or finds its sign-in expired (docker-compose.yml,
+       gatekeeper-callback): the sign-in starts once more, at most twice a minute, else the person sees the way to try
+       again. -->
+  <main>
+    <p id="wait">Signing you in…</p>
+    <p id="failed" hidden>We could not sign you in. <a href="/auth/login?redirect_uri=%2F">Try again</a></p>
+  </main>
+  <script>
+    (function () {
+      var ro = false
+      try { ro = localStorage.getItem('hoply.locale') === 'ro' } catch (e) {}
+      if (ro) {
+        document.documentElement.lang = 'ro'
+        document.getElementById('wait').textContent = 'Te conectăm…'
+        document.getElementById('failed').firstChild.textContent = 'Nu te-am putut conecta. '
+        document.querySelector('#failed a').textContent = 'Încearcă din nou'
+      }
+      // Two tries a minute: a new person's first callback and a stale one can come close together, while a
+      // callback that keeps failing stops after two. Without storage the page cannot count, so it never retries.
+      var key = 'hoply.callbackRetry'
+      try {
+        var tries = JSON.parse(sessionStorage.getItem(key) || 'null') || { since: 0, count: 0 }
+        if (Date.now() - tries.since > 60000) tries = { since: Date.now(), count: 0 }
+        if (tries.count < 2) {
+          tries.count += 1
+          sessionStorage.setItem(key, JSON.stringify(tries))
+          location.replace('/auth/login?redirect_uri=%2F')
+          return
+        }
+      } catch (e) {}
+      document.getElementById('wait').hidden = true
+      document.getElementById('failed').hidden = false
+    })()
+  </script>
+</body>
+</html>

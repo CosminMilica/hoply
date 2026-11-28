@@ -59,6 +59,15 @@ describe('OnboardingPage', () => {
     expect(router.currentRoute.value.name).toBe('hoply-jobs')
   })
 
+  it('opens Find jobs when the person was only going to the landing page', async () => {
+    newcomer()
+    const { router } = await mountPage(OnboardingPage, { at: '/welcome?to=/profile' })
+    await click(button('Continue'))
+    await click(document.querySelector<HTMLButtonElement>('[data-test="domain-it"]')!)
+    await click(button('Done, show me the jobs'))
+    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+  })
+
   it('says when the choices could not be saved, and when the profile could not be read', async () => {
     newcomer()
     server.use(http.patch('*/api/profile/v1/profiles/me', () => HttpResponse.json({ error: { code: 'INTERNAL' } }, { status: 500 })))

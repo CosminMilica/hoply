@@ -654,6 +654,9 @@ services:
       # A person stays signed in for 24 hours: idle and absolute alike (the realm's SSO session matches).
       DEFAULT_IDLE_TIMEOUT_SECONDS: "86400"
       DEFAULT_ABSOLUTE_TIMEOUT_SECONDS: "86400"
+      # A sign-in may take as long as Keycloak's own login (30 minutes): filling in the sign-up form can take longer
+      # than the gatekeeper's default 5, and the callback would then find no sign-in to finish.
+      OIDC_STATE_ENVELOPE_TTL_SECONDS: "1800"
       SESSION_WARN_AT_SECONDS: "60"
       SESSION_FERNET_KEY: "L9dXzDhHXxIbDpzmUrNSCMUgCl0rYmQ6j6lwtWXH_A4="
       DELEGATION_GRANT_FERNET_KEY: "UVEc0SmYvD9UcwKTlz_fMTusqFVVTNLliJ96ChlPDCI="
@@ -691,9 +694,21 @@ services:
       - traefik.http.middlewares.auth.forwardauth.authResponseHeaders=Authorization,X-Gatekeeper-User-Id,X-Gatekeeper-Email,X-Gatekeeper-Tenant,X-Gatekeeper-Roles,X-Gatekeeper-Auth-Method
       - traefik.http.middlewares.strip-api-key.headers.customrequestheaders.X-API-Key=
       # The browser's sign-in, session and sign-out endpoints on the app's address.
-      - "traefik.http.routers.gatekeeper-browser.rule=Host(`app.localhost`) && (Path(`/auth/login`) || Path(`/auth/userinfo`) || Path(`/auth/session`) || Path(`/auth/organization`) || Path(`/callback`) || Path(`/logout`))"
+      - "traefik.http.routers.gatekeeper-browser.rule=Host(`app.localhost`) && (Path(`/auth/login`) || Path(`/auth/userinfo`) || Path(`/auth/session`) || Path(`/auth/organization`) || Path(`/logout`))"
       - "traefik.http.routers.gatekeeper-browser.entrypoints=web"
       - "traefik.http.services.gatekeeper-browser.loadbalancer.server.port=5000"
+      # The sign-in callback, apart: when it fails, apps/frontend/public/signing-in.html starts the sign-in once more.
+      # A new person's first callback fails after the gatekeeper created their organization (forge's _release_lock
+      # calls WATCH, which the gatekeeper's Redis pipeline lacks); the second finds the organization and passes. A
+      # callback whose sign-in expired or was already used (400, a reload) starts over too: Keycloak still knows the
+      # person, so they come straight back signed in.
+      - "traefik.http.routers.gatekeeper-callback.rule=Host(`app.localhost`) && Path(`/callback`)"
+      - "traefik.http.routers.gatekeeper-callback.entrypoints=web"
+      - "traefik.http.routers.gatekeeper-callback.service=gatekeeper-browser"
+      - "traefik.http.routers.gatekeeper-callback.middlewares=callback-retry"
+      - "traefik.http.middlewares.callback-retry.errors.status=400,500-599"
+      - "traefik.http.middlewares.callback-retry.errors.service=frontend@docker"
+      - "traefik.http.middlewares.callback-retry.errors.query=/signing-in.html"
   # ── Plugin service: gatekeeper-keygen ──
   gatekeeper-keygen:
     image: "forge-gatekeeper:local"

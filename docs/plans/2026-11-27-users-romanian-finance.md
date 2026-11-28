@@ -86,5 +86,5 @@ apps/frontend/src/features/jobs/components/DomainFilter.vue   field tabs and the
 | Language | `profile.app_language`; until the profile loads, the last one on this device; Nuxt UI's own words and `<html lang>` follow |
 | Onboarding | a guard after sign-in sends a person with no `domains` to `/welcome`, then back where they were going |
 | Find jobs | `domain` filter with the person's fields (all, or one tab), `area` within the field shown |
-| Sign-up | Keycloak's registration form (Hoply theme, English and Romanian); the gatekeeper creates the person's organization on their first sign-in (`auth.keycloak_self_registration: own_organization`); emails not verified for now (a hardcoded `email_verified` claim on the `gatekeeper` client) |
+| Sign-up | Keycloak's registration form (Hoply theme, English and Romanian); the gatekeeper creates the person's organization on their first sign-in (`auth.keycloak_self_registration: own_organization`); emails not verified for now (a hardcoded `email_verified` claim on the `gatekeeper` client); the first callback's forge bug is retried once by `signing-in.html` |
 | Not translated | forge's generated pages (sign-in, not found, forbidden), the services' error texts, generated CV content |

@@ -49,7 +49,7 @@ export const useJobSearchStore = defineStore('job-search', () => {
 
   const anywhere = computed(() => (country.value ? t.value.jobs.search.anywhereIn(country.value) : t.value.jobs.search.anywhere))
   /** The city chips: anywhere in the country, then the cities Find jobs offers, the chosen one pressed. */
-  const cityOptions = computed(() => [{ label: anywhere.value, value: '' }, ...CITIES.map(city => ({ label: city, value: city }))]
+  const cityOptions = computed(() => [{ label: anywhere.value, value: '' }, ...CITIES.map(city => ({ label: t.value.jobs.search.cities[city], value: city }))]
     .map(city => ({ ...city, pressed: cityKey(location.value) === cityKey(city.value) })))
 
   /** The field tabs: all the person picked, then each of them; none when they picked one. */
