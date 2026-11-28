@@ -13,6 +13,8 @@ export const en = {
     wherePlaceholder: 'City or country',
     city: 'City',
     includeRemote: 'Include remote',
+    /** The city chips' names, by the city the filter sends. */
+    cities: { 'Iași': 'Iași', 'Bucharest': 'Bucharest', 'Cluj-Napoca': 'Cluj-Napoca' },
     anywhere: 'Anywhere',
     anywhereIn: (country: string) => `Anywhere in ${country}`,
     plusRemote: ' + remote',
@@ -217,6 +219,7 @@ export const ro: typeof en = {
     wherePlaceholder: 'Oraș sau țară',
     city: 'Oraș',
     includeRemote: 'Include remote',
+    cities: { 'Iași': 'Iași', 'Bucharest': 'București', 'Cluj-Napoca': 'Cluj-Napoca' },
     anywhere: 'Oriunde',
     anywhereIn: (country: string) => `Oriunde în ${country}`,
     plusRemote: ' + remote',

@@ -691,9 +691,19 @@ services:
       - traefik.http.middlewares.auth.forwardauth.authResponseHeaders=Authorization,X-Gatekeeper-User-Id,X-Gatekeeper-Email,X-Gatekeeper-Tenant,X-Gatekeeper-Roles,X-Gatekeeper-Auth-Method
       - traefik.http.middlewares.strip-api-key.headers.customrequestheaders.X-API-Key=
       # The browser's sign-in, session and sign-out endpoints on the app's address.
-      - "traefik.http.routers.gatekeeper-browser.rule=Host(`app.localhost`) && (Path(`/auth/login`) || Path(`/auth/userinfo`) || Path(`/auth/session`) || Path(`/auth/organization`) || Path(`/callback`) || Path(`/logout`))"
+      - "traefik.http.routers.gatekeeper-browser.rule=Host(`app.localhost`) && (Path(`/auth/login`) || Path(`/auth/userinfo`) || Path(`/auth/session`) || Path(`/auth/organization`) || Path(`/logout`))"
       - "traefik.http.routers.gatekeeper-browser.entrypoints=web"
       - "traefik.http.services.gatekeeper-browser.loadbalancer.server.port=5000"
+      # The sign-in callback, apart: when it fails, apps/frontend/public/signing-in.html starts the sign-in once more.
+      # A new person's first callback fails after the gatekeeper created their organization (forge's _release_lock
+      # calls WATCH, which the gatekeeper's Redis pipeline lacks); the second finds the organization and passes.
+      - "traefik.http.routers.gatekeeper-callback.rule=Host(`app.localhost`) && Path(`/callback`)"
+      - "traefik.http.routers.gatekeeper-callback.entrypoints=web"
+      - "traefik.http.routers.gatekeeper-callback.service=gatekeeper-browser"
+      - "traefik.http.routers.gatekeeper-callback.middlewares=callback-retry"
+      - "traefik.http.middlewares.callback-retry.errors.status=500-599"
+      - "traefik.http.middlewares.callback-retry.errors.service=frontend@docker"
+      - "traefik.http.middlewares.callback-retry.errors.query=/signing-in.html"
   # ── Plugin service: gatekeeper-keygen ──
   gatekeeper-keygen:
     image: "forge-gatekeeper:local"

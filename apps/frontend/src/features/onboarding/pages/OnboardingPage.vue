@@ -29,10 +29,15 @@ const stop = watch(() => profile.data.value, (person) => {
 // Picking a language switches the app to it at once, so the next step reads in it.
 const language = computed<Locale>({ get: () => locale.value, set: value => setLocale(value) })
 
-/** Where the person was going when onboarding stopped them: a path inside the app, else Find jobs. */
+/**
+ * Where the person was going when onboarding stopped them: a page inside the app, else Find jobs, as the button says.
+ * The landing page is where a plain sign-in goes, not a page they chose, so it opens Find jobs too.
+ */
 const next = computed(() => {
   const to = route.query.to
-  return typeof to === 'string' && to.startsWith('/') && !to.startsWith('//') ? to : { name: 'hoply-jobs' }
+  const inside = typeof to === 'string' && to.startsWith('/') && !to.startsWith('//')
+  const landing = inside && ['/', router.resolve({ name: 'hoply-profile' }).path].includes(router.resolve(to).path)
+  return inside && !landing ? to : { name: 'hoply-jobs' }
 })
 
 async function finish() {

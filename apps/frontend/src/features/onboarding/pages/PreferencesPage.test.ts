@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { locale } from '@/features/common/i18n'
-import { button, click, mountPage, settle, useServices } from '@/test/hoply'
+import { click, mountPage, settle, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
 import PreferencesPage from './PreferencesPage.vue'
 

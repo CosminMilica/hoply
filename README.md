@@ -110,6 +110,11 @@ the realm keeps `verifyEmail` off and the `gatekeeper` client's `email-verified-
 email verified, because the gatekeeper creates organizations only for verified emails. To verify emails, configure the
 realm's SMTP server, turn `verifyEmail` on and delete that mapper.
 
+A new person's first sign-in callback fails once in forge's gatekeeper, after it has created their organization: its
+lock release calls Redis `WATCH`, which the gatekeeper's Redis wrapper does not have. Until forge fixes it, Traefik sends
+that failure to `apps/frontend/public/signing-in.html`, which starts the sign-in once more; the second callback finds the
+organization and passes.
+
 An administrator can still add a person like this:
 
 ```bash
