@@ -149,9 +149,11 @@ function boardOfLink(link: string): { platform: string, board: string } | null {
     : url.hostname === 'jobs.lever.co' ? 'lever'
       : url.hostname === 'jobs.ashbyhq.com' ? 'ashby'
         : url.hostname === 'jobs.smartrecruiters.com' ? 'smartrecruiters'
-          : /\.myworkdayjobs\.com$/.test(url.hostname) ? 'workday' : ''
-  if (!platform || !first) return null
-  return { platform, board: platform === 'workday' ? `${url.hostname}/${first}` : first }
+          : /\.myworkdayjobs\.com$/.test(url.hostname) ? 'workday'
+            : /^[^.]+\.bamboohr\.com$/.test(url.hostname) ? 'bamboohr' : ''
+  if (!platform || (!first && platform !== 'bamboohr')) return null
+  const board = platform === 'workday' ? `${url.hostname}/${first}` : platform === 'bamboohr' ? url.hostname.split('.')[0]! : first
+  return { platform, board }
 }
 
 export type JobsBackend = ReturnType<typeof createJobsBackend>

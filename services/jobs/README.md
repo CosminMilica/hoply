@@ -32,7 +32,7 @@ The jobs API contract (shapes, rules, reading a link or text, the catalog)
 is [`docs/api/jobs.md`](../../docs/api/jobs.md). Ads are read by rules
 in `internal/extract` (skills dictionary in `internal/extract/skills.json`);
 links are fetched by `internal/fetch` (Greenhouse, Lever, Ashby,
-SmartRecruiters and Workable links through their public APIs, other links from
+SmartRecruiters, BambooHR and Workable links through their public APIs, other links from
 the page), which refuses non-public addresses on every connection. Schema: `migrations/00100_jobs.sql` (the catalog starts empty).
 
 ## Layout

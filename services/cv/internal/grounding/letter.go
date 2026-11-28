@@ -77,6 +77,7 @@ type letterJob struct {
 }
 
 type letterMessage struct {
+	Language    string                    `json:"language"`
 	Analysis    *Analysis                 `json:"analysis,omitempty"`
 	Job         letterJob                 `json:"job"`
 	Positioning string                    `json:"positioning"`
@@ -90,7 +91,7 @@ type letterMessage struct {
 // LetterPrompt is the letter's message: the job's analysis, the CV as it will
 // be sent and how it was tailored, and the numbered facts with the job's.
 func (c Catalogue) LetterPrompt(analysis *Analysis, job cvdoc.Job, cv models.CvDocument, tailoring *models.Tailoring) string {
-	message := letterMessage{Analysis: analysis, CV: cv, Roles: nonEmpty(c.Roles), Projects: nonEmpty(c.Projects), Facts: c.FactList(),
+	message := letterMessage{Language: cvdoc.LanguageOf(cv.Language), Analysis: analysis, CV: cv, Roles: nonEmpty(c.Roles), Projects: nonEmpty(c.Projects), Facts: c.FactList(),
 		Job:        letterJob{Title: job.Title, Company: job.Company, Matched: nonNil(c.Matched), Related: c.Related, Missing: nonNil(c.Missing)},
 		Priorities: []models.TailoredPriority{}}
 	if message.Job.Related == nil {
@@ -165,7 +166,25 @@ type Addressing struct {
 	Recruiter string
 	Company   string
 	Title     string
+	// Language is the letter's language, the CV's: "en" or "ro".
+	Language string
 }
+
+// letterWords are the greetings, sign-offs and fallback subjects code adds around Claude's sentences, per language.
+type letterWords struct {
+	team, person, company, letterClose, hi, hello, messageClose, application, followUp string
+}
+
+var lettersIn = map[string]letterWords{
+	cvdoc.English: {team: "Dear hiring team,", person: "Dear %s,", company: "Dear %s hiring team,", letterClose: "Kind regards,",
+		hi: "Hi %s,", hello: "Hello,", messageClose: "Best regards,", application: "Application for %s",
+		followUp: "Following up on my application for %s"},
+	cvdoc.Romanian: {team: "Stimată echipă de recrutare,", person: "Bună ziua, %s,", company: "Stimată echipă %s,", letterClose: "Cu stimă,",
+		hi: "Bună ziua, %s,", hello: "Bună ziua,", messageClose: "Cu stimă,", application: "Candidatură pentru %s",
+		followUp: "Revin cu privire la candidatura pentru %s"},
+}
+
+func (a Addressing) words() letterWords { return lettersIn[cvdoc.LanguageOf(a.Language)] }
 
 func (a Addressing) firstName() string {
 	if fields := strings.Fields(a.Recruiter); len(fields) > 0 {
@@ -176,9 +195,9 @@ func (a Addressing) firstName() string {
 
 func (a Addressing) hello() string {
 	if name := a.firstName(); name != "" {
-		return "Hi " + name + ","
+		return fmt.Sprintf(a.words().hi, name)
 	}
-	return "Hello,"
+	return a.words().hello
 }
 
 func (a Addressing) signed(closing string) string {
@@ -216,20 +235,21 @@ func (c Catalogue) AssembleLetter(answer LetterAnswer, to Addressing) (models.Le
 	}
 	texts := models.LetterTexts{}
 	if len(paragraphs) > 0 {
-		greeting := "Dear hiring team,"
+		words := to.words()
+		greeting := words.team
 		switch {
 		case strings.TrimSpace(to.Recruiter) != "":
-			greeting = "Dear " + strings.TrimSpace(to.Recruiter) + ","
+			greeting = fmt.Sprintf(words.person, strings.TrimSpace(to.Recruiter))
 		case strings.TrimSpace(to.Company) != "":
-			greeting = "Dear " + strings.TrimSpace(to.Company) + " hiring team,"
+			greeting = fmt.Sprintf(words.company, strings.TrimSpace(to.Company))
 		}
-		texts.CoverLetter = strings.Join(append(append([]string{greeting}, paragraphs...), to.signed("Kind regards,")), "\n\n")
+		texts.CoverLetter = strings.Join(append(append([]string{greeting}, paragraphs...), to.signed(words.letterClose)), "\n\n")
 	}
 
 	note, _ := pass("connection note sentence", answer.ConnectionNote)
 	prefix := ""
 	if name := to.firstName(); name != "" {
-		prefix = "Hi " + name + ", "
+		prefix = fmt.Sprintf(to.words().hi, name) + " "
 	}
 	for len(note) > 0 && len(prefix+strings.Join(note, " ")) > MaxConnectionNote {
 		refusals = append(refusals, "connection note: over LinkedIn's limit")
@@ -249,11 +269,11 @@ func (c Catalogue) AssembleLetter(answer LetterAnswer, to Addressing) (models.Le
 			refusals = append(refusals, where+" subject: "+reason)
 			subject = fallback
 		}
-		return models.Message{Subject: subject, Body: to.hello() + "\n\n" + strings.Join(body, " ") + "\n\n" + to.signed("Best regards,")}
+		return models.Message{Subject: subject, Body: to.hello() + "\n\n" + strings.Join(body, " ") + "\n\n" + to.signed(to.words().messageClose)}
 	}
 	title := strings.TrimSpace(to.Title)
-	texts.Message = message("message", answer.Message, strings.TrimSpace("Application for "+title))
-	texts.FollowUp = message("follow-up", answer.FollowUp, strings.TrimSpace("Following up on my application for "+title))
+	texts.Message = message("message", answer.Message, strings.TrimSpace(fmt.Sprintf(to.words().application, title)))
+	texts.FollowUp = message("follow-up", answer.FollowUp, strings.TrimSpace(fmt.Sprintf(to.words().followUp, title)))
 	return texts, refusals
 }
 

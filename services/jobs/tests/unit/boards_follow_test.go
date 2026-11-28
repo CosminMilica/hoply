@@ -175,6 +175,43 @@ func TestSmartRecruitersList(t *testing.T) {
 	}
 }
 
+func TestBambooHRList(t *testing.T) {
+	api := newFixtureServer(t, map[string]answer{
+		"/careers/list": asJSON(t, map[string]any{"meta": map[string]any{"totalCount": 3}, "result": []map[string]any{
+			{"id": "42", "jobOpeningName": "Embedded Software Engineer", "locationType": "2", "location": map[string]any{"city": "Iasi", "state": "Iasi"}},
+			{"id": "43", "jobOpeningName": "Support Engineer", "isRemote": true, "location": map[string]any{"city": "London", "state": "London, City of"}},
+			{"id": "44", "jobOpeningName": "QA Engineer", "locationType": "0", "location": map[string]any{"city": "Cluj-Napoca", "state": "Cluj"}},
+		}}),
+		"/careers/42/detail": {"application/json", boardFixtures(t)["/careers/42/detail"]},
+		"/careers/44/detail": {"application/json", `{"result":{}}`},
+	})
+	broken := newFixtureServer(t, map[string]answer{"/careers/list": {"application/json", "["}})
+	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"northwind.bamboohr.com": api.URL, "broken.bamboohr.com": broken.URL}})
+	ctx := context.Background()
+
+	jobs, complete, err := reader.List(ctx, "bamboohr", "northwind", importer.Romania)
+	if err != nil || !complete || len(jobs) != 3 || jobs[0].URL != "https://northwind.bamboohr.com/careers/42" || jobs[0].InCountry ||
+		jobs[0].Page.City != "Iasi" || fmt.Sprint(jobs[0].Places) != "[Iasi Iasi]" || !jobs[0].NeedsDescribe() {
+		t.Fatalf("bamboohr: %+v %v %v", jobs, complete, err)
+	}
+	if modes := []string{jobs[0].Page.WorkMode, jobs[1].Page.WorkMode, jobs[2].Page.WorkMode}; fmt.Sprint(modes) != "[hybrid remote onsite]" {
+		t.Fatalf("work modes: %v", modes)
+	}
+	if err := reader.Describe(ctx, &jobs[0]); err != nil || jobs[0].Page.Country != "Romania" || jobs[0].PostedAt.Format(time.DateOnly) != "2026-11-20" ||
+		!strings.Contains(jobs[0].Page.Text, "You write firmware in C++") || jobs[0].Page.ReadFrom != "ats_api" {
+		t.Fatalf("bamboohr described: %+v %v", jobs[0], err)
+	}
+	if err := reader.Describe(ctx, &jobs[1]); err == nil {
+		t.Fatal("a job the board no longer has fails")
+	}
+	if err := reader.Describe(ctx, &jobs[2]); reason(t, err) != fetch.NoJobData {
+		t.Fatalf("an empty answer fails: %v", err)
+	}
+	if _, _, err := reader.List(ctx, "bamboohr", "broken", importer.Romania); err == nil {
+		t.Fatal("a broken answer fails")
+	}
+}
+
 func TestBoardsFromLinks(t *testing.T) {
 	for link, want := range map[string]string{
 		"https://job-boards.eu.greenhouse.io/ionos2/jobs/5030878101":                          "greenhouse ionos2",
@@ -186,6 +223,10 @@ func TestBoardsFromLinks(t *testing.T) {
 		"https://jobs.smartrecruiters.com/BoschGroup/744000":                                  "smartrecruiters BoschGroup",
 		"https://crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers/job/Romania/X_R1":       "workday crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers",
 		"https://lseg.wd3.myworkdayjobs.com/en-US/Careers/job/Bucharest/Software-Engineer_R1": "workday lseg.wd3.myworkdayjobs.com/Careers",
+		"https://northwind.bamboohr.com/careers/42":                                           "bamboohr northwind",
+		"https://northwind.bamboohr.com/careers":                                              "bamboohr northwind",
+		"https://www.bamboohr.com/careers":                                                    "",
+		"https://a.b.bamboohr.com/careers":                                                    "",
 		"https://apply.workable.com/northwind/j/AB12":                                         "",
 		"https://boards.greenhouse.io/embed/job_app":                                          "",
 		"https://www.linkedin.com/jobs/view/42":                                               "",
@@ -197,7 +238,7 @@ func TestBoardsFromLinks(t *testing.T) {
 		}
 	}
 	for platform, board := range map[string]string{
-		"workday": "northwind.example/Careers", "sitemap": "http://careers.example/sitemap.xml", "greenhouse": "a/b", "bamboo": "x",
+		"workday": "northwind.example/Careers", "sitemap": "http://careers.example/sitemap.xml", "greenhouse": "a/b", "bamboo": "x", "bamboohr": "a/b",
 	} {
 		if fetch.CheckBoard(platform, board) == nil {
 			t.Errorf("%s %s is refused", platform, board)

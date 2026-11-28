@@ -5,6 +5,7 @@
 #   ashby             jobs.ashbyhq.com/<board>
 #   smartrecruiters   jobs.smartrecruiters.com/<board>
 #   workday           <tenant>.wdN.myworkdayjobs.com/<site>, the board being that host and site
+#   bamboohr          <board>.bamboohr.com/careers
 boards:
   - {company: Bitdefender, platform: greenhouse, board: scbitdefendersrl}
   - {company: IONOS, platform: greenhouse, board: ionos2}
@@ -86,3 +87,12 @@ boards:
   - {company: Swissquote, platform: smartrecruiters, board: swissquote}
   - {company: Pitech, platform: smartrecruiters, board: pitechplus}
   - {company: Softex, platform: smartrecruiters, board: SoftexCompany}
+  - {company: FintechOS, platform: bamboohr, board: fintechos}
+  - {company: Wiley, platform: workday, board: wiley.wd1.myworkdayjobs.com/wiley_careers}
+  - {company: Magna, platform: workday, board: magna.wd3.myworkdayjobs.com/magna}
+  - {company: PHINIA, platform: workday, board: phinia.wd5.myworkdayjobs.com/PHINIA_CAREERS}
+  - {company: Diconium, platform: workday, board: diconium.wd3.myworkdayjobs.com/diconium}
+  - {company: Esko, platform: workday, board: veralto.wd1.myworkdayjobs.com/EskoJobs}
+  - {company: WebBeds, platform: workday, board: webtravelgroup.wd103.myworkdayjobs.com/WebBeds_Jobs}
+  - {company: spektr, platform: greenhouse, board: spektr}
+  - {company: Sectigo, platform: smartrecruiters, board: sectigo}

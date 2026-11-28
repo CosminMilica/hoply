@@ -31,6 +31,18 @@ mean 3.60 → 3.88 (human 3.40 → 3.80), and a blind comparison preferred the n
 The articles disagree on keyword use: [4] says screeners reward job-description terms, [5] that mechanical
 mirroring no longer works. Hoply uses the job's terms only where the person's facts support them.
 
+## Romanian CVs
+
+A CV is written in English or in Romanian, picked on Prepare your CV (Romanian by default for an ad written in
+Romanian). Claude gets the language with the job and writes every sentence in it: Romanian with its diacritics, in the
+plain, formal register of a Romanian CV, past tense for finished work, keeping the names of tools, products, companies,
+certifications and job titles as the facts write them. The headings follow the language (Profil, Competențe, Experiență
+profesională, Educație …), the style check knows Romanian stock words, clichés and the "<titlu> cu N ani de experiență"
+formula, and a number may use either separator convention (180,000 in the facts is 180.000 in Romanian). The rules write
+English only: a refused sentence of a Romanian CV is left out rather than replaced by their English rewrite, and when
+Claude does not write, the CV keeps the person's own words under Romanian headings. The cover letter and the messages
+follow the CV's language, with Romanian greetings and sign-offs ("Stimată echipă …", "Bună ziua, …", "Cu stimă,").
+
 ## Cover letters and messages to recruiters
 
 | Rule | Where | Source |

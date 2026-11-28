@@ -26,7 +26,7 @@ one-page CV around it, in the company's own words. It never invents a skill, a n
 | | |
 | --- | --- |
 | **Profile** | Everything a recruiter or a screening system asks for: roles with highlights and results, projects, education, certifications, languages, work preferences. |
-| **Add a job** | Paste a link or the ad's text. Hoply reads it, from the public APIs of Greenhouse, Lever, Ashby, SmartRecruiters and Workable, from structured data, or from the page itself, and finds the requirements, the responsibilities, the place and the level. |
+| **Add a job** | Paste a link or the ad's text. Hoply reads it, from the public APIs of Greenhouse, Lever, Ashby, SmartRecruiters, BambooHR and Workable, from structured data, or from the page itself, and finds the requirements, the responsibilities, the place and the level. |
 | **Match** | Every requirement is matched, close or missing. Matching understands other names and umbrella terms (GitHub Actions proves CI/CD) and tools of the same kind (FluxCD and Argo CD are both GitOps). |
 | **Prepare your CV** | Asks only what the job needs and your profile does not show yet. Your answers become notes that the CV is written from. |
 | **Tailored CV** | Claude analyzes the job, plans the evidence for each of its priorities, writes the CV and then reviews it as the hiring manager. Every sentence cites the facts it rests on, and code checks them. |
@@ -157,7 +157,7 @@ version in `services/cv/tests/testdata/claude/`.
 | Done | Next |
 | --- | --- |
 | Profile, adding jobs from links and text, matching, saved jobs and applications | Search by meaning, and ranking by Claude's reading of each ad |
-| Finding jobs in Romania from the job boards of 80 companies (Greenhouse, Lever, Ashby, Workday, SmartRecruiters), and of the companies people follow | |
+| Finding jobs in Romania from the job boards of 89 companies (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, BambooHR), and of the companies people follow | |
 | A Send to Hoply bookmarklet that brings a job from LinkedIn, eJobs or any site into Add a job | |
 | CVs tailored by Claude in three steps, checked sentence by sentence | An evaluation set to tune the prompts on more people and jobs |
 | PDF and DOCX export, ATS checks | CVs in Romanian |

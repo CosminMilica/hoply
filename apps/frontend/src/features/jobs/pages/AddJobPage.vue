@@ -166,7 +166,7 @@ async function save(tailor: boolean) {
           <UInput v-model="form.url" type="url" placeholder="https://" class="w-full" />
         </UFormField>
         <span class="text-[13px] leading-snug font-medium text-muted">
-          Works with most job pages: company career sites, Greenhouse, Lever, Ashby, SmartRecruiters, eJobs. Pages behind a login, like LinkedIn, need the text instead.
+          Works with most job pages: company career sites, Greenhouse, Lever, Ashby, SmartRecruiters, BambooHR, eJobs. Pages behind a login, like LinkedIn, need the text instead.
         </span>
         <p v-if="error" role="alert" class="m-0 text-[13px] font-bold text-ember-400">{{ error }}</p>
         <UButton type="submit" label="Read the job" size="lg" block class="mt-1 justify-center" />

@@ -64,8 +64,16 @@ func newBoardServer(t *testing.T, routes map[string]string) *boardServer {
 	return b
 }
 
+const bambooHRDescription = `<p><strong>What you will do</strong></p><ul><li>You write firmware in C++ for sensors.</li></ul>` +
+	`<p><strong>Requirements</strong></p><ul><li>3+ years with C++ and Linux.</li></ul>`
+
 func boardFixtures(t *testing.T) map[string]string {
 	return map[string]string{
+		"/careers/42/detail": jsonBody(t, map[string]any{"result": map[string]any{"jobOpening": map[string]any{
+			"jobOpeningName": "Embedded Software Engineer", "locationType": "2", "datePosted": "2026-11-20",
+			"location":    map[string]any{"city": "Iasi", "state": "Iasi", "addressCountry": "Romania"},
+			"description": bambooHRDescription,
+		}}}),
 		"/v1/boards/northwind/jobs/4001": jsonBody(t, map[string]any{
 			"id": 4001, "title": "Platform Engineer | Remote", "company_name": "Northwind Cloud",
 			"location": map[string]any{"name": "Cluj-Napoca, Romania (Hybrid)"}, "content": stdhtml.EscapeString(boardDescription),
@@ -104,7 +112,7 @@ func boardFixtures(t *testing.T) map[string]string {
 func boardReader(api, eu, pages *boardServer) *fetch.Reader {
 	return fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{
 		"boards-api.greenhouse.io": api.URL, "api.lever.co": api.URL, "api.eu.lever.co": eu.URL, "api.ashbyhq.com": api.URL,
-		"api.smartrecruiters.com": api.URL, "apply.workable.com": api.URL,
+		"api.smartrecruiters.com": api.URL, "apply.workable.com": api.URL, "northwind.bamboohr.com": api.URL,
 		"job-boards.greenhouse.io": pages.URL, "jobs.ashbyhq.com": pages.URL, "jobs.lever.co": pages.URL,
 	}})
 }
@@ -131,6 +139,8 @@ func TestBoardAPIs(t *testing.T) {
 			"What you'll do\n- Model data in Snowflake"},
 		{"https://jobs.smartrecruiters.com/NorthwindGroup/7440001-junior-network-administrator", "Junior Network Administrator",
 			"Northwind Group", "", "Iasi", "ro", "hybrid", "You keep the office network"},
+		{"https://northwind.bamboohr.com/careers/42", "Embedded Software Engineer", "Northwind", "", "Iasi", "Romania", "hybrid",
+			"What you will do\n- You write firmware in C++ for sensors."},
 		{"https://apply.workable.com/northwind/j/ab12cd/", "ML Engineer", "Northwind Labs", "", "Paris", "France", "remote", "About You\n- PyTorch"},
 	}
 	for _, tc := range cases {
@@ -185,16 +195,19 @@ func TestBoardAnswersWithoutAJob(t *testing.T) {
 		"/api/v1/widget/accounts/empty":   `{"name":"x","jobs":[{"shortcode":"OTHER"}]}`,
 		"/api/v1/widget/accounts/bad":     `{`,
 		"/v1/companies/Broken/postings/2": `{`,
+		"/careers/1/detail":               `{"result":{"jobOpening":{"jobOpeningName":""}}}`,
+		"/careers/2/detail":               `{`,
 	})
 	pages := newBoardServer(t, map[string]string{})
 	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{
 		"boards-api.greenhouse.io": api.URL, "api.lever.co": api.URL, "api.ashbyhq.com": api.URL, "api.smartrecruiters.com": api.URL,
 		"apply.workable.com": api.URL, "job-boards.greenhouse.io": pages.URL, "jobs.lever.co": pages.URL, "jobs.ashbyhq.com": pages.URL,
-		"jobs.smartrecruiters.com": pages.URL,
+		"jobs.smartrecruiters.com": pages.URL, "empty.bamboohr.com": api.URL,
 	}})
 	for _, link := range []string{"https://job-boards.greenhouse.io/empty/jobs/1", "https://jobs.lever.co/empty/1",
 		"https://jobs.ashbyhq.com/bad/1", "https://jobs.smartrecruiters.com/Empty/1", "https://jobs.smartrecruiters.com/Broken/2-x",
-		"https://apply.workable.com/empty/j/SHORT", "https://apply.workable.com/bad/j/SHORT"} {
+		"https://apply.workable.com/empty/j/SHORT", "https://apply.workable.com/bad/j/SHORT",
+		"https://empty.bamboohr.com/careers/1", "https://empty.bamboohr.com/careers/2"} {
 		if _, err := reader.Read(context.Background(), link); reason(t, err) != fetch.FetchFailed {
 			t.Errorf("%s: an empty board answer falls back to the page (404 here): %v", link, err)
 		}
@@ -250,6 +263,7 @@ func TestBoardDraftsThroughTheService(t *testing.T) {
 		"https://jobs.lever.co/northwind-cloud/aa11":                "Site Reliability Engineer|Northwind Cloud|Bucharest|Romania|hybrid|[Linux Prometheus]|[Grafana]",
 		"https://jobs.smartrecruiters.com/NorthwindGroup/7440001-x": "Junior Network Administrator|Northwind Group|Iași|Romania|hybrid|[DNS DHCP Networking]|[]",
 		"https://apply.workable.com/northwind/j/AB12CD":             "ML Engineer|Northwind Labs|Paris|France|remote|[PyTorch]|[]",
+		"https://northwind.bamboohr.com/careers/42":                 "Embedded Software Engineer|Northwind|Iași|Romania|hybrid|[C++ Linux]|[]",
 		"https://jobs.ashbyhq.com/northwind/bb22":                   "Data Engineer|Northwind||European Union|remote|[Snowflake]|[]",
 	}
 	for link, want := range cases {

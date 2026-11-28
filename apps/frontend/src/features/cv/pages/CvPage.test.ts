@@ -8,7 +8,7 @@ import CvPage from './CvPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
 const text = () => document.body.textContent ?? ''
-const request = { job_id: seedId(1), skip_roles: [], focus: [], confirmed: [] }
+const request = { job_id: seedId(1), skip_roles: [], focus: [], confirmed: [], language: 'en' as const }
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -96,6 +96,18 @@ describe('CvPage', () => {
     document.body.innerHTML = ''
     await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
     expect(paper().getAttribute('data-template')).toBe('classic')
+  })
+
+  it('draws a Romanian CV with Romanian headings', async () => {
+    const { applications } = useServices()
+    applications.track(seedId(1), 'cv_ready')
+    await cvApi.generate({ ...request, language: 'ro' })
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    const paper = document.querySelector('[data-print-root]')!
+    expect(paper.getAttribute('lang')).toBe('ro')
+    const headings = [...paper.querySelectorAll('h2')].map(heading => heading.textContent)
+    expect(headings).toContain('Experiență profesională')
+    expect(headings).not.toContain('Experience')
   })
 
   it('leaves out the sections the CV has nothing for', async () => {

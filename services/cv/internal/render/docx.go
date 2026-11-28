@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"strings"
 
+	"cv/internal/cvdoc"
 	"cv/internal/models"
 )
 
@@ -76,6 +77,7 @@ func paragraph(style, text string, bold bool) string {
 }
 
 func body(d models.CvDocument, look docxLook) string {
+	headings := cvdoc.HeadingsFor(d.Language)
 	var b strings.Builder
 	add := func(style, text string, bold bool) {
 		if strings.TrimSpace(text) != "" {
@@ -96,15 +98,15 @@ func body(d models.CvDocument, look docxLook) string {
 	add("Contact", strings.Join(d.Contact, " · "), false)
 	add("Contact", strings.Join(d.Links, " · "), false)
 	if strings.TrimSpace(d.Summary) != "" {
-		add("Heading1", "Summary", false)
+		add("Heading1", headings.Summary, false)
 		add("", d.Summary, false)
 	}
 	if len(d.Skills) > 0 {
-		add("Heading1", "Skills", false)
+		add("Heading1", headings.Skills, false)
 		add("", strings.Join(d.Skills, ", "), false)
 	}
 	if len(d.Experience) > 0 {
-		add("Heading1", "Experience", false)
+		add("Heading1", headings.Experience, false)
 		for _, role := range d.Experience {
 			add("Heading2", role.Role, false)
 			add("", role.Meta, false)
@@ -112,7 +114,7 @@ func body(d models.CvDocument, look docxLook) string {
 		}
 	}
 	if len(d.Projects) > 0 {
-		add("Heading1", "Projects", false)
+		add("Heading1", headings.Projects, false)
 		for _, project := range d.Projects {
 			add("Heading2", project.Name, false)
 			add("", project.Meta, false)
@@ -120,21 +122,21 @@ func body(d models.CvDocument, look docxLook) string {
 		}
 	}
 	if len(d.Education) > 0 {
-		add("Heading1", "Education", false)
+		add("Heading1", headings.Education, false)
 		for _, item := range d.Education {
 			add("", strings.Join(keepText(item.Degree, item.Meta), " · "), false)
 		}
 	}
 	if len(d.Certifications) > 0 {
-		add("Heading1", "Certifications", false)
+		add("Heading1", headings.Certifications, false)
 		bullets(d.Certifications)
 	}
 	if d.Languages != "" {
-		add("Heading1", "Languages", false)
+		add("Heading1", headings.Languages, false)
 		add("", d.Languages, false)
 	}
 	if len(d.Additional) > 0 {
-		add("Heading1", "Additional information", false)
+		add("Heading1", headings.Additional, false)
 		bullets(d.Additional)
 	}
 	return document(b.String())

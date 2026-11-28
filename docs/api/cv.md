@@ -38,7 +38,7 @@ belongs to the caller; another person's CVs are never visible or changed.
 PrepQuestions { job_id, base_score, covered: [skill], gaps: [{ skill, ask, example }], related: [{ skill, via: [skill], note }],
                 responsibilities: [{ index, text, question, prefill }] }
 CvRequest     { job_id, skip_roles: [experience id], focus: [skill] (at most 3; empty takes the first three matched),
-                confirmed: [int] (indexes of the key responsibilities the person confirmed) }
+                confirmed: [int] (indexes of the key responsibilities the person confirmed), language: "en" | "ro" (default "en") }
 Cv            { id, job_id, status, created_at, updated_at, job_title, company, file_name,
                 highlights: [skill] | null, profile: CvDocument | null, tailored: CvDocument | null,
                 ats: { passed, total, checks: [{ ok, label, hint }] } | null, preview: { from, to } | null,
@@ -47,7 +47,8 @@ WriterStatus  { writer: "claude" | "rules", model, state, limit_until | null }
 Probe         { status: "ready" | "pending" | "unavailable", questions: [{ theme, question, why, example, about, place, choices: [string] }] }
 CvDocument    { name, headline, contact: [string], links: [string], summary, skills: [string],
                 experience: [{ role, meta, bullets: [string] }], projects: [{ name, meta, bullets: [string] }],
-                education: [{ degree, meta }], certifications: [string], languages, additional: [string] }
+                education: [{ degree, meta }], certifications: [string], languages, additional: [string],
+                language: "en" | "ro" (its headings follow it) }
 ```
 
 | Field | Rule |
@@ -57,7 +58,7 @@ CvDocument    { name, headline, contact: [string], links: [string], summary, ski
 | `preview` | the first highlight of the first role kept, before and after the rewrite; set from `checking` on, `null` when no role has a highlight |
 | `written_by` | who wrote the tailored version, once `ready`. The profile version is always the rules' |
 | `model` | the Claude model, when `written_by` is `claude` |
-| `refused` | how many of Claude's sentences the checks replaced with the rules' rewrite of the facts they cited |
+| `refused` | how many of Claude's sentences the checks replaced with the rules' rewrite of the facts they cited (left out on a Romanian CV, as the rules write English) |
 | `rules_reason` | why the rules wrote it: `off`, `no_token`, `login_needed`, `usage_limit` or `claude_failed`; empty for Claude |
 | `limit_until` | with `usage_limit`: when Claude is available again |
 | `WriterStatus.state` | `ok`, `off`, `no_token`, `login_needed` or `usage_limit` (`docs/claude-setup.md`) |

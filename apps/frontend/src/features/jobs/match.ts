@@ -124,7 +124,7 @@ export function yearsLine(job: Pick<Job, 'years_required'>, profile: Pick<Profil
 const hostOf = (url: string) => url.replace(/^https?:\/\//i, '').split('/')[0] ?? ''
 
 const PLATFORMS: Record<string, string> = {
-  'greenhouse': 'Greenhouse', 'lever': 'Lever', 'lever-eu': 'Lever', 'ashby': 'Ashby', 'workday': 'Workday', 'smartrecruiters': 'SmartRecruiters',
+  'greenhouse': 'Greenhouse', 'lever': 'Lever', 'lever-eu': 'Lever', 'ashby': 'Ashby', 'workday': 'Workday', 'smartrecruiters': 'SmartRecruiters', 'bamboohr': 'BambooHR',
 }
 
 /** "Greenhouse" for greenhouse; the platform as it is for one without a name. */
