@@ -19,6 +19,7 @@ import ImpactRows from '../components/ImpactRows.vue'
 import ProbeQuestionCard from '../components/ProbeQuestionCard.vue'
 import { useCvProbeQuery, useCvProgress, useCvQuestionsQuery, useGenerateCv } from '../composables/useCv'
 import { probeKey, usePrep } from '../composables/usePrep'
+import { CV_LANGUAGES } from '../language'
 
 const props = defineProps<{ id: string }>()
 const STEP_AT = [900, 1800, 2700, 3600]
@@ -133,6 +134,21 @@ function addToProfile(skill: string) {
           <span class="text-[13px] font-extrabold">{{ prep.progress.value }}</span>
         </div>
         <div class="order-last flex flex-col gap-2 min-[900px]:order-none">
+          <div class="flex items-center justify-between gap-3">
+            <span id="cv-language" class="text-xs font-extrabold tracking-wider text-ink-300 uppercase">CV language</span>
+            <div role="group" aria-labelledby="cv-language" class="flex gap-0.5 rounded-[10px] bg-accented p-0.5">
+              <UButton
+                v-for="option in CV_LANGUAGES"
+                :key="option.id"
+                :label="option.label"
+                :aria-pressed="prep.language.value === option.id"
+                size="sm"
+                color="neutral"
+                :variant="prep.language.value === option.id ? 'solid' : 'ghost'"
+                @click="prep.state.language = option.id"
+              />
+            </div>
+          </div>
           <UButton :label="`Generate CV · ${prep.score.value}% match`" size="lg" block class="justify-center" :loading="generateCv.isPending.value" @click="generate" />
           <p v-if="writeFailed" role="alert" class="m-0 text-sm font-bold text-error">We could not write this CV. Try again.</p>
         </div>

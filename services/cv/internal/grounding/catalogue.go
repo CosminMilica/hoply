@@ -58,6 +58,9 @@ type Catalogue struct {
 	JobTitle string
 	// PageLimit is how many pages the CV may take (cvdoc.PageLimit).
 	PageLimit int
+	// Language is the CV's language; the rules write English only, so a refused sentence of a Romanian CV is left
+	// out rather than replaced by their English rewrite.
+	Language string
 }
 
 // Build numbers the facts of the profile for one CV: the roles the request
@@ -67,7 +70,7 @@ func Build(profile models.Profile, job cvdoc.Job, request models.CvRequest, now 
 	known := cvdoc.KnownSkills(profile)
 	match := cvdoc.MatchJob(job, known)
 	c := Catalogue{Facts: map[string]Fact{}, Known: known, Missing: match.Missing, Matched: match.Matched, Related: match.Related, Company: job.Company,
-		PageLimit: cvdoc.PageLimit(profile, now)}
+		PageLimit: cvdoc.PageLimit(profile, now), Language: cvdoc.LanguageOf(request.Language)}
 	add := func(id, text, owner string, tools []string) {
 		if text = strings.TrimSpace(text); text == "" {
 			return

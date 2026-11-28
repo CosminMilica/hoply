@@ -437,7 +437,7 @@ func (w *Writer) Letter(ctx context.Context, task *repositories.Task, cv models.
 	if cv.Tailoring != nil {
 		catalogue = catalogue.WithEquivalents(grounding.Closes(cv.Tailoring.Close))
 	}
-	to := grounding.Addressing{Person: task.Profile.Name, Recruiter: recruiter, Company: job.Company, Title: job.Title}
+	to := grounding.Addressing{Person: task.Profile.Name, Recruiter: recruiter, Company: job.Company, Title: job.Title, Language: task.Request.Language}
 	type assembled struct {
 		texts    models.LetterTexts
 		refusals []string

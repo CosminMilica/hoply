@@ -11,7 +11,11 @@ var StockWords = []string{"leverage", "leveraged", "leveraging", "spearheaded", 
 	"utilize", "utilized", "utilizing", "facilitated", "empowered", "empowering", "streamlined", "streamlining",
 	"ensure", "ensured", "ensuring", "passionate", "dynamic", "innovative", "best-in-class", "world-class",
 	"results-driven", "proven track record", "comprehensive", "successfully", "effectively", "efficiently",
-	"pivotal", "instrumental", "foster", "fostered", "elevate", "elevated", "showcase", "showcased", "various", "full-stack observability"}
+	"pivotal", "instrumental", "foster", "fostered", "elevate", "elevated", "showcase", "showcased", "various", "full-stack observability",
+	// Romanian
+	"dinamic", "dinamică", "inovator", "inovatoare", "pasionat", "pasionată", "proactiv", "proactivă", "sinergie", "sinergii",
+	"excepțional", "excepțională", "remarcabil", "remarcabilă", "orientat spre rezultate", "orientată spre rezultate",
+	"cu succes", "în mod eficient", "diverse", "de top"}
 
 // LetterCliches are the phrases a cover letter or a message never says: the letter prompt forbids them, the letter
 // check refuses a sentence that holds one and the style check flags it.
@@ -20,7 +24,11 @@ var LetterCliches = []string{"passionate", "team player", "hard-working", "hardw
 	"to whom it may concern", "just checking in", "look forward to hearing", "please find attached",
 	"would love the opportunity", "excited to", "thrilled", "exceptional addition", "uniquely positions",
 	"hit the ground running", "add value", "make an impact", "touch base", "reach out", "one more reason i fit",
-	"robust", "leverage"}
+	"robust", "leverage",
+	// Romanian
+	"pasionat", "pasionată", "jucător de echipă", "spirit de echipă", "orientat spre rezultate", "orientată spre rezultate",
+	"atent la detalii", "atentă la detalii", "candidatul ideal", "candidata ideală", "jobul visurilor", "vă scriu pentru",
+	"aș fi încântat", "aș fi încântată", "entuziasmat", "entuziasmată", "valoare adăugată", "în așteptarea răspunsului"}
 
 // Quoted lists phrases for a prompt: "a", "b" and "c".
 func Quoted(phrases []string) string {

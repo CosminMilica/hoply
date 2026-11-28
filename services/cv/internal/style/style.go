@@ -31,7 +31,7 @@ const MaxTools = 2
 
 var (
 	ingTail = regexp.MustCompile(`,\s+(?:and\s+)?([a-z]+ing)\b`)
-	formula = regexp.MustCompile(`(?i)^[\w /&+.-]{2,60}\bwith\s+\d+\+?\s+years?\s+of\s+experience\b`)
+	formula = regexp.MustCompile(`(?i)^[\pL\d /&+.-]{2,60}\s(?:with\s+\d+\+?\s+years?\s+of\s+experience\b|cu\s+\d+\+?\s+(?:de\s+)?ani\s+de\s+experien)`)
 )
 
 // notTails are "-ing" words that start a plain clause, not a tacked-on claim.
@@ -152,8 +152,8 @@ func Lint(document models.CvDocument, known []string) Report {
 const OpensWithI = "opens-with-i"
 
 var (
-	salutation = regexp.MustCompile(`^(?:Dear|Hi|Hello)\b.*,$`)
-	signOff    = regexp.MustCompile(`^(?:Kind regards|Best regards|Best|Regards|Thank you|Thanks),?$`)
+	salutation = regexp.MustCompile(`^(?:(?:Dear|Hi|Hello)\b|Bună ziua|Stimat[ăe]\s).*,$`)
+	signOff    = regexp.MustCompile(`^(?:Kind regards|Best regards|Best|Regards|Thank you|Thanks|Cu stimă|Mulțumesc),?$`)
 )
 
 // LintLetter reads a cover letter and the messages, without their greetings
