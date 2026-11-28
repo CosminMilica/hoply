@@ -61,6 +61,8 @@ type Page struct {
 	City     string
 	Country  string
 	WorkMode string
+	// Level is the level a board states outside the ad's text (junior, mid, senior); "" leaves it to the text.
+	Level string
 }
 
 // Options tune a Reader. Zero values take the defaults.
