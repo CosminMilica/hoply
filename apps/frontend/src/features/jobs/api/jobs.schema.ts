@@ -95,7 +95,7 @@ export const jobDraftSchema = jobSchema
 
 export type JobDraft = z.infer<typeof jobDraftSchema>
 
-/** The board a job link belongs to, and whether Hoply imports its jobs already. */
+/** The board a job link belongs to, and whether crashr imports its jobs already. */
 export const boardOfSchema = z.object({ platform: z.string(), board: z.string(), company: text, imported: z.boolean() })
 export type BoardOf = z.infer<typeof boardOfSchema>
 

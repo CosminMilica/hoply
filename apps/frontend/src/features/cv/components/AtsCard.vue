@@ -21,7 +21,7 @@ defineEmits<{ improve: [] }>()
       <li v-for="check in checks" :key="check.key" class="flex items-start gap-2.5">
         <span
           class="mt-px flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
-          :class="check.ok ? 'bg-hoply-600 text-white' : 'bg-ember-500 text-ink-950'"
+          :class="check.ok ? 'bg-crashr-600 text-white' : 'bg-ember-500 text-ink-950'"
         >
           <span aria-hidden="true">{{ check.ok ? '✓' : '!' }}</span>
           <span class="sr-only">{{ check.ok ? t.cv.ats.passed : t.cv.ats.toFix }}</span>

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
-import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
+import { button, click, input, mountPage, settle, type, useServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import AddJobPage from './AddJobPage.vue'
 
@@ -34,8 +34,8 @@ describe('AddJobPage', () => {
     expect(document.querySelector('[data-test="draft-match"]')!.textContent).toContain('38%')
     expect(document.querySelector('[data-test="knockout"]')!.textContent).toBe('Based in Cluj-Napoca, hybrid. You live in Iași and are not open to relocation.')
     expect(document.querySelector('[data-test="years"]')!.textContent).toBe('Asks for 4+ years of experience. You have about 6.')
-    expect(button('Remove Linux').className).toContain('bg-hoply-900')
-    expect(button('Remove Kubernetes').className).not.toContain('bg-hoply-900')
+    expect(button('Remove Linux').className).toContain('bg-crashr-900')
+    expect(button('Remove Kubernetes').className).not.toContain('bg-crashr-900')
     expect(text()).toContain('Responsibilities we found · 4')
 
     await type(input('Job title'), 'Senior Platform Engineer')
@@ -65,7 +65,7 @@ describe('AddJobPage', () => {
     expect(saved.must_have).not.toContain('kubernetes')
     await vi.waitFor(() => expect(cvs.analyses).toEqual([saved.id]))
     expect(applications.applications.get(saved.id)?.status).toBe('saved')
-    expect(router.currentRoute.value.name).toBe('hoply-saved')
+    expect(router.currentRoute.value.name).toBe('crashr-saved')
   })
 
   it('saves and opens Prepare your CV', async () => {
@@ -74,7 +74,7 @@ describe('AddJobPage', () => {
     await readLink('https://careers.northwind.example/jobs/platform-engineer')
     await click(button('Save and prepare my CV'))
     await settle()
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: jobs.jobs[0]!.id } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'crashr-prep', params: { id: jobs.jobs[0]!.id } })
   })
 
   it('saves the job once when only saving its status failed, then retries the status', async () => {
@@ -115,7 +115,7 @@ describe('AddJobPage', () => {
     expect(jobs.jobs[0]).toMatchObject({ source: 'text', read_from: 'text', url: 'https://ejobs.ro/123', responsibilities: ['Administrezi servere Linux.', 'Automatizezi infrastructura cu Terraform.', 'Minimum 3 ani experiență în DevOps.'] })
   })
 
-  it('reads a job the Send to Hoply bookmark sent, and offers the bookmark', async () => {
+  it('reads a job the Send to crashr bookmark sent, and offers the bookmark', async () => {
     useServices()
     const sent = new URLSearchParams({ text: AD, url: 'https://www.linkedin.com/jobs/view/42', title: 'Platform Engineer', company: 'spektr' })
     const { router } = await mountPage(AddJobPage, { at: `/jobs/add#${sent}` })
@@ -125,10 +125,10 @@ describe('AddJobPage', () => {
     expect(router.currentRoute.value.hash).toBe('')
     await click(button('Back'))
     expect((input('Link to the ad (optional, to find it again)') as HTMLInputElement).value).toBe('https://www.linkedin.com/jobs/view/42')
-    const bookmark = document.querySelector<HTMLAnchorElement>('[data-test="send-to-hoply"] a')!
+    const bookmark = document.querySelector<HTMLAnchorElement>('[data-test="send-to-crashr"] a')!
     expect(bookmark.getAttribute('href')).toMatch(/^javascript:/)
     bookmark.click()
-    expect(router.currentRoute.value.name).toBe('hoply-job-add')
+    expect(router.currentRoute.value.name).toBe('crashr-job-add')
   })
 
   it.each([
@@ -194,11 +194,11 @@ describe('AddJobPage', () => {
     await click(button('Back'))
     expect(text()).toContain('Link to the job ad')
     await click(button('Back'))
-    expect(router.currentRoute.value.name).toBe('hoply-saved')
+    expect(router.currentRoute.value.name).toBe('crashr-saved')
     await router.push('/jobs/add')
     await settle()
     await click(button('Back'))
-    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+    expect(router.currentRoute.value.name).toBe('crashr-jobs')
   })
 
   it('speaks Romanian: the form, its checks, the bookmark, a page it could not read and the preview', async () => {
@@ -208,7 +208,7 @@ describe('AddJobPage', () => {
     expect(text()).toContain('Adaugă un job')
     expect(button('Link').getAttribute('aria-selected')).toBe('true')
     expect(text()).toContain('Trimite joburi aici de pe LinkedIn, eJobs sau orice site')
-    expect(document.querySelector('[data-test="send-to-hoply"] a')!.getAttribute('title')).toBe('Trage-mă în bara de marcaje')
+    expect(document.querySelector('[data-test="send-to-crashr"] a')!.getAttribute('title')).toBe('Trage-mă în bara de marcaje')
     await type(input('Linkul anunțului'), 'linkedin.com/jobs/1')
     await submit('Linkul anunțului')
     expect(text()).toContain('Scrie linkul complet, care începe cu https://')

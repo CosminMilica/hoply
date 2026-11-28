@@ -17,9 +17,9 @@ test('a new person picks Romanian and their fields, then finds jobs in them', as
   await mockApplicationsService(page);
   await page.goto('/jobs');
   await expect(page).toHaveURL(/\/welcome\?to=(%2F|\/)jobs$/);
-  await expect(page.getByRole('heading', { name: 'Welcome to Hoply' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Welcome to crashr' })).toBeVisible();
   await page.getByRole('radio', { name: /Română/ }).click();
-  await expect(page.getByRole('heading', { name: 'Bine ai venit în Hoply' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bine ai venit în crashr' })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'ro');
   await page.getByRole('button', { name: 'Continuă' }).click();
   await page.locator('[data-test="domain-it"]').click();
@@ -221,17 +221,17 @@ test('a saved job is still in Saved after a reload', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the Send to Hoply bookmark brings a LinkedIn job to Add a job in one click', async ({ page }) => {
+test('the Send to crashr bookmark brings a LinkedIn job to Add a job in one click', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await mockProfileService(page);
   await mockJobsService(page);
   await mockApplicationsService(page);
   await page.goto('/jobs/add');
-  const href = await page.locator('[data-test="send-to-hoply"] a').getAttribute('href');
+  const href = await page.locator('[data-test="send-to-crashr"] a').getAttribute('href');
   expect(href).toMatch(/^javascript:/);
 
-  // LinkedIn opens in its own tab, so this page stays on Hoply for the coverage saved after each test.
+  // LinkedIn opens in its own tab, so this page stays on crashr for the coverage saved after each test.
   const linkedin = 'https://www.linkedin.com/jobs/view/42/';
   const site = await page.context().newPage();
   await site.route(linkedin, route => route.fulfill({ contentType: 'text/html', body: [

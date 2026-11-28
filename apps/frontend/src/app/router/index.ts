@@ -15,23 +15,23 @@ function titled<T extends object>(key: keyof typeof t.value.shell.titles, meta: 
   return Object.defineProperty(meta, 'title', { get: () => t.value.shell.titles[key], enumerable: true }) as T & { title: string }
 }
 
-export const hoplyRoutes: RouteRecordRaw[] = [
-  { path: 'profile', name: 'hoply-profile', component: () => import('@/features/profile/pages/ProfilePage.vue'), meta: titled('profile', { menu: 'profile' }) },
-  { path: 'jobs', name: 'hoply-jobs', component: () => import('@/features/jobs/pages/JobsPage.vue'), meta: titled('jobs', { menu: 'jobs' }) },
+export const crashrRoutes: RouteRecordRaw[] = [
+  { path: 'profile', name: 'crashr-profile', component: () => import('@/features/profile/pages/ProfilePage.vue'), meta: titled('profile', { menu: 'profile' }) },
+  { path: 'jobs', name: 'crashr-jobs', component: () => import('@/features/jobs/pages/JobsPage.vue'), meta: titled('jobs', { menu: 'jobs' }) },
   {
     path: 'jobs/add',
-    name: 'hoply-job-add',
+    name: 'crashr-job-add',
     component: () => import('@/features/jobs/pages/AddJobPage.vue'),
     // Opened from Saved (`?from=saved`), the page belongs to Saved in the menu.
     meta: titled('addJob', { get menu() { return router.currentRoute.value.query.from === 'saved' ? 'saved' : 'jobs' } }),
   },
-  { path: 'jobs/:id', name: 'hoply-job', component: () => import('@/features/jobs/pages/JobPage.vue'), props: true, meta: titled('job', { menu: 'saved' }) },
-  { path: 'jobs/:id/prepare', name: 'hoply-prep', component: () => import('@/features/cv/pages/PrepPage.vue'), props: true, meta: titled('prepare', { menu: 'saved' }) },
-  { path: 'jobs/:id/cv', name: 'hoply-cv', component: () => import('@/features/cv/pages/CvPage.vue'), props: true, meta: titled('cv', { menu: 'applications' }) },
-  { path: 'saved', name: 'hoply-saved', component: () => import('@/features/applications/pages/SavedPage.vue'), meta: titled('saved', { menu: 'saved' }) },
-  { path: 'applications', name: 'hoply-applications', component: () => import('@/features/applications/pages/ApplicationsPage.vue'), meta: titled('applications', { menu: 'applications' }) },
-  { path: 'skills', name: 'hoply-skills', component: () => import('@/features/applications/pages/SkillGapsPage.vue'), meta: titled('skills', { menu: 'skills' }) },
-  { path: 'preferences', name: 'hoply-preferences', component: () => import('@/features/onboarding/pages/PreferencesPage.vue'), meta: titled('preferences') },
+  { path: 'jobs/:id', name: 'crashr-job', component: () => import('@/features/jobs/pages/JobPage.vue'), props: true, meta: titled('job', { menu: 'saved' }) },
+  { path: 'jobs/:id/prepare', name: 'crashr-prep', component: () => import('@/features/cv/pages/PrepPage.vue'), props: true, meta: titled('prepare', { menu: 'saved' }) },
+  { path: 'jobs/:id/cv', name: 'crashr-cv', component: () => import('@/features/cv/pages/CvPage.vue'), props: true, meta: titled('cv', { menu: 'applications' }) },
+  { path: 'saved', name: 'crashr-saved', component: () => import('@/features/applications/pages/SavedPage.vue'), meta: titled('saved', { menu: 'saved' }) },
+  { path: 'applications', name: 'crashr-applications', component: () => import('@/features/applications/pages/ApplicationsPage.vue'), meta: titled('applications', { menu: 'applications' }) },
+  { path: 'skills', name: 'crashr-skills', component: () => import('@/features/applications/pages/SkillGapsPage.vue'), meta: titled('skills', { menu: 'skills' }) },
+  { path: 'preferences', name: 'crashr-preferences', component: () => import('@/features/onboarding/pages/PreferencesPage.vue'), meta: titled('preferences') },
 ]
 
 /** Onboarding fills the screen, outside the layout, and needs the person signed in. */
@@ -39,12 +39,12 @@ export const onboardingRoute: RouteRecordRaw = {
   path: '/welcome',
   name: ONBOARDING,
   component: () => import('@/features/onboarding/pages/OnboardingPage.vue'),
-  meta: { requiresAuth: true, title: 'Hoply' },
+  meta: { requiresAuth: true, title: 'crashr' },
 }
 
 const router = createApplicationRouter({
   auth,
-  routes: { app: hoplyRoutes },
+  routes: { app: crashrRoutes },
   layouts: { app: AppLayout },
   publicRoutes: [onboardingRoute],
   actions: {

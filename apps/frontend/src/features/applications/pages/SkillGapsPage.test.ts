@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
-import { mountPage, useServices } from '@/test/hoply'
+import { mountPage, useServices } from '@/test/crashr'
 import { seedId } from '@/test/jobs-seed'
 import { sampleProfile } from '@/test/profile-service'
 import SkillGapsPage from './SkillGapsPage.vue'
@@ -31,7 +31,7 @@ describe('SkillGapsPage', () => {
     expect(link.getAttribute('href')).toBe(`/jobs/${seedId(1)}`)
     expect(text()).toContain('Learned one? Add it to your profile and it leaves this list.')
     await router.push(link.getAttribute('href')!)
-    expect(router.currentRoute.value.name).toBe('hoply-job')
+    expect(router.currentRoute.value.name).toBe('crashr-job')
   })
 
   it('speaks Romanian', async () => {

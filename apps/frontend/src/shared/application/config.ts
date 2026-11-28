@@ -3,10 +3,10 @@
 import type { ApplicationConfig } from './contracts'
 
 export const application: ApplicationConfig = {
-  "title": "hoply",
+  "title": "crashr",
   "auth": true,
   "routing": {
-    "landing": "hoply-profile",
+    "landing": "crashr-profile",
     "sign_in": "login",
     "not_found": "not-found",
     "auth_stuck": "auth-stuck",
@@ -30,20 +30,20 @@ export const application: ApplicationConfig = {
                 "id": "jobs",
                 "label": "Find jobs",
                 "icon": "i-lucide-search",
-                "to": "hoply-jobs"
+                "to": "crashr-jobs"
               },
               {
                 "id": "saved",
                 "label": "Saved",
                 "icon": "i-lucide-heart",
-                "to": "hoply-saved",
+                "to": "crashr-saved",
                 "badge": "saved"
               },
               {
                 "id": "applications",
                 "label": "Applications",
                 "icon": "i-lucide-briefcase",
-                "to": "hoply-applications",
+                "to": "crashr-applications",
                 "badge": "applications"
               }
             ]
@@ -56,13 +56,13 @@ export const application: ApplicationConfig = {
                 "id": "profile",
                 "label": "Your profile",
                 "icon": "i-lucide-user",
-                "to": "hoply-profile"
+                "to": "crashr-profile"
               },
               {
                 "id": "skills",
                 "label": "Skill gaps",
                 "icon": "i-lucide-target",
-                "to": "hoply-skills"
+                "to": "crashr-skills"
               }
             ]
           },

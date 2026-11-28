@@ -87,7 +87,7 @@ const (
 	defaultMaxBytes     = 2 << 20
 	defaultMaxAPIBytes  = 10 << 20
 	defaultMaxRedirects = 3
-	defaultUserAgent    = "Hoply/0.1 (job reader)"
+	defaultUserAgent    = "crashr/0.1 (job reader)"
 	minMainText         = 300
 )
 

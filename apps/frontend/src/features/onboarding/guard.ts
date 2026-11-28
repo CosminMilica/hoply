@@ -4,7 +4,7 @@ import { setLocale } from '@/features/common/i18n'
 import { profileApi } from '@/features/profile/api/profileApi'
 import { profileKeys } from '@/features/profile/composables/useProfile'
 
-export const ONBOARDING = 'hoply-onboarding'
+export const ONBOARDING = 'crashr-onboarding'
 
 /** How long the guard trusts the profile it read, so moving between pages does not read it again each time. */
 const FRESH_MS = 60_000

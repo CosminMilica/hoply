@@ -524,9 +524,9 @@ func TestCleanExperienceAndProject(t *testing.T) {
 		}
 	}
 
-	project, err := services.CleanProject(models.ProjectInput{Name: " Hoply ", Role: " Author ", URL: " https://hoply.dev ",
+	project, err := services.CleanProject(models.ProjectInput{Name: " crashr ", Role: " Author ", URL: " https://crashr.xyz ",
 		Start: "2026-01", Tools: strs("Go", "GO"), Bullets: []models.Bullet{{Text: " Built it "}}})
-	if err != nil || project.Name != "Hoply" || project.Role != "Author" || project.URL != "https://hoply.dev" ||
+	if err != nil || project.Name != "crashr" || project.Role != "Author" || project.URL != "https://crashr.xyz" ||
 		!slices.Equal(project.Tools, strs("Go")) || project.Bullets[0].Text != "Built it" {
 		t.Fatalf("cleaned project: %+v %v", project, err)
 	}
@@ -662,8 +662,8 @@ var children = []child{
 	{"/experience", "Experience", map[string]any{"role": "Dev", "start": "2018-01",
 		"bullets": []map[string]any{{"text": " Shipped ", "result": "fast", "skills": strs("Go")}}},
 		map[string]any{"role": "Lead", "team_size": 4}, "role"},
-	{"/projects", "Project", map[string]any{"name": "Hoply", "url": "https://hoply.dev"},
-		map[string]any{"name": "Hoply 2"}, "name"},
+	{"/projects", "Project", map[string]any{"name": "crashr", "url": "https://crashr.xyz"},
+		map[string]any{"name": "crashr 2"}, "name"},
 	{"/education", "Education", map[string]any{"level": "bachelor", "degree": "BSc"},
 		map[string]any{"level": "master", "degree": "MSc"}, "degree"},
 	{"/certifications", "Certification", map[string]any{"name": "CKA", "issued": "2025-01"},

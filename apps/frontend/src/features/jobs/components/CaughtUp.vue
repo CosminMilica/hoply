@@ -12,6 +12,6 @@ const emit = defineEmits<{ changeFilters: [], resetSkipped: [] }>()
     <p class="m-0 text-[15px] leading-normal font-medium text-muted">{{ t.jobs.caughtUp.text }}</p>
     <UButton :label="filtersLabel ?? t.jobs.caughtUp.changeFilters" size="lg" block class="mt-1.5 justify-center" @click="emit('changeFilters')" />
     <UButton :label="t.jobs.caughtUp.bringBack" color="neutral" variant="outline" size="lg" block class="justify-center" @click="emit('resetSkipped')" />
-    <UButton :to="{ name: 'hoply-saved' }" :label="t.jobs.caughtUp.seeSaved" variant="link" color="neutral" class="justify-center text-muted underline" />
+    <UButton :to="{ name: 'crashr-saved' }" :label="t.jobs.caughtUp.seeSaved" variant="link" color="neutral" class="justify-center text-muted underline" />
   </div>
 </template>

@@ -8,7 +8,7 @@ entity_plural: profiles
 go_version: '1.27'
 include_error_envelope: true
 include_platform_auth: true
-project_description: 'Hoply: job search with a CV tailored to each job'
+project_description: 'crashr: job search with a CV tailored to each job'
 project_name: profile
 project_slug: profile
 project_title: Profile

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
-import { button, click, mountPage, useServices } from '@/test/hoply'
+import { button, click, mountPage, useServices } from '@/test/crashr'
 import SavedPage from './SavedPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
@@ -66,7 +66,7 @@ describe('SavedPage', () => {
     expect(text()).toContain('Missing: Windows Server')
     expect(() => button('Best match')).toThrow()
     await click(button('Prepare CV'))
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: seedId(4) } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'crashr-prep', params: { id: seedId(4) } })
     await click(button('Remove from saved'))
     expect(applications.applications.size).toBe(0)
     expect(text()).toContain('Nothing saved yet. Add a job you found, from its link or its text, and it lands here.')

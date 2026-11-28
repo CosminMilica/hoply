@@ -1,7 +1,7 @@
 {
-  "name": "hoply-e2e",
+  "name": "crashr-e2e",
   "version": "0.1.0",
-  "description": "E2E testing platform for hoply",
+  "description": "E2E testing platform for crashr",
   "private": true,
   "scripts": {
     "test": "npx playwright test",

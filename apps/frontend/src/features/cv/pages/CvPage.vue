@@ -55,11 +55,11 @@ async function download(format: 'pdf' | 'docx') {
     <div v-else-if="!cv || !document" class="flex flex-col gap-2.5 pt-6">
       <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.cv.cvPage.emptyTitle }}</h1>
       <p class="m-0 text-base leading-normal font-medium text-muted">{{ t.cv.cvPage.emptyText }}</p>
-      <UButton :to="{ name: 'hoply-job-add' }" :label="t.cv.cvPage.addJob" size="lg" block class="mt-2 justify-center" />
+      <UButton :to="{ name: 'crashr-job-add' }" :label="t.cv.cvPage.addJob" size="lg" block class="mt-2 justify-center" />
     </div>
     <div v-else class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[380px_minmax(0,1fr)] min-[900px]:items-start min-[900px]:gap-x-12">
       <div class="contents min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4">
-        <UButton :to="{ name: 'hoply-applications' }" :label="t.cv.cvPage.applications" icon="i-lucide-chevron-left" variant="ghost" color="neutral" class="order-0 self-start px-1 text-toned" />
+        <UButton :to="{ name: 'crashr-applications' }" :label="t.cv.cvPage.applications" icon="i-lucide-chevron-left" variant="ghost" color="neutral" class="order-0 self-start px-1 text-toned" />
         <div class="order-1 -mt-2.5 flex flex-col gap-1">
           <h1 class="m-0 text-[26px] leading-tight font-extrabold tracking-tight">{{ t.cv.cvPage.ready }}</h1>
           <p class="m-0 text-[15px] font-medium text-muted">{{ t.cv.cvPage.forJob(cv.job_title, cv.company) }}</p>
@@ -94,7 +94,7 @@ async function download(format: 'pdf' | 'docx') {
             />
           </div>
         </div>
-        <AtsCard v-if="mode === 'tailored'" :ats="cv.ats" class="order-3" @improve="router.push({ name: 'hoply-prep', params: { id } })" />
+        <AtsCard v-if="mode === 'tailored'" :ats="cv.ats" class="order-3" @improve="router.push({ name: 'crashr-prep', params: { id } })" />
         <TailoringCard v-if="mode === 'tailored' && cv.tailoring" :tailoring="cv.tailoring" class="order-3" />
         <div class="order-6 flex flex-col gap-2.5">
           <div class="flex gap-2">
@@ -118,7 +118,7 @@ async function download(format: 'pdf' | 'docx') {
       <div class="contents min-[900px]:col-start-2 min-[900px]:row-start-1 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4">
         <CvPaper class="order-4" :document="document" :template="template" :highlights="mode === 'tailored' ? cv.highlights : []" />
         <p v-if="mode === 'tailored'" class="order-5 m-0 text-[13px] leading-normal font-medium text-muted">
-          <mark class="rounded-md bg-hoply-200 px-1.5 py-px font-extrabold text-hoply-950">{{ t.cv.cvPage.highlighted }}</mark>
+          <mark class="rounded-md bg-crashr-200 px-1.5 py-px font-extrabold text-crashr-950">{{ t.cv.cvPage.highlighted }}</mark>
           {{ t.cv.cvPage.highlightNote }}
         </p>
         <LetterCard class="order-7" :cv-id="cv.id" :template="template" />

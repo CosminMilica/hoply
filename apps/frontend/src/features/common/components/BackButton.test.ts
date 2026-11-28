@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { button, click, mountPage, settle } from '@/test/hoply'
+import { button, click, mountPage, settle } from '@/test/crashr'
 import BackButton from './BackButton.vue'
 
 afterEach(() => {
@@ -9,7 +9,7 @@ afterEach(() => {
 
 describe('BackButton', () => {
   it('goes back in history when there is somewhere to go back to', async () => {
-    const { router } = await mountPage(BackButton, { at: '/saved', props: { fallback: { name: 'hoply-jobs' }, label: 'Saved jobs' } })
+    const { router } = await mountPage(BackButton, { at: '/saved', props: { fallback: { name: 'crashr-jobs' }, label: 'Saved jobs' } })
     await router.push('/jobs/1')
     window.history.replaceState({ back: '/saved' }, '')
     const back = new Promise(resolve => router.afterEach(resolve))

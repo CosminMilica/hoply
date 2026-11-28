@@ -22,7 +22,7 @@ import (
 )
 
 // Description is served on GET /api/v1/info.
-const Description = "Hoply: job search with a CV tailored to each job"
+const Description = "crashr: job search with a CV tailored to each job"
 
 // New builds the HTTP handler without starting a worker: CVs it queues stay
 // queued until a worker runs (see Build).

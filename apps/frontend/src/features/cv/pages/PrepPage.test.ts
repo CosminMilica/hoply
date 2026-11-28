@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
-import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
+import { button, click, input, mountPage, settle, type, useServices } from '@/test/crashr'
 import { emptyProfile, sampleProfile } from '@/test/profile-service'
 import PrepPage from './PrepPage.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -145,7 +145,7 @@ describe('PrepPage', () => {
     await vi.advanceTimersByTimeAsync(1600)
     vi.useRealTimers()
     await settle()
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-cv', params: { id: seedId(1) } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'crashr-cv', params: { id: seedId(1) } })
     expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready')
   })
 
@@ -158,11 +158,11 @@ describe('PrepPage', () => {
     await vi.advanceTimersByTimeAsync(4600)
     expect(text()).toContain('Tailoring your CV')
     expect(text()).not.toContain('Rewritten for this job')
-    expect(router.currentRoute.value.name).not.toBe('hoply-cv')
+    expect(router.currentRoute.value.name).not.toBe('crashr-cv')
     await vi.advanceTimersByTimeAsync(3000)
     vi.useRealTimers()
     await settle()
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-cv', params: { id: seedId(1) } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'crashr-cv', params: { id: seedId(1) } })
     expect(applications.applications.get(seedId(1))?.status).toBe('cv_ready')
   })
 
@@ -306,7 +306,7 @@ describe('PrepPage', () => {
     expect(asked.some(path => path.endsWith('/probe'))).toBe(false)
     expect(button('Complete your profile').getAttribute('href')).toBe('/profile')
     await click(button('Complete your profile'))
-    expect(router.currentRoute.value.name).toBe('hoply-profile')
+    expect(router.currentRoute.value.name).toBe('crashr-profile')
   })
 
   it('says so in Romanian, with the next step when there is some work', async () => {

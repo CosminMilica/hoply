@@ -11,6 +11,6 @@ const landing = useApplicationRouting().landing
       <circle cx="14" cy="9" r="6" fill="#2A4BFF" />
       <path d="M3 22q11-9 22 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
     </svg>
-    <span class="text-[22px] font-extrabold tracking-tight">hoply</span>
+    <span class="text-[22px] font-extrabold tracking-tight">crashr<span class="text-sm text-crashr-400">.xyz</span></span>
   </RouterLink>
 </template>

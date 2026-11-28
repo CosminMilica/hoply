@@ -41,7 +41,7 @@ const answer = computed(() => answers.value.answer(key.value))
       <p class="m-0 text-sm leading-snug font-medium">{{ answers.textOf(key) }}</p>
       <p class="m-0 text-[13px] font-medium text-muted">{{ t.cv.cards.savedUnder(answers.savedUnder(key)) }}</p>
       <div class="flex flex-wrap items-center gap-3">
-        <span v-if="inSkills" class="text-[13px] font-bold text-hoply-300">{{ t.cv.gap.inSkills }}</span>
+        <span v-if="inSkills" class="text-[13px] font-bold text-crashr-300">{{ t.cv.gap.inSkills }}</span>
         <UButton v-else :label="t.cv.gap.alsoAdd(gap.skill)" color="neutral" variant="outline" size="sm" @click="$emit('addSkill', gap.skill)" />
         <UButton :label="t.cv.cards.change" variant="link" color="neutral" size="sm" class="px-1 text-[13px] text-muted underline" :loading="answers.state.saving[key]" @click="answers.undo(key)" />
       </div>

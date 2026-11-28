@@ -45,7 +45,7 @@ export function profileReadiness(profile: Profile): Readiness {
 }
 
 /**
- * How complete a profile must be before Hoply asks Claude anything for it (questions, a CV, a letter): the cv service
+ * How complete a profile must be before crashr asks Claude anything for it (questions, a CV, a letter): the cv service
  * keeps the same rule (cvdoc.ReadyForClaude), so the app never offers what the service would refuse.
  */
 export const READY_PERCENT = 60

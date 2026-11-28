@@ -8,10 +8,10 @@ import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { unreadableReason } from '../api/jobsApi'
 import { jobInputSchema, type Job, type JobDraft, type ReadRequest, type UnreadableReason } from '../api/jobs.schema'
 import JobDraftPreview from '../components/JobDraftPreview.vue'
-import SendToHoplyCard from '../components/SendToHoplyCard.vue'
+import SendToCrashrCard from '../components/SendToCrashrCard.vue'
 import { useAddJob } from '../composables/useJobs'
 import { isLink, MIN_AD_LENGTH, unreadableMessage } from '../reading'
-import { sentJob } from '../sendToHoply'
+import { sentJob } from '../sendToCrashr'
 
 type Phase = 'input' | 'loading' | 'failed' | 'preview'
 
@@ -45,7 +45,7 @@ function back() {
     error.value = ''
     return
   }
-  router.push({ name: fromSaved.value ? 'hoply-saved' : 'hoply-jobs' })
+  router.push({ name: fromSaved.value ? 'crashr-saved' : 'crashr-jobs' })
 }
 
 function readJob(body: ReadRequest) {
@@ -100,7 +100,7 @@ function tryAnother() {
   phase.value = 'input'
 }
 
-// A job the Send to Hoply bookmark sent is read at once; the hash leaves the address.
+// A job the Send to crashr bookmark sent is read at once; the hash leaves the address.
 onMounted(() => {
   const sent = sentJob(route.hash)
   if (!sent) return
@@ -125,7 +125,7 @@ async function save(tailor: boolean) {
     const saved = created.value ?? await create.mutateAsync(parsed.data)
     created.value = saved
     await setStatus.mutateAsync({ jobId: saved.id, status: 'saved' })
-    await router.push(tailor ? { name: 'hoply-prep', params: { id: saved.id } } : { name: 'hoply-saved' })
+    await router.push(tailor ? { name: 'crashr-prep', params: { id: saved.id } } : { name: 'crashr-saved' })
   }
   catch (problem) {
     error.value = await serviceErrorMessage(problem)
@@ -197,11 +197,11 @@ async function save(tailor: boolean) {
         <p v-if="error" role="alert" class="m-0 text-[13px] font-bold text-ember-400">{{ error }}</p>
         <UButton type="submit" :label="t.jobs.addJob.read" size="lg" block class="mt-1 justify-center" />
       </form>
-      <SendToHoplyCard />
+      <SendToCrashrCard />
     </template>
 
     <div v-else-if="phase === 'loading'" role="status" class="flex items-center gap-3.5 rounded-[14px] border border-default bg-elevated p-5">
-      <span class="size-[22px] shrink-0 animate-pulse rounded-full bg-hoply-500" aria-hidden="true" />
+      <span class="size-[22px] shrink-0 animate-pulse rounded-full bg-crashr-500" aria-hidden="true" />
       <span class="flex flex-col gap-0.5">
         <span class="text-[15px] font-extrabold">{{ tab === 'link' ? t.jobs.addJob.readingPage : t.jobs.addJob.readingAd }}</span>
         <span class="text-[13px] font-medium text-muted">{{ t.jobs.addJob.lookingFor }}</span>

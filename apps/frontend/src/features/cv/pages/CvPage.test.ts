@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
 import { cvApi } from '../api/cvApi'
-import { button, click, mountPage, useServices } from '@/test/hoply'
+import { button, click, mountPage, useServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import CvPage from './CvPage.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -43,7 +43,7 @@ describe('CvPage', () => {
 
     await click(button('Tailored'))
     await click(button('Improve this CV'))
-    expect(router.currentRoute.value.name).toBe('hoply-prep')
+    expect(router.currentRoute.value.name).toBe('crashr-prep')
   })
 
   it('downloads the version on screen as a PDF or a DOCX from the service', async () => {

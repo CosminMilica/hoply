@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { locale } from '@/features/common/i18n'
-import { useServices } from '@/test/hoply'
+import { useServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import { installOnboardingGuard, ONBOARDING } from './guard'
 
@@ -15,7 +15,7 @@ function app() {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/', meta: { layout: 'app' }, component: Page, children: [{ path: 'jobs', name: 'hoply-jobs', component: Page }] },
+      { path: '/', meta: { layout: 'app' }, component: Page, children: [{ path: 'jobs', name: 'crashr-jobs', component: Page }] },
       { path: '/welcome', name: ONBOARDING, component: Page },
       { path: '/signin', name: 'sign-in', component: Page },
     ],
@@ -37,7 +37,7 @@ describe('the onboarding guard', () => {
     useServices(sampleProfile({ app_language: 'ro', domains: ['banking'] }))
     const router = app()
     await router.push('/jobs')
-    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+    expect(router.currentRoute.value.name).toBe('crashr-jobs')
     expect(locale.value).toBe('ro')
     await router.push('/signin')
     expect(router.currentRoute.value.name).toBe('sign-in')
@@ -49,6 +49,6 @@ describe('the onboarding guard', () => {
     server.use(http.get('*/api/profile/v1/profiles/me', () => HttpResponse.json({ error: { code: 'INTERNAL' } }, { status: 500 })))
     const router = app()
     await router.push('/jobs')
-    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+    expect(router.currentRoute.value.name).toBe('crashr-jobs')
   })
 })

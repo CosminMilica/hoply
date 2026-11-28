@@ -4,7 +4,7 @@ withDefaults(defineProps<{ score: number, size?: 'sm' | 'md' | 'lg', label?: boo
 
 <template>
   <span
-    class="flex shrink-0 flex-col items-center justify-center rounded-xl bg-hoply-900 font-extrabold text-hoply-200"
+    class="flex shrink-0 flex-col items-center justify-center rounded-xl bg-crashr-900 font-extrabold text-crashr-200"
     :class="{ 'size-12 text-[15px]': size === 'sm', 'size-14 text-lg': size === 'md', 'size-16 text-lg': size === 'lg' }"
     :aria-label="`${score}% match`"
   >

@@ -21,7 +21,7 @@ const emit = defineEmits<{ 'update:draft': [value: string], 'add': [], 'skip': [
 <template>
   <div class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="probe">
     <div class="flex items-center justify-between gap-2">
-      <span class="text-xs font-extrabold tracking-wider text-hoply-300 uppercase">{{ item.theme }}</span>
+      <span class="text-xs font-extrabold tracking-wider text-crashr-300 uppercase">{{ item.theme }}</span>
       <StatusTag v-if="answer?.status === 'added'" :label="t.cv.cards.added" tone="added" />
       <StatusTag v-else-if="answer" :label="t.cv.cards.skipped" tone="muted" />
     </div>

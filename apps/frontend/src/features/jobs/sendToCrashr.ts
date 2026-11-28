@@ -1,4 +1,4 @@
-/** What the Send to Hoply bookmark sends in the link's hash: the ad's text, its page, and the title and company the page shows. */
+/** What the Send to crashr bookmark sends in the link's hash: the ad's text, its page, and the title and company the page shows. */
 export interface SentJob {
   text: string
   url: string
@@ -6,7 +6,7 @@ export interface SentJob {
   company: string
 }
 
-/** The job a Send to Hoply link carries in its hash, or null for any other hash. */
+/** The job a Send to crashr link carries in its hash, or null for any other hash. */
 export function sentJob(hash: string): SentJob | null {
   const params = new URLSearchParams(hash.replace(/^#/, ''))
   const text = (params.get('text') ?? '').trim()
@@ -16,7 +16,7 @@ export function sentJob(hash: string): SentJob | null {
 }
 
 /**
- * The Send to Hoply bookmark. On a job page it opens Add a job at origin with the selected text, else the page's job
+ * The Send to crashr bookmark. On a job page it opens Add a job at origin with the selected text, else the page's job
  * description, plus the page's link and the title and company it shows (LinkedIn's first, then any page's). It only
  * reads the page and opens a tab; it sends nothing anywhere else.
  */

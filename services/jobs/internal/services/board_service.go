@@ -44,7 +44,7 @@ func (s *BoardService) WithBackground(background func(func())) *BoardService {
 	return s
 }
 
-// Of returns the board a job link belongs to; 404 when Hoply cannot read it.
+// Of returns the board a job link belongs to; 404 when crashr cannot read it.
 func (s *BoardService) Of(ctx context.Context, ident identity.IdentityContext, link string) (*models.BoardOf, error) {
 	if err := requireSubject(ident); err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (s *BoardService) Follow(ctx context.Context, ident identity.IdentityContex
 	}
 	platform, board, ok := fetch.BoardOf(in.URL)
 	if !ok {
-		return nil, invalid("url", "'url' must be a job link on a board Hoply reads: Greenhouse, Lever, Ashby, SmartRecruiters, Workday, BambooHR, Recruitee or Workable")
+		return nil, invalid("url", "'url' must be a job link on a board crashr reads: Greenhouse, Lever, Ashby, SmartRecruiters, Workday, BambooHR, Recruitee or Workable")
 	}
 	if s.importer != nil {
 		for _, listed := range s.importer.Listed() {

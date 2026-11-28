@@ -32,7 +32,7 @@ const note = computed(() => (profile.data.value ? marketNote(profile.data.value)
     <DomainFilter />
     <div class="flex flex-wrap items-center justify-between gap-2">
       <span v-if="note" class="text-xs font-semibold text-muted" data-test="market-note">
-        {{ note }} <RouterLink :to="{ name: 'hoply-profile' }" class="underline">{{ t.jobs.search.changeInProfile }}</RouterLink>
+        {{ note }} <RouterLink :to="{ name: 'crashr-profile' }" class="underline">{{ t.jobs.search.changeInProfile }}</RouterLink>
       </span>
       <UButton :label="t.jobs.search.reset" variant="link" color="neutral" size="sm" class="ms-auto text-muted underline" @click="search.reset()" />
     </div>

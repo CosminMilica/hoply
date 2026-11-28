@@ -3,7 +3,7 @@ import { countEn, countRo } from '@/features/common/i18n/format'
 /** The onboarding and preferences words, in each language the app speaks. */
 export const en = {
   stepOf: (step: number, total: number) => `Step ${step} of ${total}`,
-  welcome: 'Welcome to Hoply',
+  welcome: 'Welcome to crashr',
   languageIntro: 'Pick the language of the app. We use it in menus and messages, and as the first language of your CVs and letters.',
   languageLater: 'You can change it any time in Preferences, in your account menu.',
   languageGroup: 'App language',
@@ -26,7 +26,7 @@ export const en = {
 
 export const ro: typeof en = {
   stepOf: (step: number, total: number) => `Pasul ${step} din ${total}`,
-  welcome: 'Bine ai venit în Hoply',
+  welcome: 'Bine ai venit în crashr',
   languageIntro: 'Alege limba aplicației. O folosim în meniuri și mesaje, și ca limbă implicită pentru CV-uri și scrisori.',
   languageLater: 'Poți schimba limba oricând din Preferințe, în meniul contului.',
   languageGroup: 'Limba aplicației',

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { locale } from '@/features/common/i18n'
-import { button, click, mountPage, useServices } from '@/test/hoply'
+import { button, click, mountPage, useServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import OnboardingPage from './OnboardingPage.vue'
 
@@ -19,12 +19,12 @@ describe('OnboardingPage', () => {
     const { profile } = newcomer()
     const { router } = await mountPage(OnboardingPage, { at: '/welcome?to=/saved' })
     expect(text()).toContain('Step 1 of 2')
-    expect(text()).toContain('Welcome to Hoply')
+    expect(text()).toContain('Welcome to crashr')
     expect(language('en').getAttribute('aria-checked')).toBe('true')
 
     await click(language('ro'))
     expect(locale.value).toBe('ro')
-    expect(text()).toContain('Bine ai venit în Hoply')
+    expect(text()).toContain('Bine ai venit în crashr')
     await click(button('Continuă'))
 
     expect(text()).toContain('Pasul 2 din 2')
@@ -56,7 +56,7 @@ describe('OnboardingPage', () => {
     await click(language('en'))
     await click(button('Continue'))
     await click(button('Done, show me the jobs'))
-    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+    expect(router.currentRoute.value.name).toBe('crashr-jobs')
   })
 
   it('opens Find jobs when the person was only going to the landing page', async () => {
@@ -65,7 +65,7 @@ describe('OnboardingPage', () => {
     await click(button('Continue'))
     await click(document.querySelector<HTMLButtonElement>('[data-test="domain-it"]')!)
     await click(button('Done, show me the jobs'))
-    expect(router.currentRoute.value.name).toBe('hoply-jobs')
+    expect(router.currentRoute.value.name).toBe('crashr-jobs')
   })
 
   it('says when the choices could not be saved, and when the profile could not be read', async () => {
@@ -76,7 +76,7 @@ describe('OnboardingPage', () => {
     await click(document.querySelector<HTMLButtonElement>('[data-test="domain-it"]')!)
     await click(button('Done, show me the jobs'))
     expect(text()).toContain('We could not save your choices. Try again.')
-    expect(router.currentRoute.value.name).toBe('hoply-onboarding')
+    expect(router.currentRoute.value.name).toBe('crashr-onboarding')
 
     document.body.innerHTML = ''
     server.use(http.get('*/api/profile/v1/profiles/me', () => HttpResponse.json({ error: { code: 'INTERNAL' } }, { status: 500 })))

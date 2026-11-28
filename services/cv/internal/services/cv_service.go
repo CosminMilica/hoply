@@ -159,7 +159,7 @@ func incompleteProbe() *models.Probe {
 // profileIncomplete refuses work for a profile not complete enough for Claude (cvdoc.ReadyForClaude): 409, with
 // how complete it is and how complete it must be.
 func profileIncomplete(profile models.Profile) error {
-	err := apperrors.New(apperrors.ConstraintViolation, "Complete your profile first: Hoply writes from what it says")
+	err := apperrors.New(apperrors.ConstraintViolation, "Complete your profile first: crashr writes from what it says")
 	err.Context = map[string]any{"reason": "profile_incomplete", "percent": cvdoc.Readiness(profile), "needed": cvdoc.ReadyPercent}
 	return err
 }

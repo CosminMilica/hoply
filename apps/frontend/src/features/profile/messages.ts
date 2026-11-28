@@ -54,10 +54,10 @@ export const en = {
     degrees: (n: number) => countEn(n, 'degree', 'degrees'),
     languages: (n: number) => countEn(n, 'language', 'languages'),
   },
-  /** The notice where Hoply needs a more complete profile before it asks Claude anything. */
+  /** The notice where crashr needs a more complete profile before it asks Claude anything. */
   gate: {
     title: (percent: number) => `Your profile is ${percent}% complete`,
-    text: (needed: number) => `To ask you good questions and write a CV that sounds like you, Hoply needs a profile at least ${needed}% complete, with at least one role or project and what you did there.`,
+    text: (needed: number) => `To ask you good questions and write a CV that sounds like you, crashr needs a profile at least ${needed}% complete, with at least one role or project and what you did there.`,
     noWork: 'Add at least one role or project, with what you did there.',
     action: 'Complete your profile',
     questionsLater: (needed: number) => `Once your profile is at least ${needed}% complete, with a role or a project and what you did there, the questions that make every CV stronger show up here.`,

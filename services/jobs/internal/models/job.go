@@ -163,7 +163,7 @@ type ImportedJob struct {
 }
 
 // Board is a company's job board the importer reads. FollowedAt is when a
-// person followed it; nil for the boards Hoply lists itself.
+// person followed it; nil for the boards crashr lists itself.
 type Board struct {
 	Company    string     `json:"company"`
 	Platform   string     `json:"platform"`

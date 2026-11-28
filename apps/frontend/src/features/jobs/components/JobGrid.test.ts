@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { setLocale } from '@/features/common/i18n'
-import { button, click, testRouter } from '@/test/hoply'
+import { button, click, testRouter } from '@/test/crashr'
 import { catalogJob } from '@/test/jobs'
 import { matchJob } from '../match'
 import JobGrid from './JobGrid.vue'

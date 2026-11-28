@@ -3,7 +3,7 @@ import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
-import { settle, useServices } from '@/test/hoply'
+import { settle, useServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import { OTHER, useNotes } from './useNotes'
 

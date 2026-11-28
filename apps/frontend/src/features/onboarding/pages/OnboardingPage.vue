@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import HoplyLogo from '@/features/shell/components/HoplyLogo.vue'
+import CrashrLogo from '@/features/shell/components/CrashrLogo.vue'
 import { locale, setLocale, t, type Locale } from '@/features/common/i18n'
 import { useProfileMutations, useProfileQuery } from '@/features/profile/composables/useProfile'
 import type { Domain } from '@/features/profile/api/profile.schema'
@@ -36,8 +36,8 @@ const language = computed<Locale>({ get: () => locale.value, set: value => setLo
 const next = computed(() => {
   const to = route.query.to
   const inside = typeof to === 'string' && to.startsWith('/') && !to.startsWith('//')
-  const landing = inside && ['/', router.resolve({ name: 'hoply-profile' }).path].includes(router.resolve(to).path)
-  return inside && !landing ? to : { name: 'hoply-jobs' }
+  const landing = inside && ['/', router.resolve({ name: 'crashr-profile' }).path].includes(router.resolve(to).path)
+  return inside && !landing ? to : { name: 'crashr-jobs' }
 })
 
 async function finish() {
@@ -56,14 +56,14 @@ async function finish() {
 <template>
   <div class="flex min-h-dvh flex-col bg-default text-default">
     <header class="flex items-center justify-between gap-4 border-b border-default px-4 py-2 sm:px-8">
-      <HoplyLogo />
+      <CrashrLogo />
       <span class="text-sm font-bold text-muted" data-test="step">{{ t.onboarding.stepOf(step, 2) }}</span>
     </header>
     <main class="flex flex-1 justify-center px-4 pt-10 pb-16 sm:pt-16">
       <div class="flex w-full flex-col gap-7" :class="step === 1 ? 'max-w-[720px]' : 'max-w-[1040px]'">
         <div class="flex max-w-[720px] gap-2" aria-hidden="true">
-          <span class="h-1.5 flex-1 rounded-full bg-hoply-600" />
-          <span class="h-1.5 flex-1 rounded-full" :class="step === 2 ? 'bg-hoply-600' : 'bg-accented'" />
+          <span class="h-1.5 flex-1 rounded-full bg-crashr-600" />
+          <span class="h-1.5 flex-1 rounded-full" :class="step === 2 ? 'bg-crashr-600' : 'bg-accented'" />
         </div>
         <UAlert v-if="profile.isError.value" color="error" variant="subtle" :title="t.onboarding.loadFailed" />
 

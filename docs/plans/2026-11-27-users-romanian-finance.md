@@ -2,7 +2,7 @@
 
 Status: phases 1 to 4 built, 2026-11-28 (phase 2 on feat/finance-jobs, phase 3 merged, phase 4 on feat/onboarding).
 
-Hoply has one profile, finds tech jobs only and writes CVs in English. This plan lets a second person use it: Keycloak
+crashr has one profile, finds tech jobs only and writes CVs in English. This plan lets a second person use it: Keycloak
 is the identity manager and each person is a tenant of their own, kept apart by Postgres row-level security as in
 kartra-ai; Find jobs adds banking and finance areas; a CV can be written in Romanian.
 
@@ -31,7 +31,7 @@ Each phase is its own pull request.
 
 ## Phase 1: what the forge dry run showed
 
-| Part | Forge gives | Hoply adds |
+| Part | Forge gives | crashr adds |
 | --- | --- | --- |
 | Options | read from `stack.yaml`, `.forge/quality.json` and `[forge.options]` in `forge.toml`: all three change | `session_dialog: project`, as kartra-ai |
 | Gatekeeper, Keycloak realm, Traefik `auth` middleware, sign-in page | generated | merge into our compose (jobs gzip, importer switch) |
@@ -86,5 +86,5 @@ apps/frontend/src/features/jobs/components/DomainFilter.vue   field tabs and the
 | Language | `profile.app_language`; until the profile loads, the last one on this device; Nuxt UI's own words and `<html lang>` follow |
 | Onboarding | a guard after sign-in sends a person with no `domains` to `/welcome`, then back where they were going |
 | Find jobs | `domain` filter with the person's fields (all, or one tab), `area` within the field shown |
-| Sign-up | Keycloak's registration form (Hoply theme, English and Romanian); the gatekeeper creates the person's organization on their first sign-in (`auth.keycloak_self_registration: own_organization`); emails not verified for now (a hardcoded `email_verified` claim on the `gatekeeper` client); the first callback's forge bug is retried once by `signing-in.html` |
+| Sign-up | Keycloak's registration form (crashr theme, English and Romanian); the gatekeeper creates the person's organization on their first sign-in (`auth.keycloak_self_registration: own_organization`); emails not verified for now (a hardcoded `email_verified` claim on the `gatekeeper` client); the first callback's forge bug is retried once by `signing-in.html` |
 | Not translated | forge's generated pages (sign-in, not found, forbidden), the services' error texts, generated CV content |

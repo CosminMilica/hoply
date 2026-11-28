@@ -98,7 +98,7 @@ watch(() => cv.value?.status === 'failed' || (Boolean(cvId.value) && progress.is
   writeFailed.value = true
 })
 watch([elapsed, () => cv.value?.status], ([done, status]) => {
-  if (done && status === 'ready') router.replace({ name: 'hoply-cv', params: { id: props.id } })
+  if (done && status === 'ready') router.replace({ name: 'crashr-cv', params: { id: props.id } })
 })
 onBeforeUnmount(clearTimers)
 
@@ -122,7 +122,7 @@ function addToProfile(skill: string) {
     <UAlert v-if="failed" color="error" variant="subtle" :title="t.cv.prep.failedTitle" :description="t.cv.prep.failedDescription" />
     <USkeleton v-else-if="!ready" class="h-64 w-full" />
     <div v-else-if="!enough && profile.data.value && job.data.value" class="mx-auto flex max-w-[720px] flex-col gap-4">
-      <BackButton :fallback="{ name: 'hoply-job', params: { id } }" />
+      <BackButton :fallback="{ name: 'crashr-job', params: { id } }" />
       <div class="-mt-2.5 flex flex-col gap-1">
         <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.cv.prep.title }}</h1>
         <p class="m-0 text-[15px] font-medium text-muted">{{ job.data.value.title }} · {{ job.data.value.company }}</p>
@@ -130,7 +130,7 @@ function addToProfile(skill: string) {
       <ProfileGate :profile="profile.data.value" />
     </div>
     <div v-else-if="job.data.value && questions.data.value" class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[minmax(0,1fr)_340px] min-[900px]:items-start min-[900px]:gap-x-12">
-      <BackButton :fallback="{ name: 'hoply-job', params: { id } }" class="min-[900px]:col-span-2" />
+      <BackButton :fallback="{ name: 'crashr-job', params: { id } }" class="min-[900px]:col-span-2" />
       <div class="-mt-2.5 flex flex-col gap-1 min-[900px]:col-start-1">
         <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.cv.prep.title }}</h1>
         <p class="m-0 text-[15px] font-medium text-muted">{{ job.data.value.title }} · {{ job.data.value.company }}</p>
@@ -140,7 +140,7 @@ function addToProfile(skill: string) {
         <div class="flex flex-col gap-2.5 rounded-2xl border border-default bg-elevated p-4">
           <div class="flex items-baseline justify-between">
             <span class="text-xs font-extrabold tracking-wider text-ink-300 uppercase">{{ t.cv.prep.keywordMatch }}</span>
-            <span class="text-2xl font-extrabold text-hoply-400" data-test="match">{{ prep.matchLabel.value }}</span>
+            <span class="text-2xl font-extrabold text-crashr-400" data-test="match">{{ prep.matchLabel.value }}</span>
           </div>
           <ProgressBar :value="prep.score.value" :label="t.cv.prep.keywordMatch" />
           <span class="text-[13px] leading-snug font-medium text-ink-300">{{ t.cv.prep.matchHint }}</span>
@@ -171,7 +171,7 @@ function addToProfile(skill: string) {
         <section v-if="questions.data.value.covered.length" class="flex flex-col gap-2">
           <SectionLabel>{{ t.cv.prep.covered }}</SectionLabel>
           <ul class="flex flex-wrap gap-1.5">
-            <li v-for="skill in questions.data.value.covered" :key="skill" class="rounded-lg bg-hoply-900 px-2.5 py-1 text-[13px] font-bold text-hoply-300">{{ skill }}</li>
+            <li v-for="skill in questions.data.value.covered" :key="skill" class="rounded-lg bg-crashr-900 px-2.5 py-1 text-[13px] font-bold text-crashr-300">{{ skill }}</li>
           </ul>
         </section>
 
@@ -241,7 +241,7 @@ function addToProfile(skill: string) {
             </span>
             <span
               class="rounded-lg border-[1.5px] px-3 py-1 text-xs font-extrabold"
-              :class="role.included ? 'border-hoply-600 bg-hoply-600 text-white' : 'border-ink-700 text-toned'"
+              :class="role.included ? 'border-crashr-600 bg-crashr-600 text-white' : 'border-ink-700 text-toned'"
             >{{ role.included ? t.cv.prep.included : t.cv.prep.leftOut }}</span>
           </button>
         </section>

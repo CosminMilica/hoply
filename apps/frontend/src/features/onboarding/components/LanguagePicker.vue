@@ -15,12 +15,12 @@ const model = defineModel<Locale>({ required: true })
       :aria-checked="model === language"
       :lang="language"
       class="flex min-h-[148px] flex-col gap-3 rounded-[16px] border-2 p-5 text-left transition-colors"
-      :class="model === language ? 'border-hoply-500 bg-hoply-950' : 'border-default bg-elevated hover:border-accented'"
+      :class="model === language ? 'border-crashr-500 bg-crashr-950' : 'border-default bg-elevated hover:border-accented'"
       @click="model = language"
     >
       <span class="flex items-center justify-between">
         <span class="flex size-11 items-center justify-center rounded-[12px] bg-accented text-[15px] font-extrabold tracking-wider uppercase">{{ language }}</span>
-        <UIcon v-if="model === language" name="i-lucide-circle-check" class="size-6 text-hoply-400" />
+        <UIcon v-if="model === language" name="i-lucide-circle-check" class="size-6 text-crashr-400" />
       </span>
       <span class="text-[22px] font-extrabold text-highlighted">{{ t.common.languages[language] }}</span>
       <span class="text-[14px] leading-snug font-medium text-muted">{{ t.onboarding.languageHints[language] }}</span>

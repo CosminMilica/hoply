@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { setLocale } from '@/features/common/i18n'
 import { server } from '@/shared/mocks/node'
-import { button, choose, click, input, mountPage, sectionToggle, settle, type, useServices } from '@/test/hoply'
+import { button, choose, click, input, mountPage, sectionToggle, settle, type, useServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import ProfilePage from '../pages/ProfilePage.vue'
 

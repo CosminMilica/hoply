@@ -1,6 +1,6 @@
-# hoply
+# crashr
 
-hoply - a Vue 3 SPA on forge's application shell.
+crashr - a Vue 3 SPA on forge's application shell.
 
 ## Tech Stack
 
