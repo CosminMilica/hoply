@@ -608,6 +608,17 @@ func TestProfileProbeIsAskedOnceForEveryJob(t *testing.T) {
 	}
 	equal(t, prober.profileCalls, 1)
 	equal(t, prober.calls, 0)
+	// The questions kept in English are asked again once the person uses the app in Romanian.
+	h.sources.profile.AppLanguage = "ro"
+	if _, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/probe", nil); body["status"] != "pending" {
+		t.Fatalf("asked again in Romanian: %v", body)
+	}
+	<-settled
+	equal(t, prober.profileCalls, 2)
+	if _, body := testutil.Do(t, handler, http.MethodGet, "/api/v1/probe", nil); body["status"] != "ready" {
+		t.Fatalf("kept in Romanian: %v", body)
+	}
+	equal(t, prober.profileCalls, 2)
 	h.sources.profileErr = apperrors.NewDependencyUnavailable("profile")
 	if status, _ := testutil.Do(t, handler, http.MethodGet, "/api/v1/probe", nil); status != http.StatusServiceUnavailable {
 		t.Fatalf("no profile: %d", status)

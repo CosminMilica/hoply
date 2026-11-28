@@ -62,10 +62,17 @@ type CvDocument struct {
 	Language string `json:"language"`
 }
 
+// AtsCheck is one check a screening system would make. ID names it for the web app, which words it in the person's
+// language from ID, N, Of and Title; Label and Hint are the English wording.
 type AtsCheck struct {
+	ID    string `json:"id"`
 	OK    bool   `json:"ok"`
 	Label string `json:"label"`
 	Hint  string `json:"hint"`
+	// N of Of is the count a check reports ("Keywords from the job: 7 of 9"); Title is the job's title.
+	N     int    `json:"n,omitempty"`
+	Of    int    `json:"of,omitempty"`
+	Title string `json:"title,omitempty"`
 }
 
 type Ats struct {
@@ -215,7 +222,9 @@ type Probe struct {
 type Close struct {
 	Skill string   `json:"skill"`
 	Via   []string `json:"via"`
-	Note  string   `json:"note"`
+	// Category is the kind of tool both are ("cloud infrastructure"), so the web app can word Note in its language.
+	Category string `json:"category"`
+	Note     string `json:"note"`
 }
 
 type Responsibility struct {

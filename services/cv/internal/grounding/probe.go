@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"cv/internal/cvdoc"
 	"cv/internal/models"
 )
 
@@ -37,15 +38,18 @@ func init() {
 func ProbeSchema() string { return compact(probeSchema) }
 
 type probeMessage struct {
+	Language string    `json:"language"`
 	Analysis *Analysis `json:"analysis"`
 	Roles    []Entry   `json:"roles"`
 	Projects []Entry   `json:"projects"`
 	Facts    []Fact    `json:"facts"`
 }
 
-// ProbePrompt is the message of the questions: the job's analysis and the facts.
-func (c Catalogue) ProbePrompt(analysis *Analysis) string {
-	raw, err := json.Marshal(probeMessage{Analysis: analysis, Roles: nonEmpty(c.Roles), Projects: nonEmpty(c.Projects), Facts: c.FactList()})
+// ProbePrompt is the message of the questions: the language they are asked in ("en" or "ro"), the job's analysis
+// and the facts.
+func (c Catalogue) ProbePrompt(analysis *Analysis, language string) string {
+	raw, err := json.Marshal(probeMessage{Language: cvdoc.LanguageOf(language), Analysis: analysis, Roles: nonEmpty(c.Roles),
+		Projects: nonEmpty(c.Projects), Facts: c.FactList()})
 	if err != nil {
 		panic(err)
 	}

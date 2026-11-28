@@ -235,8 +235,16 @@ func TestWriteUsesTheFactsRememberedInTheProfile(t *testing.T) {
 	equal(t, cv.Tailored.Certifications, []string{"CKA | CNCF | Issued 05/2024 | Expires 05/2027 | ID X1"})
 	equal(t, cv.Tailored.Additional, []string{"HashiCorp Terraform Associate, 2025."})
 	equal(t, cv.Profile.Additional, []string{"HashiCorp Terraform Associate, 2025."})
-	equal(t, checkStartingWith(t, cv.Ats.Checks, "Job responsibilities"), models.AtsCheck{OK: true, Label: "Job responsibilities mirrored: 2 of 4", Hint: "Describe them in Prepare your CV."})
+	equal(t, checkStartingWith(t, cv.Ats.Checks, "Job responsibilities"), models.AtsCheck{ID: "responsibilities", OK: true, Label: "Job responsibilities mirrored: 2 of 4", Hint: "Describe them in Prepare your CV.", N: 2, Of: 4})
 	equal(t, checkStartingWith(t, cv.Ats.Checks, "Keywords from the job").Label, "Keywords from the job: 8 of 9")
+	title := checkStartingWith(t, cv.Ats.Checks, "Target job title")
+	equal(t, title.ID == "title" && title.Title != "", true)
+	ids := []string{}
+	for _, check := range cv.Ats.Checks {
+		ids = append(ids, check.ID)
+	}
+	equal(t, ids, []string{"layout", "headings", "contact", "location", "dates", "title", "keywords", "keywords_in_context",
+		"responsibilities", "verbs", "numbers", "pages"})
 }
 
 func TestWriteLeavesOutSkippedRolesAndFollowsTheFocus(t *testing.T) {

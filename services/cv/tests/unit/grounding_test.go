@@ -298,10 +298,18 @@ func TestProbeQuestionsSayWhatTheyAreAboutAndWhereAnswersGo(t *testing.T) {
 	}
 
 	var message map[string]any
-	if err := json.Unmarshal([]byte(c.ProbePrompt(&grounding.Analysis{Role: "Run CI"})), &message); err != nil {
+	if err := json.Unmarshal([]byte(c.ProbePrompt(&grounding.Analysis{Role: "Run CI"}, "ro")), &message); err != nil {
 		t.Fatal(err)
 	}
 	equal(t, message["analysis"].(map[string]any)["role"], "Run CI")
+	equal(t, message["language"], "ro")
+	if err := json.Unmarshal([]byte(c.ProbePrompt(nil, "")), &message); err != nil || message["language"] != "en" {
+		t.Fatalf("no language is English: %v %v", message["language"], err)
+	}
+	for _, system := range []string{grounding.ProbeSystem, grounding.ProfileProbeSystem} {
+		equal(t, strings.Contains(system, "Write in English"), false)
+		equal(t, strings.Contains(system, "`language` names: `en` English, `ro`"), true)
+	}
 	equal(t, len(message["facts"].([]any)), len(c.Order))
 	equal(t, strings.Contains(grounding.ProbeSystem, "career coach"), true)
 	var schema map[string]any

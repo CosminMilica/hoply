@@ -1,5 +1,9 @@
 import { countEn, countRo } from '@/features/common/i18n/format'
 
+/** What the cv service sends for the texts its rules write: the English wording, and what the app words them from. */
+interface Check { id: string, label: string, hint: string, n: number, of: number, title: string }
+interface CloseSkill { skill: string, via: string[], category: string, note: string }
+
 /** The cv feature's words, in each language the app speaks. */
 export const en = {
   prep: {
@@ -57,6 +61,8 @@ export const en = {
     whereDidFor: (name: string) => `Where did you do this? ${name}`,
   },
   claim: {
+    /** The question about one of the job's key responsibilities; `asked` is the service's English. */
+    question: (_text: string, asked: string) => asked,
     fromProfileFor: (question: string) => `From your profile: ${question}`,
     whatDid: 'What exactly did you do?',
     placeholder: 'In your own words: what did you do, where, and what changed? Numbers help.',
@@ -64,10 +70,13 @@ export const en = {
     notReally: 'Not really',
   },
   closeCard: {
+    note: (close: CloseSkill) => close.note,
     usedMyself: (skill: string) => `I have used ${skill} myself`,
     placeholder: (skill: string) => `Where you used ${skill} and what you did with it`,
   },
   gap: {
+    ask: (skill: string) => `Have you used ${skill}? Tell us where and what you did. Numbers help: how many, how much, how fast.`,
+    example: (_skill: string, given: string) => given,
     inSkills: 'In your profile skills',
     alsoAdd: (skill: string) => `Also add ${skill} to my skills`,
   },
@@ -119,6 +128,8 @@ export const en = {
     label: 'CV preview',
   },
   ats: {
+    /** A check's words by its id; one the app does not know keeps the service's. */
+    check: (check: Check) => ({ label: check.label, hint: check.hint }),
     title: 'ATS check',
     score: (passed: number, total: number) => `${passed} of ${total}`,
     passed: 'Passed:',
@@ -236,6 +247,7 @@ export const ro: typeof en = {
     whereDidFor: (name: string) => `Unde ai făcut asta? ${name}`,
   },
   claim: {
+    question: (text: string, _asked: string) => `Ai făcut așa ceva? „${text}”`,
     fromProfileFor: (question: string) => `Din profilul tău: ${question}`,
     whatDid: 'Ce ai făcut mai exact?',
     placeholder: 'Cu cuvintele tale: ce ai făcut, unde și ce s-a schimbat? Cifrele ajută.',
@@ -243,10 +255,15 @@ export const ro: typeof en = {
     notReally: 'Nu chiar',
   },
   closeCard: {
+    note: (close: CloseSkill) => (close.category
+      ? `Folosești ${close.via.join(', ')}, un instrument de ${close.category}, ca ${close.skill}. CV-ul îți arată experiența de ${close.category}, fără să numească ${close.skill}.`
+      : `Folosești ${close.via.join(', ')}, apropiat de ${close.skill}. CV-ul îți arată experiența, fără să numească ${close.skill}.`),
     usedMyself: (skill: string) => `Am folosit și eu ${skill}`,
     placeholder: (skill: string) => `Unde ai folosit ${skill} și ce ai făcut concret`,
   },
   gap: {
+    ask: (skill: string) => `Ai folosit ${skill}? Spune-ne unde și ce ai făcut. Cifrele ajută: câți, cât, cât de repede.`,
+    example: (skill: string, _given: string) => `ex. Am folosit ${skill} pentru ..., ceea ce a îmbunătățit ... cu ...`,
     inSkills: 'Printre competențele din profil',
     alsoAdd: (skill: string) => `Adaugă ${skill} și la competențele mele`,
   },
@@ -298,6 +315,25 @@ export const ro: typeof en = {
     label: 'Previzualizare CV',
   },
   ats: {
+    check: (check: Check) => {
+      const counted = `${check.n} din ${check.of}`
+      const words: Record<string, [string, string]> = {
+        layout: ['O singură coloană, text simplu, fără tabele sau imagini', ''],
+        headings: ['Titluri de secțiuni standard', ''],
+        contact: ['E-mail și telefon în corpul CV-ului, nu în antet', 'Adaugă-le în Profil.'],
+        location: ['Localitatea în antet', 'Adaugă orașul și țara în Profil.'],
+        dates: ['Date cu lună și an', 'Adaugă luna de început a fiecărui rol în Profil.'],
+        title: [`Titlul jobului „${check.title}” în rezumat`, ''],
+        keywords: [`Cuvinte-cheie din anunț: ${counted}`, 'Cele care lipsesc nu sunt încă în profil. Spune-ne despre ele în Pregătește CV-ul.'],
+        keywords_in_context: [`Cuvinte-cheie folosite în fraze, nu doar enumerate: ${counted}`, 'Trece instrumentele folosite la fiecare rol în Profil.'],
+        responsibilities: [`Responsabilitățile jobului reflectate: ${counted}`, 'Descrie-le în Pregătește CV-ul.'],
+        verbs: ['Fiecare punct începe cu un verb de acțiune', ''],
+        numbers: [`Rezultate cu cifre: ${counted}`, 'Adaugă un rezultat la realizările tale în Pregătește CV-ul.'],
+        pages: [check.n === 2 ? 'Încape pe două pagini' : 'Încape pe o pagină', 'Scoate un rol sau un proiect în Pregătește CV-ul.'],
+      }
+      const [label, hint] = words[check.id] ?? [check.label, check.hint]
+      return { label, hint: check.hint ? hint : '' }
+    },
     title: 'Verificare ATS',
     score: (passed: number, total: number) => `${passed} din ${total}`,
     passed: 'Îndeplinit:',

@@ -116,7 +116,7 @@ func (s *CvService) Probe(ctx context.Context, ident identity.IdentityContext, j
 	if err != nil {
 		return nil, err
 	}
-	fingerprint := grounding.Build(profile, cvdoc.ReadJob(job), models.CvRequest{}, time.Now()).Fingerprint()
+	fingerprint := probeFingerprint(grounding.Build(profile, cvdoc.ReadJob(job), models.CvRequest{}, time.Now()), profile)
 	return s.probe(ctx, ident, jobID, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
 		return s.prober.Questions(ctx, job, profile)
 	})
@@ -135,10 +135,16 @@ func (s *CvService) ProfileProbe(ctx context.Context, ident identity.IdentityCon
 	if err != nil {
 		return nil, err
 	}
-	fingerprint := grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, time.Now()).Fingerprint()
+	fingerprint := probeFingerprint(grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, time.Now()), profile)
 	return s.probe(ctx, ident, uuid.Nil, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
 		return s.prober.ProfileQuestions(ctx, profile)
 	})
+}
+
+// probeFingerprint changes when the facts or the person's language do: questions kept for other facts, or in
+// another language, are asked again.
+func probeFingerprint(catalogue grounding.Catalogue, profile models.Profile) string {
+	return catalogue.Fingerprint() + ":" + cvdoc.LanguageOf(profile.AppLanguage)
 }
 
 func probeKey(ident identity.IdentityContext, jobID uuid.UUID) string {

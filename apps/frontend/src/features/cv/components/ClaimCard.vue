@@ -12,6 +12,7 @@ const key = computed(() => claimKey(props.claim.index))
 const answers = computed(() => props.prep.answers)
 const answer = computed(() => answers.value.answer(key.value))
 const suggestions = computed(() => props.prep.suggestionsFor(props.claim.text))
+const question = computed(() => t.value.cv.claim.question(props.claim.text, props.claim.question))
 const statusLabel = computed(() => {
   const words = t.value.cv.cards
   return { added: words.added, picked: words.fromProfile, skipped: words.leftOut }[answer.value?.status ?? 'skipped']
@@ -20,9 +21,9 @@ const statusLabel = computed(() => {
 
 <template>
   <div class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="claim">
-    <h3 class="m-0 text-sm leading-snug font-bold">{{ claim.question }}</h3>
+    <h3 class="m-0 text-sm leading-snug font-bold">{{ question }}</h3>
     <template v-if="!answer">
-      <div v-if="suggestions.length" class="flex flex-col gap-1.5" role="group" :aria-label="t.cv.claim.fromProfileFor(claim.question)">
+      <div v-if="suggestions.length" class="flex flex-col gap-1.5" role="group" :aria-label="t.cv.claim.fromProfileFor(question)">
         <SectionLabel as="span">{{ t.cv.cards.fromProfile }}</SectionLabel>
         <button
           v-for="suggestion in suggestions"
@@ -52,7 +53,7 @@ const statusLabel = computed(() => {
         class="self-start px-1 text-[13px] text-hoply-400 underline"
         @click="answers.setDraft(key, claim.prefill)"
       />
-      <RolePicker :name="claim.question" :choices="prep.roleChoices(key)" @pick="id => prep.pickRole(key, id)" />
+      <RolePicker :name="question" :choices="prep.roleChoices(key)" @pick="id => prep.pickRole(key, id)" />
       <div class="flex flex-wrap items-center gap-2.5">
         <UButton :label="t.cv.cards.addToCv" :disabled="!answers.canAdd(key)" :loading="answers.state.saving[key]" @click="prep.claimYes(claim.index)" />
         <UButton :label="t.cv.claim.notReally" color="neutral" variant="outline" @click="answers.skip(key)" />

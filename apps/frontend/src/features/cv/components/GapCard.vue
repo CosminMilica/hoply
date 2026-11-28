@@ -22,11 +22,11 @@ const answer = computed(() => answers.value.answer(key.value))
       <StatusTag v-else :label="t.cv.cards.skipped" tone="muted" />
     </div>
     <template v-if="!answer">
-      <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ gap.ask }}</p>
+      <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ t.cv.gap.ask(gap.skill) }}</p>
       <UTextarea
         :model-value="answers.draft(key)"
         :aria-label="t.cv.cards.experienceWith(gap.skill)"
-        :placeholder="gap.example"
+        :placeholder="t.cv.gap.example(gap.skill, gap.example)"
         :rows="3"
         class="w-full"
         @update:model-value="(value: string) => answers.setDraft(key, String(value))"

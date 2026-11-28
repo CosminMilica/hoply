@@ -44,8 +44,9 @@ func Questions(job Job, profile models.Profile) models.PrepQuestions {
 	related := make([]models.Close, 0, len(match.Related))
 	for _, item := range match.Related {
 		related = append(related, models.Close{
-			Skill: item.Skill,
-			Via:   item.Via,
+			Skill:    item.Skill,
+			Via:      item.Via,
+			Category: item.Category,
 			Note: "You use " + JoinList(item.Via) + ", a " + item.Category + " tool like " + item.Skill + ". Your CV shows your " +
 				item.Category + " experience, without naming " + item.Skill + ".",
 		})

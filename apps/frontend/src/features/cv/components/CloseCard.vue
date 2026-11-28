@@ -19,7 +19,7 @@ const added = computed(() => answers.value.answer(key.value)?.status === 'added'
       <StatusTag v-if="added" :label="t.cv.cards.added" tone="added" />
       <StatusTag v-else :label="t.cv.cards.close" tone="close" />
     </div>
-    <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ close.note }}</p>
+    <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ t.cv.closeCard.note(close) }}</p>
     <template v-if="added">
       <p class="m-0 text-sm leading-snug font-medium">{{ answers.textOf(key) }}</p>
       <UButton :label="t.cv.cards.change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="answers.state.saving[key]" @click="answers.undo(key)" />

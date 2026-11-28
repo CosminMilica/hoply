@@ -464,27 +464,32 @@ func AtsChecks(document models.CvDocument, job Job, profile models.Profile, requ
 			mirrored[index] = true
 		}
 	}
-	check := func(ok bool, label, hint string) models.AtsCheck {
-		return models.AtsCheck{OK: ok, Label: label, Hint: hint}
+	check := func(id string, ok bool, label, hint string) models.AtsCheck {
+		return models.AtsCheck{ID: id, OK: ok, Label: label, Hint: hint}
 	}
+	counted := func(id string, ok bool, n, of int, label, hint string) models.AtsCheck {
+		return models.AtsCheck{ID: id, OK: ok, Label: fmt.Sprintf(label, n, of), Hint: hint, N: n, Of: of}
+	}
+	title := check("title", strings.Contains(" "+words(document.Headline+" "+document.Summary)+" ", " "+coreTitle(job.Title)+" "),
+		"Target job title “"+job.Title+"” in the summary", "")
+	title.Title = job.Title
 	return []models.AtsCheck{
-		check(true, "Single column, plain text, no tables or images", ""),
-		check(true, "Standard headings: Summary, Skills, Experience, Education", ""),
-		check(strings.TrimSpace(profile.Email) != "" && strings.TrimSpace(profile.Phone) != "",
+		check("layout", true, "Single column, plain text, no tables or images", ""),
+		check("headings", true, "Standard headings: Summary, Skills, Experience, Education", ""),
+		check("contact", strings.TrimSpace(profile.Email) != "" && strings.TrimSpace(profile.Phone) != "",
 			"Email and phone in the body, not in a header", "Add them in Profile."),
-		check(strings.TrimSpace(profile.City) != "" || strings.TrimSpace(profile.Country) != "",
+		check("location", strings.TrimSpace(profile.City) != "" || strings.TrimSpace(profile.Country) != "",
 			"Location in the header", "Add your city and country in Profile."),
-		check(dated, "Dates with month and year", "Add the start month of each role in Profile."),
-		check(strings.Contains(" "+words(document.Headline+" "+document.Summary)+" ", " "+coreTitle(job.Title)+" "),
-			"Target job title “"+job.Title+"” in the summary", ""),
-		check(found == len(job.Keywords), fmt.Sprintf("Keywords from the job: %d of %d", found, len(job.Keywords)),
+		check("dates", dated, "Dates with month and year", "Add the start month of each role in Profile."),
+		title,
+		counted("keywords", found == len(job.Keywords), found, len(job.Keywords), "Keywords from the job: %d of %d",
 			"The missing ones are not in your profile yet. Tell us about them in Prepare your CV."),
-		check(inContext >= (found*6+9)/10, fmt.Sprintf("Keywords used in sentences, not only listed: %d of %d", inContext, found),
+		counted("keywords_in_context", inContext >= (found*6+9)/10, inContext, found, "Keywords used in sentences, not only listed: %d of %d",
 			"List the tools you used for each role in Profile."),
-		check(len(mirrored) > 0 || len(job.KeyResponsibilities) == 0, fmt.Sprintf("Job responsibilities mirrored: %d of %d", len(mirrored), len(job.KeyResponsibilities)),
-			"Describe them in Prepare your CV."),
-		check(verbs, "Every bullet starts with an action verb", ""),
-		check(withNumbers > 0, fmt.Sprintf("Results with numbers: %d of %d", withNumbers, len(bullets)),
+		counted("responsibilities", len(mirrored) > 0 || len(job.KeyResponsibilities) == 0, len(mirrored), len(job.KeyResponsibilities),
+			"Job responsibilities mirrored: %d of %d", "Describe them in Prepare your CV."),
+		check("verbs", verbs, "Every bullet starts with an action verb", ""),
+		counted("numbers", withNumbers > 0, withNumbers, len(bullets), "Results with numbers: %d of %d",
 			"Add a result to your highlights in Prepare your CV."),
 		fits(document, PageLimit(profile, now)),
 	}
@@ -495,7 +500,8 @@ func fits(document models.CvDocument, pages int) models.AtsCheck {
 	if pages == 2 {
 		label = "Fits on two pages"
 	}
-	return models.AtsCheck{OK: EstimatedLines(document) <= pages*PageLines, Label: label, Hint: "Leave out a role or a project in Prepare your CV."}
+	return models.AtsCheck{ID: "pages", OK: EstimatedLines(document) <= pages*PageLines, Label: label, N: pages,
+		Hint: "Leave out a role or a project in Prepare your CV."}
 }
 
 // utf16Length counts text the way the web app does, in UTF-16 code units.

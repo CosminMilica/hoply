@@ -70,15 +70,18 @@ type Language struct {
 // Profile is the part of the profile service's profile (docs/api/profile.md)
 // a CV is made from.
 type Profile struct {
-	Name           string          `json:"name"`
-	Headline       string          `json:"headline"`
-	About          string          `json:"about"`
-	Email          string          `json:"email"`
-	Phone          string          `json:"phone"`
-	GitHub         string          `json:"github"`
-	LinkedIn       string          `json:"linkedin"`
-	City           string          `json:"city"`
-	Country        string          `json:"country"`
+	Name     string `json:"name"`
+	Headline string `json:"headline"`
+	About    string `json:"about"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	GitHub   string `json:"github"`
+	LinkedIn string `json:"linkedin"`
+	City     string `json:"city"`
+	Country  string `json:"country"`
+	// AppLanguage is the language the person uses the app in, "en" or "ro" (empty: English); what Claude asks them is
+	// written in it.
+	AppLanguage    string          `json:"app_language"`
 	AdditionalInfo []string        `json:"additional_info"`
 	Notes          []Note          `json:"notes"`
 	Skills         []string        `json:"skills"`

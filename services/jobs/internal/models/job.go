@@ -30,8 +30,8 @@ type Job struct {
 	// Domains are the fields of work the title names (extract.Domains); a person's added job in none is in every one.
 	Domains  []string `json:"domains"`
 	URL      string   `json:"url"`
-	Source         string   `json:"source"`
-	ReadFrom       string   `json:"read_from"`
+	Source   string   `json:"source"`
+	ReadFrom string   `json:"read_from"`
 	// RequirementsFrom is "rules" or "analysis" (Claude's reading of the ad, written by the cv service).
 	RequirementsFrom string    `json:"requirements_from"`
 	Sample           bool      `json:"sample"`
