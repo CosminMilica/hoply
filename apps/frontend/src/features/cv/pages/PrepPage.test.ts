@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/crashr'
-import { sampleProfile } from '@/test/profile-service'
+import { emptyProfile, sampleProfile } from '@/test/profile-service'
 import PrepPage from './PrepPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
@@ -289,5 +289,34 @@ describe('PrepPage', () => {
     server.use(http.get('*/api/profile/v1/profiles/me', () => HttpResponse.json({ message: 'down' }, { status: 503 })))
     await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
     expect(text()).toContain('We could not prepare this CV')
+  })
+
+  it('sends a person whose profile says too little to complete it, and asks Claude nothing', async () => {
+    useServices(emptyProfile())
+    const asked: string[] = []
+    const listen = ({ request }: { request: Request }) => asked.push(new URL(request.url).pathname)
+    server.events.on('request:start', listen)
+    const { router } = await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    server.events.removeListener('request:start', listen)
+    const gate = document.querySelector('[data-test="profile-gate"]')!
+    expect(gate.textContent).toContain('Your profile is 0% complete')
+    expect(gate.textContent).toContain('at least 60% complete')
+    expect(document.querySelector('[data-test="profile-gate-next"]')!.textContent).toBe('Add at least one role or project, with what you did there.')
+    expect(document.querySelector('[data-test="gap"]')).toBeNull()
+    expect(asked.some(path => path.endsWith('/probe'))).toBe(false)
+    expect(button('Complete your profile').getAttribute('href')).toBe('/profile')
+    await click(button('Complete your profile'))
+    expect(router.currentRoute.value.name).toBe('crashr-profile')
+  })
+
+  it('says so in Romanian, with the next step when there is some work', async () => {
+    const profile = sampleProfile({ headline: '', about: '', email: '', phone: '', github: '', linkedin: '', city: '' })
+    useServices(profile)
+    setLocale('ro')
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    const gate = document.querySelector('[data-test="profile-gate"]')!
+    expect(gate.textContent).toContain('Profilul tău e completat 54%')
+    expect(gate.textContent).toContain('Completează-ți profilul')
+    expect(document.querySelector('[data-test="profile-gate-next"]')!.textContent).toBe('Următorul pas: adaugă un titlu')
   })
 })

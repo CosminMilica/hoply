@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { server } from '@/shared/mocks/node'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/crashr'
 import { setLocale } from '@/features/common/i18n'
 import { sampleProfile } from '@/test/profile-service'
@@ -67,5 +68,19 @@ describe('ProfileProbeCard', () => {
     await mountPage(ProfilePage)
     expect(card()).toBeNull()
     expect(document.querySelector('[data-test="profile-probe-pending"]')).toBeNull()
+  })
+
+  it('says when the questions will come while the profile says too little, and asks for none', async () => {
+    const services = useServices(sampleProfile({ experience: [], projects: [] }))
+    const asked: string[] = []
+    const listen = ({ request }: { request: Request }) => asked.push(new URL(request.url).pathname)
+    server.events.on('request:start', listen)
+    await mountPage(ProfileProbeCard, { props: { profile: services.profile } })
+    server.events.removeListener('request:start', listen)
+    expect(document.querySelector('[data-test="profile-probe-later"]')!.textContent).toContain('Once your profile is at least 60% complete')
+    expect(asked.some(path => path.endsWith('/probe'))).toBe(false)
+    setLocale('ro')
+    await settle()
+    expect(document.querySelector('[data-test="profile-probe-later"]')!.textContent).toContain('Când profilul tău e completat cel puțin 60%')
   })
 })

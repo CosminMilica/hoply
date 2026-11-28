@@ -44,6 +44,22 @@ export function profileReadiness(profile: Profile): Readiness {
   return { percent, checks, hint: next ? words.next(next.label) : words.allSet }
 }
 
+/**
+ * How complete a profile must be before crashr asks Claude anything for it (questions, a CV, a letter): the cv service
+ * keeps the same rule (cvdoc.ReadyForClaude), so the app never offers what the service would refuse.
+ */
+export const READY_PERCENT = 60
+
+/** Whether the profile tells what the person did: a role or a project with a highlight. */
+export function hasWork(profile: Profile): boolean {
+  return [...profile.experience, ...profile.projects].some(entry => entry.bullets.some(bullet => filled(bullet.text)))
+}
+
+/** Whether the profile gives Claude enough to work with: READY_PERCENT complete and some work. */
+export function readyForClaude(profile: Profile): boolean {
+  return profileReadiness(profile).percent >= READY_PERCENT && hasWork(profile)
+}
+
 /** "Andrei Popescu" gives "AP"; one word gives its first letter. */
 export function initialsOf(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)

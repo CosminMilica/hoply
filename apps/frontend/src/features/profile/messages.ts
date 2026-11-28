@@ -54,6 +54,14 @@ export const en = {
     degrees: (n: number) => countEn(n, 'degree', 'degrees'),
     languages: (n: number) => countEn(n, 'language', 'languages'),
   },
+  /** The notice where crashr needs a more complete profile before it asks Claude anything. */
+  gate: {
+    title: (percent: number) => `Your profile is ${percent}% complete`,
+    text: (needed: number) => `To ask you good questions and write a CV that sounds like you, crashr needs a profile at least ${needed}% complete, with at least one role or project and what you did there.`,
+    noWork: 'Add at least one role or project, with what you did there.',
+    action: 'Complete your profile',
+    questionsLater: (needed: number) => `Once your profile is at least ${needed}% complete, with a role or a project and what you did there, the questions that make every CV stronger show up here.`,
+  },
   readiness: {
     yourProfile: 'Your profile',
     addHeadline: 'Add a headline below',
@@ -319,6 +327,13 @@ export const ro: typeof en = {
     roles: (n: number) => countRo(n, 'rol', 'roluri'),
     degrees: (n: number) => countRo(n, 'diplomă', 'diplome'),
     languages: (n: number) => countRo(n, 'limbă', 'limbi'),
+  },
+  gate: {
+    title: (percent: number) => `Profilul tău e completat ${percent}%`,
+    text: (needed: number) => `Ca să-ți punem întrebări bune și să scriem un CV care sună a tine, avem nevoie de un profil completat cel puțin ${needed}%, cu cel puțin un rol sau un proiect și ce ai făcut acolo.`,
+    noWork: 'Adaugă cel puțin un rol sau un proiect, cu ce ai făcut acolo.',
+    action: 'Completează-ți profilul',
+    questionsLater: (needed: number) => `Când profilul tău e completat cel puțin ${needed}%, cu un rol sau un proiect și ce ai făcut acolo, aici apar întrebările care fac fiecare CV mai puternic.`,
   },
   readiness: {
     yourProfile: 'Profilul tău',

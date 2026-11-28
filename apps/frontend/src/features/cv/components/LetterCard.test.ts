@@ -128,4 +128,15 @@ describe('LetterCard', () => {
     expect(card().querySelector('[data-test="letter-empty"]')).not.toBeNull()
     expect(text()).toContain('Written by Claude from this CV')
   })
+
+  it('sends the person to complete their profile instead of writing, while it says too little', async () => {
+    const services = useServices()
+    await cvApi.generate(request)
+    services.profile.experience = []
+    services.profile.projects = []
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    expect(card().querySelector('[data-test="profile-gate"]')).not.toBeNull()
+    expect(text()).toContain('Complete your profile')
+    expect([...card().querySelectorAll('button')].some(element => element.textContent?.trim() === 'Write them')).toBe(false)
+  })
 })

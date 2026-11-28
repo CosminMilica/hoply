@@ -74,6 +74,11 @@ func (s *CvService) Analyze(ctx context.Context, ident identity.IdentityContext,
 	if s.prober == nil || !s.prober.Available() {
 		return &models.Probe{Status: models.ProbeUnavailable, Questions: []models.ProbeQuestion{}}, nil
 	}
+	if profile, _, err := s.sources.Profile(ctx); err != nil {
+		return nil, err
+	} else if !cvdoc.ReadyForClaude(profile) {
+		return incompleteProbe(), nil
+	}
 	key := "analysis/" + jobID.String()
 	if s.startAsking(key) {
 		go func() {
@@ -116,6 +121,9 @@ func (s *CvService) Probe(ctx context.Context, ident identity.IdentityContext, j
 	if err != nil {
 		return nil, err
 	}
+	if !cvdoc.ReadyForClaude(profile) {
+		return incompleteProbe(), nil
+	}
 	fingerprint := probeFingerprint(grounding.Build(profile, cvdoc.ReadJob(job), models.CvRequest{}, time.Now()), profile)
 	return s.probe(ctx, ident, jobID, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
 		return s.prober.Questions(ctx, job, profile)
@@ -135,10 +143,25 @@ func (s *CvService) ProfileProbe(ctx context.Context, ident identity.IdentityCon
 	if err != nil {
 		return nil, err
 	}
+	if !cvdoc.ReadyForClaude(profile) {
+		return incompleteProbe(), nil
+	}
 	fingerprint := probeFingerprint(grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, time.Now()), profile)
 	return s.probe(ctx, ident, uuid.Nil, fingerprint, func(ctx context.Context) ([]models.ProbeQuestion, error) {
 		return s.prober.ProfileQuestions(ctx, profile)
 	})
+}
+
+func incompleteProbe() *models.Probe {
+	return &models.Probe{Status: models.ProbeIncomplete, Questions: []models.ProbeQuestion{}}
+}
+
+// profileIncomplete refuses work for a profile not complete enough for Claude (cvdoc.ReadyForClaude): 409, with
+// how complete it is and how complete it must be.
+func profileIncomplete(profile models.Profile) error {
+	err := apperrors.New(apperrors.ConstraintViolation, "Complete your profile first: crashr writes from what it says")
+	err.Context = map[string]any{"reason": "profile_incomplete", "percent": cvdoc.Readiness(profile), "needed": cvdoc.ReadyPercent}
+	return err
 }
 
 // probeFingerprint changes when the facts or the person's language do: questions kept for other facts, or in
@@ -355,6 +378,9 @@ func (s *CvService) Create(ctx context.Context, ident identity.IdentityContext, 
 	profile, profileSnapshot, err := s.sources.Profile(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if !cvdoc.ReadyForClaude(profile) {
+		return nil, profileIncomplete(profile)
 	}
 	cv, err := s.repo.Create(ctx, ident, repositories.NewCv{
 		JobID:           jobID,

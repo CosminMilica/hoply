@@ -79,6 +79,8 @@ type Profile struct {
 	LinkedIn string `json:"linkedin"`
 	City     string `json:"city"`
 	Country  string `json:"country"`
+	// WorkAuthorization counts toward how complete the profile is (cvdoc.Readiness).
+	WorkAuthorization string `json:"work_authorization"`
 	// AppLanguage is the language the person uses the app in, "en" or "ro" (empty: English); what Claude asks them is
 	// written in it.
 	AppLanguage    string          `json:"app_language"`
