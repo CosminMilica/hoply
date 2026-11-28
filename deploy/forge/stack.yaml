@@ -46,6 +46,7 @@ options:
   auth.mode: generate
   auth.provider: gatekeeper
   auth.service_discovery: true
+  auth.keycloak_self_registration: own_organization
   database.multitenancy: shared_rls
   database.tenant_resolution: token_claim
   observability.health: true

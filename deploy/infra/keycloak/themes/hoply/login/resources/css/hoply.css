@@ -72,6 +72,11 @@ html, body {
 
 .h-tagline { margin: 0; color: var(--h-dimmed); font-size: 14px; font-weight: 600; text-align: center; }
 
+/* The language switch under the card: the current language is the one not underlined, in the text colour. */
+.h-langs { display: flex; justify-content: center; gap: 4px; }
+.h-lang { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: var(--h-radius); font-size: 13px; letter-spacing: 0.06em; }
+.h-lang[aria-current="true"] { color: var(--h-text); background: var(--h-card); text-decoration: none; }
+
 .h-hint { margin: 0; color: var(--h-muted); font-size: 13px; }
 
 a, .h-link { color: var(--h-link); font-weight: 700; text-decoration: none; }

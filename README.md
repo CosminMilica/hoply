@@ -101,7 +101,16 @@ Keycloak (http://auth.localhost, admin console at http://auth.localhost/admin, `
 accounts, and the gatekeeper signs the web app in. A person is a Keycloak organization of their own: its id is their
 tenant, and row-level security keeps every tenant's profile, saved jobs and CVs from the others. The realm starts
 with the organization `hoply` (tenant `00000000-0000-0000-0000-000000000001`) and its user `dev@localhost` /
-`devpass`. There is no sign-up: add a person like this.
+`devpass`.
+
+Anyone can sign up from the sign-in page ("Create an account", in English or Romanian). On their first sign-in the
+gatekeeper creates their own organization (`auth.keycloak_self_registration: own_organization`), and the app takes them
+through onboarding: the app's language, then the fields of work whose jobs they want. Emails are not verified for now:
+the realm keeps `verifyEmail` off and the `gatekeeper` client's `email-verified-without-verification` mapper marks every
+email verified, because the gatekeeper creates organizations only for verified emails. To verify emails, configure the
+realm's SMTP server, turn `verifyEmail` on and delete that mapper.
+
+An administrator can still add a person like this:
 
 ```bash
 kc() { docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh "$@"; }

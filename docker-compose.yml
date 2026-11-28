@@ -662,7 +662,7 @@ services:
       DEFAULT_RATE_LIMIT: "600"
       API_KEYS_ENABLED: "false"
       TENANT_SOURCE: "organization"
-      SELF_REGISTRATION: "off"
+      SELF_REGISTRATION: "own_organization"
     # 5000 on the host is macOS AirPlay Receiver; Traefik reaches the gatekeeper inside the network.
     ports:
       - 15000:5000
