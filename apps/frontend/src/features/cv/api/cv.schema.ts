@@ -35,7 +35,16 @@ export const cvDocumentSchema = z.object({
 
 export type CvDocument = z.infer<typeof cvDocumentSchema>
 
-export const atsCheckSchema = z.object({ ok: z.boolean(), label: z.string(), hint: z.string() })
+/** A screening check: `id` names it, so the app words it in its language from `n`, `of` and `title`; `label` and `hint` are the service's English, for a check the app does not know. */
+export const atsCheckSchema = z.object({
+  id: z.string().default(''),
+  ok: z.boolean(),
+  label: z.string(),
+  hint: z.string(),
+  n: z.number().default(0),
+  of: z.number().default(0),
+  title: z.string().default(''),
+})
 
 export type AtsCheck = z.infer<typeof atsCheckSchema>
 
@@ -92,7 +101,7 @@ export const prepQuestionsSchema = z.object({
   covered: z.array(z.string()),
   gaps: z.array(z.object({ skill: z.string(), ask: z.string(), example: z.string() })),
   /** Requirements the person has not used but knows a close equivalent of: the CV mentions them as transferable. */
-  related: z.array(z.object({ skill: z.string(), via: z.array(z.string()), note: z.string() })).default([]),
+  related: z.array(z.object({ skill: z.string(), via: z.array(z.string()), category: z.string().default(''), note: z.string() })).default([]),
   responsibilities: z.array(z.object({
     index: z.number().int().nonnegative(),
     text: z.string(),

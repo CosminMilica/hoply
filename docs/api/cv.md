@@ -35,13 +35,13 @@ belongs to the caller; another person's CVs are never visible or changed.
 ## Shapes
 
 ```text
-PrepQuestions { job_id, base_score, covered: [skill], gaps: [{ skill, ask, example }], related: [{ skill, via: [skill], note }],
+PrepQuestions { job_id, base_score, covered: [skill], gaps: [{ skill, ask, example }], related: [{ skill, via: [skill], category, note }],
                 responsibilities: [{ index, text, question, prefill }] }
 CvRequest     { job_id, skip_roles: [experience id], focus: [skill] (at most 3; empty takes the first three matched),
                 confirmed: [int] (indexes of the key responsibilities the person confirmed), language: "en" | "ro" (default "en") }
 Cv            { id, job_id, status, created_at, updated_at, job_title, company, file_name,
                 highlights: [skill] | null, profile: CvDocument | null, tailored: CvDocument | null,
-                ats: { passed, total, checks: [{ ok, label, hint }] } | null, preview: { from, to } | null,
+                ats: { passed, total, checks: [{ id, ok, label, hint, n?, of?, title? }] } | null, preview: { from, to } | null,
                 written_by: "claude" | "rules" | null, model, refused, rules_reason, limit_until | null }
 WriterStatus  { writer: "claude" | "rules", model, state, limit_until | null }
 Probe         { status: "ready" | "pending" | "unavailable", questions: [{ theme, question, why, example, about, place, choices: [string] }] }
@@ -150,8 +150,9 @@ The web app shows the CV in the template the person picked and remembers it in t
 `GET /jobs/{job_id}/probe` returns what Claude would ask to make the CV stronger for the job: questions about the
 person's facts that best prove the job's priorities but lack a result or scale, about priorities the facts barely
 touch, and about the traits the ad stresses (`prompts/probe-system.md`). The first call starts asking in the
-background and answers `pending`; the web app asks again every two seconds until `ready`. The questions are kept per
-person and job for the facts as they were, and asked again when the facts change. `unavailable` means Claude cannot
+background and answers `pending`; the web app asks again every two seconds until `ready`. The questions are written
+in the person's app language (the profile's `app_language`, English when empty). They are kept per person and job for
+the facts and the language as they were, and asked again when either changes. `unavailable` means Claude cannot
 be asked now (no token, a usage limit, a failure); it is tried again after five minutes. `about` is the fact or role
 the question is about, `place` where an answer goes (`experience:<id>`, `projects:<id>` or `other`); the web app saves
 answers as notes there.
@@ -165,6 +166,12 @@ typed answer.
 scale or frequency for the facts every CV leans on (the current role's highlights and notes, the strongest projects).
 They are kept like a job's questions, under no job, and the web app shows them on the profile page as "Make every CV
 stronger".
+
+The texts the rules write are in English, with what the web app needs to word them in its own language: a gap's
+`skill`, a related requirement's `skill`, `via` and `category`, a responsibility's `text`, and each ATS check's `id`
+(`layout`, `headings`, `contact`, `location`, `dates`, `title`, `keywords`, `keywords_in_context`, `responsibilities`,
+`verbs`, `numbers`, `pages`) with its counts `n` of `of` and the job's `title`. A check the web app does not know shows
+its `label` and `hint`.
 
 ## Cover letter and messages
 

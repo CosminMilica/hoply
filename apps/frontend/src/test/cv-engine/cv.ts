@@ -134,24 +134,24 @@ export function atsChecks(document: CvDocument, job: Job, profile: Profile, requ
   const roles = profile.experience.filter(role => !request.skip_roles.includes(role.id))
   const dated = roles.length > 0 && roles.every(role => MONTH.test(role.start) && (!role.end || MONTH.test(role.end)))
   const mirrored = new Set(request.confirmed.filter(index => job.key_responsibilities.includes(index))).size
-  const check = (ok: boolean, label: string, hint = '') => ({ ok, label, hint })
+  const check = (id: string, ok: boolean, label: string, hint = '', counts: { n?: number, of?: number, title?: string } = {}) => ({ id, ok, label, hint, n: 0, of: 0, title: '', ...counts })
   return [
-    check(true, 'Single column, plain text, no tables or images'),
-    check(true, 'Standard headings: Summary, Skills, Experience, Education'),
-    check(Boolean(profile.email.trim() && profile.phone.trim()), 'Email and phone in the body, not in a header', 'Add them in Profile.'),
-    check(Boolean(profile.city.trim() || profile.country.trim()), 'Location in the header', 'Add your city and country in Profile.'),
-    check(dated, 'Dates with month and year', 'Add the start month of each role in Profile.'),
-    check(hasWord(document.summary, job.title), `Target job title “${job.title}” in the summary`),
-    check(found.length === job.keywords.length, `Keywords from the job: ${found.length} of ${job.keywords.length}`,
-      'The missing ones are not in your profile yet. Tell us about them in Prepare your CV.'),
-    check(inContext.length >= Math.ceil(found.length * 0.6), `Keywords used in sentences, not only listed: ${inContext.length} of ${found.length}`,
-      'List the tools you used for each role in Profile.'),
-    check(mirrored > 0, `Job responsibilities mirrored: ${mirrored} of ${job.key_responsibilities.length}`,
-      'Describe them in Prepare your CV.'),
-    check(verbs, 'Every bullet starts with an action verb'),
-    check(withNumbers > 0, `Results with numbers: ${withNumbers} of ${bullets.length}`,
-      'Add a result to your highlights in Prepare your CV.'),
-    check(length < 3600, 'Fits on one page'),
+    check('layout', true, 'Single column, plain text, no tables or images'),
+    check('headings', true, 'Standard headings: Summary, Skills, Experience, Education'),
+    check('contact', Boolean(profile.email.trim() && profile.phone.trim()), 'Email and phone in the body, not in a header', 'Add them in Profile.'),
+    check('location', Boolean(profile.city.trim() || profile.country.trim()), 'Location in the header', 'Add your city and country in Profile.'),
+    check('dates', dated, 'Dates with month and year', 'Add the start month of each role in Profile.'),
+    check('title', hasWord(document.summary, job.title), `Target job title “${job.title}” in the summary`, '', { title: job.title }),
+    check('keywords', found.length === job.keywords.length, `Keywords from the job: ${found.length} of ${job.keywords.length}`,
+      'The missing ones are not in your profile yet. Tell us about them in Prepare your CV.', { n: found.length, of: job.keywords.length }),
+    check('keywords_in_context', inContext.length >= Math.ceil(found.length * 0.6), `Keywords used in sentences, not only listed: ${inContext.length} of ${found.length}`,
+      'List the tools you used for each role in Profile.', { n: inContext.length, of: found.length }),
+    check('responsibilities', mirrored > 0, `Job responsibilities mirrored: ${mirrored} of ${job.key_responsibilities.length}`,
+      'Describe them in Prepare your CV.', { n: mirrored, of: job.key_responsibilities.length }),
+    check('verbs', verbs, 'Every bullet starts with an action verb'),
+    check('numbers', withNumbers > 0, `Results with numbers: ${withNumbers} of ${bullets.length}`,
+      'Add a result to your highlights in Prepare your CV.', { n: withNumbers, of: bullets.length }),
+    check('pages', length < 3600, 'Fits on one page', 'Leave out a role or a project in Prepare your CV.', { n: 1 }),
   ]
 }
 

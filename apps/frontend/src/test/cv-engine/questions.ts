@@ -38,6 +38,7 @@ export function prepQuestions(job: Job, profile: Pick<Profile, 'skills' | 'exper
     related: related.map(({ skill, via, category }) => ({
       skill,
       via,
+      category,
       note: `You use ${joinList(via)}, a ${category} tool like ${skill}. Your CV shows your ${category} experience, without naming ${skill}.`,
     })),
     gaps: missing.map(skill => ({

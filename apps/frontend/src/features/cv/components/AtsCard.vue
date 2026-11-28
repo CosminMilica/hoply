@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { t } from '@/features/common/i18n'
 import ProgressBar from '@/features/common/components/ProgressBar.vue'
 import type { ReadyCv } from '../api/cv.schema'
 
-defineProps<{ ats: ReadyCv['ats'] }>()
+const props = defineProps<{ ats: ReadyCv['ats'] }>()
+/** The checks in the app's language: the service names each by its id. */
+const checks = computed(() => props.ats.checks.map(check => ({ ...check, ...t.value.cv.ats.check(check), key: check.id || check.label })))
 defineEmits<{ improve: [] }>()
 </script>
 
@@ -15,7 +18,7 @@ defineEmits<{ improve: [] }>()
     </div>
     <ProgressBar :value="Math.round((ats.passed / ats.total) * 100)" :label="t.cv.ats.title" />
     <ul class="flex flex-col gap-2.5">
-      <li v-for="check in ats.checks" :key="check.label" class="flex items-start gap-2.5">
+      <li v-for="check in checks" :key="check.key" class="flex items-start gap-2.5">
         <span
           class="mt-px flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
           :class="check.ok ? 'bg-hoply-600 text-white' : 'bg-ember-500 text-ink-950'"

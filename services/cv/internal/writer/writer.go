@@ -299,7 +299,7 @@ func (w *Writer) Questions(ctx context.Context, job models.Job, profile models.P
 	}
 	read := cvdoc.ReadJob(analysis.Apply(job))
 	catalogue := grounding.Build(profile, read, models.CvRequest{}, w.now())
-	return w.probe(ctx, logID, grounding.ProbeSystem, catalogue, analysis)
+	return w.probe(ctx, logID, grounding.ProbeSystem, catalogue, analysis, profile.AppLanguage)
 }
 
 // ProfileQuestions asks Claude what would make every CV of the person stronger
@@ -309,14 +309,15 @@ func (w *Writer) ProfileQuestions(ctx context.Context, profile models.Profile) (
 		return nil, ErrNoQuestions
 	}
 	catalogue := grounding.Build(profile, cvdoc.Job{}, models.CvRequest{}, w.now())
-	return w.probe(ctx, "profile probe", grounding.ProfileProbeSystem, catalogue, nil)
+	return w.probe(ctx, "profile probe", grounding.ProfileProbeSystem, catalogue, nil, profile.AppLanguage)
 }
 
 var errNoQuestionsAsked = errors.New("no questions in the answer")
 
-func (w *Writer) probe(ctx context.Context, logID, system string, catalogue grounding.Catalogue, analysis *grounding.Analysis) ([]models.ProbeQuestion, error) {
+func (w *Writer) probe(ctx context.Context, logID, system string, catalogue grounding.Catalogue, analysis *grounding.Analysis,
+	language string) ([]models.ProbeQuestion, error) {
 	questions, ok, _ := ask(ctx, w, logID, "probe", claude.Request{
-		System: system, Schema: grounding.ProbeSchema(), Prompt: catalogue.ProbePrompt(analysis),
+		System: system, Schema: grounding.ProbeSchema(), Prompt: catalogue.ProbePrompt(analysis, language),
 	}, func(raw json.RawMessage) ([]models.ProbeQuestion, error) {
 		questions, err := catalogue.ParseProbe(raw)
 		if err == nil && len(questions) == 0 {
