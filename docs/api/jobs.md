@@ -63,7 +63,7 @@ Board     { company, platform, board, followed_at }
 | `level` | `""`, `junior`, `mid`, `senior`, `lead` |
 | `years_required` | `null` or 0–40 |
 | `source` | `catalog`, `import`, `link`, `text` |
-| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`, `bamboohr`), else `""` |
+| `origin` | the job board platform of an imported job (`greenhouse`, `lever`, `lever-eu`, `ashby`, `workday`, `smartrecruiters`, `bamboohr`, `recruitee`, `workable`), else `""` |
 | `posted_at` | when the board published an imported job, else `null` |
 | `closed_at` | when the board stopped listing an imported job, else `null` |
 | `read_from` | `ats_api` (the job board's public API, see below), `json_ld` (the page's schema.org `JobPosting`), `page_text` (the page's main text), `text` (pasted), `""` for catalog jobs |
@@ -105,6 +105,7 @@ addresses (no SSRF). The link is read in this order:
    | `jobs.ashbyhq.com/{board}/{id}` | `api.ashbyhq.com/posting-api/job-board/{board}`, the posting with that id |
    | `jobs.smartrecruiters.com/{company}/{id}` | `api.smartrecruiters.com/v1/companies/{company}/postings/{id}` |
    | `{company}.bamboohr.com/careers/{id}` | `{company}.bamboohr.com/careers/{id}/detail` |
+   | `{company}.recruitee.com/o/{slug}` | `{company}.recruitee.com/api/offers/`, the offer with that slug |
    | `apply.workable.com/{slug}/j/{shortcode}` | `apply.workable.com/api/v1/widget/accounts/{slug}?details=true`, the job with that shortcode |
 
    Title, company, location and remote flags come from the API's fields; the description HTML (with its section
@@ -184,12 +185,16 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `ashby` | `api.ashbyhq.com/posting-api/job-board/{board}` (unlisted jobs skipped) |
 | `smartrecruiters` | `api.smartrecruiters.com/v1/companies/{board}/postings?country=ro`, 100 a page; each wanted job's description from `/postings/{id}` |
 | `bamboohr` | `{board}.bamboohr.com/careers/list`, the call the careers page makes (not a documented API), with each job's city and state; each wanted job's description, country and posting date from `/careers/{id}/detail` |
+| `recruitee` | `{board}.recruitee.com/api/offers/`: every published offer with its description and requirements |
+| `workable` | `apply.workable.com/api/v1/widget/accounts/{board}?details=true`, the widget its careers pages embed: every job with its description |
 | `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
-  country code `RO`, or a list the platform kept to Romania) and its title names one of the tech areas: `DevOps`,
+  country code `RO`, or a list the platform kept to Romania) and its title names one of the areas. Tech: `DevOps`,
   `Backend`, `Frontend`, `Full stack`, `Mobile`, `Data`, `AI`, `QA`, `Security`, `Embedded`, `Sysadmin`, `Product`,
-  `Design` (a generic developer title is `Backend` unless it names a narrower area). Where the list has no descriptions,
+  `Design` (a generic developer title is `Backend` unless it names a narrower area). Finance, from English and Romanian
+  titles and shared-service process codes: `Banking`, `Accounting` ("Contabil", "F&A - AP", "I2C", "R2R"),
+  `Finance & control`, `Risk & compliance` (an "administrator" title with a finance area is not `Sysadmin`). Where the list has no descriptions,
   only those jobs are read, a quarter of a second apart, and a description read in the last 7 days is not read again
   (the job is only marked as still listed). Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform, its board and the platform's id: a later run updates it and keeps requirements Claude's

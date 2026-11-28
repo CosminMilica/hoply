@@ -1,11 +1,13 @@
-# Companies whose public job boards the importer reads. Only jobs based in Romania, in a tech area Find jobs
-# filters on, are kept. board is the company's name on its platform, as in its board's links:
+# Companies whose public job boards the importer reads. Only jobs based in Romania, in an area Find jobs filters on
+# (tech or finance), are kept. board is the company's name on its platform, as in its board's links:
 #   greenhouse        job-boards.greenhouse.io/<board>
 #   lever, lever-eu   jobs.lever.co/<board>, jobs.eu.lever.co/<board>
 #   ashby             jobs.ashbyhq.com/<board>
 #   smartrecruiters   jobs.smartrecruiters.com/<board>
 #   workday           <tenant>.wdN.myworkdayjobs.com/<site>, the board being that host and site
 #   bamboohr          <board>.bamboohr.com/careers
+#   recruitee         <board>.recruitee.com
+#   workable          apply.workable.com/<board>
 boards:
   - {company: Bitdefender, platform: greenhouse, board: scbitdefendersrl}
   - {company: IONOS, platform: greenhouse, board: ionos2}
@@ -96,3 +98,7 @@ boards:
   - {company: WebBeds, platform: workday, board: webtravelgroup.wd103.myworkdayjobs.com/WebBeds_Jobs}
   - {company: spektr, platform: greenhouse, board: spektr}
   - {company: Sectigo, platform: smartrecruiters, board: sectigo}
+  - {company: Genpact, platform: workday, board: genpact.wd108.myworkdayjobs.com/External_Careers}
+  - {company: tbi bank, platform: recruitee, board: tbibankro}
+  - {company: Veo Worldwide Services, platform: recruitee, board: veocareers}
+  - {company: Beyond, platform: workable, board: qodea}

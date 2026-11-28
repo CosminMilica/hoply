@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import ToggleChip from '@/features/common/components/ToggleChip.vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
-import { AREAS, LEVELS } from '../api/jobs.schema'
+import { AREA_GROUPS, LEVELS } from '../api/jobs.schema'
 import { marketNote } from '../match'
 import { useJobSearchStore } from '../stores/search'
 
@@ -43,8 +43,11 @@ const showLabel = computed(() => (props.count ? `Show ${props.count} ${props.cou
 
     <div class="flex flex-col gap-2" role="group" aria-labelledby="area-label">
       <SectionLabel id="area-label" as="span">Position area</SectionLabel>
-      <div class="flex flex-wrap gap-2">
-        <ToggleChip v-for="area in AREAS" :key="area" :label="area" :pressed="search.areas.includes(area)" @toggle="search.toggleArea(area)" />
+      <div v-for="group in AREA_GROUPS" :key="group.label" class="flex flex-col gap-1.5" role="group" :aria-label="`${group.label} areas`">
+        <span class="text-xs font-extrabold tracking-wide text-dimmed uppercase" aria-hidden="true">{{ group.label }}</span>
+        <div class="flex flex-wrap gap-2">
+          <ToggleChip v-for="area in group.areas" :key="area" :label="area" :pressed="search.areas.includes(area)" @toggle="search.toggleArea(area)" />
+        </div>
       </div>
     </div>
 

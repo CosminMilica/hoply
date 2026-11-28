@@ -46,6 +46,8 @@ func boardFor(u *url.URL) *board {
 		return smartRecruiters(parts[0], leadingDigits.FindString(parts[1]))
 	case bambooHRCompany(host) != "" && len(parts) >= 2 && parts[0] == "careers" && digits.MatchString(parts[1]):
 		return bambooHR(bambooHRCompany(host), parts[1])
+	case recruiteeCompany(host) != "" && len(parts) >= 2 && parts[0] == "o":
+		return recruitee(recruiteeCompany(host), parts[1])
 	case host == "apply.workable.com" && len(parts) >= 3 && parts[1] == "j":
 		return workable(parts[0], parts[2])
 	}
@@ -141,40 +143,6 @@ func smartRecruiters(company, id string) *board {
 			return &Page{Title: text(posting.Name), Company: extract.FirstOf(text(posting.Company.Name), slugName(company)),
 				City: text(posting.Location.City), Country: text(posting.Location.Country), WorkMode: mode,
 				Text: strings.Join(descriptionLines(description), "\n")}, nil
-		},
-	}
-}
-
-func workable(account, shortcode string) *board {
-	return &board{
-		api: "https://apply.workable.com/api/v1/widget/accounts/" + url.PathEscape(account) + "?details=true",
-		read: func(body []byte) (*Page, error) {
-			var listing struct {
-				Name string `json:"name"`
-				Jobs []struct {
-					Title         string `json:"title"`
-					Shortcode     string `json:"shortcode"`
-					City          string `json:"city"`
-					Country       string `json:"country"`
-					Telecommuting bool   `json:"telecommuting"`
-					Description   string `json:"description"`
-				} `json:"jobs"`
-			}
-			if err := json.Unmarshal(body, &listing); err != nil {
-				return nil, err
-			}
-			for _, job := range listing.Jobs {
-				if strings.EqualFold(job.Shortcode, shortcode) {
-					mode := ""
-					if job.Telecommuting {
-						mode = "remote"
-					}
-					return &Page{Title: text(job.Title), Company: extract.FirstOf(text(listing.Name), slugName(account)),
-						City: text(job.City), Country: text(job.Country), WorkMode: mode,
-						Text: strings.Join(descriptionLines(job.Description), "\n")}, nil
-				}
-			}
-			return nil, errNoSuchJob
 		},
 	}
 }

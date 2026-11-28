@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import ToggleChip from '@/features/common/components/ToggleChip.vue'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
-import { AREAS, LEVELS } from '../api/jobs.schema'
+import { AREA_GROUPS, LEVELS } from '../api/jobs.schema'
 import { marketNote } from '../match'
 import { useJobSearchStore } from '../stores/search'
 
@@ -28,8 +28,11 @@ const note = computed(() => (profile.data.value ? marketNote(profile.data.value)
         <ToggleChip v-for="level in LEVELS" :key="level" :label="level" :pressed="search.level === level" @toggle="search.level = level" />
       </div>
     </div>
-    <div role="group" aria-label="Area" class="flex flex-wrap gap-2">
-      <ToggleChip v-for="area in AREAS" :key="area" :label="area" :pressed="search.areas.includes(area)" @toggle="search.toggleArea(area)" />
+    <div v-for="group in AREA_GROUPS" :key="group.label" role="group" :aria-label="`${group.label} areas`" class="flex items-start gap-2">
+      <span class="w-16 shrink-0 pt-2.5 text-xs font-extrabold tracking-wide text-dimmed uppercase" aria-hidden="true">{{ group.label }}</span>
+      <div class="flex flex-wrap gap-2">
+        <ToggleChip v-for="area in group.areas" :key="area" :label="area" :pressed="search.areas.includes(area)" @toggle="search.toggleArea(area)" />
+      </div>
     </div>
     <div class="flex flex-wrap items-center justify-between gap-2">
       <span v-if="note" class="text-xs font-semibold text-muted" data-test="market-note">

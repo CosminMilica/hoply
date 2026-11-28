@@ -16,8 +16,8 @@ One call per company, no key, full text. We keep a list of companies hiring in R
 | Ashby | `api.ashbyhq.com/posting-api/job-board/{board}` | yes | official, public; `includeCompensation=true` for salary |
 | SmartRecruiters | `api.smartrecruiters.com/v1/companies/{id}/postings` | per job | the list has no description; one more call per job. Common with large employers in Romania |
 | BambooHR | `{company}.bamboohr.com/careers/list` | per job | the JSON its careers page loads (not a documented API); the list has city and state, `/careers/{id}/detail` the description and country. Used by smaller companies |
-| Workable | `apply.workable.com/api/v1/widget/accounts/{slug}` | to verify | the public widget endpoint; descriptions may need a call per job |
-| Recruitee | Careers Site API (`/offers`) | yes | official; the keyless `{slug}.recruitee.com/api/offers/` path is to verify |
+| Workable | `apply.workable.com/api/v1/widget/accounts/{slug}?details=true` | yes | the public widget endpoint, descriptions included |
+| Recruitee | `{slug}.recruitee.com/api/offers/` | yes | keyless, every published offer with its description and requirements; used by Romanian banks and shared-service centres |
 | Personio | `{company}.jobs.personio.de/xml?language=en` | yes | official XML feed; mostly DACH companies |
 | Teamtailor | career site feed | to verify | used by Romanian companies (it publishes to eJobs) |
 | Any career page | schema.org `JobPosting` in the page (and its sitemap) | yes | the link reader we already build |
