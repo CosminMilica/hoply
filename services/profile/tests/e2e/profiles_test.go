@@ -16,11 +16,10 @@ import (
 
 // startServer runs the service binary against databaseURL and returns the
 // /api/v1 base url; the server is stopped when the test ends.
-func startServer(t *testing.T, databaseURL string) string {
+func startServer(t *testing.T, schema testutil.TestSchema) string {
 	t.Helper()
 	port := freePort(t)
-	server := command(t, "server", append(serverEnv(t), "ENV=testing", "PORT="+strconv.Itoa(port),
-		"DATABASE_URL="+databaseURL)...)
+	server := command(t, "server", append(append(serverEnv(t), asPerson(t, schema)...), "ENV=testing", "PORT="+strconv.Itoa(port))...)
 	if err := server.Start(); err != nil {
 		t.Fatal(err)
 	}
@@ -55,6 +54,9 @@ func call(t *testing.T, method, url string, payload any) (int, map[string]any) {
 		t.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json")
+	if bearer != "" {
+		request.Header.Set("Authorization", "Bearer "+bearer)
+	}
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		t.Fatal(err)
@@ -72,7 +74,7 @@ func call(t *testing.T, method, url string, payload any) (int, map[string]any) {
 func TestProfileContractEndToEnd(t *testing.T) {
 	schema := testutil.NewSchema(t)
 	migrateBinaryOK(t, schema.URL)
-	me := startServer(t, schema.URL) + "/profiles/me"
+	me := startServer(t, schema) + "/profiles/me"
 
 	status, profile := call(t, http.MethodGet, me, nil)
 	if status != http.StatusOK || profile["name"] != "" || fmt.Sprint(profile["experience"]) != "[]" ||

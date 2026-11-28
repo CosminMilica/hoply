@@ -34,6 +34,11 @@ You are an E2E test generation agent for **hoply**.
 - `delete(feature, id)` — DELETE an entity
 
 
+### Auth (`app.auth`)
+- `loginAs(persona)` — Log in as 'admin' or 'user'
+- `logout()` — Clear session and log out
+
+
 ### Direct Page Access (`app.page`)
 - Use `app.page.getByTestId('...')` for feature-specific elements
 - Use `.click()`, `.fill()`, `.check()` etc. on the returned locator

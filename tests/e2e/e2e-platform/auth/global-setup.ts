@@ -1,0 +1,53 @@
+import { chromium, type FullConfig } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+const AUTH_DIR = path.resolve(__dirname, '..', '..', '.auth');
+
+interface TestPersona {
+  name: string;
+  username: string;
+  password: string;
+}
+
+const PERSONAS: TestPersona[] = [
+  {
+    name: 'user',
+    username: process.env.TEST_USER || 'dev@localhost',
+    password: process.env.TEST_PASSWORD || 'devpass',
+  },
+];
+
+async function globalSetup(_config: FullConfig): Promise<void> {
+  fs.mkdirSync(AUTH_DIR, { recursive: true });
+
+  const browser = await chromium.launch();
+
+  for (const persona of PERSONAS) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Navigate to the app like a real user — Gatekeeper redirects to Keycloak
+    await page.goto(`${BASE_URL}/auth/login?redirect_uri=/`);
+    await page.waitForSelector(
+      '#username, #email, input[name="username"]',
+      { timeout: 30000 },
+    );
+
+    await page.fill('#username, input[name="username"]', persona.username);
+    await page.fill('#password, input[name="password"]', persona.password);
+    await page.click('#kc-login, input[type="submit"]');
+    await page.waitForURL((url) => !url.href.includes('/realms/'), {
+      timeout: 15000,
+    });
+
+    const statePath = path.join(AUTH_DIR, `${persona.name}-state.json`);
+    await context.storageState({ path: statePath });
+    await context.close();
+  }
+
+  await browser.close();
+}
+
+export default globalSetup;

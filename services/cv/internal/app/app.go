@@ -11,7 +11,6 @@ import (
 
 	"cv/internal/config"
 	"cv/internal/data/repositories"
-	"cv/internal/identity"
 	"cv/internal/middleware"
 	"cv/internal/render"
 	"cv/internal/routes"
@@ -28,7 +27,11 @@ const Description = "Hoply: job search with a CV tailored to each job"
 // New builds the HTTP handler without starting a worker: CVs it queues stay
 // queued until a worker runs (see Build).
 func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
-	return Build(cfg, pool).Handler
+	service, err := Build(cfg, pool)
+	if err != nil {
+		panic(err)
+	}
+	return service.Handler
 }
 
 // newHandler builds the HTTP handler. Middlewares run in list order: the
@@ -56,25 +59,30 @@ func newHandler(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources
 		// FORGE:BEGIN security_headers:MIDDLEWARE_REGISTRATION fp:444d5d13
 		middleware.SecurityHeaders,
 		// FORGE:END security_headers:MIDDLEWARE_REGISTRATION
+		// FORGE:BEGIN platform_auth_go_middleware:MIDDLEWARE_REGISTRATION fp:fff440ab
+		platformAuth(cfg),
+		// FORGE:END platform_auth_go_middleware:MIDDLEWARE_REGISTRATION
+		// FORGE:BEGIN multitenancy_rls_go:MIDDLEWARE_REGISTRATION fp:05e38cea
+		tenantRLS(),
+		// FORGE:END multitenancy_rls_go:MIDDLEWARE_REGISTRATION
 		// FORGE:MIDDLEWARE_REGISTRATION
 		// FORGE:BEGIN rate_limit:MIDDLEWARE_REGISTRATION fp:56d180cc
 		middleware.RateLimit(middleware.RateLimitOptions{RequestsPerMinute: 120}),
 		// FORGE:END rate_limit:MIDDLEWARE_REGISTRATION
-		// Dev-mode identity (auth.mode=none): bind the fixed local identity
-		// so tenant-scoped handlers have an identity to scope on, unless an
-		// outer middleware bound one. Never added when the platform-auth
-		// middleware owns identity.
-		devIdentity,
 	}
 	for _, m := range middlewares {
 		router.Use(m)
 	}
-	cvs := repositories.NewPgCvRepository(pool)
+	// items is the repository forge's REPOSITORY_SCOPE block binds to the caller's tenant.
+	items := repositories.NewPgCvRepository(pool)
+	// FORGE:BEGIN multitenancy_rls_go:REPOSITORY_SCOPE fp:32f68c55
+	items = items.WithScope(tenantScope(pool))
+	// FORGE:END multitenancy_rls_go:REPOSITORY_SCOPE
 	// FORGE:REPOSITORY_SCOPE
 	routes.Register(router, routes.Deps{
 		Pool:   pool,
 		DB:     pool,
-		Cvs:    services.NewCvService(cvs, sources, printer, queued).WithProbes(cvs, author).WithLetters(cvs, author),
+		Cvs:    services.NewCvService(items, sources, printer, queued).WithProbes(items, author).WithLetters(items, author),
 		Writer: cvWriter,
 		Info:   routes.Info{Title: cfg.App.Name, Version: cfg.App.Version, Description: Description},
 	})
@@ -91,9 +99,12 @@ type Service struct {
 // Build wires the API and the worker, reading the profile and the jobs from
 // the services PROFILE_SERVICE_URL and JOBS_SERVICE_URL name, and writing as
 // CV_WRITER says (writer.FromEnv).
-func Build(cfg *config.Config, pool *pgxpool.Pool) Service {
-	sources := upstream.FromEnv()
-	return BuildWith(cfg, pool, sources, writer.FromEnv().KeepRequirements(sources), render.GotenbergFromEnv())
+func Build(cfg *config.Config, pool *pgxpool.Pool) (Service, error) {
+	sources, err := upstream.FromEnv()
+	if err != nil {
+		return Service{}, err
+	}
+	return BuildWith(cfg, pool, sources, writer.FromEnv().KeepRequirements(sources), render.GotenbergFromEnv()), nil
 }
 
 // BuildWith wires the service on the given sources, writer and PDF printer.
@@ -105,12 +116,3 @@ func BuildWith(cfg *config.Config, pool *pgxpool.Pool, sources services.Sources,
 
 // WorkerPoll is how often the worker looks at the queue when nothing woke it.
 const WorkerPoll = 2 * time.Second
-
-func devIdentity(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := identity.FromContext(r.Context()); !ok {
-			r = r.WithContext(identity.WithContext(r.Context(), identity.Dev()))
-		}
-		next.ServeHTTP(w, r)
-	})
-}

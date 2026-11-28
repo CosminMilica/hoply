@@ -14,9 +14,10 @@ import { seedId } from '@/test/jobs-seed'
 const Page = defineComponent({ props: { id: { type: String, default: '' } }, setup: props => () => h('p', { 'data-test': 'page' }, props.id) })
 const narrowScreen = window.matchMedia
 
-async function render(at: string) {
+async function render(at: string, session = testAuth()) {
   const router = createApplicationRouter({
-    auth: testAuth().auth,
+    auth: session.auth,
+    actions: { 'sign-out': () => session.auth.signOut() },
     history: createMemoryHistory(),
     layouts: { app: AppLayout },
     routes: {
@@ -101,9 +102,10 @@ describe('AppLayout', () => {
     expect(button('Add a job').textContent?.trim()).toBe('Add a job')
   })
 
-  it('opens the account menu from the avatar: who you are, how complete the profile is, and its links', async () => {
+  it('opens the account menu from the avatar: who you are, how complete the profile is, its links and sign out', async () => {
     useServices()
-    const router = await render('/jobs')
+    const session = testAuth()
+    const router = await render('/jobs', session)
     const avatar = button('Your profile and menu')
     avatar.focus()
     avatar.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
@@ -114,6 +116,10 @@ describe('AppLayout', () => {
     expect(document.querySelector('[data-test="account-readiness"]')!.textContent).toBe('100%')
     const items = [...menu.querySelectorAll('a')]
     expect(items.map(item => [item.textContent?.trim(), item.getAttribute('href')])).toEqual([['Your profile', '/profile'], ['Skill gaps', '/skills']])
+    const signOut = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(item => item.textContent?.trim() === 'Sign out')!
+    signOut.click()
+    await settle()
+    expect(session.calls).toContain('signOut')
     items[1]!.click()
     await settle()
     expect(router.currentRoute.value.name).toBe('hoply-skills')

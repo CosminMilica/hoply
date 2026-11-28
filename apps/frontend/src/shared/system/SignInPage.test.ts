@@ -1,0 +1,46 @@
+import { afterEach, expect, it } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import SignInPage from './SignInPage.vue'
+import { application } from '@/shared/application/config'
+import { setApplicationContext } from '@/shared/application/context'
+import { routerFor, testAuth } from '@/shared/application/testing'
+
+afterEach(() => {
+  document.body.innerHTML = ''
+})
+
+it('signs in through the contract and returns where the visit started', async () => {
+  const { auth, calls, isAuthenticated } = testAuth(false)
+  setApplicationContext({ auth, actions: {} })
+  const router = await routerFor(application, '/sign-in-test?redirect=/somewhere')
+  const page = mount(SignInPage, { global: { plugins: [router] } })
+  expect(page.text()).toContain(application.title)
+  await page.get('[data-test="login-submit-btn"]').trigger('click')
+  await flushPromises()
+  expect(calls).toEqual(['signIn:/somewhere'])
+  isAuthenticated.value = true
+  await page.get('[data-test="login-submit-btn"]').trigger('click')
+  await flushPromises()
+  expect(router.currentRoute.value.fullPath).toBe('/somewhere')
+})
+
+it.each(['//elsewhere.example/x', '/\\elsewhere.example', '/\t/elsewhere.example', '/.//elsewhere.example', '//['])(
+  'signs in towards the landing route instead of %j',
+  async (redirect) => {
+    const { auth, calls } = testAuth(false)
+    setApplicationContext({ auth, actions: {} })
+    const router = await routerFor(application, `/sign-in-test?redirect=${encodeURIComponent(redirect)}`)
+    const page = mount(SignInPage, { global: { plugins: [router] } })
+    await page.get('[data-test="login-submit-btn"]').trigger('click')
+    await flushPromises()
+    expect(calls).toEqual([`signIn:${router.resolve({ name: application.routing.landing! }).fullPath}`])
+  },
+)
+
+it('sends a signed-in visit on to the landing route', async () => {
+  setApplicationContext({ auth: testAuth(true).auth, actions: {} })
+  const router = await routerFor(application, '/sign-in-test')
+  mount(SignInPage, { global: { plugins: [router] } })
+  await flushPromises()
+  expect(router.currentRoute.value.name).toBe(application.routing.landing)
+})

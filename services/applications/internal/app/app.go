@@ -10,7 +10,6 @@ import (
 
 	"applications/internal/config"
 	"applications/internal/data/repositories"
-	"applications/internal/identity"
 	"applications/internal/middleware"
 	"applications/internal/routes"
 	"applications/internal/services"
@@ -38,35 +37,31 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		// FORGE:BEGIN security_headers:MIDDLEWARE_REGISTRATION fp:444d5d13
 		middleware.SecurityHeaders,
 		// FORGE:END security_headers:MIDDLEWARE_REGISTRATION
+		// FORGE:BEGIN platform_auth_go_middleware:MIDDLEWARE_REGISTRATION fp:fff440ab
+		platformAuth(cfg),
+		// FORGE:END platform_auth_go_middleware:MIDDLEWARE_REGISTRATION
+		// FORGE:BEGIN multitenancy_rls_go:MIDDLEWARE_REGISTRATION fp:05e38cea
+		tenantRLS(),
+		// FORGE:END multitenancy_rls_go:MIDDLEWARE_REGISTRATION
 		// FORGE:MIDDLEWARE_REGISTRATION
 		// FORGE:BEGIN rate_limit:MIDDLEWARE_REGISTRATION fp:56d180cc
 		middleware.RateLimit(middleware.RateLimitOptions{RequestsPerMinute: 120}),
 		// FORGE:END rate_limit:MIDDLEWARE_REGISTRATION
-		// Dev-mode identity (auth.mode=none): bind the fixed local identity
-		// so tenant-scoped handlers have an identity to scope on, unless an
-		// outer middleware bound one. Never added when the platform-auth
-		// middleware owns identity.
-		devIdentity,
 	}
 	for _, m := range middlewares {
 		router.Use(m)
 	}
-	applications := repositories.NewPgApplicationRepository(pool)
+	// items is the repository forge's REPOSITORY_SCOPE block binds to the caller's tenant.
+	items := repositories.NewPgApplicationRepository(pool)
+	// FORGE:BEGIN multitenancy_rls_go:REPOSITORY_SCOPE fp:32f68c55
+	items = items.WithScope(tenantScope(pool))
+	// FORGE:END multitenancy_rls_go:REPOSITORY_SCOPE
 	// FORGE:REPOSITORY_SCOPE
 	routes.Register(router, routes.Deps{
 		Pool:         pool,
 		DB:           pool,
-		Applications: services.NewApplicationService(applications),
+		Applications: services.NewApplicationService(items),
 		Info:         routes.Info{Title: cfg.App.Name, Version: cfg.App.Version, Description: Description},
 	})
 	return router
-}
-
-func devIdentity(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := identity.FromContext(r.Context()); !ok {
-			r = r.WithContext(identity.WithContext(r.Context(), identity.Dev()))
-		}
-		next.ServeHTTP(w, r)
-	})
 }

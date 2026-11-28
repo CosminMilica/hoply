@@ -1,0 +1,48 @@
+package app
+
+import (
+	"context"
+	"os"
+	"sync/atomic"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"profile/internal/data/repositories"
+	"profile/internal/middleware"
+	"profile/internal/tenancy"
+)
+
+var tenancySettings atomic.Pointer[tenancy.Settings]
+
+// InitTenancy validates the TENANT_* environment at startup. New uses the
+// validated settings, or the generated defaults before InitTenancy runs.
+func InitTenancy() error {
+	settings, err := tenancy.LoadSettings(os.Getenv)
+	if err != nil {
+		return err
+	}
+	tenancySettings.Store(&settings)
+	return nil
+}
+
+func tenantResolver() *tenancy.Resolver {
+	settings := tenancy.DefaultSettings()
+	if loaded := tenancySettings.Load(); loaded != nil {
+		settings = *loaded
+	}
+	return tenancy.NewResolver(settings, tenancy.VerifiedClaims)
+}
+
+func tenantRLS() middleware.Middleware {
+	return middleware.TenantRLS(tenantResolver())
+}
+
+func tenantScope(pool *pgxpool.Pool) repositories.Scope {
+	return tenancy.Scope(pool, tenantResolver())
+}
+
+// CheckTenantRole refuses a pool whose role would bypass RLS; see
+// tenancy.AssertRLSEnforced.
+func CheckTenantRole(ctx context.Context, pool *pgxpool.Pool) error {
+	return tenancy.AssertRLSEnforced(ctx, pool)
+}

@@ -2,7 +2,8 @@
 
 Service: `services/cv` (Go). The browser calls `/api/cv/v1/...`; Traefik and the Vite proxy rewrite it to
 `/api/v1/...` on the service. JSON is `snake_case`. Errors use the service's error envelope, with `context.field` on
-validation errors. No login yet: every request runs as the dev identity, which owns its rows.
+validation errors. Every request is signed in through the gatekeeper (Keycloak); a person is a tenant, and row-level security keeps each tenant's rows from every other. The cv service calls profile and jobs with the gatekeeper's service tokens for the
+tenant it works for.
 
 The service asks the questions for a job and writes CVs tailored to it. It reads the profile from the profile service
 (`GET /api/v1/profiles/me`) and the job from the jobs service (`GET /api/v1/jobs/{id}`), and keeps a snapshot of both

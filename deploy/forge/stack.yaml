@@ -1,7 +1,8 @@
 # The forge stack of hoply. Regenerate with the forge build pinned in .forge/quality.json.
 project_name: hoply
 description: "Hoply: job search with a CV tailored to each job"
-include_keycloak: false
+include_keycloak: true
+keycloak: { port: 18080, realm: hoply, client_id: hoply-web }
 backends:
   # profile owns the person's profile: headline, about, contact, skills, experience, education, languages
   - { name: profile, language: go, go_version: "1.27", app_template: crud-service, features: [profiles], server_port: 5010 }
@@ -10,12 +11,13 @@ backends:
   # applications tracks what a person does with each job: saved, CV ready, applied, and the jobs they skipped
   - { name: applications, language: go, go_version: "1.27", app_template: crud-service, features: [applications], server_port: 5030 }
   # cv prepares the questions for a job and writes a CV tailored to it from a snapshot of the profile
-  - { name: cv, language: go, go_version: "1.27", app_template: crud-service, features: [cvs], server_port: 5040 }
+  - { name: cv, language: go, go_version: "1.27", app_template: crud-service, features: [cvs], depends_on: [profile, jobs], server_port: 5040 }
 # The web app on forge's app-shell template: no generated page of its own; hoply's pages are composed into the
 # router factory. Every part of the app talks to its own service; MSW is kept for services still being built.
 frontend:
   framework: vue
-  include_auth: false
+  include_auth: true
+  auth: { runtime: forge, session_dialog: project }
   include_chat: false
   layout: sidebar
   package_manager: npm
@@ -24,7 +26,7 @@ frontend:
   ui_kit: nuxt-ui
   app_template: app-shell
   extras: [msw, forms, confirm]
-  routing: { landing: hoply-profile, not_found: builtin, forbidden: builtin }
+  routing: { landing: hoply-profile, sign_in: builtin, auth_stuck: builtin, not_found: builtin, forbidden: builtin }
   layouts:
     app:
       shell: header-sidebar
@@ -38,6 +40,12 @@ frontend:
           - items:
               - { id: profile, label: Your profile, icon: i-lucide-user, to: hoply-profile }
               - { id: skills, label: Skill gaps, icon: i-lucide-target, to: hoply-skills }
+          - items:
+              - { id: sign-out, label: Sign out, icon: i-lucide-log-out, action: sign-out }
 options:
-  auth.mode: none
+  auth.mode: generate
+  auth.provider: gatekeeper
+  auth.service_discovery: true
+  database.multitenancy: shared_rls
+  database.tenant_resolution: token_claim
   observability.health: true

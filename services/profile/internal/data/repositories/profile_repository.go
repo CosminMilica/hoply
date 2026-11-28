@@ -2,7 +2,7 @@
 // implementations.
 //
 // Every method is scoped to the caller: a profile is owned by the identity's
-// tenant and subject, and child rows are reached only through that profile.
+// tenant (a person), and child rows are reached only through that profile.
 // Services depend on the interface, so unit tests substitute an in-memory
 // implementation.
 package repositories
@@ -51,8 +51,8 @@ const (
 		"open_to_relocation, work_authorization, work_authorization_region, notice_period_weeks, available_from, " +
 		"target_roles, target_seniority, employment_types, salary_min, salary_currency, salary_period, " +
 		"additional_info, notes, skills, created_at, updated_at"
-	// ownedProfile selects the caller's profile id from the $1 tenant and $2 subject.
-	ownedProfile = "(SELECT id FROM profiles WHERE customer_id = $1 AND subject = $2)"
+	// ownedProfile selects the profile id of the $1 tenant.
+	ownedProfile = "(SELECT id FROM profiles WHERE customer_id = $1)"
 )
 
 // child describes a child table: its name, the order its rows are listed in
@@ -99,20 +99,20 @@ func (c child) insert() string {
 func (c child) update() string {
 	sets := make([]string, len(c.columns))
 	for i, column := range c.columns {
-		sets[i] = fmt.Sprintf("%s = $%d", column, i+4)
+		sets[i] = fmt.Sprintf("%s = $%d", column, i+3)
 		if _, ok := keptWhenAbsent[column]; ok {
-			sets[i] = fmt.Sprintf("%s = COALESCE($%d::jsonb, %s)", column, i+4, column)
+			sets[i] = fmt.Sprintf("%s = COALESCE($%d::jsonb, %s)", column, i+3, column)
 		}
 	}
 	if c.updated {
 		sets = append(sets, "updated_at = NOW()")
 	}
 	return "UPDATE " + c.table + " SET " + strings.Join(sets, ", ") +
-		" WHERE id = $3 AND profile_id = " + ownedProfile + " RETURNING " + c.returning()
+		" WHERE id = $2 AND profile_id = " + ownedProfile + " RETURNING " + c.returning()
 }
 
 func (c child) delete() string {
-	return "DELETE FROM " + c.table + " WHERE id = $3 AND profile_id = " + ownedProfile
+	return "DELETE FROM " + c.table + " WHERE id = $2 AND profile_id = " + ownedProfile
 }
 
 func (c child) list() string {
@@ -335,7 +335,7 @@ func add[T any](ctx context.Context, r *PgProfileRepository, ident identity.Iden
 func replace[T any](ctx context.Context, r *PgProfileRepository, ident identity.IdentityContext, id uuid.UUID, table child, scan pgx.RowToFunc[T], values []any) (*T, error) {
 	var updated *T
 	err := r.run(ctx, ident, func(db DBTX) error {
-		rows, err := db.Query(ctx, table.update(), append([]any{ident.TenantID, ident.Subject, id}, values...)...)
+		rows, err := db.Query(ctx, table.update(), append([]any{ident.TenantID, id}, values...)...)
 		if err != nil {
 			return err
 		}
@@ -358,7 +358,7 @@ func replace[T any](ctx context.Context, r *PgProfileRepository, ident identity.
 func (r *PgProfileRepository) remove(ctx context.Context, ident identity.IdentityContext, table child, id uuid.UUID) (bool, error) {
 	removed := false
 	err := r.run(ctx, ident, func(db DBTX) error {
-		tag, err := db.Exec(ctx, table.delete(), ident.TenantID, ident.Subject, id)
+		tag, err := db.Exec(ctx, table.delete(), ident.TenantID, id)
 		if err != nil {
 			return err
 		}
@@ -384,21 +384,20 @@ func (r *PgProfileRepository) run(ctx context.Context, ident identity.IdentityCo
 func ensureID(ctx context.Context, db DBTX, ident identity.IdentityContext) (uuid.UUID, error) {
 	var id uuid.UUID
 	find := func() error {
-		return db.QueryRow(ctx, "SELECT id FROM profiles WHERE customer_id = $1 AND subject = $2", ident.TenantID, ident.Subject).Scan(&id)
+		return db.QueryRow(ctx, "SELECT id FROM profiles WHERE customer_id = $1", ident.TenantID).Scan(&id)
 	}
 	if err := find(); !errors.Is(err, pgx.ErrNoRows) {
 		return id, err
 	}
 	if _, err := db.Exec(ctx, "INSERT INTO profiles (customer_id, subject) VALUES ($1, $2) "+
-		"ON CONFLICT (customer_id, subject) DO NOTHING", ident.TenantID, ident.Subject); err != nil {
+		"ON CONFLICT (customer_id) DO NOTHING", ident.TenantID, ident.Subject); err != nil {
 		return uuid.Nil, err
 	}
 	return id, find()
 }
 
 func touch(ctx context.Context, db DBTX, ident identity.IdentityContext) error {
-	_, err := db.Exec(ctx, "UPDATE profiles SET updated_at = NOW() WHERE customer_id = $1 AND subject = $2",
-		ident.TenantID, ident.Subject)
+	_, err := db.Exec(ctx, "UPDATE profiles SET updated_at = NOW() WHERE customer_id = $1", ident.TenantID)
 	return err
 }
 

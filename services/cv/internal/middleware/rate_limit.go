@@ -13,6 +13,8 @@ import (
 
 	"github.com/google/uuid"
 
+	platformauth "forge.local/platform-auth-go"
+
 	"cv/internal/apperrors"
 	"cv/internal/identity"
 )
@@ -162,8 +164,11 @@ func trustedProxy(addr netip.Addr) bool {
 	return addr.IsLoopback() || addr.IsPrivate() || addr.IsLinkLocalUnicast()
 }
 
-// verifiedIdentity reports none: without platform auth (auth.mode=none) no
-// token is verified, so every request is keyed by address.
-func verifiedIdentity(*http.Request) (identity.IdentityContext, bool) {
-	return identity.IdentityContext{}, false
+// verifiedIdentity returns the identity bound to r when the platform-auth
+// middleware verified its token.
+func verifiedIdentity(r *http.Request) (identity.IdentityContext, bool) {
+	if _, verified := platformauth.IdentityFromContext(r.Context()); !verified {
+		return identity.IdentityContext{}, false
+	}
+	return identity.FromContext(r.Context())
 }

@@ -12,6 +12,11 @@ FROM golang:1.27-alpine AS builder
 
 WORKDIR /workspace/services/cv
 
+# In-tree SDK source for the go.mod replace directives. Only copied when a
+# project-root packages/ tree ships (auth); the compose `packages` context is
+# gated on the same condition.
+COPY --from=packages . /workspace/packages/
+
 # Module graph first so the dependency layer caches independently of source
 # edits. A project generated on a host without Go has no go.sum yet; tidy
 # resolves it inside the image in that case.

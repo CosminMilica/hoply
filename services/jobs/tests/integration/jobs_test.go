@@ -82,7 +82,7 @@ func TestJobRepositoryAgainstPostgres(t *testing.T) {
 	insertCatalog(t, pool)
 	repo := repositories.NewPgJobRepository(pool).WithScope(bindTenant(pool))
 	me := identity.New(uuid.New(), uuid.NewString())
-	other := identity.New(me.TenantID, uuid.NewString())
+	other := identity.New(uuid.New(), uuid.NewString())
 
 	five := 5
 	mine, err := repo.Create(ctx, me, models.JobInput{Title: "Remote Go Engineer", Company: "Acme", City: "Timișoara",

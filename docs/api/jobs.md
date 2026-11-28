@@ -2,7 +2,7 @@
 
 Service: `services/jobs` (Go). The browser calls `/api/jobs/v1/...`; Traefik and the Vite proxy rewrite it to
 `/api/v1/...` on the service. JSON is `snake_case`. Errors use the service's existing error envelope, with
-`context.field` on validation errors. No login yet: the dev identity owns the jobs it adds.
+`context.field` on validation errors. Every request is signed in through the gatekeeper (Keycloak); a person is a tenant, and row-level security keeps each tenant's rows from every other. The jobs a person adds are theirs; the catalog is everyone's.
 
 The service holds three kinds of jobs: the **catalog** (empty for now), the jobs it **imports** from company job
 boards (see Importing below), and the jobs a person **adds** from a link or pasted text. It reads job ads with rules

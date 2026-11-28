@@ -2,7 +2,7 @@
 // implementations.
 //
 // A job is either in the catalog (no owner) or added by a person (owned by the
-// identity's tenant and subject). Every query sees the catalog plus the
+// identity's tenant; subject records who added it). Every query sees the catalog plus the
 // caller's own jobs; other people's jobs are never visible. Services depend on
 // the interface, so unit tests substitute an in-memory implementation.
 package repositories
@@ -57,8 +57,8 @@ const (
 		"customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
 	cardColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
 		"responsibilities, about, areas, url, source, requirements_from, sample, customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
-	// visible keeps the catalog and the jobs of the $1 tenant and $2 subject.
-	visible = "(customer_id IS NULL OR (customer_id = $1 AND subject = $2))"
+	// visible keeps the catalog and the jobs of the $1 tenant.
+	visible = "(customer_id IS NULL OR customer_id = $1)"
 )
 
 // folded lower-cases a column and removes Romanian diacritics, as
@@ -99,7 +99,7 @@ func (r *PgJobRepository) WithScope(scope Scope) *PgJobRepository {
 
 // filtered is the WHERE clause and its arguments for a filter, as the caller sees the jobs.
 func filtered(ident identity.IdentityContext, filter models.JobFilter) (string, []any) {
-	where, args := []string{visible}, []any{ident.TenantID, ident.Subject}
+	where, args := []string{visible}, []any{ident.TenantID}
 	arg := func(value any) string {
 		args = append(args, value)
 		return fmt.Sprintf("$%d", len(args))
@@ -171,7 +171,7 @@ func (r *PgJobRepository) Count(ctx context.Context, ident identity.IdentityCont
 }
 
 func (r *PgJobRepository) Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error) {
-	return r.one(ctx, ident, "SELECT "+jobColumns+" FROM jobs WHERE id = $3 AND "+visible, ident.TenantID, ident.Subject, id)
+	return r.one(ctx, ident, "SELECT "+jobColumns+" FROM jobs WHERE id = $2 AND "+visible, ident.TenantID, id)
 }
 
 func (r *PgJobRepository) Create(ctx context.Context, ident identity.IdentityContext, d models.JobInput) (*models.Job, error) {
@@ -189,16 +189,15 @@ func (r *PgJobRepository) Create(ctx context.Context, ident identity.IdentityCon
 // catalog or imported job's ad is the same for everyone, so its analysis is
 // shared.
 func (r *PgJobRepository) SetRequirements(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, d models.RequirementsInput) (*models.Job, error) {
-	return r.one(ctx, ident, "UPDATE jobs SET must_have = $4, nice_to_have = $5, requirements_from = 'analysis' "+
-		"WHERE id = $3 AND "+visible+" RETURNING "+jobColumns,
-		ident.TenantID, ident.Subject, id, nonNil(d.MustHave), nonNil(d.NiceToHave))
+	return r.one(ctx, ident, "UPDATE jobs SET must_have = $3, nice_to_have = $4, requirements_from = 'analysis' "+
+		"WHERE id = $2 AND "+visible+" RETURNING "+jobColumns,
+		ident.TenantID, id, nonNil(d.MustHave), nonNil(d.NiceToHave))
 }
 
 func (r *PgJobRepository) Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error) {
 	removed := false
 	err := r.run(ctx, ident, func(db DBTX) error {
-		tag, err := db.Exec(ctx, "DELETE FROM jobs WHERE id = $3 AND customer_id = $1 AND subject = $2",
-			ident.TenantID, ident.Subject, id)
+		tag, err := db.Exec(ctx, "DELETE FROM jobs WHERE id = $2 AND customer_id = $1", ident.TenantID, id)
 		removed = err == nil && tag.RowsAffected() > 0
 		return err
 	})

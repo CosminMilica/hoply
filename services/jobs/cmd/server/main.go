@@ -34,6 +34,18 @@ func run() int {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	// FORGE:BEGIN platform_auth_go_middleware:STARTUP_INIT fp:a4407f80
+	if err := app.InitPlatformAuth(cfg); err != nil {
+		slog.Error("platform auth configuration error", "error", err)
+		return 1
+	}
+	// FORGE:END platform_auth_go_middleware:STARTUP_INIT
+	// FORGE:BEGIN multitenancy_rls_go:STARTUP_INIT fp:39469fb7
+	if err := app.InitTenancy(); err != nil {
+		slog.Error("tenancy configuration error", "error", err)
+		return 1
+	}
+	// FORGE:END multitenancy_rls_go:STARTUP_INIT
 	// FORGE:STARTUP_INIT
 	// FORGE:BEGIN pii_redaction:STARTUP_INIT fp:bd51ca96
 	app.InstallPIIRedaction()
@@ -46,6 +58,12 @@ func run() int {
 		return 1
 	}
 	defer pool.Close()
+	// FORGE:BEGIN multitenancy_rls_go:POOL_READY fp:a420556e
+	if err := app.CheckTenantRole(ctx, pool); err != nil {
+		slog.Error("tenant isolation is not enforced", "error", err)
+		return 1
+	}
+	// FORGE:END multitenancy_rls_go:POOL_READY
 	// FORGE:POOL_READY
 
 	service, err := app.Build(cfg, pool)

@@ -95,6 +95,24 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yaml up --build -d --
 
 Open http://app.localhost. Without a Claude token the rules engine writes the CVs.
 
+### Sign in
+
+Keycloak (http://auth.localhost, admin console at http://auth.localhost/admin, `admin` / `admin` locally) holds the
+accounts, and the gatekeeper signs the web app in. A person is a Keycloak organization of their own: its id is their
+tenant, and row-level security keeps every tenant's profile, saved jobs and CVs from the others. The realm starts
+with the organization `hoply` (tenant `00000000-0000-0000-0000-000000000001`) and its user `dev@localhost` /
+`devpass`. There is no sign-up: add a person like this.
+
+```bash
+kc() { docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh "$@"; }
+kc config credentials --server http://localhost:8080 --realm master --user admin --password admin
+org=$(kc create organizations -r hoply -s name=ana -s alias=ana -s enabled=true -i)
+user=$(kc create users -r hoply -s username=ana@example.com -s email=ana@example.com -s emailVerified=true \
+  -s enabled=true -s firstName=Ana -s lastName=Pop -i)
+kc set-password -r hoply --userid "$user" --new-password 'a-first-password' --temporary
+kc create "organizations/$org/members" -r hoply -b "\"$user\""
+```
+
 ### Connect Claude
 
 Hoply runs Claude through the Claude Code CLI with a subscription token, the way you use Claude yourself:

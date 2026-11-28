@@ -6,7 +6,7 @@ security:
   auth:
     # Only a project that generates the platform-auth middleware enables auth;
     # without it the production profile would demand an issuer it never uses.
-    enabled: false
+    enabled: true
 
 server:
   cors:

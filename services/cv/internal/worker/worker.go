@@ -8,6 +8,7 @@ import (
 
 	"cv/internal/cvdoc"
 	"cv/internal/data/repositories"
+	"cv/internal/identity"
 	"cv/internal/models"
 )
 
@@ -70,6 +71,8 @@ func (w *Worker) Next(ctx context.Context) bool {
 	if task == nil {
 		return false
 	}
+	// The CV is written for its tenant: the services it calls see that person.
+	ctx = identity.WithContext(ctx, identity.New(task.Tenant, "svc-cv"))
 	if err := w.write(ctx, task); err != nil && ctx.Err() == nil {
 		slog.Error("cv writing failed", "cv_id", task.ID, "error", err)
 		if err := w.queue.Fail(ctx, task.ID); err != nil {

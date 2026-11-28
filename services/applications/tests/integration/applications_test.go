@@ -82,7 +82,7 @@ func TestListOrderAndOwnerIsolation(t *testing.T) {
 	repo := repositories.NewPgApplicationRepository(pool)
 	me := identity.New(uuid.New(), uuid.NewString())
 	sameSubjectOtherTenant := identity.New(uuid.New(), me.Subject)
-	colleague := identity.New(me.TenantID, uuid.NewString())
+	colleague := identity.New(uuid.New(), uuid.NewString())
 
 	first, second, third := uuid.New(), uuid.New(), uuid.New()
 	put(t, repo, me, first, "saved")

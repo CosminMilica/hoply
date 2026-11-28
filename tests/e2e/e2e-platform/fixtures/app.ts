@@ -3,6 +3,8 @@ import { Navigation } from '../actions/Navigation';
 import { ApiHelper } from '../actions/ApiHelper';
 import { Assertions } from '../actions/Assertions';
 
+import { AuthManager } from '../auth/AuthManager';
+
 
 export type AppFixtures = {
   app: {
@@ -11,16 +13,20 @@ export type AppFixtures = {
     assertions: Assertions;
     page: import('@playwright/test').Page;
 
+    auth: AuthManager;
+
   };
 };
 
 export const test = base.extend<AppFixtures>({
-  app: async ({ page }, use) => {
+  app: async ({ page, context }, use) => {
     await use({
       nav: new Navigation(page),
       api: new ApiHelper(page),
       assertions: new Assertions(page),
       page,
+
+      auth: new AuthManager(page, context),
 
     });
   },

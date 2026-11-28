@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -14,9 +15,11 @@ import (
 	"strings"
 	"time"
 
+	platformauth "forge.local/platform-auth-go"
 	"github.com/google/uuid"
 
 	"cv/internal/apperrors"
+	"cv/internal/identity"
 	"cv/internal/models"
 )
 
@@ -28,6 +31,21 @@ type Client struct {
 	profileURL string
 	jobsURL    string
 	http       *http.Client
+	// profileTokens and jobsTokens mint the service tokens each service takes, for the tenant in the context; nil
+	// without the gatekeeper's credentials, when requests go without a token.
+	profileTokens Minter
+	jobsTokens    Minter
+}
+
+// Minter mints a service token; *platformauth.S2SClient is one.
+type Minter interface {
+	Token(ctx context.Context, options platformauth.S2SRequestOptions) (string, error)
+}
+
+// WithTokens calls the profile and jobs services with the tokens of the given minters.
+func (c *Client) WithTokens(profile, jobs Minter) *Client {
+	c.profileTokens, c.jobsTokens = profile, jobs
+	return c
 }
 
 // New takes the services' base URLs, such as http://profile:5010.
@@ -40,9 +58,26 @@ func New(profileURL, jobsURL string) *Client {
 }
 
 // FromEnv reads PROFILE_SERVICE_URL and JOBS_SERVICE_URL, defaulting to the
-// services' local ports.
-func FromEnv() *Client {
-	return New(envOr("PROFILE_SERVICE_URL", "http://localhost:5010"), envOr("JOBS_SERVICE_URL", "http://localhost:5020"))
+// services' local ports. With GATEKEEPER_CLIENT_ID, GATEKEEPER_CLIENT_SECRET and
+// GATEKEEPER_TOKEN_ENDPOINT it calls them with the gatekeeper's service tokens.
+func FromEnv() (*Client, error) {
+	client := New(envOr("PROFILE_SERVICE_URL", "http://localhost:5010"), envOr("JOBS_SERVICE_URL", "http://localhost:5020"))
+	id, secret, endpoint := os.Getenv("GATEKEEPER_CLIENT_ID"), os.Getenv("GATEKEEPER_CLIENT_SECRET"), os.Getenv("GATEKEEPER_TOKEN_ENDPOINT")
+	if id == "" && secret == "" && endpoint == "" {
+		return client, nil
+	}
+	minter := func(audience string) (Minter, error) {
+		return platformauth.NewS2SClient(platformauth.S2SClientConfig{Audience: audience, TokenEndpoint: endpoint, ClientID: id, ClientSecret: secret})
+	}
+	profile, err := minter("svc-profile")
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := minter("svc-jobs")
+	if err != nil {
+		return nil, err
+	}
+	return client.WithTokens(profile, jobs), nil
 }
 
 func envOr(name, fallback string) string {
@@ -55,7 +90,7 @@ func envOr(name, fallback string) string {
 // Profile returns the caller's profile, and the profile as the service sent it.
 func (c *Client) Profile(ctx context.Context) (models.Profile, json.RawMessage, error) {
 	var profile models.Profile
-	raw, status, err := c.get(ctx, c.profileURL+"/api/v1/profiles/me")
+	raw, status, err := c.get(ctx, c.profileTokens, c.profileURL+"/api/v1/profiles/me")
 	if err != nil || status != http.StatusOK {
 		return profile, nil, unavailable("profile", status, err)
 	}
@@ -69,7 +104,7 @@ func (c *Client) Profile(ctx context.Context) (models.Profile, json.RawMessage, 
 // does not know is a not-found error.
 func (c *Client) Job(ctx context.Context, id uuid.UUID) (models.Job, json.RawMessage, error) {
 	var job models.Job
-	raw, status, err := c.get(ctx, c.jobsURL+"/api/v1/jobs/"+id.String())
+	raw, status, err := c.get(ctx, c.jobsTokens, c.jobsURL+"/api/v1/jobs/"+id.String())
 	if err == nil && status == http.StatusNotFound {
 		return job, nil, apperrors.NewNotFound("Job", id.String())
 	}
@@ -82,12 +117,15 @@ func (c *Client) Job(ctx context.Context, id uuid.UUID) (models.Job, json.RawMes
 	return job, raw, nil
 }
 
-func (c *Client) get(ctx context.Context, url string) ([]byte, int, error) {
+func (c *Client) get(ctx context.Context, tokens Minter, url string) ([]byte, int, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
 	req.Header.Set("Accept", "application/json")
+	if err := authorize(ctx, req, tokens); err != nil {
+		return nil, 0, err
+	}
 	res, err := c.http.Do(req)
 	if err != nil {
 		return nil, 0, err
@@ -116,6 +154,9 @@ func (c *Client) SetRequirements(ctx context.Context, id uuid.UUID, must, nice [
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if err := authorize(ctx, req, c.jobsTokens); err != nil {
+		return err
+	}
 	res, err := c.http.Do(req)
 	if err != nil {
 		return err
@@ -124,5 +165,23 @@ func (c *Client) SetRequirements(ctx context.Context, id uuid.UUID, must, nice [
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("jobs answered %d", res.StatusCode)
 	}
+	return nil
+}
+
+// authorize adds a service token for the tenant of the context's identity: the caller's, or the one the worker writes
+// for.
+func authorize(ctx context.Context, req *http.Request, tokens Minter) error {
+	if tokens == nil {
+		return nil
+	}
+	ident, ok := identity.FromContext(ctx)
+	if !ok {
+		return errors.New("no tenant to call the service for")
+	}
+	token, err := tokens.Token(ctx, platformauth.S2SRequestOptions{TenantID: ident.TenantID.String()})
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
 	return nil
 }
