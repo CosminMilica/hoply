@@ -179,6 +179,8 @@ type memoryLetters struct {
 	cvs     *memoryCvs
 	fail    error
 	settled chan struct{}
+	// profile is the profile the CVs were written from.
+	profile models.Profile
 }
 
 func (m *memoryLetters) Letter(_ context.Context, _ identity.IdentityContext, cvID uuid.UUID) (*models.Letter, error) {
@@ -208,7 +210,7 @@ func (m *memoryLetters) Source(ctx context.Context, ident identity.IdentityConte
 	if cv == nil || err != nil {
 		return nil, err
 	}
-	return &repositories.Task{ID: cvID, Request: request(), Job: models.Job{Title: "Engineer"}}, nil
+	return &repositories.Task{ID: cvID, Request: request(), Job: models.Job{Title: "Engineer"}, Profile: m.profile}, nil
 }
 
 // fakeLetterWriter writes a fixed letter once released.
@@ -225,7 +227,7 @@ func (f *fakeLetterWriter) Letter(_ context.Context, _ *repositories.Task, _ mod
 
 func TestLettersThroughRoutes(t *testing.T) {
 	h := &cvHarness{repo: newMemoryCvs(), sources: newFakeSources(t), printer: &fakePrinter{}}
-	letters := &memoryLetters{kept: map[uuid.UUID]models.Letter{}, cvs: h.repo, settled: make(chan struct{}, 4)}
+	letters := &memoryLetters{kept: map[uuid.UUID]models.Letter{}, cvs: h.repo, settled: make(chan struct{}, 4), profile: sampleProfile(t)}
 	author := &fakeLetterWriter{release: make(chan struct{})}
 	service := services.NewCvService(h.repo, h.sources, h.printer, func() {}).WithLetters(letters, author)
 	router := chi.NewRouter()

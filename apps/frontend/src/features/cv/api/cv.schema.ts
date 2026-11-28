@@ -129,14 +129,15 @@ export type ProbeQuestion = z.infer<typeof probeQuestionSchema>
 
 /** What Claude asks to make the CV stronger for one job: ready, still being asked for, or unavailable. */
 export const probeSchema = z.object({
-  status: z.enum(['ready', 'pending', 'unavailable']),
+  /** `incomplete`: the profile says too little for Claude to ask anything (readyForClaude). */
+  status: z.enum(['ready', 'pending', 'unavailable', 'incomplete']),
   questions: z.array(probeQuestionSchema),
 })
 
 export type Probe = z.infer<typeof probeSchema>
 
 /** Whether Claude started reading a job's ad. */
-export const analysisStartSchema = z.object({ status: z.enum(['pending', 'unavailable']) })
+export const analysisStartSchema = z.object({ status: z.enum(['pending', 'unavailable', 'incomplete']) })
 
 /** The looks a CV is shown and exported in, the default first (render.Templates in the cv service). */
 export const CV_TEMPLATES = { classic: 'Classic', modern: 'Modern', elegant: 'Elegant' } as const

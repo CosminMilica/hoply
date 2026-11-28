@@ -50,11 +50,15 @@ export function useCvProbeQuery(jobId: MaybeRefOrGetter<string>) {
   })
 }
 
-/** The questions that make every CV stronger, followed while they are being asked for; a failure stays quiet. */
-export function useProfileProbeQuery() {
+/**
+ * The questions that make every CV stronger, followed while they are being asked for; a failure stays quiet. Not
+ * asked for while `enabled` is false: a profile that says too little gets none.
+ */
+export function useProfileProbeQuery(enabled: MaybeRefOrGetter<boolean> = true) {
   return useQuery({
     queryKey: cvKeys.profileProbe,
     queryFn: () => cvApi.profileProbe(),
+    enabled: computed(() => toValue(enabled)),
     staleTime: Infinity,
     refetchOnMount: 'always',
     retry: false,

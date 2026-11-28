@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"cv/internal/apperrors"
+	"cv/internal/cvdoc"
 	"cv/internal/data/repositories"
 	"cv/internal/identity"
 	"cv/internal/models"
@@ -89,6 +90,9 @@ func (s *CvService) WriteLetter(ctx context.Context, ident identity.IdentityCont
 	}
 	if task == nil {
 		return nil, apperrors.NewNotFound("CV", cvID.String())
+	}
+	if !cvdoc.ReadyForClaude(task.Profile) {
+		return nil, profileIncomplete(task.Profile)
 	}
 	writing := models.Letter{Status: models.LetterWriting, Recruiter: recruiter}
 	if err := s.letters.SaveLetter(ctx, ident, cvID, writing); err != nil {

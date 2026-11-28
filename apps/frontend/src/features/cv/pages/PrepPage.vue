@@ -11,6 +11,8 @@ import { useJobQuery } from '@/features/jobs/composables/useJobs'
 import { requirementsOf } from '@/features/jobs/match'
 import { cleanList } from '@/features/profile/api/profile.schema'
 import { useProfileMutations, useProfileQuery } from '@/features/profile/composables/useProfile'
+import ProfileGate from '@/features/profile/components/ProfileGate.vue'
+import { readyForClaude } from '@/features/profile/readiness'
 import type { CvStatus } from '../api/cv.schema'
 import ClaimCard from '../components/ClaimCard.vue'
 import CloseCard from '../components/CloseCard.vue'
@@ -30,7 +32,9 @@ const router = useRouter()
 const job = useJobQuery(() => props.id)
 const profile = useProfileQuery()
 const questions = useCvQuestionsQuery(() => props.id)
-const probe = useCvProbeQuery(() => props.id)
+// Claude is asked nothing for a profile that says too little: the page sends the person to complete it instead.
+const enough = computed(() => Boolean(profile.data.value && readyForClaude(profile.data.value)))
+const probe = useCvProbeQuery(() => (enough.value ? props.id : ''))
 const asked = computed(() => (probe.data.value?.status === 'ready' ? probe.data.value.questions : []))
 const { setSkills } = useProfileMutations()
 const { statuses } = useApplicationStatuses()
@@ -117,6 +121,14 @@ function addToProfile(skill: string) {
   <div v-else class="mx-auto w-full max-w-[1080px]">
     <UAlert v-if="failed" color="error" variant="subtle" :title="t.cv.prep.failedTitle" :description="t.cv.prep.failedDescription" />
     <USkeleton v-else-if="!ready" class="h-64 w-full" />
+    <div v-else-if="!enough && profile.data.value && job.data.value" class="mx-auto flex max-w-[720px] flex-col gap-4">
+      <BackButton :fallback="{ name: 'hoply-job', params: { id } }" />
+      <div class="-mt-2.5 flex flex-col gap-1">
+        <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.cv.prep.title }}</h1>
+        <p class="m-0 text-[15px] font-medium text-muted">{{ job.data.value.title }} · {{ job.data.value.company }}</p>
+      </div>
+      <ProfileGate :profile="profile.data.value" />
+    </div>
     <div v-else-if="job.data.value && questions.data.value" class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[minmax(0,1fr)_340px] min-[900px]:items-start min-[900px]:gap-x-12">
       <BackButton :fallback="{ name: 'hoply-job', params: { id } }" class="min-[900px]:col-span-2" />
       <div class="-mt-2.5 flex flex-col gap-1 min-[900px]:col-start-1">

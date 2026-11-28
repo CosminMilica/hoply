@@ -44,7 +44,7 @@ Cv            { id, job_id, status, created_at, updated_at, job_title, company, 
                 ats: { passed, total, checks: [{ id, ok, label, hint, n?, of?, title? }] } | null, preview: { from, to } | null,
                 written_by: "claude" | "rules" | null, model, refused, rules_reason, limit_until | null }
 WriterStatus  { writer: "claude" | "rules", model, state, limit_until | null }
-Probe         { status: "ready" | "pending" | "unavailable", questions: [{ theme, question, why, example, about, place, choices: [string] }] }
+Probe         { status: "ready" | "pending" | "unavailable" | "incomplete", questions: [{ theme, question, why, example, about, place, choices: [string] }] }
 CvDocument    { name, headline, contact: [string], links: [string], summary, skills: [string],
                 experience: [{ role, meta, bullets: [string] }], projects: [{ name, meta, bullets: [string] }],
                 education: [{ degree, meta }], certifications: [string], languages, additional: [string],
@@ -172,6 +172,20 @@ The texts the rules write are in English, with what the web app needs to word th
 (`layout`, `headings`, `contact`, `location`, `dates`, `title`, `keywords`, `keywords_in_context`, `responsibilities`,
 `verbs`, `numbers`, `pages`) with its counts `n` of `of` and the job's `title`. A check the web app does not know shows
 its `label` and `hint`.
+
+## A profile complete enough for Claude
+
+Claude is asked nothing for a profile that says too little: it would spend tokens on questions and CVs with nothing
+to stand on. A profile is ready when it passes at least 60% of the web app's completeness checks
+(`apps/frontend/src/features/profile/readiness.ts`; `cvdoc.Readiness` counts the same 13) and has a role or a project
+with a highlight (`cvdoc.ReadyForClaude`). Until then:
+
+- `GET /probe`, `GET /jobs/{job_id}/probe` and `POST /jobs/{job_id}/analysis` answer the status `incomplete`;
+- `POST /cvs`, and `POST /cvs/{id}/letter` for a CV written from such a profile, answer 409 `CONSTRAINT_VIOLATION` with
+  `context: { reason: "profile_incomplete", percent, needed: 60 }`.
+
+The web app keeps the same rule: Prepare your CV and the letter show how complete the profile is, what to add next and
+a button to the profile, and the profile page says when its questions will come.
 
 ## Cover letter and messages
 

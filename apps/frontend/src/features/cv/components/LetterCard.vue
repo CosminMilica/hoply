@@ -7,10 +7,16 @@ import { cvApi } from '../api/cvApi'
 import { CONNECTION_NOTE_LIMIT, type CvTemplate, type Letter } from '../api/cv.schema'
 import { letterFailure, modelLabel } from '../authorship'
 import { useLetterQuery, useWriteLetter } from '../composables/useCv'
+import ProfileGate from '@/features/profile/components/ProfileGate.vue'
+import { useProfileQuery } from '@/features/profile/composables/useProfile'
+import { readyForClaude } from '@/features/profile/readiness'
 
 const props = defineProps<{ cvId: string, template: CvTemplate }>()
 const { data: letter, isPending } = useLetterQuery(() => props.cvId)
 const write = useWriteLetter(() => props.cvId)
+// A letter is written by Claude: a profile that says too little is sent to be completed first.
+const profile = useProfileQuery()
+const enough = computed(() => !profile.data.value || readyForClaude(profile.data.value))
 const recruiter = ref('')
 
 const TABS = ['letter', 'note', 'message', 'follow_up'] as const
@@ -134,7 +140,8 @@ const startWriting = () => write.mutate(recruiter.value)
     <p v-else class="m-0 text-sm leading-snug font-medium text-muted">
       {{ t.cv.letter.intro }}
     </p>
-    <form v-if="!isPending && letter?.status !== 'writing'" class="flex flex-col gap-2" @submit.prevent="startWriting">
+    <ProfileGate v-if="!enough && profile.data.value && letter?.status !== 'writing'" :profile="profile.data.value" />
+    <form v-else-if="!isPending && letter?.status !== 'writing'" class="flex flex-col gap-2" @submit.prevent="startWriting">
       <UFormField :label="t.cv.letter.recruiter">
         <UInput v-model="recruiter" maxlength="80" placeholder="Ana Popescu" class="w-full" />
       </UFormField>
