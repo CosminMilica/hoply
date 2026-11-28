@@ -39,11 +39,12 @@ func evalCases(t *testing.T) []eval.Case {
 
 func TestEvalWritesLintsAndKeepsARun(t *testing.T) {
 	cases := evalCases(t)
-	equal(t, len(cases), 2)
+	equal(t, len(cases), 3)
+	equal(t, cases[1].Request.Language, "ro")
 	equal(t, cases[0].Name, "finance-fpa-analyst")
 	equal(t, cases[0].Job.ID, uuid.NewSHA1(uuid.NameSpaceURL, []byte("hoply-eval/finance-fpa-analyst")))
 	results := eval.Write(context.Background(), fixedWriter{failFor: "Ioana Marin"}, cases, now)
-	equal(t, len(results), 1)
+	equal(t, len(results), 2)
 	equal(t, results[0].By.WrittenBy, "rules")
 	equal(t, results[0].Style.Sentences > 0, true)
 
@@ -52,7 +53,7 @@ func TestEvalWritesLintsAndKeepsARun(t *testing.T) {
 		t.Fatal(err)
 	}
 	loaded, err := eval.LoadRun(dir)
-	if err != nil || len(loaded) != 1 || loaded[0].Case != "finance-fpa-analyst" {
+	if err != nil || len(loaded) != 2 || loaded[0].Case != "finance-fpa-analyst" {
 		t.Fatalf("loaded: %v %v", loaded, err)
 	}
 	if _, err := eval.LoadRun(t.TempDir()); err == nil {
@@ -158,11 +159,11 @@ func TestEvalJudgesAndComparesBlind(t *testing.T) {
 		}
 	}
 
-	a := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: document}}, {Case: cases[1].Name}, {Case: "unknown"}}
-	b := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: other}}, {Case: cases[1].Name}}
+	a := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: document}}, {Case: cases[2].Name}, {Case: "unknown"}}
+	b := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: other}}, {Case: cases[2].Name}}
 	verdicts := eval.CompareRuns(context.Background(), &judgeModel{replies: []modelReply{{output: forward}, {output: backward}, {err: claude.ErrFailed}}}, cases, a, b, false)
 	equal(t, len(verdicts), 1)
-	table := eval.CompareTable([]string{cases[0].Name, cases[1].Name}, verdicts)
+	table := eval.CompareTable([]string{cases[0].Name, cases[2].Name}, verdicts)
 	equal(t, strings.Contains(table, "| finance-fpa-analyst | a | a | tie | b | tie | a |"), true)
 	equal(t, strings.Contains(table, "| **total** | a 1 · b 0 · tie 0 |"), true)
 	equal(t, eval.Text(models.CvDocument{Headline: "Engineer"}), "Engineer")
@@ -185,7 +186,7 @@ func (f fixedLetters) Letter(_ context.Context, task *repositories.Task, _ model
 
 func TestEvalWritesJudgesAndComparesLetters(t *testing.T) {
 	cases := evalCases(t)
-	results := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: sampleDocument(t)}}, {Case: cases[1].Name}, {Case: "unknown"}}
+	results := []eval.Result{{Case: cases[0].Name, Written: models.Written{Tailored: sampleDocument(t)}}, {Case: cases[2].Name}, {Case: "unknown"}}
 	written := eval.Letters(context.Background(), fixedLetters{failFor: "Ioana Marin"}, cases, results, now)
 	equal(t, written[0].Letter.ConnectionNote, "Hi, I applied for the FP&A role.")
 	equal(t, written[0].LetterStyle.ByRule["stock-word"], 1)

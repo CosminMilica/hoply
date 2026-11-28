@@ -112,6 +112,7 @@ export function buildDocument(profile: Profile, job: Job, request: CvRequest, ta
       certifications,
       languages: profile.languages.map(language => `${language.name} (${language.level})`).join(', '),
       additional: profile.additional_info.map(line => cleanFact(line, null)).filter(Boolean),
+      language: request.language ?? 'en',
     },
   }
 }

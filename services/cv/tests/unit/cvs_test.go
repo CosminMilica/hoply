@@ -320,6 +320,7 @@ func TestCvRequestValidation(t *testing.T) {
 		{http.MethodPost, cvsPath, map[string]any{"job_id": "nope"}, "job_id"},
 		{http.MethodPost, cvsPath, map[string]any{}, "job_id"},
 		{http.MethodPost, cvsPath, map[string]any{"job_id": jobID, "focus": []string{"a", "b", "c", "d"}}, "focus"},
+		{http.MethodPost, cvsPath, map[string]any{"job_id": jobID, "language": "fr"}, "language"},
 		{http.MethodPost, cvsPath, map[string]any{"job_id": jobID, "confirmed": []int{-1}}, "confirmed"},
 		{http.MethodPost, cvsPath, map[string]any{"job_id": jobID, "confirmed": "one"}, nil},
 		{http.MethodPost, cvsPath, "{", nil},

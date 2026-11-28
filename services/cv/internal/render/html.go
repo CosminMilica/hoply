@@ -9,6 +9,7 @@ import (
 	htmltemplate "html/template"
 	"strings"
 
+	"cv/internal/cvdoc"
 	"cv/internal/models"
 )
 
@@ -31,7 +32,7 @@ const baseCSS = `
 `
 
 var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"join": strings.Join}).Parse(`<!doctype html>
-<html lang="en">
+<html lang="{{.Language}}">
 <head>
 <meta charset="utf-8">
 <title>{{if .Name}}{{.Name}} – CV{{else}}CV{{end}}</title>
@@ -56,19 +57,19 @@ var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"
 </header>
 {{- if .Summary}}
 <section>
-  <h2>Summary</h2>
+  <h2>{{.Headings.Summary}}</h2>
   <p>{{.Summary}}</p>
 </section>
 {{- end}}
 {{- if .Skills}}
 <section>
-  <h2>Skills</h2>
+  <h2>{{.Headings.Skills}}</h2>
   <p>{{join .Skills ", "}}</p>
 </section>
 {{- end}}
 {{- if .Experience}}
 <section>
-  <h2>Experience</h2>
+  <h2>{{.Headings.Experience}}</h2>
 {{- range .Experience}}
   <div class="entry">
     <h3>{{.Role}}</h3>
@@ -80,7 +81,7 @@ var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"
 {{- end}}
 {{- if .Projects}}
 <section>
-  <h2>Projects</h2>
+  <h2>{{.Headings.Projects}}</h2>
 {{- range .Projects}}
   <div class="entry">
     <h3>{{.Name}}</h3>
@@ -94,7 +95,7 @@ var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"
 {{- end}}
 {{- if .Education}}
 <section>
-  <h2>Education</h2>
+  <h2>{{.Headings.Education}}</h2>
 {{- range .Education}}
   <p><strong>{{.Degree}}</strong>{{if .Meta}} · {{.Meta}}{{end}}</p>
 {{- end}}
@@ -102,19 +103,19 @@ var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"
 {{- end}}
 {{- if .Certifications}}
 <section>
-  <h2>Certifications</h2>
+  <h2>{{.Headings.Certifications}}</h2>
   <ul>{{range .Certifications}}<li>{{.}}</li>{{end}}</ul>
 </section>
 {{- end}}
 {{- if .Languages}}
 <section>
-  <h2>Languages</h2>
+  <h2>{{.Headings.Languages}}</h2>
   <p>{{.Languages}}</p>
 </section>
 {{- end}}
 {{- if .Additional}}
 <section>
-  <h2>Additional information</h2>
+  <h2>{{.Headings.Additional}}</h2>
   <ul>{{range .Additional}}<li>{{.}}</li>{{end}}</ul>
 </section>
 {{- end}}
@@ -125,10 +126,12 @@ var page = htmltemplate.Must(htmltemplate.New("cv").Funcs(htmltemplate.FuncMap{"
 // HTML is the CV as a printable page in one of the Templates ("" is the default).
 func HTML(document models.CvDocument, template string) (string, error) {
 	var out bytes.Buffer
+	document.Language = cvdoc.LanguageOf(document.Language)
 	if err := page.Execute(&out, struct {
 		models.CvDocument
-		CSS htmltemplate.CSS
-	}{document, htmltemplate.CSS(baseCSS) + lookOf(template).css}); err != nil {
+		Headings cvdoc.Headings
+		CSS      htmltemplate.CSS
+	}{document, cvdoc.HeadingsFor(document.Language), htmltemplate.CSS(baseCSS) + lookOf(template).css}); err != nil {
 		return "", err
 	}
 	return out.String(), nil

@@ -88,6 +88,8 @@ func TestCheckRefusesWhatTheCitedFactsDoNotHold(t *testing.T) {
 		{grounding.Sentence{Text: "Built pipelines.", Facts: []string{"E2.B1"}}, "E1", "cites E2.B1, which is not about E1"},
 		{grounding.Sentence{Text: "Built 40 pipelines.", Facts: []string{"E1.B1"}}, "E1", "names 40, which no cited fact holds"},
 		{grounding.Sentence{Text: "Runs 99 containers.", Facts: []string{"P1.B1"}}, "P1", "names 99, which no cited fact holds"},
+		{grounding.Sentence{Text: "Rulează 12 containere cu o disponibilitate de 99,9%.", Facts: []string{"P1.B1"}}, "P1", ""},
+		{grounding.Sentence{Text: "Rulează 12 containere cu 9,99% disponibilitate.", Facts: []string{"P1.B1"}}, "P1", "names 9,99, which no cited fact holds"},
 		{grounding.Sentence{Text: "Runs 2 containers.", Facts: []string{"P1.B1"}}, "P1", "names 2, which no cited fact holds"},
 		{grounding.Sentence{Text: "Built pipelines with Terraform.", Facts: []string{"E1.B1"}}, "E1", "claims Terraform, which the profile does not show"},
 		{grounding.Sentence{Text: "Built pipelines for Capgemini Romania.", Facts: []string{"E1.B1"}}, "E1", "names Capgemini Romania, the company being applied to"},
