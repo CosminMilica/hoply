@@ -110,8 +110,12 @@ export interface JobFilters {
   ids?: string[]
 }
 
-/** The tech areas the jobs service reads from a job's title (extract.Areas). */
-export const AREAS = ['DevOps', 'Backend', 'Frontend', 'Full stack', 'Mobile', 'Data', 'AI', 'QA', 'Security', 'Embedded', 'Sysadmin', 'Product', 'Design'] as const
+/** The areas the jobs service reads from a job's title, in its groups (extract.TechAreas, extract.FinanceAreas). */
+export const AREA_GROUPS = [
+  { label: 'Tech', areas: ['DevOps', 'Backend', 'Frontend', 'Full stack', 'Mobile', 'Data', 'AI', 'QA', 'Security', 'Embedded', 'Sysadmin', 'Product', 'Design'] },
+  { label: 'Finance', areas: ['Banking', 'Accounting', 'Finance & control', 'Risk & compliance'] },
+] as const
+export const AREAS = AREA_GROUPS.flatMap(group => group.areas)
 export const LEVELS = ['Any', 'Junior', 'Mid', 'Senior'] as const
 export const CITIES = ['Iași', 'Bucharest', 'Cluj-Napoca'] as const
 

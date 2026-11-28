@@ -212,6 +212,45 @@ func TestBambooHRList(t *testing.T) {
 	}
 }
 
+func TestRecruiteeAndWorkableLists(t *testing.T) {
+	recruitee := newFixtureServer(t, map[string]answer{
+		"/api/offers/": asJSON(t, map[string]any{"offers": []map[string]any{
+			{"id": 2840695, "slug": "consilier-bancar-iasi", "title": "Consilier bancar Iași", "company_name": "tbi bank",
+				"careers_url": "https://tbibankro.recruitee.com/o/consilier-bancar-iasi", "location": "Iași, Romania", "city": "Iași",
+				"country": "Romania", "hybrid": true, "published_at": "2026-11-25 13:47:55 UTC",
+				"description": "<p>Ajuți clienții cu credite.</p>", "requirements": "<ul><li>Experiență în vânzări</li></ul>",
+				"locations": []map[string]any{{"city": "Iași", "country": "România"}, {"city": "Suceava", "country": "România"}}},
+		}}),
+	})
+	workable := newFixtureServer(t, map[string]answer{
+		"/api/v1/widget/accounts/qodea": asJSON(t, map[string]any{"name": "Beyond", "jobs": []map[string]any{
+			{"title": "Senior Management Accountant", "shortcode": "DA176EF206", "url": "https://apply.workable.com/j/DA176EF206",
+				"city": "Iași", "country": "Romania", "telecommuting": true, "published_on": "2026-11-20",
+				"description": "<p><strong>Requirements</strong></p><ul><li>IFRS</li></ul>",
+				"locations":   []map[string]any{{"city": "Iași", "country": "Romania"}}},
+		}}),
+	})
+	broken := newFixtureServer(t, map[string]answer{"/api/offers/": {"application/json", "["}})
+	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{"tbibankro.recruitee.com": recruitee.URL,
+		"apply.workable.com": workable.URL, "broken.recruitee.com": broken.URL}})
+	ctx := context.Background()
+
+	offers, complete, err := reader.List(ctx, "recruitee", "tbibankro", importer.Romania)
+	if err != nil || !complete || len(offers) != 1 || offers[0].ID != "2840695" || offers[0].URL != "https://tbibankro.recruitee.com/o/consilier-bancar-iasi" ||
+		offers[0].Page.WorkMode != "hybrid" || offers[0].Page.Company != "tbi bank" || offers[0].PostedAt.Format(time.DateTime) != "2026-11-25 13:47:55" ||
+		!slices.Contains(offers[0].Places, "Suceava") || !strings.Contains(offers[0].Page.Text, "Requirements\n- Experiență în vânzări") || offers[0].NeedsDescribe() {
+		t.Fatalf("recruitee: %+v %v %v", offers, complete, err)
+	}
+	jobs, complete, err := reader.List(ctx, "workable", "qodea", importer.Romania)
+	if err != nil || !complete || len(jobs) != 1 || jobs[0].ID != "DA176EF206" || jobs[0].Page.Company != "Beyond" || jobs[0].Page.WorkMode != "remote" ||
+		jobs[0].PostedAt.Format(time.DateOnly) != "2026-11-20" || !strings.Contains(jobs[0].Page.Text, "IFRS") {
+		t.Fatalf("workable: %+v %v %v", jobs, complete, err)
+	}
+	if _, _, err := reader.List(ctx, "recruitee", "broken", importer.Romania); err == nil {
+		t.Fatal("a broken answer fails")
+	}
+}
+
 func TestBoardsFromLinks(t *testing.T) {
 	for link, want := range map[string]string{
 		"https://job-boards.eu.greenhouse.io/ionos2/jobs/5030878101":                          "greenhouse ionos2",
@@ -227,7 +266,9 @@ func TestBoardsFromLinks(t *testing.T) {
 		"https://northwind.bamboohr.com/careers":                                              "bamboohr northwind",
 		"https://www.bamboohr.com/careers":                                                    "",
 		"https://a.b.bamboohr.com/careers":                                                    "",
-		"https://apply.workable.com/northwind/j/AB12":                                         "",
+		"https://apply.workable.com/northwind/j/AB12":                                         "workable northwind",
+		"https://apply.workable.com/j/DA176EF206":                                             "",
+		"https://tbibankro.recruitee.com/o/consilier-bancar-iasi":                             "recruitee tbibankro",
 		"https://boards.greenhouse.io/embed/job_app":                                          "",
 		"https://www.linkedin.com/jobs/view/42":                                               "",
 		"mailto:jobs@example.com":                                                             "",

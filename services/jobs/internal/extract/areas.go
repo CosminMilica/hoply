@@ -2,8 +2,14 @@ package extract
 
 import "regexp"
 
-// Areas are the tech areas a job's title can name, in the order Find jobs shows them.
-var Areas = []string{"DevOps", "Backend", "Frontend", "Full stack", "Mobile", "Data", "AI", "QA", "Security", "Embedded", "Sysadmin", "Product", "Design"}
+// Areas are the areas a job's title can name, in the order Find jobs shows them: the tech areas, then the finance
+// ones (TechAreas, FinanceAreas).
+var Areas = append(append([]string{}, TechAreas...), FinanceAreas...)
+
+var (
+	TechAreas    = []string{"DevOps", "Backend", "Frontend", "Full stack", "Mobile", "Data", "AI", "QA", "Security", "Embedded", "Sysadmin", "Product", "Design"}
+	FinanceAreas = []string{"Banking", "Accounting", "Finance & control", "Risk & compliance"}
+)
 
 var (
 	areaTitles = map[string]*regexp.Regexp{
@@ -20,19 +26,44 @@ var (
 		"Sysadmin":   regexp.MustCompile(`administrator|sysadmin|\blinux\b|\bnetwork\b|systems engineer|system engineer|\bnoc\b|it support|help ?desk`),
 		"Product":    regexp.MustCompile(`product (?:manager|owner)|\bproduct lead|technical product`),
 		"Design":     regexp.MustCompile(`\bux\b|\bui\b.*designer|product designer|ux/ui|ui/ux|interaction designer`),
+		// The finance areas read English and Romanian titles (folded, without diacritics) and the process codes of
+		// shared-service centres: "Specialist - F&A - AP 4A" is accounts payable.
+		"Banking": regexp.MustCompile(`\bbank|bancar|\bbanca\b|bancassurance|\bbanker\b|relationship manager|` +
+			`credit (?:officer|analyst|specialist|advisor|consultant)|\bloans?\b|mortgage|ipotecar|creditare|teller|casier|` +
+			`branch (?:manager|advisor)|consilier (?:bancar|financiar|clienti)|clienti (?:pf|imm|persoane)|specialist (?:pf|imm)|` +
+			`(?:referent|ofiter) (?:credite|bancar)`),
+		"Accounting": regexp.MustCompile(`accountant|accounting|contabil|accounts (?:payable|receivable)|\b(?:ap|ar|i2c|p2p|r2r|o2c)\b|` +
+			`record to report|invoice to cash|order to cash|procure to pay|general ledger|\bgl\b|bookkeep|payroll|salarizare|` +
+			`billing|facturare|collections?\b|cash applications?|reconciliation|reconcilier|\bf&a\b|` +
+			`tax (?:specialist|accountant|analyst|consultant|manager)|fiscal|referent financiar|economist`),
+		"Finance & control": regexp.MustCompile(`financial (?:analyst|controller|planning|reporting|manager|specialist|officer|assistant)|` +
+			`finance (?:manager|specialist|analyst|business partner|lead|director|officer|associate|assistant)|\bfp&a\b|` +
+			`\bcontroller\b|controlling|treasury|trezorerie|analist financiar|\bcfo\b|` +
+			`reporting (?:specialist|analyst)|budget(?:ing)? analyst|management accountant`),
+		"Risk & compliance": regexp.MustCompile(`\brisk\b|\brisc\b|compliance|conformitate|\baml\b|\bkyc\b|money laundering|` +
+			`spalare|fraud|\baudit|\bsox\b|internal control|controllership|regulatory (?:compliance|reporting|affairs|analyst|specialist)|reglementar|sanctions screening`),
 	}
+	// sysadmin names a system administrator; "administrator" alone is also a finance title (Payroll Administrator).
+	sysadmin = regexp.MustCompile(`sysadmin|\blinux\b|\bnetwork\b|systems? (?:engineer|administrator)|\bnoc\b|it support|help ?desk|` +
+		`(?:database|cloud|windows|server|it) administrator`)
 	backEnd = regexp.MustCompile(`back-?end|back end`)
 	// narrower names the areas a generic "developer" or "software engineer" title belongs to instead of Backend.
 	narrower = []string{"Frontend", "Full stack", "Mobile", "QA", "Embedded", "Design"}
 )
 
-// AreasOf returns the areas a job title names, in the order of Areas; none for a title outside tech. A title is
-// Backend when it says back end, or when it names a developer or a server language and no narrower area.
+// AreasOf returns the areas a job title names, in the order of Areas; none for a title outside them. A title is
+// Backend when it says back end, or when it names a developer or a server language and no narrower area; it is
+// Sysadmin only for a system administrator when it also names a finance area.
 func AreasOf(title string) []string {
 	folded := Fold(title)
 	found := map[string]bool{}
 	for area, pattern := range areaTitles {
 		found[area] = pattern.MatchString(folded)
+	}
+	if found["Sysadmin"] && !sysadmin.MatchString(folded) {
+		for _, area := range FinanceAreas {
+			found["Sysadmin"] = found["Sysadmin"] && !found[area]
+		}
 	}
 	if found["Backend"] && !backEnd.MatchString(folded) {
 		for _, area := range narrower {

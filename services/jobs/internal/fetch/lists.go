@@ -37,6 +37,8 @@ var platforms = []platform{
 		list: (*Reader).workday},
 	{name: "smartrecruiters", boardOf: onHost("jobs.smartrecruiters.com"), list: (*Reader).smartRecruitersList},
 	{name: "bamboohr", boardOf: bambooHRBoardOf, list: (*Reader).bambooHRList},
+	{name: "recruitee", boardOf: recruiteeBoardOf, list: (*Reader).recruiteeList},
+	{name: "workable", boardOf: workableBoardOf, list: (*Reader).workableList},
 }
 
 func leverPlatform(name, host string) platform {

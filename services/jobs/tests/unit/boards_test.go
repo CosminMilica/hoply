@@ -69,6 +69,10 @@ const bambooHRDescription = `<p><strong>What you will do</strong></p><ul><li>You
 
 func boardFixtures(t *testing.T) map[string]string {
 	return map[string]string{
+		"/api/offers/": jsonBody(t, map[string]any{"offers": []map[string]any{
+			{"id": 7, "slug": "contabil-iasi", "title": "Contabil", "company_name": "Northwind Finance", "city": "Iasi", "country": "Romania",
+				"on_site": true, "description": "<p><strong>Cerințe</strong></p><ul><li>3 ani de experiență cu SAGA și IFRS</li></ul>"},
+		}}),
 		"/careers/42/detail": jsonBody(t, map[string]any{"result": map[string]any{"jobOpening": map[string]any{
 			"jobOpeningName": "Embedded Software Engineer", "locationType": "2", "datePosted": "2026-11-20",
 			"location":    map[string]any{"city": "Iasi", "state": "Iasi", "addressCountry": "Romania"},
@@ -112,7 +116,7 @@ func boardFixtures(t *testing.T) map[string]string {
 func boardReader(api, eu, pages *boardServer) *fetch.Reader {
 	return fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{
 		"boards-api.greenhouse.io": api.URL, "api.lever.co": api.URL, "api.eu.lever.co": eu.URL, "api.ashbyhq.com": api.URL,
-		"api.smartrecruiters.com": api.URL, "apply.workable.com": api.URL, "northwind.bamboohr.com": api.URL,
+		"api.smartrecruiters.com": api.URL, "apply.workable.com": api.URL, "northwind.bamboohr.com": api.URL, "northwind.recruitee.com": api.URL,
 		"job-boards.greenhouse.io": pages.URL, "jobs.ashbyhq.com": pages.URL, "jobs.lever.co": pages.URL,
 	}})
 }
@@ -141,6 +145,8 @@ func TestBoardAPIs(t *testing.T) {
 			"Northwind Group", "", "Iasi", "ro", "hybrid", "You keep the office network"},
 		{"https://northwind.bamboohr.com/careers/42", "Embedded Software Engineer", "Northwind", "", "Iasi", "Romania", "hybrid",
 			"What you will do\n- You write firmware in C++ for sensors."},
+		{"https://northwind.recruitee.com/o/contabil-iasi", "Contabil", "Northwind Finance", "", "Iasi", "Romania", "",
+			"Cerințe\n- 3 ani de experiență cu SAGA și IFRS"},
 		{"https://apply.workable.com/northwind/j/ab12cd/", "ML Engineer", "Northwind Labs", "", "Paris", "France", "remote", "About You\n- PyTorch"},
 	}
 	for _, tc := range cases {
@@ -197,17 +203,18 @@ func TestBoardAnswersWithoutAJob(t *testing.T) {
 		"/v1/companies/Broken/postings/2": `{`,
 		"/careers/1/detail":               `{"result":{"jobOpening":{"jobOpeningName":""}}}`,
 		"/careers/2/detail":               `{`,
+		"/api/offers/":                    `{"offers": [{"slug": "other"}]}`,
 	})
 	pages := newBoardServer(t, map[string]string{})
 	reader := fetch.New(fetch.Options{AllowLoopback: true, Hosts: map[string]string{
 		"boards-api.greenhouse.io": api.URL, "api.lever.co": api.URL, "api.ashbyhq.com": api.URL, "api.smartrecruiters.com": api.URL,
 		"apply.workable.com": api.URL, "job-boards.greenhouse.io": pages.URL, "jobs.lever.co": pages.URL, "jobs.ashbyhq.com": pages.URL,
-		"jobs.smartrecruiters.com": pages.URL, "empty.bamboohr.com": api.URL,
+		"jobs.smartrecruiters.com": pages.URL, "empty.bamboohr.com": api.URL, "empty.recruitee.com": api.URL,
 	}})
 	for _, link := range []string{"https://job-boards.greenhouse.io/empty/jobs/1", "https://jobs.lever.co/empty/1",
 		"https://jobs.ashbyhq.com/bad/1", "https://jobs.smartrecruiters.com/Empty/1", "https://jobs.smartrecruiters.com/Broken/2-x",
 		"https://apply.workable.com/empty/j/SHORT", "https://apply.workable.com/bad/j/SHORT",
-		"https://empty.bamboohr.com/careers/1", "https://empty.bamboohr.com/careers/2"} {
+		"https://empty.bamboohr.com/careers/1", "https://empty.bamboohr.com/careers/2", "https://empty.recruitee.com/o/missing"} {
 		if _, err := reader.Read(context.Background(), link); reason(t, err) != fetch.FetchFailed {
 			t.Errorf("%s: an empty board answer falls back to the page (404 here): %v", link, err)
 		}
