@@ -11,6 +11,8 @@ import (
 
 	"github.com/google/uuid"
 
+	platformauth "forge.local/platform-auth-go"
+
 	"profile/internal/identity"
 	"profile/internal/middleware"
 	"profile/tests/testutil"
@@ -81,6 +83,9 @@ func TestRateLimitSkipsProbePaths(t *testing.T) {
 func withIdentity(ident identity.IdentityContext, verified bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := identity.WithContext(r.Context(), ident)
+		if verified {
+			ctx = platformauth.WithIdentity(ctx, platformauth.IdentityContext{TenantID: ident.TenantID, Subject: ident.Subject})
+		}
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -94,8 +99,8 @@ func TestRateLimitKeysVerifiedTenantsAcrossAddresses(t *testing.T) {
 		t.Fatalf("first tenant request: %d", code)
 	}
 	second := sendFrom(handler, "198.51.100.2:1", "/api/v1/items", nil).Code
-	if second != http.StatusNoContent {
-		t.Fatalf("without platform auth nothing is verified, so the address keys the bucket: %d", second)
+	if second != http.StatusTooManyRequests {
+		t.Fatalf("the bucket of a verified tenant follows the tenant, not the address: %d", second)
 	}
 }
 

@@ -25,6 +25,7 @@ export const SESSION_USER = {
  * Playwright tries the routes registered last first.
  */
 export async function mockSession(page: Page, user: Record<string, unknown> = SESSION_USER) {
-  await page.route(url => url.pathname === '/auth/userinfo', route => route.fulfill({ json: user }));
-  await page.route(url => url.pathname === '/auth/session', route => route.fulfill({ status: 404, json: { message: 'Not found' } }));
+  // The context's routes also see requests a service worker passes on (MSW runs in development).
+  await page.context().route(url => url.pathname === '/auth/userinfo', route => route.fulfill({ json: user }));
+  await page.context().route(url => url.pathname === '/auth/session', route => route.fulfill({ status: 404, json: { message: 'Not found' } }));
 }

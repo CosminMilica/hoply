@@ -1,8 +1,8 @@
 // Package repositories holds the persistence contracts and their pgx
 // implementations.
 //
-// Every row belongs to the identity's tenant and subject, and every query is
-// scoped to the caller. Services depend on the interface, so unit tests
+// Every row belongs to the identity's tenant (a person), and every query is
+// scoped to it; subject records who wrote the row. Services depend on the interface, so unit tests
 // substitute an in-memory implementation.
 package repositories
 
@@ -33,8 +33,8 @@ type ApplicationRepository interface {
 
 const (
 	applicationColumns = "job_id, status, saved_at, cv_ready_at, applied_at, created_at, updated_at"
-	// owner matches the $1 tenant and $2 subject.
-	owner = "customer_id = $1 AND subject = $2"
+	// owner matches the $1 tenant.
+	owner = "customer_id = $1"
 )
 
 // putApplication creates the application with the status's timestamp, or
@@ -46,7 +46,7 @@ VALUES ($1, $2, $3, $4::text,
         CASE WHEN $4::text = 'saved' THEN NOW() END,
         CASE WHEN $4::text = 'cv_ready' THEN NOW() END,
         CASE WHEN $4::text = 'applied' THEN NOW() END)
-ON CONFLICT (customer_id, subject, job_id) DO UPDATE SET
+ON CONFLICT (customer_id, job_id) DO UPDATE SET
     status = CASE WHEN EXCLUDED.status = 'cv_ready' AND applications.status = 'applied' THEN 'applied'
                   ELSE EXCLUDED.status END,
     saved_at = CASE WHEN EXCLUDED.status = 'saved' AND applications.status <> 'saved' THEN NOW()
@@ -92,7 +92,7 @@ func (r *PgApplicationRepository) List(ctx context.Context, ident identity.Ident
 	var items []models.Application
 	err := r.run(ctx, ident, func(db DBTX) error {
 		rows, err := db.Query(ctx, "SELECT "+applicationColumns+" FROM applications WHERE "+owner+
-			" ORDER BY updated_at DESC, job_id", ident.TenantID, ident.Subject)
+			" ORDER BY updated_at DESC, job_id", ident.TenantID)
 		if err != nil {
 			return err
 		}
@@ -122,14 +122,13 @@ func (r *PgApplicationRepository) Put(ctx context.Context, ident identity.Identi
 }
 
 func (r *PgApplicationRepository) Delete(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (bool, error) {
-	return r.exec(ctx, ident, "DELETE FROM applications WHERE "+owner+" AND job_id = $3", jobID)
+	return r.exec(ctx, ident, "DELETE FROM applications WHERE "+owner+" AND job_id = $2", jobID)
 }
 
 func (r *PgApplicationRepository) Skips(ctx context.Context, ident identity.IdentityContext) ([]uuid.UUID, error) {
 	var ids []uuid.UUID
 	err := r.run(ctx, ident, func(db DBTX) error {
-		rows, err := db.Query(ctx, "SELECT job_id FROM skips WHERE "+owner+" ORDER BY skipped_at DESC, job_id",
-			ident.TenantID, ident.Subject)
+		rows, err := db.Query(ctx, "SELECT job_id FROM skips WHERE "+owner+" ORDER BY skipped_at DESC, job_id", ident.TenantID)
 		if err != nil {
 			return err
 		}
@@ -144,13 +143,13 @@ func (r *PgApplicationRepository) Skips(ctx context.Context, ident identity.Iden
 
 // Skip records the skip; skipping again moves it to the top.
 func (r *PgApplicationRepository) Skip(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) error {
-	_, err := r.exec(ctx, ident, "INSERT INTO skips (customer_id, subject, job_id) VALUES ($1, $2, $3) "+
-		"ON CONFLICT (customer_id, subject, job_id) DO UPDATE SET skipped_at = NOW()", jobID)
+	_, err := r.exec(ctx, ident, "INSERT INTO skips (customer_id, job_id, subject) VALUES ($1, $2, $3) "+
+		"ON CONFLICT (customer_id, job_id) DO UPDATE SET skipped_at = NOW()", jobID, ident.Subject)
 	return err
 }
 
 func (r *PgApplicationRepository) Unskip(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) error {
-	_, err := r.exec(ctx, ident, "DELETE FROM skips WHERE "+owner+" AND job_id = $3", jobID)
+	_, err := r.exec(ctx, ident, "DELETE FROM skips WHERE "+owner+" AND job_id = $2", jobID)
 	return err
 }
 
@@ -159,12 +158,12 @@ func (r *PgApplicationRepository) ClearSkips(ctx context.Context, ident identity
 	return err
 }
 
-// exec runs a statement whose first two parameters are the caller's tenant and
-// subject, and reports whether it touched a row.
+// exec runs a statement whose first parameter is the caller's tenant, and
+// reports whether it touched a row.
 func (r *PgApplicationRepository) exec(ctx context.Context, ident identity.IdentityContext, query string, args ...any) (bool, error) {
 	touched := false
 	err := r.run(ctx, ident, func(db DBTX) error {
-		tag, err := db.Exec(ctx, query, append([]any{ident.TenantID, ident.Subject}, args...)...)
+		tag, err := db.Exec(ctx, query, append([]any{ident.TenantID}, args...)...)
 		touched = err == nil && tag.RowsAffected() > 0
 		return err
 	})

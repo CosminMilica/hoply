@@ -1,0 +1,209 @@
+package tenancy
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+
+	"github.com/google/uuid"
+
+	"applications/internal/identity"
+)
+
+// ClaimsFunc returns the verified token claims bound to ctx, or nil.
+type ClaimsFunc func(context.Context) map[string]any
+
+// Resolver finds the tenant of a request with the configured strategy.
+type Resolver struct {
+	settings Settings
+	claims   ClaimsFunc
+}
+
+// NewResolver returns a resolver for settings; claims may be nil.
+func NewResolver(settings Settings, claims ClaimsFunc) *Resolver {
+	return &Resolver{settings: settings, claims: claims}
+}
+
+// Settings returns the resolver's configuration.
+func (r *Resolver) Settings() Settings {
+	return r.settings
+}
+
+// Resolve returns the tenant of req, or "" when there is none:
+//   - header: the configured request header;
+//   - subdomain: the leftmost label of the host when it is a UUID
+//     (<uuid>.example.com); example.com, api.example.com and IPs carry none;
+//   - token_claim: the claim at the configured dot-path of the verified token,
+//     else the tenant of the identity the auth middleware bound.
+func (r *Resolver) Resolve(req *http.Request) string {
+	switch r.settings.Resolution {
+	case ResolutionHeader:
+		return req.Header.Get(r.settings.HeaderName)
+	case ResolutionSubdomain:
+		return subdomain(req.Host)
+	default:
+		return r.fromClaims(req.Context())
+	}
+}
+
+// ErrTenantNotUUID rejects a request tenant that must become the identity's
+// tenant but is not a UUID.
+var ErrTenantNotUUID = errors.New("the request's tenant must be a UUID")
+
+// ErrTenantMismatch rejects a header or subdomain tenant that is not the
+// tenant of the request's verified token.
+
+// names reports whether a request tenant names ident's tenant: a UUID its
+// tenant id, anything else (a slug such as acme) its tenant slug, ignoring
+// case as browsers lowercase host names.
+func names(tenant string, ident identity.IdentityContext) bool {
+	if id, err := uuid.Parse(tenant); err == nil {
+		return id == ident.TenantID
+	}
+	return ident.TenantSlug != "" && strings.EqualFold(tenant, ident.TenantSlug)
+}
+
+var ErrTenantMismatch = errors.New("the requested tenant is not the tenant of the verified identity")
+
+// Attach returns the context of req carrying its resolved tenant. Without a
+// verified token the tenant also becomes the tenant of the request's identity,
+// so it must be a UUID. With one, a header or subdomain tenant must name the
+// token's tenant, by id or slug (ErrTenantMismatch otherwise); it is never
+// replaced. A subdomain slug (acme.example.com) is checked against the
+// token's slug as the Python services check it, and resolves no tenant
+// without a verified token.
+func (r *Resolver) Attach(req *http.Request) (context.Context, error) {
+	ctx := req.Context()
+	tenant := r.Resolve(req)
+	if tenant == "" && r.settings.Resolution == ResolutionSubdomain {
+		if verified, ok := verifiedIdentity(ctx); ok {
+			if slug := hostLabel(req.Host); slug != "" {
+				if !names(slug, verified) {
+					return nil, ErrTenantMismatch
+				}
+				return WithTenant(ctx, verified.TenantID.String()), nil
+			}
+		}
+	}
+	if tenant == "" {
+		return ctx, nil
+	}
+	if r.settings.Resolution != ResolutionTokenClaim {
+		if verified, ok := verifiedIdentity(ctx); ok && !names(tenant, verified) {
+			return nil, ErrTenantMismatch
+		}
+	}
+	ctx = WithTenant(ctx, tenant)
+	if ident, ok := unverifiedIdentity(ctx); ok {
+		id, err := uuid.Parse(tenant)
+		if err != nil || id == uuid.Nil {
+			return nil, ErrTenantNotUUID
+		}
+		ident.TenantID = id
+		ctx = identity.WithContext(ctx, ident)
+	}
+	return ctx, nil
+}
+
+// Tenant returns the tenant a transaction for ident binds: the identity's
+// tenant when it has one (a verified token's, or the one Attach chose), else,
+// under token_claim, a UUID at the claim path of the verified token. A
+// client-supplied header or host never reaches the binding on its own, so a
+// verified identity without a tenant cannot pick one. "" binds nothing, so the
+// RLS policies match no rows.
+func (r *Resolver) Tenant(ctx context.Context, ident identity.IdentityContext) string {
+	if ident.TenantID != uuid.Nil {
+		return ident.TenantID.String()
+	}
+	if r.settings.Resolution != ResolutionTokenClaim {
+		return ""
+	}
+	if id, err := uuid.Parse(r.fromClaims(ctx)); err == nil && id != uuid.Nil {
+		return id.String()
+	}
+	return ""
+}
+
+func (r *Resolver) fromClaims(ctx context.Context) string {
+	if r.claims != nil {
+		if value, ok := claimAt(r.claims(ctx), r.settings.ClaimPath); ok {
+			return value
+		}
+	}
+	if ident, ok := identity.FromContext(ctx); ok && ident.TenantID != uuid.Nil {
+		return ident.TenantID.String()
+	}
+	return ""
+}
+
+// claimAt looks path up as a whole key first, so URL-shaped claim names work,
+// then as a dot-path through nested objects (organization.id).
+func claimAt(claims map[string]any, path string) (string, bool) {
+	if value, ok := claims[path]; ok {
+		return claimString(value)
+	}
+	var current any = claims
+	for _, segment := range strings.Split(path, ".") {
+		object, ok := current.(map[string]any)
+		if !ok {
+			return "", false
+		}
+		if current, ok = object[segment]; !ok {
+			return "", false
+		}
+	}
+	return claimString(current)
+}
+
+func claimString(value any) (string, bool) {
+	switch typed := value.(type) {
+	case nil:
+		return "", false
+	case string:
+		return typed, true
+	default:
+		return fmt.Sprint(typed), true
+	}
+}
+
+// subdomain returns the leftmost host label when it is a UUID.
+func subdomain(host string) string {
+	label := hostLabel(host)
+	if _, err := uuid.Parse(label); err != nil {
+		return ""
+	}
+	return label
+}
+
+// hostLabel returns the leftmost label of a host name with a dot
+// (acme.example.com: acme); "" for a single label or an IP address.
+func hostLabel(host string) string {
+	host = strings.TrimSpace(host)
+	if name, _, err := net.SplitHostPort(host); err == nil {
+		host = name
+	}
+	if net.ParseIP(strings.Trim(host, "[]")) != nil {
+		return ""
+	}
+	label, _, found := strings.Cut(host, ".")
+	if !found {
+		return ""
+	}
+	return label
+}
+
+type tenantKey struct{}
+
+// WithTenant stores the tenant resolved for a request on ctx.
+func WithTenant(ctx context.Context, tenant string) context.Context {
+	return context.WithValue(ctx, tenantKey{}, tenant)
+}
+
+// FromContext returns the tenant stored with WithTenant.
+func FromContext(ctx context.Context) (string, bool) {
+	tenant, ok := ctx.Value(tenantKey{}).(string)
+	return tenant, ok
+}

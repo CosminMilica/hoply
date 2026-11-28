@@ -20,6 +20,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
+  globalSetup: './e2e-platform/auth/global-setup.ts',
+
   projects: [
     {
       name: 'chromium',

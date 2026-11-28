@@ -3,8 +3,9 @@
 Service: `services/profile` (Go). The browser calls `/api/profile/v1/...`; Traefik and the Vite proxy rewrite it to
 `/api/v1/...` on the service. JSON is `snake_case`. Errors use the service's existing error envelope.
 
-There is no login yet: every request runs as the dev identity (`auth.mode: none`), so "me" is one profile per
-identity subject. The profile is created empty on the first `GET /me`.
+Every request is signed in through the gatekeeper (Keycloak). A person is a tenant, so "me" is the one profile of
+the caller's tenant, kept from every other tenant by row-level security. The profile is created empty on the first
+`GET /me`.
 
 ## Endpoints
 

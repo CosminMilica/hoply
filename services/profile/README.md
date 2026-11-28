@@ -42,8 +42,8 @@ The server starts on [http://localhost:5010](http://localhost:5010).
 
 The profile API contract (shapes, validation rules, ordering) is
 [`docs/api/profile.md`](../../docs/api/profile.md). Every request runs as the
-identity bound by the auth (or, with `auth.mode: none`, the dev) middleware;
-the profile is keyed by its tenant and subject. Schema: `migrations/00100_profiles.sql` and `00101_profile_v2.sql` (which converts
+identity the platform-auth middleware verifies; the profile is keyed by its
+tenant (a person) and kept apart by row-level security (`00103_tenant_rows.sql`). Schema: `migrations/00100_profiles.sql` and `00101_profile_v2.sql` (which converts
 existing rows to the v2 shape).
 
 ## Layout

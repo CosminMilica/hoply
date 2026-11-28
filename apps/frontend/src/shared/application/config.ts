@@ -4,14 +4,18 @@ import type { ApplicationConfig } from './contracts'
 
 export const application: ApplicationConfig = {
   "title": "hoply",
-  "auth": false,
+  "auth": true,
   "routing": {
     "landing": "hoply-profile",
+    "sign_in": "login",
     "not_found": "not-found",
+    "auth_stuck": "auth-stuck",
     "forbidden": "forbidden"
   },
   "builtin": [
+    "sign_in",
     "not_found",
+    "auth_stuck",
     "forbidden"
   ],
   "layouts": {
@@ -59,6 +63,16 @@ export const application: ApplicationConfig = {
                 "label": "Skill gaps",
                 "icon": "i-lucide-target",
                 "to": "hoply-skills"
+              }
+            ]
+          },
+          {
+            "items": [
+              {
+                "id": "sign-out",
+                "label": "Sign out",
+                "icon": "i-lucide-log-out",
+                "action": "sign-out"
               }
             ]
           }

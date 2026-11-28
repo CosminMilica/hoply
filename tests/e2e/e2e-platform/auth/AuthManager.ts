@@ -1,0 +1,45 @@
+import type { BrowserContext, Page } from '@playwright/test';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+export type Persona = 'admin' | 'user';
+
+const AUTH_DIR = path.resolve(__dirname, '..', '..', '.auth');
+
+export class AuthManager {
+  constructor(
+    private readonly page: Page,
+    private readonly context: BrowserContext,
+  ) {}
+
+  async loginAs(persona: Persona): Promise<void> {
+    const statePath = path.join(AUTH_DIR, `${persona}-state.json`);
+    console.log(`[auth] Loading state for ${persona}`);
+
+    const raw = await fs.readFile(statePath, 'utf-8');
+    const state = JSON.parse(raw);
+
+    if (state.cookies?.length) {
+      await this.context.addCookies(state.cookies);
+      console.log(`[auth] ✓ ${persona} — ${state.cookies.length} cookies loaded`);
+    } else {
+      console.log(`[auth] ⚠ ${persona} — no cookies in state file`);
+    }
+
+    await this.page.reload();
+  }
+
+  async logout(): Promise<void> {
+    console.log('[auth] Logging out');
+    await this.context.clearCookies();
+    try {
+      await this.page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+    } catch {
+      // localStorage not accessible on about:blank or cross-origin pages
+    }
+    await this.page.reload();
+  }
+}

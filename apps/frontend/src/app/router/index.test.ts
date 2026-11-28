@@ -1,7 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '@/shared/mocks/node'
+import { auth } from '../auth'
 import router, { hoplyRoutes } from './index'
 
 describe('the application router', () => {
+  beforeAll(async () => {
+    server.use(http.get('*/auth/userinfo', () => HttpResponse.json({ userId: 'u1', email: 'ana@example.com', preferredUsername: 'ana', roles: ['user'], customerId: 't1' })))
+    await auth.init?.()
+  })
+
   it('composes hoply’s pages into the app layout, starting on the profile', async () => {
     expect(hoplyRoutes.map(route => route.name)).toEqual(['hoply-profile', 'hoply-jobs', 'hoply-job-add', 'hoply-job', 'hoply-prep', 'hoply-cv', 'hoply-saved', 'hoply-applications', 'hoply-skills'])
     expect(router.resolve({ name: 'hoply-prep', params: { id: '3' } }).path).toBe('/jobs/3/prepare')

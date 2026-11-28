@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -14,6 +15,7 @@ import (
 
 	"cv/internal/apperrors"
 	"cv/internal/data/repositories"
+	"cv/internal/identity"
 	"cv/internal/models"
 	"cv/internal/upstream"
 	"cv/internal/worker"
@@ -227,7 +229,11 @@ func TestUpstreamFromEnv(t *testing.T) {
 	defer server.Close()
 	t.Setenv("PROFILE_SERVICE_URL", server.URL)
 	t.Setenv("JOBS_SERVICE_URL", " ")
-	profile, _, err := upstream.FromEnv().Profile(context.Background())
+	client, err := upstream.FromEnv()
+	if err != nil {
+		t.Fatal(err)
+	}
+	profile, _, err := client.Profile(context.Background())
 	if err != nil || profile.Name != "From env" {
 		t.Fatalf("env profile: %+v %v", profile, err)
 	}
@@ -258,5 +264,60 @@ func TestUpstreamSetsTheJobsRequirements(t *testing.T) {
 	}
 	if err := upstream.New("", "http://bad host").SetRequirements(context.Background(), uuid.New(), nil, nil); err == nil {
 		t.Fatal("a bad URL fails")
+	}
+}
+
+func TestUpstreamCallsWithServiceTokensForTheTenant(t *testing.T) {
+	var minted []string
+	tokens := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		minted = append(minted, r.PostForm.Get("audience")+" "+r.PostForm.Get("tenant_id"))
+		_, _ = w.Write([]byte(`{"access_token": "token-for-` + r.PostForm.Get("audience") + `", "expires_in": 300}`))
+	}))
+	defer tokens.Close()
+	var seen []string
+	services := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		seen = append(seen, r.Method+" "+r.URL.Path+" "+r.Header.Get("Authorization"))
+		if r.URL.Path == "/api/v1/profiles/me" {
+			_, _ = w.Write([]byte(`{"name": "Ana"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"id": "` + uuid.Nil.String() + `", "title": "Accountant"}`))
+	}))
+	defer services.Close()
+	t.Setenv("PROFILE_SERVICE_URL", services.URL)
+	t.Setenv("JOBS_SERVICE_URL", services.URL)
+	t.Setenv("GATEKEEPER_CLIENT_ID", "svc-cv")
+	t.Setenv("GATEKEEPER_CLIENT_SECRET", "secret")
+	t.Setenv("GATEKEEPER_TOKEN_ENDPOINT", tokens.URL)
+	client, err := upstream.FromEnv()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tenant := uuid.New()
+	ctx := identity.WithContext(context.Background(), identity.New(tenant, "ana"))
+	if profile, _, err := client.Profile(ctx); err != nil || profile.Name != "Ana" {
+		t.Fatalf("profile: %+v %v", profile, err)
+	}
+	if _, _, err := client.Job(ctx, uuid.Nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.SetRequirements(ctx, uuid.Nil, []string{"SAP"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if fmt.Sprint(minted) != fmt.Sprintf("[svc-profile %s svc-jobs %s]", tenant, tenant) {
+		t.Fatalf("one token per service, for the caller's tenant, kept until it expires: %v", minted)
+	}
+	want := []string{"GET /api/v1/profiles/me Bearer token-for-svc-profile", "GET /api/v1/jobs/" + uuid.Nil.String() + " Bearer token-for-svc-jobs",
+		"PUT /api/v1/jobs/" + uuid.Nil.String() + "/requirements Bearer token-for-svc-jobs"}
+	if fmt.Sprint(seen) != fmt.Sprint(want) {
+		t.Fatalf("each call carries its service's token: %v", seen)
+	}
+	if _, _, err := client.Profile(context.Background()); err == nil {
+		t.Fatal("a call without a tenant is refused before it leaves")
+	}
+	t.Setenv("GATEKEEPER_TOKEN_ENDPOINT", "")
+	if _, err := upstream.FromEnv(); err == nil {
+		t.Fatal("half the gatekeeper's credentials is a configuration error")
 	}
 }

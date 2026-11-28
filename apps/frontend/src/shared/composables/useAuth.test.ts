@@ -78,3 +78,137 @@ describe('useAuth – dev mode (VITE_AUTH_DISABLED=true)', () => {
 })
 
 
+describe('useAuth – Gatekeeper mode', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.stubEnv('VITE_AUTH_DISABLED', 'false')
+    vi.restoreAllMocks()
+  })
+
+  async function loadUseAuth() {
+    const mod = await import('./useAuth')
+    return mod.useAuth()
+  }
+
+  it('init() fetches /auth/userinfo and sets user on success', async () => {
+    const mockUser = {
+      userId: 'gk-user-id',
+      email: 'user@example.com',
+      preferredUsername: 'testuser',
+      givenName: 'Test',
+      familyName: 'User',
+      roles: ['user'],
+      customerId: 'cust-1',
+      orgId: null,
+    }
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(mockUser), { status: 200 }),
+    )
+
+    const auth = await loadUseAuth()
+    await auth.init()
+
+    expect(auth.isLoading.value).toBe(false)
+    expect(auth.user.value).toMatchObject({
+      id: 'gk-user-id',
+      email: 'user@example.com',
+      username: 'testuser',
+      firstName: 'Test',
+      lastName: 'User',
+      roles: ['user'],
+    })
+  })
+
+  it('init() sets user to null when /auth/userinfo returns non-ok', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('Unauthorized', { status: 401 }),
+    )
+
+    const auth = await loadUseAuth()
+    await auth.init()
+
+    expect(auth.user.value).toBeNull()
+    expect(auth.isLoading.value).toBe(false)
+  })
+
+  it('init() sets user to null on network error', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
+
+    const auth = await loadUseAuth()
+    await auth.init()
+
+    expect(auth.user.value).toBeNull()
+    expect(auth.isLoading.value).toBe(false)
+  })
+
+  it('getToken() returns null (cookie-based auth)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ userId: 'test' }), { status: 200 }),
+    )
+
+    const auth = await loadUseAuth()
+    await auth.init()
+
+    const token = await auth.getToken()
+    expect(token).toBeNull()
+  })
+
+  it('login() redirects to /callback with redirect_uri', async () => {
+    const auth = await loadUseAuth()
+
+    // Mock window.location
+    const locationHref = vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      href: 'http://app.localhost/',
+    } as Location)
+
+    // login() sets window.location.href — spy on the setter
+    const hrefSetter = vi.fn()
+    locationHref.mockReturnValue(
+      new Proxy(window.location, {
+        get(target, prop) {
+          if (prop === 'href') return 'http://app.localhost/'
+          if (prop === 'origin') return 'http://app.localhost'
+          return Reflect.get(target, prop)
+        },
+        set(_target, prop, value) {
+          if (prop === 'href') hrefSetter(value)
+          return true
+        },
+      }),
+    )
+
+    auth.login('http://app.localhost/dashboard')
+    expect(hrefSetter).toHaveBeenCalledWith(
+      '/auth/login?redirect_uri=%2Fdashboard',
+    )
+
+    locationHref.mockRestore()
+  })
+
+  it('logout() redirects to /logout', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ userId: 'test' }), { status: 200 }),
+    )
+
+    const auth = await loadUseAuth()
+    await auth.init()
+
+    const hrefSetter = vi.fn()
+    vi.spyOn(window, 'location', 'get').mockReturnValue(
+      new Proxy(window.location, {
+        set(_target, prop, value) {
+          if (prop === 'href') hrefSetter(value)
+          return true
+        },
+      }),
+    )
+
+    auth.logout()
+    expect(auth.user.value).toBeNull()
+    expect(hrefSetter).toHaveBeenCalledWith('/logout')
+  })
+})
+
+

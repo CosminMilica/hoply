@@ -2,7 +2,7 @@
 
 Service: `services/applications` (Go). The browser calls `/api/applications/v1/...`; Traefik and the Vite proxy
 rewrite it to `/api/v1/...` on the service. JSON is `snake_case`. Errors use the service's existing error envelope,
-with `context.field` on validation errors. No login yet: every request runs as the dev identity, which owns its rows.
+with `context.field` on validation errors. Every request is signed in through the gatekeeper (Keycloak); a person is a tenant, and row-level security keeps each tenant's rows from every other.
 
 The service tracks what a person does with each job: saved, CV ready, applied, and the jobs they skipped. It stores
 only the job's id; the job itself lives in the jobs service (`docs/api/jobs.md`), and the web app joins the two. This

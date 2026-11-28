@@ -26,6 +26,7 @@ services:
       # SDK fragments) — BuildKit FAILS the build on a declared-but-missing
       # context dir, and forge-core comes from the main context, not here.
       additional_contexts:
+        packages: ./packages
         project_root: .
     environment:
       ENV: development
@@ -37,6 +38,28 @@ services:
     networks:
       - app-network
 
+  # ── Runtime role for profile (database.rls_app_role) ──
+  # Postgres skips RLS for the superuser that owns the tables, so the service
+  # connects as profile_app (NOSUPERUSER NOBYPASSRLS, no tables owned).
+  # Re-run after every migration so new tables are granted.
+  profile-db-role:
+    image: pgvector/pgvector:pg16
+    entrypoint: ["sh", "/db-app-role.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: profile
+      APP_DB_ROLE: profile_app
+      APP_DB_PASSWORD: profile_app_dev
+    volumes:
+      - ./deploy/compose/db-app-role.sh:/db-app-role.sh:ro
+    depends_on:
+      profile-migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
   # ── profile ──
   profile:
     build:
@@ -45,6 +68,7 @@ services:
       # See the profile-migrate build above — same rationale (the
       # ``packages`` context is only declared when a project-root packages/ ships).
       additional_contexts:
+        packages: ./packages
         project_root: .
     # Direct host:container port so the matrix-nightly lane-C smoke
     # contract — and any local ``curl http://localhost:5010`` —
@@ -56,19 +80,40 @@ services:
     environment:
       ENV: development
       PORT: "5010"
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/profile"
-      APP__SECURITY__AUTH__ENABLED: "false"
+      DATABASE_URL: "postgresql://profile_app:profile_app_dev@postgres:5432/profile"
+      APP__SECURITY__AUTH__ENABLED: "true"
+      # In the gatekeeper sole-issuer model the backend validates the internal
+      # ES256 JWT that gatekeeper mints (iss=gatekeeper, JWKS at
+      # <server_url>/auth/jwks). So server_url + audience must point at
+      # gatekeeper, not Keycloak (Keycloak is gatekeeper's upstream IdP).
+      APP__SECURITY__AUTH__SERVER_URL: "http://gatekeeper:5000"
+      APP__SECURITY__AUTH__AUDIENCE: "forge-services"
+      # forge_core's auth setup derives the JWKS URI from server_url + realm as
+      # the Keycloak-style ``/realms/<realm>/protocol/openid-connect/certs`` path
+      # unless JWKS_URI is set. Gatekeeper does NOT serve that path — it exposes
+      # JWKS at /auth/jwks — so this pin is REQUIRED or the backend 404s on every
+      # verification and rejects all gatekeeper tokens.
+      APP__SECURITY__AUTH__JWKS_URI: "http://gatekeeper:5000/auth/jwks"
+      APP__SECURITY__AUTH__REALM: "hoply"
+      APP__SECURITY__AUTH__CLIENT_ID: "hoply-web"
+      GATEKEEPER_ISSUER: "http://gatekeeper:5000"
+      SERVICE_AUDIENCE: "forge-services"
+      GATEKEEPER_CLIENT_ID: "svc-profile"
+      GATEKEEPER_CLIENT_SECRET: "eee15e6a545be18533793e5dcc1d819b"
+      GATEKEEPER_TOKEN_ENDPOINT: "http://gatekeeper:5000/auth/token"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.profile.rule=Host(`app.localhost`) && PathPrefix(`/api/profile`)"
       - "traefik.http.routers.profile.entrypoints=web"
       - "traefik.http.middlewares.profile-rewrite.replacepathregex.regex=^/api/profile/(.*)"
       - "traefik.http.middlewares.profile-rewrite.replacepathregex.replacement=/api/$$1"
-      - "traefik.http.routers.profile.middlewares=profile-rewrite"
+      - "traefik.http.routers.profile.middlewares=profile-rewrite,auth,strip-api-key"
       - "traefik.http.services.profile.loadbalancer.server.port=5010"
     depends_on:
-      profile-migrate:
+      profile-db-role:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
     networks:
       - app-network
   # ── Migrations for jobs ──
@@ -86,6 +131,7 @@ services:
       # SDK fragments) — BuildKit FAILS the build on a declared-but-missing
       # context dir, and forge-core comes from the main context, not here.
       additional_contexts:
+        packages: ./packages
         project_root: .
     environment:
       ENV: development
@@ -97,6 +143,28 @@ services:
     networks:
       - app-network
 
+  # ── Runtime role for jobs (database.rls_app_role) ──
+  # Postgres skips RLS for the superuser that owns the tables, so the service
+  # connects as jobs_app (NOSUPERUSER NOBYPASSRLS, no tables owned).
+  # Re-run after every migration so new tables are granted.
+  jobs-db-role:
+    image: pgvector/pgvector:pg16
+    entrypoint: ["sh", "/db-app-role.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: jobs
+      APP_DB_ROLE: jobs_app
+      APP_DB_PASSWORD: jobs_app_dev
+    volumes:
+      - ./deploy/compose/db-app-role.sh:/db-app-role.sh:ro
+    depends_on:
+      jobs-migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
   # ── jobs ──
   jobs:
     build:
@@ -105,6 +173,7 @@ services:
       # See the jobs-migrate build above — same rationale (the
       # ``packages`` context is only declared when a project-root packages/ ships).
       additional_contexts:
+        packages: ./packages
         project_root: .
     # Direct host:container port so the matrix-nightly lane-C smoke
     # contract — and any local ``curl http://localhost:5020`` —
@@ -116,21 +185,42 @@ services:
     environment:
       ENV: development
       PORT: "5020"
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/jobs"
-      APP__SECURITY__AUTH__ENABLED: "false"
+      DATABASE_URL: "postgresql://jobs_app:jobs_app_dev@postgres:5432/jobs"
       JOBS_IMPORT: "on"
+      APP__SECURITY__AUTH__ENABLED: "true"
+      # In the gatekeeper sole-issuer model the backend validates the internal
+      # ES256 JWT that gatekeeper mints (iss=gatekeeper, JWKS at
+      # <server_url>/auth/jwks). So server_url + audience must point at
+      # gatekeeper, not Keycloak (Keycloak is gatekeeper's upstream IdP).
+      APP__SECURITY__AUTH__SERVER_URL: "http://gatekeeper:5000"
+      APP__SECURITY__AUTH__AUDIENCE: "forge-services"
+      # forge_core's auth setup derives the JWKS URI from server_url + realm as
+      # the Keycloak-style ``/realms/<realm>/protocol/openid-connect/certs`` path
+      # unless JWKS_URI is set. Gatekeeper does NOT serve that path — it exposes
+      # JWKS at /auth/jwks — so this pin is REQUIRED or the backend 404s on every
+      # verification and rejects all gatekeeper tokens.
+      APP__SECURITY__AUTH__JWKS_URI: "http://gatekeeper:5000/auth/jwks"
+      APP__SECURITY__AUTH__REALM: "hoply"
+      APP__SECURITY__AUTH__CLIENT_ID: "hoply-web"
+      GATEKEEPER_ISSUER: "http://gatekeeper:5000"
+      SERVICE_AUDIENCE: "forge-services"
+      GATEKEEPER_CLIENT_ID: "svc-jobs"
+      GATEKEEPER_CLIENT_SECRET: "cb43682529abd5eb0889d706ee8cb2ab"
+      GATEKEEPER_TOKEN_ENDPOINT: "http://gatekeeper:5000/auth/token"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jobs.rule=Host(`app.localhost`) && PathPrefix(`/api/jobs`)"
       - "traefik.http.routers.jobs.entrypoints=web"
       - "traefik.http.middlewares.jobs-rewrite.replacepathregex.regex=^/api/jobs/(.*)"
       - "traefik.http.middlewares.jobs-rewrite.replacepathregex.replacement=/api/$$1"
-      - "traefik.http.routers.jobs.middlewares=jobs-rewrite,jobs-compress"
+      - "traefik.http.routers.jobs.middlewares=jobs-rewrite,jobs-compress,auth,strip-api-key"
       - "traefik.http.middlewares.jobs-compress.compress=true"
       - "traefik.http.services.jobs.loadbalancer.server.port=5020"
     depends_on:
-      jobs-migrate:
+      jobs-db-role:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
     networks:
       - app-network
   # ── Migrations for applications ──
@@ -148,6 +238,7 @@ services:
       # SDK fragments) — BuildKit FAILS the build on a declared-but-missing
       # context dir, and forge-core comes from the main context, not here.
       additional_contexts:
+        packages: ./packages
         project_root: .
     environment:
       ENV: development
@@ -159,6 +250,28 @@ services:
     networks:
       - app-network
 
+  # ── Runtime role for applications (database.rls_app_role) ──
+  # Postgres skips RLS for the superuser that owns the tables, so the service
+  # connects as applications_app (NOSUPERUSER NOBYPASSRLS, no tables owned).
+  # Re-run after every migration so new tables are granted.
+  applications-db-role:
+    image: pgvector/pgvector:pg16
+    entrypoint: ["sh", "/db-app-role.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: applications
+      APP_DB_ROLE: applications_app
+      APP_DB_PASSWORD: applications_app_dev
+    volumes:
+      - ./deploy/compose/db-app-role.sh:/db-app-role.sh:ro
+    depends_on:
+      applications-migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
   # ── applications ──
   applications:
     build:
@@ -167,6 +280,7 @@ services:
       # See the applications-migrate build above — same rationale (the
       # ``packages`` context is only declared when a project-root packages/ ships).
       additional_contexts:
+        packages: ./packages
         project_root: .
     # Direct host:container port so the matrix-nightly lane-C smoke
     # contract — and any local ``curl http://localhost:5030`` —
@@ -178,19 +292,40 @@ services:
     environment:
       ENV: development
       PORT: "5030"
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/applications"
-      APP__SECURITY__AUTH__ENABLED: "false"
+      DATABASE_URL: "postgresql://applications_app:applications_app_dev@postgres:5432/applications"
+      APP__SECURITY__AUTH__ENABLED: "true"
+      # In the gatekeeper sole-issuer model the backend validates the internal
+      # ES256 JWT that gatekeeper mints (iss=gatekeeper, JWKS at
+      # <server_url>/auth/jwks). So server_url + audience must point at
+      # gatekeeper, not Keycloak (Keycloak is gatekeeper's upstream IdP).
+      APP__SECURITY__AUTH__SERVER_URL: "http://gatekeeper:5000"
+      APP__SECURITY__AUTH__AUDIENCE: "forge-services"
+      # forge_core's auth setup derives the JWKS URI from server_url + realm as
+      # the Keycloak-style ``/realms/<realm>/protocol/openid-connect/certs`` path
+      # unless JWKS_URI is set. Gatekeeper does NOT serve that path — it exposes
+      # JWKS at /auth/jwks — so this pin is REQUIRED or the backend 404s on every
+      # verification and rejects all gatekeeper tokens.
+      APP__SECURITY__AUTH__JWKS_URI: "http://gatekeeper:5000/auth/jwks"
+      APP__SECURITY__AUTH__REALM: "hoply"
+      APP__SECURITY__AUTH__CLIENT_ID: "hoply-web"
+      GATEKEEPER_ISSUER: "http://gatekeeper:5000"
+      SERVICE_AUDIENCE: "forge-services"
+      GATEKEEPER_CLIENT_ID: "svc-applications"
+      GATEKEEPER_CLIENT_SECRET: "08317fc86846832355478eabefebdf64"
+      GATEKEEPER_TOKEN_ENDPOINT: "http://gatekeeper:5000/auth/token"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.applications.rule=Host(`app.localhost`) && PathPrefix(`/api/applications`)"
       - "traefik.http.routers.applications.entrypoints=web"
       - "traefik.http.middlewares.applications-rewrite.replacepathregex.regex=^/api/applications/(.*)"
       - "traefik.http.middlewares.applications-rewrite.replacepathregex.replacement=/api/$$1"
-      - "traefik.http.routers.applications.middlewares=applications-rewrite"
+      - "traefik.http.routers.applications.middlewares=applications-rewrite,auth,strip-api-key"
       - "traefik.http.services.applications.loadbalancer.server.port=5030"
     depends_on:
-      applications-migrate:
+      applications-db-role:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
     networks:
       - app-network
   # ── Migrations for cv ──
@@ -208,6 +343,7 @@ services:
       # SDK fragments) — BuildKit FAILS the build on a declared-but-missing
       # context dir, and forge-core comes from the main context, not here.
       additional_contexts:
+        packages: ./packages
         project_root: .
     environment:
       ENV: development
@@ -219,6 +355,28 @@ services:
     networks:
       - app-network
 
+  # ── Runtime role for cv (database.rls_app_role) ──
+  # Postgres skips RLS for the superuser that owns the tables, so the service
+  # connects as cv_app (NOSUPERUSER NOBYPASSRLS, no tables owned).
+  # Re-run after every migration so new tables are granted.
+  cv-db-role:
+    image: pgvector/pgvector:pg16
+    entrypoint: ["sh", "/db-app-role.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: cv
+      APP_DB_ROLE: cv_app
+      APP_DB_PASSWORD: cv_app_dev
+    volumes:
+      - ./deploy/compose/db-app-role.sh:/db-app-role.sh:ro
+    depends_on:
+      cv-migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
   # ── cv ──
   cv:
     build:
@@ -227,6 +385,7 @@ services:
       # See the cv-migrate build above — same rationale (the
       # ``packages`` context is only declared when a project-root packages/ ships).
       additional_contexts:
+        packages: ./packages
         project_root: .
     # Direct host:container port so the matrix-nightly lane-C smoke
     # contract — and any local ``curl http://localhost:5040`` —
@@ -238,8 +397,29 @@ services:
     environment:
       ENV: development
       PORT: "5040"
-      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/cv"
-      APP__SECURITY__AUTH__ENABLED: "false"
+      DATABASE_URL: "postgresql://cv_app:cv_app_dev@postgres:5432/cv"
+      APP__SECURITY__AUTH__ENABLED: "true"
+      # In the gatekeeper sole-issuer model the backend validates the internal
+      # ES256 JWT that gatekeeper mints (iss=gatekeeper, JWKS at
+      # <server_url>/auth/jwks). So server_url + audience must point at
+      # gatekeeper, not Keycloak (Keycloak is gatekeeper's upstream IdP).
+      APP__SECURITY__AUTH__SERVER_URL: "http://gatekeeper:5000"
+      APP__SECURITY__AUTH__AUDIENCE: "forge-services"
+      # forge_core's auth setup derives the JWKS URI from server_url + realm as
+      # the Keycloak-style ``/realms/<realm>/protocol/openid-connect/certs`` path
+      # unless JWKS_URI is set. Gatekeeper does NOT serve that path — it exposes
+      # JWKS at /auth/jwks — so this pin is REQUIRED or the backend 404s on every
+      # verification and rejects all gatekeeper tokens.
+      APP__SECURITY__AUTH__JWKS_URI: "http://gatekeeper:5000/auth/jwks"
+      APP__SECURITY__AUTH__REALM: "hoply"
+      APP__SECURITY__AUTH__CLIENT_ID: "hoply-web"
+      GATEKEEPER_ISSUER: "http://gatekeeper:5000"
+      SERVICE_AUDIENCE: "forge-services"
+      GATEKEEPER_CLIENT_ID: "svc-cv"
+      GATEKEEPER_CLIENT_SECRET: "e7962cdae244ce9d1f5b5166605dc02e"
+      GATEKEEPER_TOKEN_ENDPOINT: "http://gatekeeper:5000/auth/token"
+      INTERNAL_SERVICE_URL_JOBS: "http://jobs:5020"
+      INTERNAL_SERVICE_URL_PROFILE: "http://profile:5010"
       PROFILE_SERVICE_URL: "http://profile:5010"
       JOBS_SERVICE_URL: "http://jobs:5020"
       # Claude through the owner's subscription token (docs/claude-setup.md). Without the token file the
@@ -257,11 +437,13 @@ services:
       - "traefik.http.routers.cv.entrypoints=web"
       - "traefik.http.middlewares.cv-rewrite.replacepathregex.regex=^/api/cv/(.*)"
       - "traefik.http.middlewares.cv-rewrite.replacepathregex.replacement=/api/$$1"
-      - "traefik.http.routers.cv.middlewares=cv-rewrite"
+      - "traefik.http.routers.cv.middlewares=cv-rewrite,auth,strip-api-key"
       - "traefik.http.services.cv.loadbalancer.server.port=5040"
     depends_on:
-      cv-migrate:
+      cv-db-role:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -345,8 +527,71 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
+      app-network:
+        aliases:
+          - auth.localhost
+
+  # Gatekeeper (OIDC ForwardAuth + token authority) is now contributed
+  # by the ``platform_auth_gatekeeper`` + ``platform_auth_gatekeeper_keygen``
+  # fragments via declarative compose.yaml entries (registered through
+  # ``forge.services.fragment_compose``). The fragments build the
+  # service block from the same ``./deploy/infra/gatekeeper/`` source tree that
+  # used to be hand-rolled here.
+
+  # ── Identity Provider ──
+  keycloak:
+    build:
+      context: ./deploy/infra/keycloak
+      dockerfile: Dockerfile
+    command: start-dev --import-realm
+    ports:
+      - "18080:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Browsers reach Keycloak at auth.localhost through Traefik; the gatekeeper calls it at keycloak:8080.
+      KC_HOSTNAME: http://auth.localhost
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+    volumes:
+      - ./deploy/infra/keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cat < /dev/null > /dev/tcp/localhost/9000"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
       - app-network
 
+  # ── Session Cache ──
+  redis:
+    image: redis:7-alpine
+    ports:
+      # Loopback only — services use redis:6379 over the compose network.
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
 
   # ── Tools (optional) ──
   pgadmin:
@@ -373,18 +618,128 @@ services:
     environment:
       BASE_URL: "http://app.localhost"
       CI: "true"
+      TEST_USER: "dev@localhost"
+      TEST_PASSWORD: "devpass"
     depends_on:
       - frontend
       - profile
       - jobs
       - applications
       - cv
+      - gatekeeper
     profiles:
       - test
 
+  # ── Plugin service: gatekeeper ──
+  gatekeeper:
+    image: "forge-gatekeeper:local"
+    environment:
+      ENV: "development"
+      KEYCLOAK_BASE_URL: "http://keycloak:8080/realms"
+      KEYCLOAK_PUBLIC_BASE_URL: "http://auth.localhost/realms"
+      KEYCLOAK_ADMIN_REALM: "hoply"
+      GATEKEEPER_CLIENT_ID: "gatekeeper"
+      GATEKEEPER_CLIENT_SECRET: "gatekeeper-dev-secret"
+      SESSION_ID_COOKIE_NAME: "tenant_session_id"
+      COOKIE_SECURE: "false"
+      REDIS_URL: "redis://redis:6379"
+      TENANT_ID_CLAIM: "https://forge/tenant_id"
+      DEFAULT_TENANT_ID: "00000000-0000-0000-0000-000000000001"
+      GATEKEEPER_ISSUER: "http://gatekeeper:5000"
+      INTERNAL_TOKEN_AUDIENCE: "forge-services"
+      INTERNAL_TOKEN_TTL_SECONDS: "300"
+      KEY_BACKEND: "file"
+      SIGNING_KEY_DIR: "/run/secrets/gatekeeper-signing"
+      SESSION_TIMEOUT_ENABLED: "true"
+      # A person stays signed in for 24 hours: idle and absolute alike (the realm's SSO session matches).
+      DEFAULT_IDLE_TIMEOUT_SECONDS: "86400"
+      DEFAULT_ABSOLUTE_TIMEOUT_SECONDS: "86400"
+      SESSION_WARN_AT_SECONDS: "60"
+      SESSION_FERNET_KEY: "L9dXzDhHXxIbDpzmUrNSCMUgCl0rYmQ6j6lwtWXH_A4="
+      DELEGATION_GRANT_FERNET_KEY: "UVEc0SmYvD9UcwKTlz_fMTusqFVVTNLliJ96ChlPDCI="
+      SERVICE_REGISTRY_PATH: "/run/secrets/gatekeeper-service-registry/service_registry.yaml"
+      SVC_AUTH_BACKEND: "preshared"
+      DEFAULT_RATE_LIMIT: "600"
+      API_KEYS_ENABLED: "false"
+      TENANT_SOURCE: "organization"
+      SELF_REGISTRATION: "off"
+    # 5000 on the host is macOS AirPlay Receiver; Traefik reaches the gatekeeper inside the network.
+    ports:
+      - 15000:5000
+    volumes:
+      - gatekeeper_signing_keys:/run/secrets/gatekeeper-signing:ro
+      - ./deploy/infra/gatekeeper/secrets/service_registry.yaml:/run/secrets/gatekeeper-service-registry/service_registry.yaml:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen(\u0027http://localhost:5000/auth/jwks\u0027,timeout=3).status==200 else 1)"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+    depends_on:
+      redis: {"condition": "service_healthy"}
+      keycloak: {"condition": "service_healthy"}
+      gatekeeper-keygen: {"condition": "service_completed_successfully"}
+      keycloak-realm-sync: {"condition": "service_completed_successfully"}
+    networks:
+      - app-network
+    restart: "unless-stopped"
+    build:
+      context: "./deploy/infra/gatekeeper"
+      dockerfile: "Dockerfile"
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.auth.forwardauth.address=http://gatekeeper:5000/auth
+      - traefik.http.middlewares.auth.forwardauth.authResponseHeaders=Authorization,X-Gatekeeper-User-Id,X-Gatekeeper-Email,X-Gatekeeper-Tenant,X-Gatekeeper-Roles,X-Gatekeeper-Auth-Method
+      - traefik.http.middlewares.strip-api-key.headers.customrequestheaders.X-API-Key=
+      # The browser's sign-in, session and sign-out endpoints on the app's address.
+      - "traefik.http.routers.gatekeeper-browser.rule=Host(`app.localhost`) && (Path(`/auth/login`) || Path(`/auth/userinfo`) || Path(`/auth/session`) || Path(`/auth/organization`) || Path(`/callback`) || Path(`/logout`))"
+      - "traefik.http.routers.gatekeeper-browser.entrypoints=web"
+      - "traefik.http.services.gatekeeper-browser.loadbalancer.server.port=5000"
+  # ── Plugin service: gatekeeper-keygen ──
+  gatekeeper-keygen:
+    image: "forge-gatekeeper:local"
+    command:
+      - python
+      - scripts/keygen.py
+    environment:
+      SIGNING_KEY_DIR: "/run/secrets/gatekeeper-signing"
+      KEY_BACKEND: "file"
+    volumes:
+      - gatekeeper_signing_keys:/run/secrets/gatekeeper-signing
+    networks:
+      - app-network
+    restart: "no"
+    user: "root"
+    build:
+      context: "./deploy/infra/gatekeeper"
+      dockerfile: "Dockerfile"
+  # ── Plugin service: keycloak-realm-sync ──
+  keycloak-realm-sync:
+    image: "forge-gatekeeper:local"
+    command:
+      - python
+      - scripts/realm_sync.py
+    environment:
+      KEYCLOAK_BASE_URL: "http://keycloak:8080/realms"
+      KEYCLOAK_ADMIN_REALM: "hoply"
+      KC_ADMIN_USER: "admin"
+      KC_ADMIN_PASSWORD: "admin"
+      REALM_JSON_PATH: "/realm/keycloak-realm.json"
+      ENV: "development"
+    volumes:
+      - ./deploy/infra/keycloak-realm.json:/realm/keycloak-realm.json:ro
+    depends_on:
+      keycloak: {"condition": "service_healthy"}
+    networks:
+      - app-network
+    restart: "no"
+    build:
+      context: "./deploy/infra/gatekeeper"
+      dockerfile: "Dockerfile"
 
 volumes:
   pgdata:
+  redis_data:
+  gatekeeper_signing_keys:
 
 networks:
   app-network:

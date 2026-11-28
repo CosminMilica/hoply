@@ -54,7 +54,10 @@
       },
       {
         "app_template": "crud-service",
-        "depends_on": [],
+        "depends_on": [
+          "profile",
+          "jobs"
+        ],
         "description": "Hoply: job search with a CV tailored to each job",
         "features": [
           "cvs"
@@ -76,7 +79,10 @@
       "api_base_url": "",
       "api_proxy_target": "",
       "app_template": "app-shell",
-      "auth": null,
+      "auth": {
+        "runtime": "forge",
+        "session_dialog": "project"
+      },
       "author_name": "Your Name",
       "default_color_scheme": "blue",
       "description": "Hoply: job search with a CV tailored to each job",
@@ -89,12 +95,12 @@
       "features": null,
       "framework": "vue",
       "generate_e2e_tests": true,
-      "include_auth": false,
+      "include_auth": true,
       "include_chat": false,
       "include_openapi": false,
-      "keycloak_client_id": "",
-      "keycloak_realm": "",
-      "keycloak_url": "http://localhost:8080",
+      "keycloak_client_id": "hoply-web",
+      "keycloak_realm": "hoply",
+      "keycloak_url": "http://localhost:18080",
       "layout": "sidebar",
       "layouts": [
         {
@@ -113,6 +119,16 @@
                     "id": "skills",
                     "label": "Skill gaps",
                     "to": "hoply-skills"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "action": "sign-out",
+                    "icon": "i-lucide-log-out",
+                    "id": "sign-out",
+                    "label": "Sign out"
                   }
                 ]
               }
@@ -153,9 +169,11 @@
       "package_manager": "npm",
       "project_name": "hoply",
       "routing": {
+        "auth_stuck": "builtin",
         "forbidden": "builtin",
         "landing": "hoply-profile",
-        "not_found": "builtin"
+        "not_found": "builtin",
+        "sign_in": "builtin"
       },
       "server_port": 5173,
       "ui_kit": "nuxt-ui",
@@ -166,7 +184,10 @@
         "api_base_url": "",
         "api_proxy_target": "",
         "app_template": "app-shell",
-        "auth": null,
+        "auth": {
+          "runtime": "forge",
+          "session_dialog": "project"
+        },
         "author_name": "Your Name",
         "default_color_scheme": "blue",
         "description": "Hoply: job search with a CV tailored to each job",
@@ -179,12 +200,12 @@
         "features": null,
         "framework": "vue",
         "generate_e2e_tests": true,
-        "include_auth": false,
+        "include_auth": true,
         "include_chat": false,
         "include_openapi": false,
-        "keycloak_client_id": "",
-        "keycloak_realm": "",
-        "keycloak_url": "http://localhost:8080",
+        "keycloak_client_id": "hoply-web",
+        "keycloak_realm": "hoply",
+        "keycloak_url": "http://localhost:18080",
         "layout": "sidebar",
         "layouts": [
           {
@@ -203,6 +224,16 @@
                       "id": "skills",
                       "label": "Skill gaps",
                       "to": "hoply-skills"
+                    }
+                  ]
+                },
+                {
+                  "items": [
+                    {
+                      "action": "sign-out",
+                      "icon": "i-lucide-log-out",
+                      "id": "sign-out",
+                      "label": "Sign out"
                     }
                   ]
                 }
@@ -243,16 +274,18 @@
         "package_manager": "npm",
         "project_name": "hoply",
         "routing": {
+          "auth_stuck": "builtin",
           "forbidden": "builtin",
           "landing": "hoply-profile",
-          "not_found": "builtin"
+          "not_found": "builtin",
+          "sign_in": "builtin"
         },
         "server_port": 5173,
         "ui_kit": "nuxt-ui",
         "version": "0.1.0"
       }
     ],
-    "include_keycloak": false,
+    "include_keycloak": true,
     "keycloak_port": 18080,
     "option_origins": {
       "agent.llm": "default",
@@ -266,8 +299,8 @@
       "auth.keycloak_self_registration": "default",
       "auth.keycloak_tenant_source": "default",
       "auth.mode": "user",
-      "auth.provider": "default",
-      "auth.service_discovery": "default",
+      "auth.provider": "user",
+      "auth.service_discovery": "user",
       "backend.mode": "default",
       "chat.attachments": "default",
       "connectors.backends": "default",
@@ -276,7 +309,7 @@
       "database.allow_unverified_tenant": "default",
       "database.engine": "default",
       "database.mode": "default",
-      "database.multitenancy": "default",
+      "database.multitenancy": "user",
       "database.rls_app_role": "default",
       "database.rls_startup_guard": "default",
       "database.tenant_claim_path": "default",
@@ -337,9 +370,9 @@
       "auth.api_keys": false,
       "auth.keycloak_self_registration": "off",
       "auth.keycloak_tenant_source": "organization",
-      "auth.mode": "none",
-      "auth.provider": "none",
-      "auth.service_discovery": false,
+      "auth.mode": "generate",
+      "auth.provider": "gatekeeper",
+      "auth.service_discovery": true,
       "backend.mode": "generate",
       "chat.attachments": false,
       "connectors.backends": [],
@@ -348,7 +381,7 @@
       "database.allow_unverified_tenant": false,
       "database.engine": "postgres",
       "database.mode": "generate",
-      "database.multitenancy": "none",
+      "database.multitenancy": "shared_rls",
       "database.rls_app_role": true,
       "database.rls_startup_guard": true,
       "database.tenant_claim_path": "tenant_id",

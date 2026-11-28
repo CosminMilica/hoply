@@ -40,9 +40,12 @@ async function bootstrap() {
   auth.init?.().catch((error: unknown) => {
     console.error('The authentication contract failed to start.', error)
   })
+  // The gateway keeps the session in an HttpOnly cookie: no bearer token.
   configureApiClient({
     getToken: async () => null,
-    onUnauthorized: () => {},
+    onUnauthorized: () => {
+      void auth.signIn()
+    },
   })
 
   app.mount('#app')

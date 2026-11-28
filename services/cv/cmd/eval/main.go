@@ -48,7 +48,8 @@ func main() {
 		if target == "" {
 			target = "eval/local"
 		}
-		sources := upstream.FromEnv()
+		sources, err := upstream.FromEnv()
+		check(err)
 		profile, _, err := sources.Profile(ctx)
 		check(err)
 		for _, id := range list(*ids) {

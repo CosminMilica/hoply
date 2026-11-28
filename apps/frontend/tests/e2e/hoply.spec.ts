@@ -4,7 +4,9 @@ import { mockApplicationsService } from './applications';
 import { mockCvService } from './cv';
 import { mockJobsService } from './jobs';
 import { mockProfileService } from './profile';
+import { mockSession } from './session';
 
+test.beforeEach(async ({ page }) => mockSession(page));
 test.afterEach(async ({ page }, testInfo) => saveCoverage(page, testInfo));
 
 test('a phone edits the profile with the tab bar at hand', async ({ page }) => {

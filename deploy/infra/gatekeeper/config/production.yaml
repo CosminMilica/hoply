@@ -1,0 +1,57 @@
+version: 1
+
+server:
+  host: "0.0.0.0"
+  port: 5000
+  log_level: "critical"
+  reload: false
+  max_workers: 4
+  cors:
+    enabled: false
+    allow_origins: ["http://localhost"]
+    allow_credentials: true
+    allow_headers: ["*"]
+    allow_methods: ["*"]
+    max_age: 600
+
+security:
+  algorithm: "HS256"
+  secret_key: "dev-gatekeeper-secret-override-in-production"
+  access_token_expire_minutes: 30
+  refresh_token_expire_minutes: 600
+  # Keycloak (URL, realm, client) comes from the environment, not this file:
+  # KEYCLOAK_BASE_URL, KEYCLOAK_PUBLIC_BASE_URL, KEYCLOAK_ADMIN_REALM,
+  # GATEKEEPER_CLIENT_ID and GATEKEEPER_CLIENT_SECRET (see
+  # app/gatekeeper/config.py).
+
+discovery:
+  enabled: false
+
+db:
+  url: "postgresql+asyncpg://postgres:postgres@postgres:5432/keycloak"
+  echo: false
+
+logging:
+  version: 1
+  formatters:
+    json:
+      "()": app.observability.json_logging.JsonFormatter
+      service: gatekeeper
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: json
+      stream: ext://sys.stdout
+  loggers:
+    api.access:
+      level: INFO
+      handlers: [console]
+      propagate: false
+    app:
+      level: INFO
+      handlers: [console]
+      propagate: false
+  root:
+    level: INFO
+    handlers: [console]

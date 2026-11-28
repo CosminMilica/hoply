@@ -6,7 +6,9 @@ import type { RoutingKey } from './contracts'
 type Page = () => Promise<Component>
 
 export const systemPages: Partial<Record<RoutingKey, Page>> = {
+  sign_in: () => import('@/shared/system/SignInPage.vue'),
   not_found: () => import('@/shared/system/NotFoundPage.vue'),
+  auth_stuck: () => import('@/shared/system/AuthStuckPage.vue'),
   forbidden: () => import('@/shared/system/ForbiddenPage.vue'),
 }
 

@@ -32,7 +32,8 @@ The server starts on [http://localhost:5030](http://localhost:5030).
 
 The applications API contract (shapes, status rules, ownership) is
 [`docs/api/applications.md`](../../docs/api/applications.md). Rows belong to
-the identity's tenant and subject. Schema: `migrations/00100_applications.sql`.
+the identity's tenant (a person), kept apart by row-level security. Schema: `migrations/00100_applications.sql`,
+`00101_tenant_rows.sql`.
 
 ## Layout
 

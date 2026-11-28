@@ -45,11 +45,11 @@ func sourcesServer(t *testing.T) string {
 
 // startServer runs the service binary against databaseURL, reading the profile
 // and the jobs from sources, with extra environment, and returns the /api/v1 base url.
-func startServer(t *testing.T, databaseURL, sources string, extra ...string) string {
+func startServer(t *testing.T, schema testutil.TestSchema, sources string, extra ...string) string {
 	t.Helper()
 	port := freePort(t)
-	server := command(t, "server", append(append(serverEnv(t), "ENV=testing", "PORT="+strconv.Itoa(port),
-		"DATABASE_URL="+databaseURL, "PROFILE_SERVICE_URL="+sources, "JOBS_SERVICE_URL="+sources), extra...)...)
+	server := command(t, "server", append(append(append(serverEnv(t), asPerson(t, schema)...), "ENV=testing", "PORT="+strconv.Itoa(port),
+		"PROFILE_SERVICE_URL="+sources, "JOBS_SERVICE_URL="+sources), extra...)...)
 	if err := server.Start(); err != nil {
 		t.Fatal(err)
 	}
@@ -84,6 +84,9 @@ func call(t *testing.T, method, url string, payload any) (int, map[string]any) {
 		t.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json")
+	if bearer != "" {
+		request.Header.Set("Authorization", "Bearer "+bearer)
+	}
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		t.Fatal(err)
@@ -128,7 +131,7 @@ func TestCvWrittenByClaudeEndToEnd(t *testing.T) {
 	}
 	schema := testutil.NewSchema(t)
 	migrateBinaryOK(t, schema.URL)
-	base := startServer(t, schema.URL, sourcesServer(t), "CV_WRITER=claude-cli", "CLAUDE_BIN="+script, "CLAUDE_TOKEN_FILE="+token)
+	base := startServer(t, schema, sourcesServer(t), "CV_WRITER=claude-cli", "CLAUDE_BIN="+script, "CLAUDE_TOKEN_FILE="+token)
 
 	if _, writer := call(t, http.MethodGet, base+"/writer", nil); writer["writer"] != "claude" || writer["state"] != "ok" {
 		t.Fatalf("GET /writer: %v", writer)
@@ -144,7 +147,7 @@ func TestCvWrittenByClaudeEndToEnd(t *testing.T) {
 func TestCvContractEndToEnd(t *testing.T) {
 	schema := testutil.NewSchema(t)
 	migrateBinaryOK(t, schema.URL)
-	base := startServer(t, schema.URL, sourcesServer(t))
+	base := startServer(t, schema, sourcesServer(t))
 
 	status, questions := call(t, http.MethodGet, base+"/jobs/"+jobID+"/questions", nil)
 	if status != http.StatusOK || questions["base_score"] != float64(56) {

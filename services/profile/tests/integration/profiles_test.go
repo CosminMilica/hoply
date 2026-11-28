@@ -192,7 +192,7 @@ func TestProfileRepositoryIsOwnerScoped(t *testing.T) {
 	repo := repositories.NewPgProfileRepository(pool)
 	owner := identity.New(uuid.New(), uuid.NewString())
 	sameSubjectOtherTenant := identity.New(uuid.New(), owner.Subject)
-	other := identity.New(owner.TenantID, uuid.NewString())
+	other := identity.New(uuid.New(), uuid.NewString())
 
 	experience, err := repo.AddExperience(ctx, owner, models.ExperienceInput{Role: "private"})
 	if err != nil {

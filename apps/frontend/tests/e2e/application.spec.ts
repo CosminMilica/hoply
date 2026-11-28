@@ -111,3 +111,11 @@ test('on a narrow screen the primary menu is a bottom tab bar', async ({ page })
   await expect(page).toHaveURL(/\/jobs$/);
   await expect(tabs.getByRole('link', { name: 'Find jobs' })).toHaveAttribute('aria-current', 'page');
 });
+
+// The gateway never answers who is signed in: the app still mounts, and the guard's
+// timeout shows the stalled-sign-in page instead of a blank one.
+test('a sign-in that never answers shows the stalled sign-in page', async ({ page }) => {
+  await page.context().route(url => url.pathname === '/auth/userinfo', () => {});
+  await page.goto('/');
+  await expect(page.getByText('Sign-in is taking longer than usual')).toBeVisible({ timeout: 15_000 });
+});

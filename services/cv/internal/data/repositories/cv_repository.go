@@ -1,8 +1,8 @@
 // Package repositories holds the persistence contracts and their pgx
 // implementations.
 //
-// Every CV belongs to the identity's tenant and subject, and every API query is
-// scoped to the caller. The queue methods serve the worker, which writes CVs
+// Every CV belongs to the identity's tenant (a person; subject records who
+// asked for it), and every API query is scoped to the caller. The queue methods serve the worker, which writes CVs
 // for every caller. Services depend on the interfaces, so unit tests substitute
 // in-memory implementations.
 package repositories
@@ -45,7 +45,9 @@ type CvRepository interface {
 
 // Task is a queued CV as the worker takes it.
 type Task struct {
-	ID        uuid.UUID
+	ID uuid.UUID
+	// Tenant is the person the CV is written for.
+	Tenant    uuid.UUID
 	Request   models.CvRequest
 	Profile   models.Profile
 	Job       models.Job
@@ -97,8 +99,8 @@ const MaxAttempts = 3
 
 const (
 	cvColumns = "id, job_id, status, created_at, updated_at, job_title, company, file_name, preview, written, written_by, model, refused, rules_reason, limit_until"
-	// owner matches the $1 tenant and $2 subject.
-	owner = "customer_id = $1 AND subject = $2"
+	// owner matches the $1 tenant.
+	owner = "customer_id = $1"
 )
 
 // DBTX is the query surface shared by *pgxpool.Pool and pgx.Tx.
@@ -156,7 +158,7 @@ job_title, company, file_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETUR
 func (r *PgCvRepository) Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Cv, error) {
 	var found *models.Cv
 	err := r.run(ctx, ident, func(db DBTX) error {
-		rows, err := db.Query(ctx, "SELECT "+cvColumns+" FROM cvs WHERE "+owner+" AND id = $3", ident.TenantID, ident.Subject, id)
+		rows, err := db.Query(ctx, "SELECT "+cvColumns+" FROM cvs WHERE "+owner+" AND id = $2", ident.TenantID, id)
 		if err != nil {
 			return err
 		}
@@ -174,7 +176,7 @@ func (r *PgCvRepository) List(ctx context.Context, ident identity.IdentityContex
 	var items []models.Cv
 	err := r.run(ctx, ident, func(db DBTX) error {
 		rows, err := db.Query(ctx, "SELECT "+cvColumns+" FROM cvs WHERE "+owner+
-			" AND ($3::uuid IS NULL OR job_id = $3) ORDER BY created_at DESC, id", ident.TenantID, ident.Subject, jobID)
+			" AND ($2::uuid IS NULL OR job_id = $2) ORDER BY created_at DESC, id", ident.TenantID, jobID)
 		if err != nil {
 			return err
 		}
@@ -193,7 +195,7 @@ func (r *PgCvRepository) List(ctx context.Context, ident identity.IdentityContex
 func (r *PgCvRepository) Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error) {
 	removed := false
 	err := r.run(ctx, ident, func(db DBTX) error {
-		tag, err := db.Exec(ctx, "DELETE FROM cvs WHERE "+owner+" AND id = $3", ident.TenantID, ident.Subject, id)
+		tag, err := db.Exec(ctx, "DELETE FROM cvs WHERE "+owner+" AND id = $2", ident.TenantID, id)
 		removed = err == nil && tag.RowsAffected() > 0
 		return err
 	})
@@ -207,9 +209,8 @@ func (r *PgCvRepository) Claim(ctx context.Context) (*Task, error) {
 		task                     Task
 		request, profile, jobRaw []byte
 	)
-	err := r.pool.QueryRow(ctx, `UPDATE cvs SET status = 'writing', attempts = attempts + 1, updated_at = NOW()
-WHERE id = (SELECT id FROM cvs WHERE status = 'queued' ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
-RETURNING id, request, profile_snapshot, job_snapshot, created_at`).Scan(&task.ID, &request, &profile, &jobRaw, &task.CreatedAt)
+	err := r.pool.QueryRow(ctx, "SELECT id, customer_id, request, profile_snapshot, job_snapshot, created_at FROM cv_claim()").
+		Scan(&task.ID, &task.Tenant, &request, &profile, &jobRaw, &task.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -239,25 +240,35 @@ func (t *Task) decode(request, profile, job []byte) error {
 }
 
 func (r *PgCvRepository) Checking(ctx context.Context, id uuid.UUID, preview *models.Preview) error {
-	return r.update(ctx, "UPDATE cvs SET status = 'checking', preview = $2, updated_at = NOW() WHERE id = $1", id, preview)
+	return r.update(ctx, id, "UPDATE cvs SET status = 'checking', preview = $2, updated_at = NOW() WHERE id = $1", id, preview)
 }
 
 func (r *PgCvRepository) Complete(ctx context.Context, id uuid.UUID, written models.Written, by models.Authorship) error {
-	return r.update(ctx, `UPDATE cvs SET status = 'ready', written = $2, written_by = $3, model = $4, refused = $5, rules_reason = $6,
+	return r.update(ctx, id, `UPDATE cvs SET status = 'ready', written = $2, written_by = $3, model = $4, refused = $5, rules_reason = $6,
 limit_until = $7, updated_at = NOW() WHERE id = $1`, id, written, by.WrittenBy, by.Model, by.Refused, by.RulesReason, by.LimitUntil)
 }
 
 func (r *PgCvRepository) Fail(ctx context.Context, id uuid.UUID) error {
-	return r.update(ctx, "UPDATE cvs SET status = 'failed', updated_at = NOW() WHERE id = $1", id)
+	return r.update(ctx, id, "UPDATE cvs SET status = 'failed', updated_at = NOW() WHERE id = $1", id)
 }
 
 func (r *PgCvRepository) Recover(ctx context.Context) error {
-	return r.update(ctx, `UPDATE cvs SET status = CASE WHEN attempts >= $1 THEN 'failed' ELSE 'queued' END, updated_at = NOW()
-WHERE status IN ('writing', 'checking')`, MaxAttempts)
+	if _, err := r.pool.Exec(ctx, "SELECT cv_recover($1)", MaxAttempts); err != nil {
+		return apperrors.FromDatabase(err)
+	}
+	return nil
 }
 
-func (r *PgCvRepository) update(ctx context.Context, query string, args ...any) error {
-	if _, err := r.pool.Exec(ctx, query, args...); err != nil {
+// update changes the CV id inside a transaction bound to its tenant, so row-level security admits the change.
+func (r *PgCvRepository) update(ctx context.Context, id uuid.UUID, query string, args ...any) error {
+	err := pgx.BeginFunc(ctx, r.pool, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, "SELECT set_config('app.current_tenant', COALESCE(cv_tenant($1)::text, ''), true)", id); err != nil {
+			return err
+		}
+		_, err := tx.Exec(ctx, query, args...)
+		return err
+	})
+	if err != nil {
 		return apperrors.FromDatabase(err)
 	}
 	return nil
@@ -304,16 +315,19 @@ func (r *PgCvRepository) Analysis(ctx context.Context, jobID uuid.UUID) (json.Ra
 }
 
 func (r *PgCvRepository) SaveAnalysis(ctx context.Context, jobID uuid.UUID, analysis json.RawMessage, model string) error {
-	return r.update(ctx, `INSERT INTO job_analyses (job_id, analysis, model) VALUES ($1, $2, $3)
-ON CONFLICT (job_id) DO UPDATE SET analysis = EXCLUDED.analysis, model = EXCLUDED.model, created_at = NOW()`, jobID, analysis, model)
+	if _, err := r.pool.Exec(ctx, `INSERT INTO job_analyses (job_id, analysis, model) VALUES ($1, $2, $3)
+ON CONFLICT (job_id) DO UPDATE SET analysis = EXCLUDED.analysis, model = EXCLUDED.model, created_at = NOW()`, jobID, analysis, model); err != nil {
+		return apperrors.FromDatabase(err)
+	}
+	return nil
 }
 
 func (r *PgCvRepository) Probe(ctx context.Context, ident identity.IdentityContext, jobID uuid.UUID) (*StoredProbe, error) {
 	var found *StoredProbe
 	err := r.run(ctx, ident, func(db DBTX) error {
 		var probe StoredProbe
-		err := db.QueryRow(ctx, "SELECT fingerprint, status, questions, updated_at FROM probes WHERE "+owner+" AND job_id = $3",
-			ident.TenantID, ident.Subject, jobID).Scan(&probe.Fingerprint, &probe.Status, &probe.Questions, &probe.UpdatedAt)
+		err := db.QueryRow(ctx, "SELECT fingerprint, status, questions, updated_at FROM probes WHERE "+owner+" AND job_id = $2",
+			ident.TenantID, jobID).Scan(&probe.Fingerprint, &probe.Status, &probe.Questions, &probe.UpdatedAt)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
 		}
@@ -330,7 +344,7 @@ func (r *PgCvRepository) SaveProbe(ctx context.Context, ident identity.IdentityC
 	return r.run(ctx, ident, func(db DBTX) error {
 		_, err := db.Exec(ctx, `INSERT INTO probes (customer_id, subject, job_id, fingerprint, status, questions)
 VALUES ($1, $2, $3, $4, $5, $6)
-ON CONFLICT (customer_id, subject, job_id) DO UPDATE SET fingerprint = EXCLUDED.fingerprint, status = EXCLUDED.status,
+ON CONFLICT (customer_id, job_id) DO UPDATE SET fingerprint = EXCLUDED.fingerprint, status = EXCLUDED.status,
 questions = EXCLUDED.questions, updated_at = NOW()`, ident.TenantID, ident.Subject, jobID, probe.Fingerprint, probe.Status, probe.Questions)
 		return err
 	})
@@ -341,7 +355,7 @@ func (r *PgCvRepository) Letter(ctx context.Context, ident identity.IdentityCont
 	err := r.run(ctx, ident, func(db DBTX) error {
 		var letter models.Letter
 		err := db.QueryRow(ctx, "SELECT status, recruiter, written, model, refused, reason, limit_until, updated_at FROM letters WHERE "+owner+
-			" AND cv_id = $3", ident.TenantID, ident.Subject, cvID).Scan(&letter.Status, &letter.Recruiter, &letter.Texts, &letter.Model,
+			" AND cv_id = $2", ident.TenantID, cvID).Scan(&letter.Status, &letter.Recruiter, &letter.Texts, &letter.Model,
 			&letter.Refused, &letter.Reason, &letter.LimitUntil, &letter.UpdatedAt)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
@@ -355,10 +369,10 @@ func (r *PgCvRepository) Letter(ctx context.Context, ident identity.IdentityCont
 func (r *PgCvRepository) SaveLetter(ctx context.Context, ident identity.IdentityContext, cvID uuid.UUID, letter models.Letter) error {
 	return r.run(ctx, ident, func(db DBTX) error {
 		_, err := db.Exec(ctx, `INSERT INTO letters (cv_id, customer_id, subject, status, recruiter, written, model, refused, reason, limit_until)
-SELECT id, customer_id, subject, $4, $5, $6, $7, $8, $9, $10 FROM cvs WHERE `+owner+` AND id = $3
+SELECT id, customer_id, subject, $3, $4, $5, $6, $7, $8, $9 FROM cvs WHERE `+owner+` AND id = $2
 ON CONFLICT (cv_id) DO UPDATE SET status = EXCLUDED.status, recruiter = EXCLUDED.recruiter, written = EXCLUDED.written,
 model = EXCLUDED.model, refused = EXCLUDED.refused, reason = EXCLUDED.reason, limit_until = EXCLUDED.limit_until, updated_at = NOW()`,
-			ident.TenantID, ident.Subject, cvID, letter.Status, letter.Recruiter, letter.Texts, letter.Model, letter.Refused, letter.Reason, letter.LimitUntil)
+			ident.TenantID, cvID, letter.Status, letter.Recruiter, letter.Texts, letter.Model, letter.Refused, letter.Reason, letter.LimitUntil)
 		return err
 	})
 }
@@ -370,8 +384,8 @@ func (r *PgCvRepository) Source(ctx context.Context, ident identity.IdentityCont
 			task                     Task
 			request, profile, jobRaw []byte
 		)
-		err := db.QueryRow(ctx, "SELECT id, request, profile_snapshot, job_snapshot, created_at FROM cvs WHERE "+owner+" AND id = $3",
-			ident.TenantID, ident.Subject, cvID).Scan(&task.ID, &request, &profile, &jobRaw, &task.CreatedAt)
+		err := db.QueryRow(ctx, "SELECT id, request, profile_snapshot, job_snapshot, created_at FROM cvs WHERE "+owner+" AND id = $2",
+			ident.TenantID, cvID).Scan(&task.ID, &request, &profile, &jobRaw, &task.CreatedAt)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
 		}
