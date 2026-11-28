@@ -23,6 +23,8 @@ type CvRequest struct {
 	SkipRoles []string `json:"skip_roles"`
 	Focus     []string `json:"focus"`
 	Confirmed []int    `json:"confirmed"`
+	// Language is the CV's language: "en" (the default) or "ro".
+	Language string `json:"language,omitempty"`
 }
 
 type RoleSection struct {
@@ -56,6 +58,8 @@ type CvDocument struct {
 	Certifications []string         `json:"certifications"`
 	Languages      string           `json:"languages"`
 	Additional     []string         `json:"additional"`
+	// Language is the language the document is written in, "en" or "ro"; its headings follow it.
+	Language string `json:"language"`
 }
 
 type AtsCheck struct {

@@ -143,7 +143,9 @@ describe('usePrep', () => {
     expect(prep.state.focus).toBeNull()
     prep.toggleFocus('Git')
     prep.toggleFocus('Python')
-    expect(prep.toRequest(seedId(1))).toEqual({ job_id: seedId(1), skip_roles: ['r2'], focus: ['SQL', 'CI/CD', 'Python'], confirmed: [] })
+    expect(prep.toRequest(seedId(1))).toEqual({ job_id: seedId(1), skip_roles: ['r2'], focus: ['SQL', 'CI/CD', 'Python'], confirmed: [], language: 'en' })
+    prep.state.language = 'ro'
+    expect(prep.toRequest(seedId(1)).language).toBe('ro')
   })
 
   it('falls back to the person’s own notes without a role or project', async () => {

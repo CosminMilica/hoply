@@ -1,0 +1,178 @@
+{
+  "name": "finance-fpa-analyst-ro",
+  "profile": {
+    "name": "Mihai Stan",
+    "headline": "Financial Analyst",
+    "about": "Financial analyst in manufacturing. Most of my week is the monthly close, the forecast and explaining variances to people who do not like spreadsheets.",
+    "email": "mihai.stan@example.com",
+    "phone": "+40 700 000 202",
+    "linkedin": "linkedin.com/in/mihai-stan-example",
+    "city": "Timișoara",
+    "country": "Romania",
+    "work_modes": [
+      "hybrid",
+      "onsite"
+    ],
+    "additional_info": [],
+    "skills": [
+      "Financial modelling",
+      "Excel",
+      "Power BI",
+      "SAP",
+      "Budgeting",
+      "Forecasting",
+      "Variance analysis",
+      "SQL"
+    ],
+    "experience": [
+      {
+        "id": "f1",
+        "role": "Financial Analyst",
+        "company": "Continental Parts",
+        "location": "Timișoara",
+        "start": "2021-06",
+        "end": "",
+        "tools": [
+          "SAP",
+          "Excel",
+          "Power BI",
+          "SQL"
+        ],
+        "bullets": [
+          {
+            "text": "Prepare the monthly management report for the plant.",
+            "result": "close reporting moved from day 8 to day 5",
+            "skills": []
+          },
+          {
+            "text": "Build the annual budget and the rolling forecast for three production lines.",
+            "result": "",
+            "skills": [
+              "Budgeting",
+              "Forecasting"
+            ]
+          },
+          {
+            "text": "Explain cost variances to plant managers each month.",
+            "result": "",
+            "skills": [
+              "Variance analysis"
+            ]
+          },
+          {
+            "text": "Replaced manual Excel packs with Power BI dashboards fed from SAP.",
+            "result": "saved about 2 days of work a month",
+            "skills": [
+              "Power BI"
+            ]
+          }
+        ],
+        "notes": [
+          {
+            "text": "Found a scrap cost booking error worth about EUR 180,000 a year during a variance review",
+            "skills": []
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "role": "Junior Accountant",
+        "company": "Delta Audit",
+        "location": "Timișoara",
+        "start": "2019-09",
+        "end": "2021-05",
+        "tools": [
+          "Excel",
+          "Saga"
+        ],
+        "bullets": [
+          {
+            "text": "Booked invoices and reconciled bank accounts for 15 small clients.",
+            "result": "",
+            "skills": []
+          },
+          {
+            "text": "Helped prepare year-end statements.",
+            "result": "",
+            "skills": []
+          }
+        ]
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "id": "e1",
+        "level": "bachelor",
+        "field": "Finance",
+        "degree": "BSc Finance and Banking",
+        "school": "West University of Timișoara",
+        "start_year": "2016",
+        "end_year": "2019"
+      }
+    ],
+    "certifications": [
+      {
+        "id": "c1",
+        "name": "ACCA (in progress, 9 of 13 exams)",
+        "issuer": "ACCA"
+      }
+    ],
+    "languages": [
+      {
+        "id": "l1",
+        "name": "Romanian",
+        "level": "Native"
+      },
+      {
+        "id": "l2",
+        "name": "English",
+        "level": "C1"
+      },
+      {
+        "id": "l3",
+        "name": "German",
+        "level": "B1"
+      }
+    ]
+  },
+  "job": {
+    "title": "Analist FP&A",
+    "company": "Contoso Retail Group",
+    "city": "Timișoara",
+    "country": "Romania",
+    "work_mode": "hybrid",
+    "level": "mid",
+    "years_required": 3,
+    "about": "Echipa noastră de FP&A susține 40 de magazine și afacerea de comerț online. Vei fi responsabil de prognoza lunară pentru două regiuni, vei construi modele pentru deschiderea de magazine noi și îi vei ajuta pe partenerii de business să își înțeleagă cifrele.",
+    "about_company": "Contoso Retail Group are magazine de casă și grădină în România și Ungaria și își mută planificarea din foi de calcul într-un instrument de planificare.",
+    "product": "comerț cu articole pentru casă și grădină",
+    "must_have": [
+      "Forecasting",
+      "Budgeting",
+      "Modelare financiară",
+      "Excel",
+      "Analiza abaterilor"
+    ],
+    "nice_to_have": [
+      "Power BI",
+      "SQL",
+      "Anaplan",
+      "Experiență în retail"
+    ],
+    "responsibilities": [
+      "Gestionezi prognoza și bugetul lunar pentru două regiuni",
+      "Construiești analize de business pentru deschiderea de magazine noi",
+      "Analizezi abaterile și le explici managerilor regionali",
+      "Îmbunătățești raportarea și automatizezi munca manuală",
+      "Sprijini trecerea de la foi de calcul la un instrument de planificare"
+    ]
+  },
+  "request": {
+    "job_id": "",
+    "skip_roles": [],
+    "focus": [],
+    "confirmed": [],
+    "language": "ro"
+  }
+}

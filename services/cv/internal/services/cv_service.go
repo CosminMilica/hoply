@@ -332,6 +332,10 @@ func (s *CvService) Create(ctx context.Context, ident identity.IdentityContext, 
 			return nil, invalid("confirmed", "'confirmed' holds indexes from 0")
 		}
 	}
+	if request.Language != "" && request.Language != cvdoc.English && request.Language != cvdoc.Romanian {
+		return nil, invalid("language", "'language' must be en or ro")
+	}
+	request.Language = cvdoc.LanguageOf(request.Language)
 	request.JobID = jobID.String()
 	request.SkipRoles = nonNil(request.SkipRoles)
 	request.Focus = nonNil(request.Focus)

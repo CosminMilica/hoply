@@ -111,6 +111,24 @@ describe('PrepPage', () => {
     expect(button('Python').getAttribute('aria-pressed')).toBe('true')
   })
 
+  it('writes the CV in the ad’s language unless the person picks the other one', async () => {
+    const { applications } = useServices()
+    applications.track(seedId(1), 'saved')
+    const sent: unknown[] = []
+    const record = ({ request }: { request: Request }) => {
+      if (request.method === 'POST' && new URL(request.url).pathname.endsWith('/api/cv/v1/cvs')) void request.clone().json().then(body => sent.push(body))
+    }
+    server.events.on('request:start', record)
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    expect(button('English').getAttribute('aria-pressed')).toBe('true')
+    await click(button('Română'))
+    expect(button('Română').getAttribute('aria-pressed')).toBe('true')
+    await click(button(/^Generate CV/))
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+    server.events.removeListener('request:start', record)
+    expect(sent[0]).toMatchObject({ job_id: seedId(1), language: 'ro' })
+  })
+
   it('generates the CV, steps through the progress and opens it', async () => {
     const { applications } = useServices()
     applications.track(seedId(1), 'saved')

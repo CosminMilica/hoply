@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CvDocument, CvTemplate } from '../api/cv.schema'
 import HighlightedText from './HighlightedText.vue'
+import { HEADINGS } from '../language'
 
 withDefaults(defineProps<{ document: CvDocument, highlights: string[], template?: CvTemplate }>(), { template: 'classic' })
 </script>
@@ -9,6 +10,7 @@ withDefaults(defineProps<{ document: CvDocument, highlights: string[], template?
   <article
     data-print-root
     aria-label="CV preview"
+    :lang="document.language"
     :data-template="template"
     class="cv-paper flex flex-col gap-3 rounded-xl border border-[#d8d6ce] bg-white p-5 text-[12.5px] leading-normal text-[#111111]"
   >
@@ -19,15 +21,15 @@ withDefaults(defineProps<{ document: CvDocument, highlights: string[], template?
       <span v-if="document.links.length">{{ document.links.join(' · ') }}</span>
     </header>
     <section v-if="document.summary" class="flex flex-col gap-1">
-      <h2 class="cv-heading">Summary</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['summary'] }}</h2>
       <p class="m-0"><HighlightedText :text="document.summary" :keywords="highlights" /></p>
     </section>
     <section v-if="document.skills.length" class="flex flex-col gap-1">
-      <h2 class="cv-heading">Skills</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['skills'] }}</h2>
       <p class="m-0"><HighlightedText :text="document.skills.join(', ')" :keywords="highlights" /></p>
     </section>
     <section v-if="document.experience.length" class="flex flex-col gap-2.5">
-      <h2 class="cv-heading">Experience</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['experience'] }}</h2>
       <div v-for="(role, index) in document.experience" :key="index" class="flex flex-col gap-[3px]">
         <h3 class="m-0 text-[12.5px] font-bold">{{ role.role }}</h3>
         <span>{{ role.meta }}</span>
@@ -39,7 +41,7 @@ withDefaults(defineProps<{ document: CvDocument, highlights: string[], template?
       </div>
     </section>
     <section v-if="document.projects.length" class="flex flex-col gap-2.5">
-      <h2 class="cv-heading">Projects</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['projects'] }}</h2>
       <div v-for="(project, index) in document.projects" :key="index" class="flex flex-col gap-[3px]">
         <h3 class="m-0 text-[12.5px] font-bold">{{ project.name }}</h3>
         <span v-if="project.meta">{{ project.meta }}</span>
@@ -51,24 +53,24 @@ withDefaults(defineProps<{ document: CvDocument, highlights: string[], template?
       </div>
     </section>
     <section v-if="document.education.length" class="flex flex-col gap-1">
-      <h2 class="cv-heading">Education</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['education'] }}</h2>
       <div v-for="(item, index) in document.education" :key="index" class="flex flex-col">
         <span class="font-bold">{{ item.degree }}</span>
         <span v-if="item.meta">{{ item.meta }}</span>
       </div>
     </section>
     <section v-if="document.certifications.length" class="flex flex-col gap-1">
-      <h2 class="cv-heading">Certifications</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['certifications'] }}</h2>
       <ul class="flex flex-col">
         <li v-for="(item, index) in document.certifications" :key="index" class="flex gap-2"><span aria-hidden="true">•</span><span>{{ item }}</span></li>
       </ul>
     </section>
     <section v-if="document.languages" class="flex flex-col gap-1">
-      <h2 class="cv-heading">Languages</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['languages'] }}</h2>
       <p class="m-0">{{ document.languages }}</p>
     </section>
     <section v-if="document.additional.length" class="flex flex-col gap-1">
-      <h2 class="cv-heading">Additional information</h2>
+      <h2 class="cv-heading">{{ HEADINGS[document.language]['additional'] }}</h2>
       <ul class="flex flex-col">
         <li v-for="(item, index) in document.additional" :key="index" class="flex gap-2"><span aria-hidden="true">•</span><span>{{ item }}</span></li>
       </ul>

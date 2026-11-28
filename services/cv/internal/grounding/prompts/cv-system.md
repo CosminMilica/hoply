@@ -16,6 +16,10 @@ The message is JSON:
   years of experience.
 - `roles`, `projects`: the person's roles (in order, `current` when it has no end) and projects, with their facts.
 - `skills`, `focus`, `page_limit`.
+- `language`: the language the CV is written in, `en` (English) or `ro` (Romanian). Write every sentence and the
+  headline in it. Romanian is written with its diacritics (ă, â, î, ș, ț), in the plain, formal register of a
+  Romanian CV, with past-tense verbs for finished work ("am redus", "am automatizat"). Keep the names of tools,
+  technologies, products, companies, certifications and job titles as the facts and the ad write them.
 
 First make a `plan`:
 - `evidence`: for each priority of the analysis, the facts that prove the person can deliver it, and how strongly:

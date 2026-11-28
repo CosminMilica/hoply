@@ -8,6 +8,8 @@ export const cvRequestSchema = z.object({
   focus: z.array(z.string()).max(3),
   /** The key responsibilities the person confirmed for this job (indexes into the job's responsibilities). */
   confirmed: z.array(z.number().int().nonnegative()),
+  /** The CV's language: English (the default) or Romanian. */
+  language: z.enum(['en', 'ro']).default('en'),
 })
 
 export type CvRequest = z.infer<typeof cvRequestSchema>
@@ -27,6 +29,8 @@ export const cvDocumentSchema = z.object({
   certifications: z.array(z.string()),
   languages: z.string(),
   additional: z.array(z.string()),
+  /** A CV written before the choice existed has none, and is English. */
+  language: z.enum(['en', 'ro']).catch('en'),
 })
 
 export type CvDocument = z.infer<typeof cvDocumentSchema>

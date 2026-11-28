@@ -160,11 +160,11 @@ func buildDocument(profile models.Profile, job Job, request models.CvRequest, ta
 		if len(sentences) > 1 {
 			second = sentences[1] + "."
 		}
-		summary = strings.Join(keepNonEmpty(
-			title+" with "+experience+strongest+".",
-			second,
-			"Looking to join "+job.Company+" as "+job.Title+" and work on its "+job.Product+".",
-		), " ")
+		opening, joining := title+" with "+experience+strongest+".", "Looking to join "+job.Company+" as "+job.Title+" and work on its "+job.Product+"."
+		if LanguageOf(request.Language) == Romanian {
+			opening, joining = romanianSummary(profile.Headline, years, top, job)
+		}
+		summary = strings.Join(keepNonEmpty(opening, second, joining), " ")
 		skills = append([]string{}, matched...)
 		for _, skill := range profile.Skills {
 			if !containsFold(matched, skill) {
@@ -266,6 +266,7 @@ func buildDocument(profile models.Profile, job Job, request models.CvRequest, ta
 			Certifications: certifications,
 			Languages:      strings.Join(languages, ", "),
 			Additional:     additional,
+			Language:       LanguageOf(request.Language),
 		},
 	}
 }

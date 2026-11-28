@@ -42,6 +42,7 @@ type promptJob struct {
 }
 
 type promptMessage struct {
+	Language  string          `json:"language"`
 	PageLimit int             `json:"page_limit"`
 	Analysis  *Analysis       `json:"analysis,omitempty"`
 	Job       promptJob       `json:"job"`
@@ -78,6 +79,7 @@ func (c Catalogue) message(job cvdoc.Job, request models.CvRequest, skills []str
 		focus = c.Matched[:min(3, len(c.Matched))]
 	}
 	message := promptMessage{
+		Language:  cvdoc.LanguageOf(request.Language),
 		PageLimit: c.PageLimit,
 		Analysis:  analysis,
 		Draft:     draft,

@@ -77,6 +77,8 @@ func ParseAnswer(raw json.RawMessage) (Answer, error) {
 
 var number = regexp.MustCompile(`\b\d+(?:[.,]\d+)*`)
 
+var otherSeparators = strings.NewReplacer(".", ",", ",", ".")
+
 // Check reports why a sentence cannot go in the CV, or "" when it can. owner is
 // the role or project the sentence describes, "" for the summary.
 func (c Catalogue) Check(sentence Sentence, owner string) string {
@@ -102,7 +104,8 @@ func (c Catalogue) Check(sentence Sentence, owner string) string {
 	}
 	held := map[string]bool{}
 	for _, value := range number.FindAllString(strings.Join(cited, " "), -1) {
-		held[value] = true
+		// Romanian swaps the separators: the facts' 180,000 and 99.9 are its 180.000 and 99,9.
+		held[value], held[otherSeparators.Replace(value)] = true, true
 	}
 	for _, value := range number.FindAllString(text, -1) {
 		if !held[value] {
@@ -221,6 +224,9 @@ func (c Catalogue) section(sections []Section, entry Entry, job cvdoc.Job, limit
 			continue
 		}
 		refused = append(refused, reason)
+		if c.Language == cvdoc.Romanian {
+			continue
+		}
 		if fallback := c.rewrite(sentence, entry.ID, job, index); fallback != "" && !contains(bullets, fallback) {
 			bullets = append(bullets, fallback)
 		}

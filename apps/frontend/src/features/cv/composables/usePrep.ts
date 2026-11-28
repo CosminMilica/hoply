@@ -5,6 +5,7 @@ import type { Bullet, Profile } from '@/features/profile/api/profile.schema'
 import { monthRange } from '@/features/profile/format'
 import { bulletLine, knownSkills } from '@/features/profile/skills'
 import type { CvRequest, PrepQuestions, ProbeQuestion } from '../api/cv.schema'
+import { adLanguage, type CvLanguage } from '../language'
 import { useAnswers } from './useAnswers'
 import { OTHER, useNotes, type Place } from './useNotes'
 
@@ -40,6 +41,12 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     skip: {} as Record<string, boolean>,
     focus: null as string[] | null,
     places: {} as Record<string, Place>,
+    language: null as CvLanguage | null,
+  })
+  // The CV is in the ad's language unless the person picks the other one.
+  const language = computed<CvLanguage>(() => {
+    const ad = toValue(job)
+    return state.language ?? (ad ? adLanguage([ad.title, ad.about, ...ad.responsibilities, ...ad.must_have].join(' ')) : 'en')
   })
 
   const current = () => toValue(profile)
@@ -163,11 +170,13 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
           return kept && kept.status !== 'skipped'
         })
         .map(claim => claim.index),
+      language: language.value,
     }
   }
 
   return {
     state,
+    language,
     answers,
     whereLabel,
     roleChoices,
