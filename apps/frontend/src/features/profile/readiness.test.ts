@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { setLocale } from '@/features/common/i18n'
 import { emptyProfile, sampleProfile } from '@/test/profile-service'
 import { educationTitle, monthLabel, monthRange, yearRange } from './format'
-import { initialsOf, isRichRole, profileReadiness } from './readiness'
+import { hasWork, initialsOf, isRichRole, profileReadiness, READY_PERCENT, readyForClaude } from './readiness'
 import { bulletLine, knownSkills } from './skills'
 
 describe('profileReadiness', () => {
@@ -101,5 +101,27 @@ describe('skills', () => {
   it('reads a highlight with its result', () => {
     expect(bulletLine({ text: 'Built pipelines.', result: 'Cut release time to 15 minutes.' })).toBe('Built pipelines, cut release time to 15 minutes.')
     expect(bulletLine({ text: 'Built pipelines', result: ' ' })).toBe('Built pipelines')
+  })
+})
+
+describe('readyForClaude', () => {
+  // The cv service keeps the same rule and cases (cvdoc.ReadyForClaude, readiness_test.go).
+  const contact = emptyProfile()
+  Object.assign(contact, { name: 'Ana Pop', headline: 'Accountant', about: 'About', email: 'a@b.ro', phone: '+40', linkedin: 'li',
+    city: 'Iași', country: 'Romania', work_authorization: 'citizen' })
+
+  it('needs the percent and some work', () => {
+    expect(READY_PERCENT).toBe(60)
+    expect(readyForClaude(emptyProfile())).toBe(false)
+    expect(profileReadiness(contact).percent).toBe(62)
+    expect(hasWork(contact)).toBe(false)
+    expect(readyForClaude(contact)).toBe(false)
+    const working = { ...contact, projects: [{ id: 'p1', name: 'Books', role: '', url: '', start: '', end: '', tools: [], notes: [],
+      bullets: [{ text: 'Kept the books of 12 clients', result: '', skills: [] }] }] }
+    expect(hasWork(working)).toBe(true)
+    expect(readyForClaude(working)).toBe(true)
+    expect(profileReadiness({ ...working, headline: '', about: '' }).percent).toBe(46)
+    expect(readyForClaude({ ...working, headline: '', about: '' })).toBe(false)
+    expect(readyForClaude(sampleProfile())).toBe(true)
   })
 })

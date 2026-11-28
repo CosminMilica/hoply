@@ -209,6 +209,8 @@ const (
 	ProbeReady       = "ready"
 	ProbePending     = "pending"
 	ProbeUnavailable = "unavailable"
+	// ProbeIncomplete: the profile is not complete enough to ask Claude anything (cvdoc.ReadyForClaude).
+	ProbeIncomplete = "incomplete"
 )
 
 // Probe is the questions for one job: ready, still being asked for, or
