@@ -5,8 +5,11 @@
   "displayName": "hoply",
   "displayNameHtml": "<strong>hoply</strong>",
   "sslRequired": "none",
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "verifyEmail": false,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "ro"],
+  "defaultLocale": "en",
   "registrationEmailAsUsername": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
@@ -144,6 +147,21 @@
             "introspection.token.claim": "true",
             "userinfo.token.claim": "true"
           }
+        },
+        {
+          "name": "email-verified-without-verification",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "email_verified",
+            "claim.value": "true",
+            "jsonType.label": "boolean",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     }
@@ -210,7 +228,7 @@
       "enabled": true,
       "serviceAccountClientId": "gatekeeper",
       "clientRoles": {
-        "realm-management": ["manage-users", "view-users"]
+        "realm-management": ["manage-users", "view-users", "manage-realm"]
       }
     },
     {

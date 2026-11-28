@@ -30,7 +30,7 @@ dev_server = true
 "async.rag_ingest_queue" = false
 "async.task_queue" = false
 "auth.api_keys" = false
-"auth.keycloak_self_registration" = "off"
+"auth.keycloak_self_registration" = "own_organization"
 "auth.keycloak_tenant_source" = "organization"
 "auth.mode" = "generate"
 "auth.provider" = "gatekeeper"
@@ -102,7 +102,7 @@ dev_server = true
 "async.rag_ingest_queue" = "default"
 "async.task_queue" = "default"
 "auth.api_keys" = "default"
-"auth.keycloak_self_registration" = "default"
+"auth.keycloak_self_registration" = "user"
 "auth.keycloak_tenant_source" = "default"
 "auth.mode" = "user"
 "auth.provider" = "user"
@@ -1635,7 +1635,7 @@ sha256 = "1447b23872702fb775247351651512cebd72eb50e600c5e201de188b808e898e"
 emitted_at = "2026-11-27T20:15:27Z"
 origin = "base-template"
 ownership = "scaffold"
-sha256 = "e2cad7d2e833c747f8592cb79ba2e23e170958816834f8d3fb315e5f8dbff91f"
+sha256 = "efea6cf3ee9bbeeee87a6d8878d8408e1d84da801295f02b781223eebaf40148"
 
 [forge.provenance."deploy/infra/keycloak/Dockerfile"]
 emitted_at = "2026-11-27T20:15:27Z"
@@ -1665,7 +1665,7 @@ sha256 = "fea2296738d4dc0699ecbde95df8c1c48ee4e269feeee8f58c69fa7b7c24d431"
 emitted_at = "2026-11-27T20:15:27Z"
 origin = "base-template"
 ownership = "scaffold"
-sha256 = "773c05d901f57250f07f2adcd10d7b72c18a1c6f92b5b49d23b1d3d6761992bc"
+sha256 = "a7c5f69a21334b29c7e859639a213e656660aa6dd62a923c97613800f161d915"
 
 [forge.provenance."package.json"]
 emitted_at = "2026-11-27T20:15:27Z"

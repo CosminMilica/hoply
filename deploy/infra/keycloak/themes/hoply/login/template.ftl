@@ -1,7 +1,7 @@
 <#--
   Hoply's frame for every sign-in page. keycloak.v2's pages call registrationLayout and fill its sections: "header"
   (the title), "form", "socialProviders" and "info". The frame draws them in one card under the Hoply mark, on the
-  app's dark ground. A section the page leaves empty draws nothing.
+  app's dark ground. A section the page leaves empty draws nothing. Under it, the languages the realm offers.
 -->
 <#import "footer.ftl" as loginFooter>
 
@@ -84,6 +84,13 @@
         <#if hasContent(info)><div id="kc-info" class="h-info">${info}</div></#if>
     </main>
     <p class="h-tagline">${msg("hoplyTagline")}</p>
+    <#if realm.internationalizationEnabled && locale.supported?size gt 1>
+        <nav class="h-langs" aria-label="${msg("hoplyLanguages")}">
+            <#list locale.supported as language>
+                <a class="h-lang" href="${language.url}" lang="${language.languageTag}"<#if language.languageTag == locale.currentLanguageTag> aria-current="true"</#if>>${language.languageTag?upper_case}</a>
+            </#list>
+        </nav>
+    </#if>
 </div>
 </body>
 </html>
