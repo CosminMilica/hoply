@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
 import AddJobPage from './AddJobPage.vue'
@@ -198,5 +199,44 @@ describe('AddJobPage', () => {
     await settle()
     await click(button('Back'))
     expect(router.currentRoute.value.name).toBe('hoply-jobs')
+  })
+
+  it('speaks Romanian: the form, its checks, the bookmark, a page it could not read and the preview', async () => {
+    setLocale('ro')
+    useServices()
+    await mountPage(AddJobPage, { at: '/jobs/add' })
+    expect(text()).toContain('Adaugă un job')
+    expect(button('Link').getAttribute('aria-selected')).toBe('true')
+    expect(text()).toContain('Trimite joburi aici de pe LinkedIn, eJobs sau orice site')
+    expect(document.querySelector('[data-test="send-to-hoply"] a')!.getAttribute('title')).toBe('Trage-mă în bara de marcaje')
+    await type(input('Linkul anunțului'), 'linkedin.com/jobs/1')
+    await submit('Linkul anunțului')
+    expect(text()).toContain('Scrie linkul complet, care începe cu https://')
+    await type(input('Linkul anunțului'), 'https://www.linkedin.com/jobs/view/1')
+    await submit('Linkul anunțului')
+    expect(failed()).toContain('Nu am putut citi pagina')
+    expect(failed()).toContain('LinkedIn arată anunțurile doar membrilor autentificați')
+    await click(button('Lipește textul'))
+    expect(input('Linkul anunțului (opțional, ca să-l regăsești)')).toBeTruthy()
+    await type(input('Anunțul'), 'Prea scurt')
+    await submit('Anunțul')
+    expect(text()).toContain('Lipește tot anunțul: câteva rânduri cu ce cer și ce vei face.')
+    await click(button('Link'))
+
+    await type(input('Linkul anunțului'), 'https://careers.northwind.example/jobs/platform-engineer')
+    await submit('Linkul anunțului')
+    expect(text()).toContain('Verifică ce am găsit')
+    expect(text()).toContain('Citit din datele jobului de pe careers.northwind.example. Corectează ce am greșit.')
+    expect(document.querySelector('[data-test="knockout"]')!.textContent).toBe('Jobul e în Cluj-Napoca, hibrid. Tu locuiești în Iași și nu vrei să te muți.')
+    expect(document.querySelector('[data-test="years"]')!.textContent).toBe('Cere cel puțin 4 ani de experiență. Tu ai cam 6 ani.')
+    expect(text()).toContain('Responsabilități găsite · 4')
+    expect(button('Hibrid').getAttribute('aria-pressed')).toBe('true')
+    expect(button('La birou')).toBeTruthy()
+    expect(button('Șterge Linux')).toBeTruthy()
+    await type(input('Adaugă o cerință'), 'Ansible')
+    await click(button('+ De preferat'))
+    expect(button('Șterge Ansible').className).toContain('border-dashed')
+    expect(button('Salvează și pregătește CV-ul')).toBeTruthy()
+    expect(button('Salvează în joburile mele')).toBeTruthy()
   })
 })

@@ -3,11 +3,38 @@ import { saveCoverage } from './coverage';
 import { mockApplicationsService } from './applications';
 import { mockCvService } from './cv';
 import { mockJobsService } from './jobs';
-import { mockProfileService } from './profile';
+import { mockProfileService, sampleProfile } from './profile';
 import { mockSession } from './session';
 
 test.beforeEach(async ({ page }) => mockSession(page));
 test.afterEach(async ({ page }, testInfo) => saveCoverage(page, testInfo));
+
+test('a new person picks Romanian and their fields, then finds jobs in them', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const profile = await mockProfileService(page, { ...sampleProfile(), app_language: '', domains: [] });
+  await mockJobsService(page);
+  await mockApplicationsService(page);
+  await page.goto('/jobs');
+  await expect(page).toHaveURL(/\/welcome\?to=(%2F|\/)jobs$/);
+  await expect(page.getByRole('heading', { name: 'Welcome to Hoply' })).toBeVisible();
+  await page.getByRole('radio', { name: /Română/ }).click();
+  await expect(page.getByRole('heading', { name: 'Bine ai venit în Hoply' })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ro');
+  await page.getByRole('button', { name: 'Continuă' }).click();
+  await page.locator('[data-test="domain-it"]').click();
+  await page.locator('[data-test="domain-accounting"]').click();
+  await expect(page.getByText('2 domenii alese')).toBeVisible();
+  await page.getByRole('button', { name: 'Gata, arată-mi joburile' }).click();
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(page.getByRole('heading', { name: 'Caută joburi' })).toBeVisible();
+  await page.getByRole('button', { name: 'Contabilitate' }).click();
+  await expect(page.getByText('Filtre pentru Contabilitate')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: /Salvate/ })).toBeVisible();
+  expect(profile.app_language).toBe('ro');
+  expect(profile.domains).toEqual(['it', 'accounting']);
+  expect(errors).toEqual([]);
+});
 
 test('a phone edits the profile with the tab bar at hand', async ({ page }) => {
   const errors: string[] = [];

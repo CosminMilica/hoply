@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import HeaderSidebarShell from '@/shared/layouts/HeaderSidebarShell.vue'
 import { provideMenuBadges } from '@/shared/application/menus'
+import { locale, setLocale, t } from '@/features/common/i18n'
 import { useApplicationsQuery } from '@/features/applications/composables/useApplications'
+import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { useNavTabs } from '../tabs'
 import AccountMenu from './AccountMenu.vue'
 import BottomTabBar from './BottomTabBar.vue'
@@ -22,6 +25,15 @@ provideMenuBadges(computed(() => {
   return { saved: saved || undefined, applications: all.length - saved || undefined }
 }))
 const tabs = useNavTabs()
+
+// The app speaks the person's language, and the browser tab's title follows a switch.
+const profile = useProfileQuery()
+watch(() => profile.data.value?.app_language, language => setLocale(language), { immediate: true })
+const route = useRoute()
+watch(locale, () => {
+  const titled = [...route.matched].reverse().find(record => typeof record.meta.title === 'string' && record.meta.title)
+  if (titled) document.title = titled.meta.title as string
+})
 const addJob = computed(() => ({ name: 'hoply-job-add', query: tabs.value.some(tab => tab.active && tab.value === 'saved') ? { from: 'saved' } : {} }))
 </script>
 
@@ -39,18 +51,18 @@ const addJob = computed(() => ({ name: 'hoply-job-add', query: tabs.value.some(t
       <template #header>
         <TopNav />
       </template>
-      <template #actions="{ narrow, account }">
+      <template #actions="{ narrow }">
         <UButton
           v-if="narrow"
           :to="addJob"
           icon="i-lucide-plus"
-          aria-label="Add a job"
+          :aria-label="t.shell.addJob"
           color="neutral"
           variant="ghost"
           size="lg"
         />
-        <UButton v-else :to="addJob" icon="i-lucide-plus" label="Add a job" color="neutral" variant="outline" />
-        <AccountMenu :items="account" />
+        <UButton v-else :to="addJob" icon="i-lucide-plus" :label="t.shell.addJob" color="neutral" variant="outline" />
+        <AccountMenu />
       </template>
     </HeaderSidebarShell>
     <BottomTabBar class="min-[900px]:hidden" />

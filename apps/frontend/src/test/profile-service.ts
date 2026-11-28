@@ -30,6 +30,8 @@ export function sampleProfile(overrides: Partial<Profile> = {}): Profile {
     salary_period: '',
     additional_info: [],
     notes: [],
+    app_language: 'en',
+    domains: ['it'],
     skills: ['Python', 'SQL', 'Git', 'Linux', 'Docker', 'CI/CD', 'Bash', 'Monitoring'],
     experience: [
       {

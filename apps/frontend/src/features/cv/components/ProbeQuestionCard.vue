@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import StatusTag from './StatusTag.vue'
 import type { ProbeQuestion } from '../api/cv.schema'
 
@@ -21,14 +22,14 @@ const emit = defineEmits<{ 'update:draft': [value: string], 'add': [], 'skip': [
   <div class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated p-3" data-test="probe">
     <div class="flex items-center justify-between gap-2">
       <span class="text-xs font-extrabold tracking-wider text-hoply-300 uppercase">{{ item.theme }}</span>
-      <StatusTag v-if="answer?.status === 'added'" label="Added" tone="added" />
-      <StatusTag v-else-if="answer" label="Skipped" tone="muted" />
+      <StatusTag v-if="answer?.status === 'added'" :label="t.cv.cards.added" tone="added" />
+      <StatusTag v-else-if="answer" :label="t.cv.cards.skipped" tone="muted" />
     </div>
     <p v-if="item.about" class="m-0 border-s-2 border-ink-600 ps-2.5 text-[13px] leading-snug font-medium text-muted">{{ item.about }}</p>
     <h3 class="m-0 text-[15px] leading-snug font-bold">{{ item.question }}</h3>
     <template v-if="!answer">
       <p v-if="item.why" class="m-0 text-[13px] leading-snug font-medium text-muted">{{ item.why }}</p>
-      <div v-if="item.choices.length" class="flex flex-wrap gap-1.5" role="group" :aria-label="`Answers to pick for: ${item.question}`">
+      <div v-if="item.choices.length" class="flex flex-wrap gap-1.5" role="group" :aria-label="t.cv.probe.choicesFor(item.question)">
         <UButton
           v-for="choice in item.choices"
           :key="choice"
@@ -44,22 +45,22 @@ const emit = defineEmits<{ 'update:draft': [value: string], 'add': [], 'skip': [
       <UTextarea
         :model-value="draft"
         :aria-label="item.question"
-        :placeholder="item.choices.length ? 'Pick one above, or answer in your own words' : item.example"
+        :placeholder="item.choices.length ? t.cv.probe.pickOrWrite : item.example"
         :rows="2"
         class="w-full"
         @update:model-value="(value: string) => emit('update:draft', String(value))"
       />
       <div class="flex items-center gap-2.5">
         <UButton :label="addLabel" :disabled="!canAdd" :loading="saving" @click="emit('add')" />
-        <UButton label="Skip" color="neutral" variant="outline" @click="emit('skip')" />
+        <UButton :label="t.cv.cards.skip" color="neutral" variant="outline" @click="emit('skip')" />
       </div>
     </template>
     <template v-else-if="answer.status === 'added'">
       <p class="m-0 text-sm leading-snug font-medium">{{ answer.text }}</p>
-      <p class="m-0 text-[13px] font-medium text-muted">Saved in your profile under {{ answer.where }}</p>
-      <UButton label="Change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="saving" @click="emit('undo')" />
+      <p class="m-0 text-[13px] font-medium text-muted">{{ t.cv.cards.savedUnder(answer.where) }}</p>
+      <UButton :label="t.cv.cards.change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="saving" @click="emit('undo')" />
     </template>
-    <UButton v-else label="Change my mind" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" @click="emit('undo')" />
+    <UButton v-else :label="t.cv.cards.changeMind" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" @click="emit('undo')" />
     <p v-if="error" role="alert" class="m-0 text-sm font-bold text-error">{{ error }}</p>
   </div>
 </template>

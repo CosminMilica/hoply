@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { t } from '@/features/common/i18n'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
 import BackButton from '@/features/common/components/BackButton.vue'
 import ProgressBar from '@/features/common/components/ProgressBar.vue'
@@ -114,28 +115,28 @@ function addToProfile(skill: string) {
     :highlights="prep.matched.value"
   />
   <div v-else class="mx-auto w-full max-w-[1080px]">
-    <UAlert v-if="failed" color="error" variant="subtle" title="We could not prepare this CV" description="Check that your profile loads, then try again." />
+    <UAlert v-if="failed" color="error" variant="subtle" :title="t.cv.prep.failedTitle" :description="t.cv.prep.failedDescription" />
     <USkeleton v-else-if="!ready" class="h-64 w-full" />
     <div v-else-if="job.data.value && questions.data.value" class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[minmax(0,1fr)_340px] min-[900px]:items-start min-[900px]:gap-x-12">
       <BackButton :fallback="{ name: 'hoply-job', params: { id } }" class="min-[900px]:col-span-2" />
       <div class="-mt-2.5 flex flex-col gap-1 min-[900px]:col-start-1">
-        <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">Prepare your CV</h1>
+        <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.cv.prep.title }}</h1>
         <p class="m-0 text-[15px] font-medium text-muted">{{ job.data.value.title }} · {{ job.data.value.company }}</p>
       </div>
 
-      <aside class="contents min-[900px]:sticky min-[900px]:top-0 min-[900px]:col-start-2 min-[900px]:row-span-2 min-[900px]:row-start-2 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4" aria-label="Your progress">
+      <aside class="contents min-[900px]:sticky min-[900px]:top-0 min-[900px]:col-start-2 min-[900px]:row-span-2 min-[900px]:row-start-2 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4" :aria-label="t.cv.prep.progressLabel">
         <div class="flex flex-col gap-2.5 rounded-2xl border border-default bg-elevated p-4">
           <div class="flex items-baseline justify-between">
-            <span class="text-xs font-extrabold tracking-wider text-ink-300 uppercase">Keyword match</span>
+            <span class="text-xs font-extrabold tracking-wider text-ink-300 uppercase">{{ t.cv.prep.keywordMatch }}</span>
             <span class="text-2xl font-extrabold text-hoply-400" data-test="match">{{ prep.matchLabel.value }}</span>
           </div>
-          <ProgressBar :value="prep.score.value" label="Keyword match" />
-          <span class="text-[13px] leading-snug font-medium text-ink-300">The more real detail you give, the stronger the CV. We rewrite everything in this job’s words, but only from what you tell us.</span>
+          <ProgressBar :value="prep.score.value" :label="t.cv.prep.keywordMatch" />
+          <span class="text-[13px] leading-snug font-medium text-ink-300">{{ t.cv.prep.matchHint }}</span>
           <span class="text-[13px] font-extrabold">{{ prep.progress.value }}</span>
         </div>
         <div class="order-last flex flex-col gap-2 min-[900px]:order-none">
           <div class="flex items-center justify-between gap-3">
-            <span id="cv-language" class="text-xs font-extrabold tracking-wider text-ink-300 uppercase">CV language</span>
+            <span id="cv-language" class="text-xs font-extrabold tracking-wider text-ink-300 uppercase">{{ t.cv.prep.cvLanguage }}</span>
             <div role="group" aria-labelledby="cv-language" class="flex gap-0.5 rounded-[10px] bg-accented p-0.5">
               <UButton
                 v-for="option in CV_LANGUAGES"
@@ -149,27 +150,27 @@ function addToProfile(skill: string) {
               />
             </div>
           </div>
-          <UButton :label="`Generate CV · ${prep.score.value}% match`" size="lg" block class="justify-center" :loading="generateCv.isPending.value" @click="generate" />
-          <p v-if="writeFailed" role="alert" class="m-0 text-sm font-bold text-error">We could not write this CV. Try again.</p>
+          <UButton :label="t.cv.prep.generate(prep.score.value)" size="lg" block class="justify-center" :loading="generateCv.isPending.value" @click="generate" />
+          <p v-if="writeFailed" role="alert" class="m-0 text-sm font-bold text-error">{{ t.cv.prep.writeFailed }}</p>
         </div>
       </aside>
 
       <div class="flex flex-col gap-4 min-[900px]:col-start-1">
         <section v-if="questions.data.value.covered.length" class="flex flex-col gap-2">
-          <SectionLabel>Already in your profile</SectionLabel>
+          <SectionLabel>{{ t.cv.prep.covered }}</SectionLabel>
           <ul class="flex flex-wrap gap-1.5">
             <li v-for="skill in questions.data.value.covered" :key="skill" class="rounded-lg bg-hoply-900 px-2.5 py-1 text-[13px] font-bold text-hoply-300">{{ skill }}</li>
           </ul>
         </section>
 
         <section v-if="probe.data.value?.status === 'pending'" class="flex flex-col gap-2" aria-live="polite" data-test="probe-pending">
-          <SectionLabel>Make your CV stronger for this job</SectionLabel>
-          <p class="m-0 text-[13px] font-medium text-muted">Reading the job and your profile to find what is worth asking…</p>
+          <SectionLabel>{{ t.cv.prep.probeTitle }}</SectionLabel>
+          <p class="m-0 text-[13px] font-medium text-muted">{{ t.cv.prep.probeReading }}</p>
           <USkeleton class="h-20 w-full rounded-[10px]" />
         </section>
         <section v-else-if="asked.length" class="flex flex-col gap-2.5">
-          <SectionLabel>Make your CV stronger for this job</SectionLabel>
-          <p class="m-0 text-[13px] leading-snug font-medium text-muted">What this job cares about that your profile does not say yet. Answer in your own words; we write the CV from it.</p>
+          <SectionLabel>{{ t.cv.prep.probeTitle }}</SectionLabel>
+          <p class="m-0 text-[13px] leading-snug font-medium text-muted">{{ t.cv.prep.probeIntro }}</p>
           <ProbeQuestionCard
             v-for="(item, index) in asked"
             :key="index"
@@ -179,7 +180,7 @@ function addToProfile(skill: string) {
             :can-add="prep.answers.canAdd(probeKey(index))"
             :saving="prep.answers.state.saving[probeKey(index)]"
             :error="prep.answers.state.errors[probeKey(index)]"
-            add-label="Add to my CV"
+            :add-label="t.cv.cards.addToCv"
             @update:draft="(value: string) => prep.answers.setDraft(probeKey(index), value)"
             @add="prep.answerProbe(index, item)"
             @skip="prep.answers.skip(probeKey(index))"
@@ -188,12 +189,12 @@ function addToProfile(skill: string) {
         </section>
 
         <section v-if="questions.data.value.related.length" class="flex flex-col gap-2.5">
-          <SectionLabel>Close to what you know</SectionLabel>
+          <SectionLabel>{{ t.cv.prep.close }}</SectionLabel>
           <CloseCard v-for="close in questions.data.value.related" :key="close.skill" :close="close" :prep="prep" />
         </section>
 
         <section v-if="questions.data.value.gaps.length" class="flex flex-col gap-2.5">
-          <SectionLabel>Fill the gaps</SectionLabel>
+          <SectionLabel>{{ t.cv.prep.gaps }}</SectionLabel>
           <GapCard
             v-for="gap in questions.data.value.gaps"
             :key="gap.skill"
@@ -205,14 +206,14 @@ function addToProfile(skill: string) {
         </section>
 
         <section v-if="!asked.length" class="flex flex-col gap-2.5">
-          <SectionLabel>What this job will ask you to do</SectionLabel>
+          <SectionLabel>{{ t.cv.prep.claims }}</SectionLabel>
           <ClaimCard v-for="claim in questions.data.value.responsibilities" :key="claim.index" :claim="claim" :prep="prep" />
         </section>
 
         <ImpactRows :prep="prep" />
 
         <section class="flex flex-col gap-2">
-          <SectionLabel>Roles to feature</SectionLabel>
+          <SectionLabel>{{ t.cv.prep.roles }}</SectionLabel>
           <button
             v-for="role in prep.roles.value"
             :key="role.id"
@@ -229,27 +230,27 @@ function addToProfile(skill: string) {
             <span
               class="rounded-lg border-[1.5px] px-3 py-1 text-xs font-extrabold"
               :class="role.included ? 'border-hoply-600 bg-hoply-600 text-white' : 'border-ink-700 text-toned'"
-            >{{ role.included ? 'Included' : 'Left out' }}</span>
+            >{{ role.included ? t.cv.prep.included : t.cv.prep.leftOut }}</span>
           </button>
         </section>
 
         <section v-if="prep.focusChips.value.length" class="flex flex-col gap-2">
-          <SectionLabel>Put these up front (up to 3)</SectionLabel>
-          <div class="flex flex-wrap gap-2" role="group" aria-label="Put these up front">
+          <SectionLabel>{{ t.cv.prep.focus }}</SectionLabel>
+          <div class="flex flex-wrap gap-2" role="group" :aria-label="t.cv.prep.focusLabel">
             <ToggleChip v-for="chip in prep.focusChips.value" :key="chip.label" :label="chip.label" :pressed="chip.pressed" @toggle="prep.toggleFocus(chip.label)" />
           </div>
         </section>
 
         <UFormField
-          label="Anything else that makes you a better fit?"
-          description="Certifications, side projects, awards, relocation. One per line. We keep them in your profile’s additional information."
+          :label="t.cv.prep.extraLabel"
+          :description="t.cv.prep.extraDescription"
           :error="prep.answers.state.errors.note"
           :ui="{ label: 'text-xs font-extrabold tracking-wider text-muted uppercase', description: 'text-[13px] leading-snug font-medium' }"
         >
           <UTextarea
             v-model="prep.note.value"
             :rows="3"
-            :placeholder="'e.g. HashiCorp Terraform Associate, 2025\nBuilt a home lab running 12 containers'"
+            :placeholder="t.cv.prep.extraPlaceholder"
             class="w-full"
             @change="prep.saveNote()"
           />

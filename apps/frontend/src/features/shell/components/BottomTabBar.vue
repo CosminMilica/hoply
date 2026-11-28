@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import { useNavTabs } from '../tabs'
 
 /** The phone's navigation: the layout's primary menu as tabs at the bottom of the screen. */
@@ -7,7 +8,7 @@ const tabs = useNavTabs()
 
 <template>
   <nav
-    aria-label="Main"
+    :aria-label="t.shell.mainMenu"
     data-shell="tabs"
     class="fixed inset-x-0 bottom-0 z-30 flex border-t border-default bg-elevated px-3 pt-1.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]"
   >

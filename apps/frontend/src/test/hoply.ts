@@ -23,6 +23,8 @@ export const ROUTE_PATHS: Record<string, string> = {
   'hoply-saved': '/saved',
   'hoply-applications': '/applications',
   'hoply-skills': '/skills',
+  'hoply-preferences': '/preferences',
+  'hoply-onboarding': '/welcome',
 }
 
 export function testRouter(pages: Partial<Record<string, Component>> = {}) {

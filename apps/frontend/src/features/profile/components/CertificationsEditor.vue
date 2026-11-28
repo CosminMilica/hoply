@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import type { Profile } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
 import { useProfileMutations } from '../composables/useProfile'
@@ -11,9 +12,9 @@ const editor = useEntryEditor(certifications)
 
 const meta = (item: Profile['certifications'][number]) => [
   item.issuer,
-  item.issued ? `issued ${monthLabel(item.issued)}` : '',
-  item.expires ? `expires ${monthLabel(item.expires)}` : '',
-  item.credential_id ? `ID ${item.credential_id}` : '',
+  item.issued ? t.value.profile.certifications.issued(monthLabel(item.issued)) : '',
+  item.expires ? t.value.profile.certifications.expires(monthLabel(item.expires)) : '',
+  item.credential_id ? t.value.profile.certifications.id(item.credential_id) : '',
 ].filter(Boolean).join(' · ')
 </script>
 
@@ -33,8 +34,8 @@ const meta = (item: Profile['certifications'][number]) => [
           <span class="text-[15px] font-extrabold">{{ item.name }}</span>
           <span class="text-[13px] font-medium text-muted">{{ meta(item) }}</span>
         </span>
-        <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" :aria-label="`Edit ${item.name}`" class="size-9 justify-center text-muted" @click="editor.open(item.id)" />
-        <UButton color="neutral" variant="ghost" icon="i-lucide-x" :aria-label="`Remove ${item.name}`" class="size-9 justify-center text-muted" @click="certifications.remove.mutate(item.id)" />
+        <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" :aria-label="t.profile.entry.edit(item.name)" class="size-9 justify-center text-muted" @click="editor.open(item.id)" />
+        <UButton color="neutral" variant="ghost" icon="i-lucide-x" :aria-label="t.profile.entry.remove(item.name)" class="size-9 justify-center text-muted" @click="certifications.remove.mutate(item.id)" />
       </div>
     </li>
   </ul>
@@ -43,7 +44,7 @@ const meta = (item: Profile['certifications'][number]) => [
     v-else
     color="neutral"
     variant="outline"
-    label="+ Add a certification"
+    :label="t.profile.certifications.add"
     block
     class="border-[1.5px] border-dashed border-ink-400 text-toned ring-0"
     @click="editor.open(null)"

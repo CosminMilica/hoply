@@ -3,9 +3,14 @@ import { config } from '@vue/test-utils'
 import ui from '@nuxt/ui/vue-plugin'
 import { createMemoryHistory, createRouter, routeLocationKey, routerKey } from 'vue-router'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n/locale'
 
 beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }))
-afterEach(() => server.resetHandlers())
+afterEach(() => {
+  server.resetHandlers()
+  // Each test starts in English, the app's first language; a test that switches to Romanian switches back.
+  setLocale('en')
+})
 afterAll(() => server.close())
 
 // Every mounted component gets Nuxt UI as the app does (main.ts): its bundled

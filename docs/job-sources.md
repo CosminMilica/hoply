@@ -65,3 +65,17 @@ People bring these jobs in with **Add a job** (link or text).
 ## Plan
 
 See [plans/2026-11-26-find-jobs.md](plans/2026-11-26-find-jobs.md).
+
+## Insurance and HR employers (checked 2026-11-28)
+
+Most Romanian insurers do not use a platform the importer reads; HR jobs sit mostly in Bucharest and Cluj shared-service
+centres on Workday.
+
+| Added | Platform | Why |
+| --- | --- | --- |
+| NN, Hellas Direct | Workday, Workable | underwriting, claims, bancassurance |
+| Mondelez, Broadridge, Airbus, MKS Instruments, Samsung, Abbott, Mars | Workday | recruitment, payroll, rewards, HR business partners |
+
+Out of reach for now: SuccessFactors (Allianz, Generali, Groupama, Swiss Re, ERGO, Capgemini), Oracle HCM (Chubb,
+Crawford), iCIMS (Aon, Gallagher), Avature (MetLife), Yello (WTW), Phenom (Conduent), mingle.ro (Omniasig), and the
+insurers that post only on their own site or job portals (Signal Iduna, Grawe, Asirom, Uniqa, Euroins).

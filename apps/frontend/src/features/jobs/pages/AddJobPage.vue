@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApplicationMutations } from '@/features/applications/composables/useApplications'
 import { serviceErrorMessage } from '@/features/common/errors'
+import { t } from '@/features/common/i18n'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { unreadableReason } from '../api/jobsApi'
 import { jobInputSchema, type Job, type JobDraft, type ReadRequest, type UnreadableReason } from '../api/jobs.schema'
@@ -71,7 +72,7 @@ function readJob(body: ReadRequest) {
 
 function readLink() {
   if (!isLink(form.url)) {
-    error.value = 'Enter the full link, starting with https://'
+    error.value = t.value.jobs.addJob.fullLink
     return
   }
   readJob({ url: form.url.trim() })
@@ -79,7 +80,7 @@ function readLink() {
 
 function readText() {
   if (form.text.trim().length < MIN_AD_LENGTH) {
-    error.value = 'Paste the whole ad: a few lines with what they ask for and what you would do.'
+    error.value = t.value.jobs.addJob.wholeAd
     return
   }
   const optional = Object.fromEntries(
@@ -114,7 +115,7 @@ async function save(tailor: boolean) {
   const { host: _host, ...job } = draft.value
   const parsed = jobInputSchema.safeParse({ ...job, source: job.source === 'link' ? 'link' : 'text' })
   if (!parsed.success) {
-    error.value = parsed.error.issues[0]?.message ?? 'Check the job.'
+    error.value = parsed.error.issues[0]?.message ?? t.value.jobs.addJob.checkJob
     return
   }
   error.value = ''
@@ -137,18 +138,18 @@ async function save(tailor: boolean) {
 
 <template>
   <div class="mx-auto flex w-full max-w-[620px] flex-col gap-4">
-    <UButton variant="ghost" color="neutral" icon="i-lucide-chevron-left" label="Back" class="self-start px-1 text-toned" @click="back" />
+    <UButton variant="ghost" color="neutral" icon="i-lucide-chevron-left" :label="t.common.actions.back" class="self-start px-1 text-toned" @click="back" />
     <div class="-mt-2 flex flex-col gap-1">
-      <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">Add a job</h1>
+      <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.jobs.addJob.title }}</h1>
       <p class="m-0 text-[15px] leading-snug font-medium text-muted">
-        Found a job somewhere else? Give us its link or paste its text. We read it, match it to your profile, and you can tailor a CV for it.
+        {{ t.jobs.addJob.intro }}
       </p>
     </div>
 
     <template v-if="phase === 'input'">
-      <div role="tablist" aria-label="Add from" class="flex gap-1 rounded-[10px] bg-accented p-1">
+      <div role="tablist" :aria-label="t.jobs.addJob.addFrom" class="flex gap-1 rounded-[10px] bg-accented p-1">
         <button
-          v-for="option in [{ id: 'link', label: 'Link', icon: 'i-lucide-link' }, { id: 'text', label: 'Text', icon: 'i-lucide-text' }] as const"
+          v-for="option in [{ id: 'link', label: t.jobs.addJob.link, icon: 'i-lucide-link' }, { id: 'text', label: t.jobs.addJob.text, icon: 'i-lucide-text' }] as const"
           :key="option.id"
           type="button"
           role="tab"
@@ -161,40 +162,40 @@ async function save(tailor: boolean) {
         </button>
       </div>
 
-      <form v-if="tab === 'link'" role="tabpanel" aria-label="Link" class="flex flex-col gap-2" @submit.prevent="readLink">
-        <UFormField label="Link to the job ad" :ui="{ label: 'text-xs font-extrabold tracking-wider text-muted uppercase' }">
+      <form v-if="tab === 'link'" role="tabpanel" :aria-label="t.jobs.addJob.link" class="flex flex-col gap-2" @submit.prevent="readLink">
+        <UFormField :label="t.jobs.addJob.linkLabel" :ui="{ label: 'text-xs font-extrabold tracking-wider text-muted uppercase' }">
           <UInput v-model="form.url" type="url" placeholder="https://" class="w-full" />
         </UFormField>
         <span class="text-[13px] leading-snug font-medium text-muted">
-          Works with most job pages: company career sites, Greenhouse, Lever, Ashby, SmartRecruiters, BambooHR, Recruitee, Workable, eJobs. Pages behind a login, like LinkedIn, need the text instead.
+          {{ t.jobs.addJob.worksWith }}
         </span>
         <p v-if="error" role="alert" class="m-0 text-[13px] font-bold text-ember-400">{{ error }}</p>
-        <UButton type="submit" label="Read the job" size="lg" block class="mt-1 justify-center" />
+        <UButton type="submit" :label="t.jobs.addJob.read" size="lg" block class="mt-1 justify-center" />
       </form>
 
-      <form v-else role="tabpanel" aria-label="Text" class="flex flex-col gap-2" @submit.prevent="readText">
-        <UFormField label="The job ad" :ui="{ label: 'text-xs font-extrabold tracking-wider text-muted uppercase' }">
+      <form v-else role="tabpanel" :aria-label="t.jobs.addJob.text" class="flex flex-col gap-2" @submit.prevent="readText">
+        <UFormField :label="t.jobs.addJob.adLabel" :ui="{ label: 'text-xs font-extrabold tracking-wider text-muted uppercase' }">
           <UTextarea
             v-model="form.text"
             :rows="9"
-            placeholder="Paste the whole ad: title, company, location, requirements and responsibilities. English or Romanian."
+            :placeholder="t.jobs.addJob.adPlaceholder"
             maxlength="50000"
             class="w-full"
           />
         </UFormField>
         <div class="grid grid-cols-2 gap-2">
-          <UFormField label="Job title (optional)" :ui="{ label: 'text-xs font-bold text-muted' }">
-            <UInput v-model="form.title" placeholder="We find it if empty" maxlength="160" class="w-full" />
+          <UFormField :label="t.jobs.addJob.titleOptional" :ui="{ label: 'text-xs font-bold text-muted' }">
+            <UInput v-model="form.title" :placeholder="t.jobs.addJob.findIt" maxlength="160" class="w-full" />
           </UFormField>
-          <UFormField label="Company (optional)" :ui="{ label: 'text-xs font-bold text-muted' }">
-            <UInput v-model="form.company" placeholder="We find it if empty" maxlength="120" class="w-full" />
+          <UFormField :label="t.jobs.addJob.companyOptional" :ui="{ label: 'text-xs font-bold text-muted' }">
+            <UInput v-model="form.company" :placeholder="t.jobs.addJob.findIt" maxlength="120" class="w-full" />
           </UFormField>
         </div>
-        <UFormField label="Link to the ad (optional, to find it again)" :ui="{ label: 'text-xs font-bold text-muted' }">
+        <UFormField :label="t.jobs.addJob.linkOptional" :ui="{ label: 'text-xs font-bold text-muted' }">
           <UInput v-model="form.link" type="url" placeholder="https://" maxlength="2000" class="w-full" />
         </UFormField>
         <p v-if="error" role="alert" class="m-0 text-[13px] font-bold text-ember-400">{{ error }}</p>
-        <UButton type="submit" label="Read the job" size="lg" block class="mt-1 justify-center" />
+        <UButton type="submit" :label="t.jobs.addJob.read" size="lg" block class="mt-1 justify-center" />
       </form>
       <SendToHoplyCard />
     </template>
@@ -202,17 +203,17 @@ async function save(tailor: boolean) {
     <div v-else-if="phase === 'loading'" role="status" class="flex items-center gap-3.5 rounded-[14px] border border-default bg-elevated p-5">
       <span class="size-[22px] shrink-0 animate-pulse rounded-full bg-hoply-500" aria-hidden="true" />
       <span class="flex flex-col gap-0.5">
-        <span class="text-[15px] font-extrabold">{{ tab === 'link' ? 'Reading the page' : 'Reading the ad' }}</span>
-        <span class="text-[13px] font-medium text-muted">Looking for the job's title, company, location, requirements and responsibilities.</span>
+        <span class="text-[15px] font-extrabold">{{ tab === 'link' ? t.jobs.addJob.readingPage : t.jobs.addJob.readingAd }}</span>
+        <span class="text-[13px] font-medium text-muted">{{ t.jobs.addJob.lookingFor }}</span>
       </span>
     </div>
 
     <div v-else-if="phase === 'failed'" class="flex flex-col gap-2.5 rounded-[14px] border border-default bg-elevated p-[18px]" data-test="read-failed">
-      <h2 class="m-0 text-[19px] font-extrabold tracking-tight">We could not read this page</h2>
+      <h2 class="m-0 text-[19px] font-extrabold tracking-tight">{{ t.jobs.addJob.failed }}</h2>
       <p class="m-0 text-sm leading-normal font-medium text-ink-300">{{ failure }}</p>
       <div class="flex flex-wrap items-center gap-2.5">
-        <UButton label="Paste the text instead" @click="pasteInstead" />
-        <UButton label="Try another link" variant="link" color="neutral" size="sm" class="px-1 text-[13px] text-muted underline" @click="tryAnother" />
+        <UButton :label="t.jobs.addJob.pasteInstead" @click="pasteInstead" />
+        <UButton :label="t.jobs.addJob.tryAnother" variant="link" color="neutral" size="sm" class="px-1 text-[13px] text-muted underline" @click="tryAnother" />
       </div>
     </div>
 

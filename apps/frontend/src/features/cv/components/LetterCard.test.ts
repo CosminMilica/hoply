@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { cvApi } from '../api/cvApi'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
 import { seedId } from '@/test/jobs-seed'
@@ -83,6 +84,22 @@ describe('LetterCard', () => {
 
     await click(button('Write them again'))
     expect(cvs.letters.get(id)?.recruiter).toBe('Ana Pop')
+  })
+
+  it('speaks Romanian when the app does', async () => {
+    setLocale('ro')
+    const { queryClient } = await openCv()
+    expect(text()).toContain('Scrisoare de intenție și mesaje')
+    await click(button('Scrie-le'))
+    await refetch(queryClient)
+    expect(text()).toContain('Scrise de Claude (Sonnet 5.5) pe baza acestui CV')
+    expect(card().querySelector('[data-test="letter-count"]')!.textContent).toMatch(/^\d+ (de )?cuvinte$/)
+    expect(button('Copiază scrisoarea de intenție').textContent?.trim()).toBe('Copiază')
+    await click(button('Mesaj de conectare'))
+    expect(card().querySelector('[data-test="letter-count"]')!.textContent).toMatch(/^\d+ \/ 300 caractere$/)
+    await click(button('Mesaj de revenire'))
+    expect(input('Subiect')).toBeTruthy()
+    expect(button('Scrie-le din nou')).toBeTruthy()
   })
 
   it('says why a letter could not be written and offers to try again', async () => {

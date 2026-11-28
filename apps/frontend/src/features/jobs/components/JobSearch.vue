@@ -3,7 +3,9 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApplicationMutations } from '@/features/applications/composables/useApplications'
+import { t } from '@/features/common/i18n'
 import { useProfileQuery } from '@/features/profile/composables/useProfile'
+import type { Domain } from '@/features/profile/api/profile.schema'
 import JobFilters from './JobFilters.vue'
 import JobFilterBar from './JobFilterBar.vue'
 import JobGrid from './JobGrid.vue'
@@ -13,7 +15,10 @@ import { analyzeImported } from '../composables/useJobs'
 import { useJobSearchStore } from '../stores/search'
 
 const UNDO_MS = 3500
-const VIEWS = [{ id: 'grid', label: 'Grid', icon: 'i-lucide-layout-grid' }, { id: 'swipe', label: 'Swipe', icon: 'i-lucide-layers' }] as const
+const views = computed(() => [
+  { id: 'grid' as const, label: t.value.jobs.search.grid, icon: 'i-lucide-layout-grid' },
+  { id: 'swipe' as const, label: t.value.jobs.search.swipe, icon: 'i-lucide-layers' },
+])
 const router = useRouter()
 const search = useJobSearchStore()
 const { deck, beyond, loading, error } = useDeck()
@@ -21,18 +26,19 @@ const profile = useProfileQuery()
 watch([() => profile.data.value, () => search.stage], ([person, stage]) => {
   if (!person) return
   search.country = person.country.trim()
+  search.domains = person.domains as Domain[]
   if (stage === 'filters') search.prefill(person)
 }, { immediate: true })
 const { setStatus, remove, skip, unskip, clearSkips } = useApplicationMutations()
 const last = ref<{ job: ScoredJob, decision: 'save' | 'skip' } | null>(null)
 let timer: number | undefined
 
-const toast = computed(() => (last.value ? `${last.value.decision === 'save' ? 'Saved' : 'Skipped'} · ${last.value.job.title}` : ''))
+const toast = computed(() => (last.value ? t.value.jobs.search[last.value.decision === 'save' ? 'saved' : 'skipped'](last.value.job.title) : ''))
 // A view this device remembered from before the grid (the list) shows as the grid.
 const shownView = computed(() => (search.view === 'swipe' ? 'swipe' : 'grid'))
 const results = computed(() => [
-  `${deck.value.length} ${deck.value.length === 1 ? 'job' : 'jobs'} left`,
-  beyond.value ? `from the newest ${beyond.value.sent} of ${beyond.value.total}: narrow the filters to see the rest` : '',
+  t.value.jobs.search.left(deck.value.length),
+  beyond.value ? t.value.jobs.search.beyond(beyond.value.sent, beyond.value.total) : '',
 ].filter(Boolean).join(', '))
 
 function remember(job: ScoredJob, decision: 'save' | 'skip') {
@@ -82,14 +88,14 @@ onBeforeUnmount(() => window.clearTimeout(timer))
   <div v-else class="mx-auto flex h-full w-full flex-col gap-2.5" :class="search.view === 'swipe' ? 'min-h-[560px] max-w-[560px]' : 'max-w-[1080px]'">
     <div class="flex items-center justify-between gap-2.5">
       <div class="flex min-w-0 flex-col gap-px">
-        <h1 v-if="shownView === 'grid'" class="m-0 truncate text-[28px] leading-tight font-extrabold tracking-tight">Find jobs</h1>
+        <h1 v-if="shownView === 'grid'" class="m-0 truncate text-[28px] leading-tight font-extrabold tracking-tight">{{ t.jobs.search.title }}</h1>
         <h1 v-else class="m-0 truncate text-[15px] font-extrabold">{{ search.summary }}</h1>
         <span class="text-[13px] font-medium text-muted">{{ results }}</span>
       </div>
       <div class="flex shrink-0 items-center gap-2">
-        <div role="group" aria-label="View" class="flex gap-0.5 rounded-[10px] bg-accented p-0.5">
+        <div role="group" :aria-label="t.jobs.search.view" class="flex gap-0.5 rounded-[10px] bg-accented p-0.5">
           <UButton
-            v-for="option in VIEWS"
+            v-for="option in views"
             :key="option.id"
             :icon="option.icon"
             :aria-label="option.label"
@@ -101,11 +107,11 @@ onBeforeUnmount(() => window.clearTimeout(timer))
             @click="setView(option.id)"
           />
         </div>
-        <UButton v-if="shownView === 'swipe'" label="Filters" color="neutral" variant="outline" @click="search.stage = 'filters'" />
+        <UButton v-if="shownView === 'swipe'" :label="t.jobs.search.filters" color="neutral" variant="outline" @click="search.stage = 'filters'" />
       </div>
     </div>
     <JobFilterBar v-if="shownView === 'grid'" />
-    <UAlert v-if="error" color="error" variant="subtle" title="We could not load jobs" />
+    <UAlert v-if="error" color="error" variant="subtle" :title="t.jobs.search.loadFailed" />
     <USkeleton v-else-if="loading" class="min-h-[360px] flex-1 rounded-[18px]" />
     <JobGrid
       v-else-if="shownView === 'grid'"

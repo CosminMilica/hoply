@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { jobsServiceHandlers } from '@/test/jobs-service'
+import { setLocale } from '@/features/common/i18n'
 import { jobDraftSchema, jobInputSchema } from './jobs.schema'
 import { jobSearchParams, jobsApi, unreadableReason } from './jobsApi'
 import { seedId } from '@/test/jobs-seed'
@@ -51,5 +52,17 @@ describe('jobsApi', () => {
     expect(unreadableReason(new Error('offline'))).toBeNull()
     server.use(http.post('*/api/jobs/v1/jobs/read', () => HttpResponse.json({ error: { code: 'X' } }, { status: 500 })))
     expect(unreadableReason(await failure({ url: 'https://a.example/b' }))).toBeNull()
+  })
+})
+
+describe('a job read from an ad, checked before it is saved', () => {
+  it('says what is wrong in the app language', () => {
+    const bad = { title: ' ', company: '', city: '', country: '', work_mode: '', level: '', years_required: null, must_have: Array(41).fill('Go'),
+      nice_to_have: [], responsibilities: [], about: '', url: 'ftp://x', source: 'link', read_from: '' }
+    const messages = () => jobInputSchema.safeParse(bad).error!.issues.map(issue => issue.message)
+    expect(messages()).toEqual(['Add the job title.', 'At most 40 requirements', 'Use a link starting with http:// or https://'])
+    setLocale('ro')
+    expect(messages()).toEqual(['Adaugă titlul jobului.', 'Cel mult 40 de cerințe', 'Folosește un link care începe cu http:// sau https://'])
+    expect(jobInputSchema.safeParse({ ...bad, title: 'x'.repeat(161), must_have: [], url: '' }).error!.issues[0]!.message).toBe('Cel mult 160 de caractere')
   })
 })

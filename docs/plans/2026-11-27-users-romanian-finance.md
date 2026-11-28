@@ -1,6 +1,6 @@
 # Plan: users, finance jobs and Romanian CVs
 
-Status: phases 1 to 3 built, 2026-11-28 (phase 2 on feat/finance-jobs, phase 3 on feat/romanian-cv).
+Status: phases 1 to 4 built, 2026-11-28 (phase 2 on feat/finance-jobs, phase 3 merged, phase 4 on feat/onboarding).
 
 Hoply has one profile, finds tech jobs only and writes CVs in English. This plan lets a second person use it: Keycloak
 is the identity manager and each person is a tenant of their own, kept apart by Postgres row-level security as in
@@ -25,6 +25,7 @@ kartra-ai; Find jobs adds banking and finance areas; a CV can be written in Roma
 | 1. Users | Keycloak, sign-in in the web app, RLS per tenant, service credentials for the cv worker, the data move | Two people sign in and see only their own profile, saved jobs and CVs, also when one asks for the other's ids |
 | 2. Finance jobs | The four areas (title rules in both languages), finance skills in the dictionary, area groups in Find jobs, finance employers' boards | Find jobs lists banking and accounting jobs in Iași |
 | 3. Romanian CVs | `language` on a CV; Romanian prompts, writing rules, PDF labels and letter; eval cases in Romanian | A Romanian CV passes the same ATS and grounding checks as an English one |
+| 4. Onboarding and app language | The app in English or Romanian; a first sign-in that asks the language and the fields of work (IT, banking, accounting, finance, insurance, HR); Find jobs keeps to those fields, with each field's areas as filters; insurance and HR title rules and boards | A new person picks Romanian and Accounting and lands on Find jobs in Romanian, showing accounting jobs with accounting filters |
 
 Each phase is its own pull request.
 
@@ -67,3 +68,22 @@ apps/frontend/src/features/jobs/   area groups (Tech, Finance) in the filters
 apps/frontend/src/features/cv/     the language choice on Prepare your CV
 docs/cv-writing.md                 the Romanian rules and their sources
 ```
+
+## Phase 4: onboarding and the app language
+
+```text
+services/jobs/internal/extract/areas.go        Domains, DomainAreas, Classify (domains + areas per title)
+services/jobs/migrations/00108_job_domains.sql domains column, backfill from areas, every import read again
+services/profile/migrations/00104_app_preferences.sql   app_language, domains
+apps/frontend/src/features/common/i18n/        locale (profile, then this device), typed catalogs, counts and dates
+apps/frontend/src/features/<feature>/messages.ts   each feature's words, `ro` typed as `en`
+apps/frontend/src/features/onboarding/         /welcome (language, then fields), Preferences, the guard
+apps/frontend/src/features/jobs/components/DomainFilter.vue   field tabs and their area chips
+```
+
+| Piece | How |
+| --- | --- |
+| Language | `profile.app_language`; until the profile loads, the last one on this device; Nuxt UI's own words and `<html lang>` follow |
+| Onboarding | a guard after sign-in sends a person with no `domains` to `/welcome`, then back where they were going |
+| Find jobs | `domain` filter with the person's fields (all, or one tab), `area` within the field shown |
+| Not translated | forge's generated pages (sign-in, not found, forbidden), the Keycloak login, the services' error texts, generated CV content |

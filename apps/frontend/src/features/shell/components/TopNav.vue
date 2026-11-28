@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import { useNavTabs } from '../tabs'
 
 /** The wide screen's navigation: the layout's primary menu as tabs in the header. */
@@ -6,7 +7,7 @@ const tabs = useNavTabs()
 </script>
 
 <template>
-  <nav aria-label="Main" data-shell="top-nav" class="flex w-full gap-1">
+  <nav :aria-label="t.shell.mainMenu" data-shell="top-nav" class="flex w-full gap-1">
     <RouterLink
       v-for="tab in tabs"
       :key="String(tab.value)"

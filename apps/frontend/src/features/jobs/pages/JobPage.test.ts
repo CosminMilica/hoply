@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { button, click, mountPage, settle, useServices } from '@/test/hoply'
 import JobPage from './JobPage.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -132,5 +133,56 @@ describe('JobPage', () => {
     useServices()
     await mountPage(JobPage, { at: '/jobs/9', props: { id: '9' } })
     expect(text()).toContain('We could not find this job')
+  })
+
+  it('speaks Romanian: the job, its match and following its company', async () => {
+    setLocale('ro')
+    const { jobs } = useServices()
+    jobs.jobs.push({ ...structuredClone(jobs.jobs[1]!), id: '11111111-0000-4000-8000-000000000001', url: 'https://jobs.lever.co/northwind/aa11', source: 'link', added_by_me: true, sample: false, company: 'Northwind', closed_at: '2026-11-25T10:00:00Z' })
+    await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000001', props: { id: '11111111-0000-4000-8000-000000000001' } })
+    expect(text()).toContain('Northwind · Bucharest, hibrid')
+    expect(text()).toContain('Adăugat de tine · dintr-un link · DevOps · Mid')
+    expect(text()).toContain('Potrivire bună, cu câteva lucruri de învățat.')
+    expect(text()).toContain('Ce căutăm·Experiență cu Kubernetes.')
+    for (const section of ['Despre rol', 'Ce vei face', 'De ce le place oamenilor aici', 'Despre Northwind']) expect(text()).toContain(section)
+    expect(document.querySelector('[data-test="closed"]')?.textContent).toContain('Compania nu mai afișează jobul')
+    expect(document.querySelector('aside')!.getAttribute('aria-label')).toBe('Potrivirea ta')
+    expect(button('Vezi anunțul original ↗')).toBeTruthy()
+    expect(button('Pregătește CV-ul')).toBeTruthy()
+    await click(button('Salvează pentru mai târziu'))
+    expect(button('Salvat · atinge ca să-l scoți')).toBeTruthy()
+    await vi.waitFor(() => expect(text()).toContain('Northwind își publică joburile pe Lever.'))
+    expect(text()).toContain('Urmărește compania și joburile ei din România ajung în Caută joburi')
+    await click(button('Urmărește Northwind'))
+    expect(text()).toContain('Urmărești Northwind. Joburile ei din România apar în Caută joburi în câteva minute.')
+  })
+
+  it('speaks Romanian when a company it cannot name fails to follow, and sends the service the same fallback', async () => {
+    setLocale('ro')
+    const { jobs } = useServices()
+    jobs.jobs.push({ ...structuredClone(jobs.jobs[1]!), id: '11111111-0000-4000-8000-000000000001', url: 'https://jobs.ashbyhq.com/linear/1', source: 'link', added_by_me: true, company: '' })
+    let sent: unknown
+    server.use(http.post('*/api/jobs/v1/boards', async ({ request }) => {
+      sent = await request.json()
+      return HttpResponse.json({ error: { code: 'INTERNAL' } }, { status: 500 })
+    }))
+    await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000001', props: { id: '11111111-0000-4000-8000-000000000001' } })
+    await vi.waitFor(() => expect(text()).toContain('Această companie își publică joburile pe Ashby.'))
+    await click(button('Urmărește Această companie'))
+    await vi.waitFor(() => expect(document.querySelector('[role="alert"]')?.textContent).toContain('Nu am putut urmări Această companie. Încearcă din nou.'))
+    expect(sent).toMatchObject({ company: 'This company' })
+  })
+
+  it('speaks Romanian for a job it cannot find, a new CV, and Claude\'s reading', async () => {
+    setLocale('ro')
+    const { jobs, applications } = useServices()
+    await mountPage(JobPage, { at: '/jobs/9', props: { id: '9' } })
+    expect(text()).toContain('Nu am găsit jobul')
+    document.body.innerHTML = ''
+    jobs.jobs.find(job => job.id === seedId(1))!.requirements_from = 'analysis'
+    applications.track(seedId(1), 'applied')
+    await mountPage(JobPage, { at: `/jobs/${seedId(1)}`, props: { id: seedId(1) } })
+    expect(document.querySelector('[data-test="requirements-from"]')!.textContent).toBe('Cerințele, așa cum le-a citit Claude din anunț.')
+    expect(button('Pregătește un CV nou')).toBeTruthy()
   })
 })

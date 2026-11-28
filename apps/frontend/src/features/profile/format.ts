@@ -1,8 +1,5 @@
-import { EDUCATION_LEVELS, type Education, type Profile } from './api/profile.schema'
-
-export function plural(count: number, one: string, many = `${one}s`): string {
-  return `${count} ${count === 1 ? one : many}`
-}
+import { t } from '@/features/common/i18n'
+import type { Education, Profile } from './api/profile.schema'
 
 /** `2022-03` as `03/2022`. */
 export function monthLabel(value: string): string {
@@ -10,21 +7,24 @@ export function monthLabel(value: string): string {
   return year && month ? `${month}/${year}` : value
 }
 
-/** `03/2022 – now`; nothing without a start. */
-export function monthRange(start: string, end: string, ongoing = 'now'): string {
+/** `03/2022 – now`, in the app's language; nothing without a start. */
+export function monthRange(start: string, end: string, ongoing = t.value.profile.format.now): string {
   return start ? `${monthLabel(start)} – ${end ? monthLabel(end) : ongoing}` : ''
 }
 
 export function yearRange(start: string, end: string): string {
   if (!start && !end) return ''
-  return `${start || '?'} – ${end || 'now'}`
+  return `${start || '?'} – ${end || t.value.profile.format.now}`
 }
 
 /** The degree's own title, else its level and field: "Bachelor’s degree in Computer Science". */
 export function educationTitle(item: Pick<Education, 'degree' | 'level' | 'field'>): string {
   if (item.degree.trim()) return item.degree
-  const level = EDUCATION_LEVELS[item.level as keyof typeof EDUCATION_LEVELS] ?? ''
-  return [level, item.field.trim()].filter(Boolean).join(' in ') || 'Education'
+  const words = t.value.profile
+  const level = (words.educationLevels as Record<string, string>)[item.level] ?? ''
+  const field = item.field.trim()
+  if (level && field) return words.education.levelIn(level, field)
+  return level || field || words.education.fallback
 }
 
 const MONTH = /^\d{4}-\d{2}$/

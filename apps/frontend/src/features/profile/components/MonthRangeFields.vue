@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { t } from '@/features/common/i18n'
 
 defineProps<{ ongoingLabel: string, errors?: { start?: string, end?: string } }>()
 const start = defineModel<string>('start', { required: true })
@@ -14,11 +15,11 @@ watch(ongoing, (value) => {
 
 <template>
   <div class="grid grid-cols-2 gap-2">
-    <UFormField label="Start month" :error="errors?.start" :ui="label">
-      <UInput v-model="start" type="month" placeholder="YYYY-MM" class="w-full" />
+    <UFormField :label="t.profile.monthRange.start" :error="errors?.start" :ui="label">
+      <UInput v-model="start" type="month" :placeholder="t.profile.monthRange.placeholder" class="w-full" />
     </UFormField>
-    <UFormField v-if="!ongoing" label="End month" :error="errors?.end" :ui="label">
-      <UInput v-model="end" type="month" placeholder="YYYY-MM" class="w-full" />
+    <UFormField v-if="!ongoing" :label="t.profile.monthRange.end" :error="errors?.end" :ui="label">
+      <UInput v-model="end" type="month" :placeholder="t.profile.monthRange.placeholder" class="w-full" />
     </UFormField>
   </div>
   <USwitch v-model="ongoing" :label="ongoingLabel" size="sm" />

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
 import PrepPage from './PrepPage.vue'
@@ -235,6 +236,48 @@ describe('PrepPage', () => {
     await settle()
     expect(text()).toContain('Prepare your CV')
     expect(applications.applications.get(seedId(2))?.status).toBe('applied')
+  })
+
+  it('speaks Romanian when the app does, and switches live', async () => {
+    const person = sampleProfile()
+    person.experience[0]!.tools.push('FluxCD')
+    const { jobs } = useServices(person)
+    jobs.jobs[0]!.must_have.push('Argo CD')
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    setLocale('ro')
+    await settle()
+    expect(text()).toContain('Pregătește CV-ul')
+    expect(text()).toContain('0 din 8 întrebări cu răspuns')
+    expect(text()).toContain('Completează competențele lipsă')
+    expect(button(/^Generează CV-ul · potrivire \d+%$/)).toBeTruthy()
+    const terraform = () => card('[data-test="gap"]', 'Terraform')
+    expect(terraform().textContent).toContain('Lipsește')
+    await type(input('Experiența ta cu Terraform'), 'Am scris module pentru 3 medii')
+    await click(within(terraform(), 'Bonbon Labs'))
+    await click(within(terraform(), 'Adaugă în CV'))
+    expect(terraform().textContent).toContain('Salvat în profilul tău, la Junior system administrator la Bonbon Labs')
+    expect(input('Ce altceva te recomandă pentru acest job?')).toBeTruthy()
+    expect(text()).toContain('Ce îți va cere acest job')
+    const claim = document.querySelector<HTMLElement>('[data-test="claim"]')!
+    expect(input('Ce ai făcut mai exact?').getAttribute('placeholder')).toBe('Cu cuvintele tale: ce ai făcut, unde și ce s-a schimbat? Cifrele ajută.')
+    await click(within(claim, 'Nu chiar'))
+    expect(claim.textContent).toContain('Lăsat deoparte')
+    const close = card('[data-test="close"]', 'Argo CD')
+    expect(close.textContent).toContain('Am folosit și eu Argo CD')
+    expect(close.textContent).toContain('Apropiat')
+    setLocale('en')
+    await settle()
+    expect(text()).toContain('Prepare your CV')
+  })
+
+  it('writes a new CV in the app’s language when the ad does not tell', async () => {
+    const { jobs } = useServices()
+    Object.assign(jobs.jobs[0]!, { title: 'DevOps Engineer', about: '', responsibilities: [], must_have: ['Kubernetes'] })
+    setLocale('ro')
+    await mountPage(PrepPage, { at: `/jobs/${seedId(1)}/prepare`, props: { id: seedId(1) } })
+    expect(button('Română').getAttribute('aria-pressed')).toBe('true')
+    await click(button('English'))
+    expect(button('English').getAttribute('aria-pressed')).toBe('true')
   })
 
   it('says so when the profile cannot be read', async () => {

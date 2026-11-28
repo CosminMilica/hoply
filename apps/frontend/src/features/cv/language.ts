@@ -11,9 +11,9 @@ export const HEADINGS: Record<CvLanguage, Record<'summary' | 'skills' | 'experie
 const ROMANIAN = /[ăâîșțşţ]|\b(?:și|si|pentru|cu|în|din|care|experiență|experienta|cerințe|cerinte|responsabilități|oferim|ani|lucru)\b/gi
 const ENGLISH = /\b(?:the|and|with|for|you|we|our|will|experience|requirements|responsibilities|years)\b/gi
 
-/** The language an ad is written in: Romanian when its words read as Romanian more than English. */
-export function adLanguage(text: string): CvLanguage {
+/** The language an ad is written in, by which language's words it has more of; `undecided` when neither wins. */
+export function adLanguage(text: string, undecided: CvLanguage = 'en'): CvLanguage {
   const romanian = text.match(ROMANIAN)?.length ?? 0
   const english = text.match(ENGLISH)?.length ?? 0
-  return romanian > english ? 'ro' : 'en'
+  return romanian === english ? undecided : romanian > english ? 'ro' : 'en'
 }

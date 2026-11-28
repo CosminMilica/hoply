@@ -29,11 +29,11 @@ func TestRLSKeepsEachTenantsJobsAndSharesTheCatalog(t *testing.T) {
 
 	if _, err := importer.Import(ctx, models.ImportedJob{JobInput: models.JobInput{Title: "Accountant", Company: "Genpact",
 		City: "Iași", Country: "Romania", URL: "https://genpact.example/1", Source: "import", ReadFrom: "ats_api"},
-		Areas: []string{"Accounting"}, Origin: "workday", ExternalID: "1", Board: "genpact"}, time.Now()); err != nil {
+		Areas: []string{"General accounting"}, Domains: []string{"accounting"}, Origin: "workday", ExternalID: "1", Board: "genpact"}, time.Now()); err != nil {
 		t.Fatalf("the importer writes the catalog: %v", err)
 	}
 	added, err := repo.Create(ctx, ana, models.JobInput{Title: "Consilier bancar", Company: "BRD", Country: "Romania",
-		URL: "https://brd.example/1", Source: "link", ReadFrom: "page_text"})
+		URL: "https://brd.example/1", Source: "link", ReadFrom: "page_text"}, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

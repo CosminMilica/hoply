@@ -16,6 +16,8 @@ export function sampleProfile() {
     city: 'Iași',
     country: 'Romania',
     work_modes: ['hybrid'] as string[],
+    app_language: 'en',
+    domains: ['it'] as string[],
     open_to_relocation: false,
     work_authorization: 'citizen',
     work_authorization_region: 'EU',

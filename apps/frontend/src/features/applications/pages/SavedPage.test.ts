@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import SavedPage from './SavedPage.vue'
 import { seedId } from '@/test/jobs-seed'
@@ -70,6 +71,35 @@ describe('SavedPage', () => {
     expect(applications.applications.size).toBe(0)
     expect(text()).toContain('Nothing saved yet. Add a job you found, from its link or its text, and it lands here.')
     expect(button('Add a job').getAttribute('href')).toBe('/jobs/add?from=saved')
+  })
+
+  it('speaks Romanian', async () => {
+    setLocale('ro')
+    const { applications } = useServices()
+    applications.track(seedId(1), 'saved')
+    applications.track(seedId(4), 'saved')
+    await mountPage(SavedPage)
+    expect(text()).toContain('Joburi salvate')
+    expect(button('Cele mai potrivite').getAttribute('aria-pressed')).toBe('true')
+    expect(button('Cele mai noi')).toBeTruthy()
+    expect([...document.querySelectorAll('[data-test="since"]')].map(line => line.textContent)).toEqual(['Salvat pe 25 nov.', 'Salvat pe 25 nov.'])
+    expect(text()).toContain('Lipsă: Snowflake, Terraform, Infrastructure as Code, RBAC')
+    expect(button('Pregătește CV-ul')).toBeTruthy()
+    expect(button('Scoate din salvate')).toBeTruthy()
+  })
+
+  it('says in Romanian when nothing is saved, or every saved job has a CV', async () => {
+    setLocale('ro')
+    useServices()
+    await mountPage(SavedPage)
+    expect(text()).toContain('Încă n-ai salvat nimic.')
+    expect(button('Adaugă un job').getAttribute('href')).toBe('/jobs/add?from=saved')
+    document.body.innerHTML = ''
+
+    const { applications } = useServices()
+    applications.track(seedId(2), 'applied')
+    await mountPage(SavedPage)
+    expect(text()).toContain('Toate joburile salvate au acum CV.')
   })
 
   it('says every saved job has a CV once they all moved on', async () => {

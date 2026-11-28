@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { setLocale } from '@/features/common/i18n'
 import { emptyProfile, sampleProfile } from '@/test/profile-service'
-import { educationTitle, monthLabel, monthRange, plural, yearRange } from './format'
+import { educationTitle, monthLabel, monthRange, yearRange } from './format'
 import { initialsOf, isRichRole, profileReadiness } from './readiness'
 import { bulletLine, knownSkills } from './skills'
 
@@ -44,6 +45,19 @@ describe('profileReadiness', () => {
   })
 })
 
+describe('in Romanian', () => {
+  it('names the next item, the dates and the education in Romanian', () => {
+    setLocale('ro')
+    expect(profileReadiness(emptyProfile())).toMatchObject({ percent: 0, hint: 'Următorul pas: adaugă numele tău' })
+    expect(profileReadiness(sampleProfile()).hint).toBe('Totul e gata. E timpul să cauți joburi.')
+    expect(monthRange('2022-03', '')).toBe('03/2022 – prezent')
+    expect(yearRange('2016', '')).toBe('2016 – prezent')
+    expect(educationTitle({ degree: '', level: 'master', field: 'Data Science' })).toBe('Master în Data Science')
+    expect(educationTitle({ degree: '', level: '', field: 'Drept' })).toBe('Drept')
+    expect(educationTitle({ degree: '', level: '', field: '' })).toBe('Educație')
+  })
+})
+
 describe('initialsOf', () => {
   it('takes the first letters of the first and last names', () => {
     expect(initialsOf('Andrei Popescu')).toBe('AP')
@@ -54,9 +68,7 @@ describe('initialsOf', () => {
 })
 
 describe('formatting', () => {
-  it('pluralises and prints dates', () => {
-    expect(plural(1, 'role')).toBe('1 role')
-    expect(plural(2, 'role')).toBe('2 roles')
+  it('prints dates', () => {
     expect(monthLabel('2022-03')).toBe('03/2022')
     expect(monthLabel('soon')).toBe('soon')
     expect(monthRange('2022-03', '')).toBe('03/2022 – now')

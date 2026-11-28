@@ -1,6 +1,6 @@
 // Package importer reads the jobs of the companies in boards.yaml from their
 // public job boards, on a schedule, and keeps the ones based in Romania in the
-// tech areas Find jobs filters on (extract.Areas).
+// domains a person can pick (extract.Domains).
 package importer
 
 import (
@@ -306,10 +306,10 @@ func (im *Importer) board(ctx context.Context, b Board) Result {
 }
 
 // wanted reports whether a listed job may be kept, before its description is
-// read: its title names an area, and it is in Romania or the platform kept the
+// read: its title names a domain, and it is in Romania or the platform kept the
 // list to Romania.
 func wanted(p fetch.Posting) bool {
-	if len(extract.AreasOf(p.Page.Title)) == 0 {
+	if len(extract.Classify(p.Page.Title).Domains) == 0 {
 		return false
 	}
 	_, country := extract.Place(strings.Join(append(slices.Clone(p.Places), p.Page.Location, p.Page.City), " · "))
@@ -317,15 +317,15 @@ func wanted(p fetch.Posting) bool {
 }
 
 // Job turns a posting into the job to keep, or reports false when the job is
-// not based in Romania or its title names none of the areas.
+// not based in Romania or its title names none of the domains.
 func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 	where := strings.Join(append(slices.Clone(p.Places), p.Page.Location, p.Page.City), " · ")
 	city, country := extract.Place(where)
 	if country == "" && (p.InCountry || extract.IsRomania(p.Page.Country)) {
 		country = "Romania"
 	}
-	areas := extract.AreasOf(p.Page.Title)
-	if country != "Romania" || len(areas) == 0 || p.ID == "" {
+	c := extract.Classify(p.Page.Title)
+	if country != "Romania" || len(c.Domains) == 0 || p.ID == "" {
 		return models.ImportedJob{}, false
 	}
 	read := extract.Read(p.Page.Text, extract.Hints{Title: p.Page.Title, Company: b.Company})
@@ -337,7 +337,7 @@ func Job(b Board, p fetch.Posting) (models.ImportedJob, bool) {
 			Responsibilities: read.Responsibilities, Qualifications: read.Qualifications, Bonuses: read.Bonuses, About: read.About,
 			AboutCompany: read.AboutCompany, Perks: read.Perks, URL: p.URL, Source: "import", ReadFrom: p.Page.ReadFrom,
 		},
-		Areas: areas, Origin: b.Platform, ExternalID: p.ID, Board: b.Board, PostedAt: p.PostedAt,
+		Areas: c.Areas, Domains: c.Domains, Origin: b.Platform, ExternalID: p.ID, Board: b.Board, PostedAt: p.PostedAt,
 	}, true
 }
 

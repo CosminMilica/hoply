@@ -55,6 +55,7 @@ export function createJobsBackend() {
       const country = plain(params.get('country') ?? '')
       const remote = params.get('include_remote') === 'true'
       const areas = params.getAll('area')
+      const domains = params.getAll('domain')
       const level = params.get('level') ?? ''
       const ids = (params.get('ids') ?? '').split(',').filter(Boolean)
       if (ids.length) {
@@ -67,6 +68,7 @@ export function createJobsBackend() {
           && (!city || plain(job.city) === city || (remote && job.work_mode === 'remote'))
           && (!country || plain(job.country) === country)
           && (!areas.length || job.areas.some(area => areas.includes(area)))
+          && (!domains.length || job.domains.some(domain => domains.includes(domain)) || (job.added_by_me && !job.domains.length))
           && (!level || job.level === level)
       }).sort((a, b) => b.created_at.localeCompare(a.created_at))
       return { status: 200, body: { items: items.map(card), total: items.length } }
@@ -107,7 +109,7 @@ export function createJobsBackend() {
       const input = body as Partial<Job>
       const job = {
         ...(body as unknown as Job), about_company: input.about_company ?? '', perks: input.perks ?? [], qualifications: input.qualifications ?? [],
-        bonuses: input.bonuses ?? [], id: `00000000-0000-4000-9000-${String(sequence).padStart(12, '0')}`, product: '', areas: [],
+        bonuses: input.bonuses ?? [], id: `00000000-0000-4000-9000-${String(sequence).padStart(12, '0')}`, product: '', areas: [], domains: [],
         sample: false, added_by_me: true, created_at: `2026-12-0${sequence}T08:00:00Z`,
       }
       jobs.unshift(job)

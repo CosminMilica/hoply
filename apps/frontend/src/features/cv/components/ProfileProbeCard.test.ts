@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
+import { setLocale } from '@/features/common/i18n'
+import { sampleProfile } from '@/test/profile-service'
+import ProfileProbeCard from './ProfileProbeCard.vue'
 import ProfilePage from '@/features/profile/pages/ProfilePage.vue'
 
 const card = () => document.querySelector<HTMLElement>('[data-test="profile-probe"]')
@@ -42,6 +45,17 @@ describe('ProfileProbeCard', () => {
     expect(second().textContent).toContain('Skipped')
     await click(button('Change my mind'))
     expect(card()!.textContent).not.toContain('Skipped')
+  })
+
+  it('speaks Romanian when the app does', async () => {
+    useServices(undefined, { profileProbe: { status: 'ready', questions: [question] } })
+    setLocale('ro')
+    await mountPage(ProfileProbeCard, { props: { profile: sampleProfile() } })
+    expect(card()!.textContent).toContain('Fă fiecare CV mai puternic')
+    expect(input(question.question).getAttribute('placeholder')).toBe('Alege unul de mai sus sau răspunde cu cuvintele tale')
+    await click(button('Sari peste'))
+    expect(card()!.textContent).toContain('Omis')
+    expect(button('M-am răzgândit')).toBeTruthy()
   })
 
   it('says it is reading while asked for, and stays out of the way otherwise', async () => {

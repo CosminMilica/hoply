@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useLocalStorage } from '@vueuse/core'
 import { useApplicationMutations, useApplicationStatuses } from '@/features/applications/composables/useApplications'
 import { saveFile } from '@/features/common/download'
+import { t } from '@/features/common/i18n'
 import AtsCard from '../components/AtsCard.vue'
 import CvPaper from '../components/CvPaper.vue'
 import LetterCard from '../components/LetterCard.vue'
@@ -24,7 +25,7 @@ const template = computed<CvTemplate>({
   get: () => (Object.hasOwn(CV_TEMPLATES, stored.value) ? stored.value as CvTemplate : 'classic'),
   set: (value) => { stored.value = value },
 })
-const templates = Object.entries(CV_TEMPLATES) as [CvTemplate, string][]
+const templates = Object.keys(CV_TEMPLATES) as CvTemplate[]
 
 const applied = computed(() => statuses.value.get(props.id) === 'applied')
 const document = computed(() => (cv.value ? cv.value[mode.value] : null))
@@ -52,21 +53,21 @@ async function download(format: 'pdf' | 'docx') {
   <div class="mx-auto w-full max-w-[1080px]">
     <USkeleton v-if="isPending" class="h-64 w-full" />
     <div v-else-if="!cv || !document" class="flex flex-col gap-2.5 pt-6">
-      <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">No CV yet</h1>
-      <p class="m-0 text-base leading-normal font-medium text-muted">Add a job, prepare your CV, and the tailored version shows up here.</p>
-      <UButton :to="{ name: 'hoply-job-add' }" label="Add a job" size="lg" block class="mt-2 justify-center" />
+      <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.cv.cvPage.emptyTitle }}</h1>
+      <p class="m-0 text-base leading-normal font-medium text-muted">{{ t.cv.cvPage.emptyText }}</p>
+      <UButton :to="{ name: 'hoply-job-add' }" :label="t.cv.cvPage.addJob" size="lg" block class="mt-2 justify-center" />
     </div>
     <div v-else class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[380px_minmax(0,1fr)] min-[900px]:items-start min-[900px]:gap-x-12">
       <div class="contents min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4">
-        <UButton :to="{ name: 'hoply-applications' }" label="Applications" icon="i-lucide-chevron-left" variant="ghost" color="neutral" class="order-0 self-start px-1 text-toned" />
+        <UButton :to="{ name: 'hoply-applications' }" :label="t.cv.cvPage.applications" icon="i-lucide-chevron-left" variant="ghost" color="neutral" class="order-0 self-start px-1 text-toned" />
         <div class="order-1 -mt-2.5 flex flex-col gap-1">
-          <h1 class="m-0 text-[26px] leading-tight font-extrabold tracking-tight">Your CV is ready</h1>
-          <p class="m-0 text-[15px] font-medium text-muted">For {{ cv.job_title }} at {{ cv.company }}</p>
+          <h1 class="m-0 text-[26px] leading-tight font-extrabold tracking-tight">{{ t.cv.cvPage.ready }}</h1>
+          <p class="m-0 text-[15px] font-medium text-muted">{{ t.cv.cvPage.forJob(cv.job_title, cv.company) }}</p>
           <p class="m-0 text-[13px] font-medium text-dimmed" data-test="written-by">{{ authorshipLine(cv) }}</p>
         </div>
-        <div class="order-2 flex gap-1.5 rounded-[10px] bg-accented p-1" role="group" aria-label="Version">
+        <div class="order-2 flex gap-1.5 rounded-[10px] bg-accented p-1" role="group" :aria-label="t.cv.cvPage.version">
           <UButton
-            v-for="option in [{ id: 'profile', label: 'Your profile' }, { id: 'tailored', label: 'Tailored' }] as const"
+            v-for="option in [{ id: 'profile', label: t.cv.cvPage.profileVersion }, { id: 'tailored', label: t.cv.cvPage.tailored }] as const"
             :key="option.id"
             :label="option.label"
             :aria-pressed="mode === option.id"
@@ -78,12 +79,12 @@ async function download(format: 'pdf' | 'docx') {
           />
         </div>
         <div class="order-2 flex flex-col gap-1.5">
-          <span class="text-[13px] font-bold text-muted">Template</span>
-          <div class="flex gap-1.5 rounded-[10px] bg-accented p-1" role="group" aria-label="Template">
+          <span class="text-[13px] font-bold text-muted">{{ t.cv.cvPage.template }}</span>
+          <div class="flex gap-1.5 rounded-[10px] bg-accented p-1" role="group" :aria-label="t.cv.cvPage.template">
             <UButton
-              v-for="[name, label] in templates"
+              v-for="name in templates"
               :key="name"
-              :label="label"
+              :label="t.cv.cvPage.templates[name]"
               :aria-pressed="template === name"
               color="neutral"
               :variant="template === name ? 'soft' : 'ghost'"
@@ -97,13 +98,13 @@ async function download(format: 'pdf' | 'docx') {
         <TailoringCard v-if="mode === 'tailored' && cv.tailoring" :tailoring="cv.tailoring" class="order-3" />
         <div class="order-6 flex flex-col gap-2.5">
           <div class="flex gap-2">
-            <UButton label="Download PDF" :loading="downloading === 'pdf'" size="lg" class="flex-1 justify-center" @click="download('pdf')" />
+            <UButton :label="t.cv.cvPage.downloadPdf" :loading="downloading === 'pdf'" size="lg" class="flex-1 justify-center" @click="download('pdf')" />
             <UButton label="DOCX" :loading="downloading === 'docx'" color="neutral" variant="outline" size="lg" class="justify-center" @click="download('docx')" />
           </div>
-          <p v-if="downloadFailed" role="alert" class="m-0 text-center text-[13px] font-bold text-ember-400">We could not download the CV. Try again.</p>
+          <p v-if="downloadFailed" role="alert" class="m-0 text-center text-[13px] font-bold text-ember-400">{{ t.cv.cvPage.downloadFailed }}</p>
           <span class="text-center text-xs font-medium text-muted">{{ cv.file_name }}</span>
           <UButton
-            :label="applied ? 'Marked as applied ✓' : 'I applied to this job'"
+            :label="applied ? t.cv.cvPage.applied : t.cv.cvPage.markApplied"
             color="neutral"
             :variant="applied ? 'soft' : 'outline'"
             size="lg"
@@ -117,8 +118,8 @@ async function download(format: 'pdf' | 'docx') {
       <div class="contents min-[900px]:col-start-2 min-[900px]:row-start-1 min-[900px]:flex min-[900px]:flex-col min-[900px]:gap-4">
         <CvPaper class="order-4" :document="document" :template="template" :highlights="mode === 'tailored' ? cv.highlights : []" />
         <p v-if="mode === 'tailored'" class="order-5 m-0 text-[13px] leading-normal font-medium text-muted">
-          <mark class="rounded-md bg-hoply-200 px-1.5 py-px font-extrabold text-hoply-950">Highlighted</mark>
-          words are only for you. Every template exports real text in one column with standard headings, so any ATS can read it. Everything in it comes from your profile and your answers.
+          <mark class="rounded-md bg-hoply-200 px-1.5 py-px font-extrabold text-hoply-950">{{ t.cv.cvPage.highlighted }}</mark>
+          {{ t.cv.cvPage.highlightNote }}
         </p>
         <LetterCard class="order-7" :cv-id="cv.id" :template="template" />
       </div>

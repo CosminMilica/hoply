@@ -8,6 +8,12 @@ describe('the CV language', () => {
     expect(adLanguage('')).toBe('en')
   })
 
+  it('leaves an ad that reads as neither language to the language it is given', () => {
+    expect(adLanguage('DevOps Engineer', 'ro')).toBe('ro')
+    expect(adLanguage('Kubernetes, Terraform', 'en')).toBe('en')
+    expect(adLanguage('Accounts Payable Associate. You will process invoices with the team.', 'ro')).toBe('en')
+  })
+
   it('names the sections the way each language does', () => {
     expect(HEADINGS.ro.experience).toBe('Experiență profesională')
     expect(HEADINGS.en.experience).toBe('Experience')

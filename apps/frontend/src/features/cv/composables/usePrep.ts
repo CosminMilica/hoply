@@ -1,4 +1,5 @@
 import { computed, reactive, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
+import { locale, t } from '@/features/common/i18n'
 import type { Job } from '@/features/jobs/api/jobs.schema'
 import { keywordsIn, matchJob, requirementsOf } from '@/features/jobs/match'
 import type { Bullet, Profile } from '@/features/profile/api/profile.schema'
@@ -15,7 +16,7 @@ export const claimKey = (index: number) => `c:${index}`
 export const probeKey = (index: number) => `p:${index}`
 
 const joinList = (items: string[]) =>
-  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
+  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} ${t.value.cv.prep.and} ${items[items.length - 1]}`
 
 interface PrepInputs {
   job: MaybeRefOrGetter<Job | undefined>
@@ -43,10 +44,11 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     places: {} as Record<string, Place>,
     language: null as CvLanguage | null,
   })
-  // The CV is in the ad's language unless the person picks the other one.
+  // The person's pick wins; then the ad's language; then, when the ad does not tell, the app's.
   const language = computed<CvLanguage>(() => {
     const ad = toValue(job)
-    return state.language ?? (ad ? adLanguage([ad.title, ad.about, ...ad.responsibilities, ...ad.must_have].join(' ')) : 'en')
+    if (state.language) return state.language
+    return ad ? adLanguage([ad.title, ad.about, ...ad.responsibilities, ...ad.must_have].join(' '), locale.value) : locale.value
   })
 
   const current = () => toValue(profile)
@@ -56,8 +58,8 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   const includedRoles = computed(() => experience.value.filter(role => !state.skip[role.id]))
 
   const choices = computed(() => [
-    ...includedRoles.value.map(role => ({ id: `experience:${role.id}`, label: role.company || role.role, where: `${role.role}${role.company ? ` at ${role.company}` : ''}` })),
-    ...projects.value.map(project => ({ id: `projects:${project.id}`, label: project.name, where: `the ${project.name} project` })),
+    ...includedRoles.value.map(role => ({ id: `experience:${role.id}`, label: role.company || role.role })),
+    ...projects.value.map(project => ({ id: `projects:${project.id}`, label: project.name })),
   ])
   function whereOf(key: string): Place {
     const chosen = state.places[key]
@@ -66,7 +68,7 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
   }
   function roleChoices(key: string) {
     const where = whereOf(key)
-    return [...choices.value, { id: OTHER, label: 'Elsewhere' }].map(choice => ({ id: choice.id, label: choice.label, pressed: choice.id === where }))
+    return [...choices.value, { id: OTHER, label: t.value.cv.prep.elsewhere }].map(choice => ({ id: choice.id, label: choice.label, pressed: choice.id === where }))
   }
   function pickRole(key: string, id: Place) {
     state.places[key] = id
@@ -103,7 +105,7 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     const claims = asked.length ? [] : (toValue(questions)?.responsibilities ?? [])
     const answered = [...gaps.map(gap => gapKey(gap.skill)), ...claims.map(claim => claimKey(claim.index)), ...asked.map((_, index) => probeKey(index))]
       .filter(key => answers.answer(key)).length
-    return `${answered} of ${gaps.length + claims.length + asked.length} questions answered`
+    return t.value.cv.prep.answered(answered, gaps.length + claims.length + asked.length)
   })
 
   // The highlights to strengthen are chosen once, so that a saved result does not move them.
@@ -142,8 +144,8 @@ export function usePrep({ job, profile, questions, probe }: PrepInputs) {
     return {
       id: role.id,
       role: role.role,
-      meta: `${role.company} · ${monthRange(role.start, role.end) || 'dates not set'}`,
-      overlap: overlap.length ? `Uses ${joinList(overlap)}` : 'No tools in common with this job',
+      meta: `${role.company} · ${monthRange(role.start, role.end) || t.value.cv.prep.datesNotSet}`,
+      overlap: overlap.length ? t.value.cv.prep.uses(joinList(overlap)) : t.value.cv.prep.noOverlap,
       included: !state.skip[role.id],
     }
   }))

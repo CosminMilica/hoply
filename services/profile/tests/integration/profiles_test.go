@@ -45,6 +45,7 @@ func TestProfilePatchAgainstPostgres(t *testing.T) {
 		AvailableFrom: ptr("2027-01"), TargetRoles: []string{"Backend", "SRE"}, TargetSeniority: []string{"senior"},
 		EmploymentTypes: []string{"contract", "full_time"}, SalaryMin: models.Nullable{Set: true, Value: ptr(90000)},
 		SalaryCurrency: ptr("EUR"), SalaryPeriod: ptr("year"), AdditionalInfo: []string{"Driving licence"},
+		AppLanguage: ptr("ro"), Domains: []string{"banking", "accounting"},
 	})
 	if err != nil || patched.Name != "Ana Pop" || patched.About != "About" || patched.Country != "Romania" ||
 		!slices.Equal(patched.WorkModes, []string{"hybrid", "remote"}) || !patched.OpenToRelocation ||
@@ -52,6 +53,7 @@ func TestProfilePatchAgainstPostgres(t *testing.T) {
 		patched.AvailableFrom != "2027-01" || !slices.Equal(patched.TargetRoles, []string{"Backend", "SRE"}) ||
 		!slices.Equal(patched.EmploymentTypes, []string{"contract", "full_time"}) || *patched.SalaryMin != 90000 ||
 		patched.SalaryCurrency != "EUR" || patched.SalaryPeriod != "year" || patched.AdditionalInfo[0] != "Driving licence" ||
+		patched.AppLanguage != "ro" || !slices.Equal(patched.Domains, []string{"banking", "accounting"}) ||
 		!patched.UpdatedAt.After(created.UpdatedAt) {
 		t.Fatalf("patch: %+v %v", patched, err)
 	}
@@ -59,7 +61,7 @@ func TestProfilePatchAgainstPostgres(t *testing.T) {
 		NoticePeriodWeeks: models.Nullable{Set: true}, OpenToRelocation: ptr(false)})
 	if err != nil || patched.Headline != "" || len(patched.WorkModes) != 0 || patched.NoticePeriodWeeks != nil ||
 		patched.OpenToRelocation || *patched.SalaryMin != 90000 || patched.Name != "Ana Pop" ||
-		!slices.Equal(patched.TargetRoles, []string{"Backend", "SRE"}) {
+		!slices.Equal(patched.TargetRoles, []string{"Backend", "SRE"}) || patched.AppLanguage != "ro" || len(patched.Domains) != 2 {
 		t.Fatalf("patch changes only the sent fields: %+v %v", patched, err)
 	}
 

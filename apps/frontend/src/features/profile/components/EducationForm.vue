@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import { t } from '@/features/common/i18n'
 import { EDUCATION_LEVELS, educationInputSchema, type Education, type EducationInput } from '../api/profile.schema'
 
 const label = { label: 'text-xs font-bold text-muted' }
-const levels = Object.entries(EDUCATION_LEVELS).map(([value, text]) => ({ label: text, value }))
+const levels = computed(() => EDUCATION_LEVELS.map(value => ({ label: t.value.profile.educationLevels[value], value: value as string })))
 
 const props = defineProps<{ initial?: Education, pending?: boolean, serverError?: string }>()
 const emit = defineEmits<{ save: [input: EducationInput], cancel: [] }>()
@@ -30,31 +31,31 @@ function submit() {
 </script>
 
 <template>
-  <form class="flex flex-col gap-2 rounded-[10px] border-[1.5px] border-dashed border-ink-400 p-3" :aria-label="initial ? `Edit ${initial.degree || initial.field || 'education'}` : 'Add education'" @submit.prevent="submit">
-    <UFormField label="Level" :error="errors.level" :ui="label" required>
-      <USelect v-model="draft.level" :items="levels" placeholder="Choose the level" class="w-full" />
+  <form class="flex flex-col gap-2 rounded-[10px] border-[1.5px] border-dashed border-ink-400 p-3" :aria-label="initial ? t.profile.entry.edit(initial.degree || initial.field || t.profile.educationForm.entry) : t.profile.educationForm.add" @submit.prevent="submit">
+    <UFormField :label="t.profile.educationForm.level" :error="errors.level" :ui="label" required>
+      <USelect v-model="draft.level" :items="levels" :placeholder="t.profile.educationForm.chooseLevel" class="w-full" />
     </UFormField>
-    <UFormField label="Field of study" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.field" placeholder="Field, e.g. Computer Science" maxlength="120" class="w-full" />
+    <UFormField :label="t.profile.educationForm.field" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.field" :placeholder="t.profile.educationForm.fieldPlaceholder" maxlength="120" class="w-full" />
     </UFormField>
-    <UFormField label="Degree title" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.degree" placeholder="Degree title (optional), e.g. BSc Computer Science" maxlength="120" class="w-full" />
+    <UFormField :label="t.profile.educationForm.degree" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.degree" :placeholder="t.profile.educationForm.degreePlaceholder" maxlength="120" class="w-full" />
     </UFormField>
-    <UFormField label="School" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.school" placeholder="School" maxlength="120" class="w-full" />
+    <UFormField :label="t.profile.educationForm.school" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.school" :placeholder="t.profile.educationForm.school" maxlength="120" class="w-full" />
     </UFormField>
     <div class="grid grid-cols-2 gap-2">
-      <UFormField label="Start year" :error="errors.start_year" :ui="label">
-        <UInput v-model="draft.start_year" placeholder="e.g. 2016" inputmode="numeric" maxlength="4" class="w-full" />
+      <UFormField :label="t.profile.educationForm.startYear" :error="errors.start_year" :ui="label">
+        <UInput v-model="draft.start_year" :placeholder="t.profile.educationForm.startYearPlaceholder" inputmode="numeric" maxlength="4" class="w-full" />
       </UFormField>
-      <UFormField label="End year" :error="errors.end_year" :ui="label">
-        <UInput v-model="draft.end_year" placeholder="Empty = ongoing" inputmode="numeric" maxlength="4" class="w-full" />
+      <UFormField :label="t.profile.educationForm.endYear" :error="errors.end_year" :ui="label">
+        <UInput v-model="draft.end_year" :placeholder="t.profile.educationForm.endYearPlaceholder" inputmode="numeric" maxlength="4" class="w-full" />
       </UFormField>
     </div>
     <p v-if="serverError" role="alert" class="m-0 text-sm font-bold text-error">{{ serverError }}</p>
     <div class="flex gap-2">
-      <UButton type="submit" color="neutral" label="Save" block class="flex-1" :loading="pending" />
-      <UButton color="neutral" variant="outline" label="Cancel" @click="emit('cancel')" />
+      <UButton type="submit" color="neutral" :label="t.common.actions.save" block class="flex-1" :loading="pending" />
+      <UButton color="neutral" variant="outline" :label="t.common.actions.cancel" @click="emit('cancel')" />
     </div>
   </form>
 </template>

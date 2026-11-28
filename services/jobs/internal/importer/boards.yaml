@@ -1,5 +1,5 @@
-# Companies whose public job boards the importer reads. Only jobs based in Romania, in an area Find jobs filters on
-# (tech or finance), are kept. board is the company's name on its platform, as in its board's links:
+# Companies whose public job boards the importer reads. Only jobs based in Romania, in a domain a person can pick
+# (IT, banking, accounting, finance, insurance, HR), are kept. board is the company's name on its platform, as in its board's links:
 #   greenhouse        job-boards.greenhouse.io/<board>
 #   lever, lever-eu   jobs.lever.co/<board>, jobs.eu.lever.co/<board>
 #   ashby             jobs.ashbyhq.com/<board>
@@ -102,3 +102,12 @@ boards:
   - {company: tbi bank, platform: recruitee, board: tbibankro}
   - {company: Veo Worldwide Services, platform: recruitee, board: veocareers}
   - {company: Beyond, platform: workable, board: qodea}
+  - {company: NN, platform: workday, board: nngroup.wd3.myworkdayjobs.com/WDExternal}
+  - {company: Hellas Direct, platform: workable, board: hellasdirect}
+  - {company: Mondelez, platform: workday, board: mdlz.wd3.myworkdayjobs.com/External}
+  - {company: Broadridge, platform: workday, board: broadridge.wd5.myworkdayjobs.com/Careers}
+  - {company: Airbus, platform: workday, board: ag.wd3.myworkdayjobs.com/Airbus}
+  - {company: MKS Instruments, platform: workday, board: mksinst.wd1.myworkdayjobs.com/MKSCareersEMEA}
+  - {company: Samsung, platform: workday, board: sec.wd3.myworkdayjobs.com/Samsung_Careers}
+  - {company: Abbott, platform: workday, board: abbott.wd5.myworkdayjobs.com/abbottcareers}
+  - {company: Mars, platform: workday, board: mars.wd3.myworkdayjobs.com/External}

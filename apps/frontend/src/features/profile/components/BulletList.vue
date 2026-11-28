@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import type { Bullet } from '../api/profile.schema'
 
 defineProps<{ bullets: Bullet[] }>()
@@ -11,7 +12,7 @@ defineProps<{ bullets: Bullet[] }>()
       <span class="flex flex-col gap-0.5">
         <span>{{ bullet.text }}</span>
         <span v-if="bullet.result" class="flex items-center gap-1 text-[13px] font-bold text-hoply-300">
-          <UIcon name="i-lucide-trending-up" class="size-3.5 shrink-0" /><span class="sr-only">Result:</span>{{ bullet.result }}
+          <UIcon name="i-lucide-trending-up" class="size-3.5 shrink-0" /><span class="sr-only">{{ t.profile.bullets.result }}</span>{{ bullet.result }}
         </span>
       </span>
     </li>
