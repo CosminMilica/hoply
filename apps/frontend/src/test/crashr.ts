@@ -14,17 +14,17 @@ import { profileServiceHandlers, sampleProfile } from './profile-service'
 const Blank = defineComponent({ name: 'BlankRoute', setup: () => () => h('div', { 'data-test': 'route' }) })
 
 export const ROUTE_PATHS: Record<string, string> = {
-  'hoply-profile': '/profile',
-  'hoply-jobs': '/jobs',
-  'hoply-job-add': '/jobs/add',
-  'hoply-job': '/jobs/:id',
-  'hoply-prep': '/jobs/:id/prepare',
-  'hoply-cv': '/jobs/:id/cv',
-  'hoply-saved': '/saved',
-  'hoply-applications': '/applications',
-  'hoply-skills': '/skills',
-  'hoply-preferences': '/preferences',
-  'hoply-onboarding': '/welcome',
+  'crashr-profile': '/profile',
+  'crashr-jobs': '/jobs',
+  'crashr-job-add': '/jobs/add',
+  'crashr-job': '/jobs/:id',
+  'crashr-prep': '/jobs/:id/prepare',
+  'crashr-cv': '/jobs/:id/cv',
+  'crashr-saved': '/saved',
+  'crashr-applications': '/applications',
+  'crashr-skills': '/skills',
+  'crashr-preferences': '/preferences',
+  'crashr-onboarding': '/welcome',
 }
 
 export function testRouter(pages: Partial<Record<string, Component>> = {}) {

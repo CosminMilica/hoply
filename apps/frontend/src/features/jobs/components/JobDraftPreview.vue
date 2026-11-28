@@ -93,7 +93,7 @@ const set = (patch: Partial<JobDraft>) => {
     <section class="flex flex-col gap-2" aria-labelledby="requirements">
       <div class="flex items-baseline justify-between gap-2">
         <SectionLabel id="requirements" as="h3">{{ t.jobs.draft.requirements }}</SectionLabel>
-        <span class="flex items-center gap-1.5 text-xs font-semibold text-muted"><span class="size-2 rounded-xs bg-hoply-500" aria-hidden="true" />{{ t.jobs.draft.inProfile }}</span>
+        <span class="flex items-center gap-1.5 text-xs font-semibold text-muted"><span class="size-2 rounded-xs bg-crashr-500" aria-hidden="true" />{{ t.jobs.draft.inProfile }}</span>
       </div>
       <p v-if="!draft.must_have.length && !draft.nice_to_have.length" class="m-0 text-[13px] leading-snug font-medium text-ink-300">
         {{ t.jobs.draft.noSkills }}
@@ -109,7 +109,7 @@ const set = (patch: Partial<JobDraft>) => {
                 class="flex min-h-8 items-center gap-1.5 rounded-lg border-[1.5px] px-2.5 text-[13px] font-bold"
                 :class="[
                   list === 'nice_to_have' ? 'border-dashed' : '',
-                  have.has(item.toLowerCase()) ? 'border-hoply-500 bg-hoply-900 text-hoply-300' : 'border-ink-400 text-toned',
+                  have.has(item.toLowerCase()) ? 'border-crashr-500 bg-crashr-900 text-crashr-300' : 'border-ink-400 text-toned',
                 ]"
                 @click="remove(list, item)"
               >

@@ -7,7 +7,7 @@ import { createMemoryHistory, RouterView } from 'vue-router'
 import { createApplicationRouter } from '@/shared/application/router'
 import { testAuth } from '@/shared/application/testing'
 import UApp from '@nuxt/ui/components/App.vue'
-import { button, settle, useServices } from '@/test/hoply'
+import { button, settle, useServices } from '@/test/crashr'
 import AppLayout from './AppLayout.vue'
 import { seedId } from '@/test/jobs-seed'
 
@@ -22,14 +22,14 @@ async function render(at: string, session = testAuth()) {
     layouts: { app: AppLayout },
     routes: {
       app: [
-        { path: 'profile', name: 'hoply-profile', component: Page, meta: { menu: 'profile' } },
-        { path: 'jobs', name: 'hoply-jobs', component: Page, meta: { menu: 'jobs' } },
-        { path: 'jobs/add', name: 'hoply-job-add', component: Page, meta: { menu: 'jobs' } },
-        { path: 'jobs/:id/cv', name: 'hoply-cv', component: Page, props: true, meta: { menu: 'applications' } },
-        { path: 'saved', name: 'hoply-saved', component: Page, meta: { menu: 'saved' } },
-        { path: 'applications', name: 'hoply-applications', component: Page, meta: { menu: 'applications' } },
-        { path: 'skills', name: 'hoply-skills', component: Page, meta: { menu: 'skills' } },
-        { path: 'preferences', name: 'hoply-preferences', component: Page },
+        { path: 'profile', name: 'crashr-profile', component: Page, meta: { menu: 'profile' } },
+        { path: 'jobs', name: 'crashr-jobs', component: Page, meta: { menu: 'jobs' } },
+        { path: 'jobs/add', name: 'crashr-job-add', component: Page, meta: { menu: 'jobs' } },
+        { path: 'jobs/:id/cv', name: 'crashr-cv', component: Page, props: true, meta: { menu: 'applications' } },
+        { path: 'saved', name: 'crashr-saved', component: Page, meta: { menu: 'saved' } },
+        { path: 'applications', name: 'crashr-applications', component: Page, meta: { menu: 'applications' } },
+        { path: 'skills', name: 'crashr-skills', component: Page, meta: { menu: 'skills' } },
+        { path: 'preferences', name: 'crashr-preferences', component: Page },
       ],
     },
   })
@@ -68,7 +68,7 @@ describe('AppLayout', () => {
     expect(tabs().some(tab => tab.getAttribute('aria-current'))).toBe(false)
     expect(tabs()[0]!.getAttribute('href')).toBe('/jobs')
     expect(document.querySelector('[data-shell="top-nav"]')).toBeNull()
-    expect(document.querySelector('[data-shell="header"] a')?.getAttribute('aria-label')).toBe('hoply, go to your profile')
+    expect(document.querySelector('[data-shell="header"] a')?.getAttribute('aria-label')).toBe('crashr, go to your profile')
     expect(button('Add a job').getAttribute('href')).toBe('/jobs/add')
     expect(document.querySelector('[data-test="account-avatar"]')!.textContent?.trim()).toBe('AP')
   })
@@ -123,6 +123,6 @@ describe('AppLayout', () => {
     expect(session.calls).toContain('signOut')
     items[1]!.click()
     await settle()
-    expect(router.currentRoute.value.name).toBe('hoply-skills')
+    expect(router.currentRoute.value.name).toBe('crashr-skills')
   })
 })

@@ -44,7 +44,7 @@ export const jobsApi = {
   async remove(id: string) {
     await getApiClient().delete(`${BASE}/${encodeURIComponent(id)}`)
   },
-  /** The board a job link belongs to; null when Hoply cannot read that board. */
+  /** The board a job link belongs to; null when crashr cannot read that board. */
   async boardOf(url: string) {
     try {
       return boardOfSchema.parse(await getApiClient().get(`${BOARDS}/of`, { searchParams: { url } }).json())

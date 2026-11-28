@@ -103,7 +103,7 @@ func TestReadsJobPostingJSONLD(t *testing.T) {
 		got.Country != "RO" || got.WorkMode != "" || got.Text != want {
 		t.Fatalf("JSON-LD page: %+v", got)
 	}
-	if agent != "Hoply/0.1 (job reader)" {
+	if agent != "crashr/0.1 (job reader)" {
 		t.Fatalf("user agent: %q", agent)
 	}
 

@@ -1,6 +1,6 @@
 <#--
-  Hoply's frame for every sign-in page. keycloak.v2's pages call registrationLayout and fill its sections: "header"
-  (the title), "form", "socialProviders" and "info". The frame draws them in one card under the Hoply mark, on the
+  crashr's frame for every sign-in page. keycloak.v2's pages call registrationLayout and fill its sections: "header"
+  (the title), "form", "socialProviders" and "info". The frame draws them in one card under the crashr mark, on the
   app's dark ground. A section the page leaves empty draws nothing. Under it, the languages the realm offers.
 -->
 <#import "footer.ftl" as loginFooter>
@@ -22,7 +22,7 @@
     <meta name="color-scheme" content="dark">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>${msg("loginTitle", "Hoply")}</title>
+    <title>${msg("loginTitle", "crashr")}</title>
     <link rel="icon" href="${url.resourcesPath}/img/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@
     <main class="h-card" aria-labelledby="kc-page-title">
         <header class="h-brand">
             <svg width="32" height="32" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="9" r="6" fill="#2A4BFF"/><path d="M3 22q11-9 22 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-            <span class="h-brand-name">hoply</span>
+            <span class="h-brand-name">crashr<span class="h-brand-tld">.xyz</span></span>
         </header>
         <#if hasContent(header)>
             <h1 id="kc-page-title" class="h-title">${header}</h1>
@@ -83,9 +83,9 @@
         <#if hasContent(social)><div class="h-social">${social}</div></#if>
         <#if hasContent(info)><div id="kc-info" class="h-info">${info}</div></#if>
     </main>
-    <p class="h-tagline">${msg("hoplyTagline")}</p>
+    <p class="h-tagline">${msg("crashrTagline")}</p>
     <#if realm.internationalizationEnabled && locale.supported?size gt 1>
-        <nav class="h-langs" aria-label="${msg("hoplyLanguages")}">
+        <nav class="h-langs" aria-label="${msg("crashrLanguages")}">
             <#list locale.supported as language>
                 <a class="h-lang" href="${language.url}" lang="${language.languageTag}"<#if language.languageTag == locale.currentLanguageTag> aria-current="true"</#if>>${language.languageTag?upper_case}</a>
             </#list>

@@ -1,11 +1,11 @@
-# How Hoply writes a CV
+# How crashr writes a CV
 
 The rules behind the prompt (`services/cv/internal/grounding/prompts/cv-system.md`), the checks
 (`internal/grounding/check.go`, `internal/cvdoc/document.go`) and the export (`internal/render`).
 
 | Rule | Where it lives | Source |
 | --- | --- | --- |
-| Write only from the person's facts; every sentence cites them; numbers, skills and companies are checked | checks | Hoply's own rule: a CV with invented skills fails the first interview |
+| Write only from the person's facts; every sentence cites them; numbers, skills and companies are checked | checks | crashr's own rule: a CV with invented skills fails the first interview |
 | Notes are raw material, rewritten and combined with highlights, never printed as they are | prompt | the owner, 2026-11-25 |
 | A tool proves its umbrella term (GitHub Actions proves CI/CD). A tool the person has not used is never named; the CV shows the kind of work beside the person's own tool instead ("GitOps delivery with FluxCD" for a job that asks for Argo CD) | `skillmap.json`, prompt, checks | the owner, 2026-11-25 |
 | One idea per bullet, in the person's own words adapted where it fits; no glued clauses, tool lists or forced terms | prompt | the owner, 2026-11-25 |
@@ -29,7 +29,7 @@ Code lints every draft for these patterns (`internal/style`) and the review must
 mean 3.60 → 3.88 (human 3.40 → 3.80), and a blind comparison preferred the new CVs in 4 cases, with 1 tie.
 
 The articles disagree on keyword use: [4] says screeners reward job-description terms, [5] that mechanical
-mirroring no longer works. Hoply uses the job's terms only where the person's facts support them.
+mirroring no longer works. crashr uses the job's terms only where the person's facts support them.
 
 ## Romanian CVs
 
@@ -57,7 +57,7 @@ follow the CV's language, with Romanian greetings and sign-offs ("Stimată echip
 | A message after applying: under 100 words, the role, one proof told as context rather than achievements, an easy ask | prompt | [9], [10] |
 | A connection note within LinkedIn's 300 characters | prompt, checks | the platform's limit |
 | One follow-up, about a week after applying: the role, one reason they fit, a question about next steps | prompt, page hint | [11], [12] |
-| The same facts, checks and naming rules as the CV | checks | Hoply's own rule |
+| The same facts, checks and naming rules as the CV | checks | crashr's own rule |
 
 Sources, read 2026-11-25:
 1. Harvard FAS Mignone Center, [Create a strong resume](https://careerservices.fas.harvard.edu/resources/create-a-strong-resume/)

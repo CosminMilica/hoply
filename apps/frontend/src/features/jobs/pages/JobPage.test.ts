@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
-import { button, click, mountPage, settle, useServices } from '@/test/hoply'
+import { button, click, mountPage, settle, useServices } from '@/test/crashr'
 import JobPage from './JobPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
@@ -60,7 +60,7 @@ describe('JobPage', () => {
     document.body.innerHTML = ''
 
     await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000003', props: { id: '11111111-0000-4000-8000-000000000003' } })
-    await vi.waitFor(() => expect(text()).toContain('Hoply brings Awin’s jobs in Romania to Find jobs.'))
+    await vi.waitFor(() => expect(text()).toContain('crashr brings Awin’s jobs in Romania to Find jobs.'))
     document.body.innerHTML = ''
 
     await mountPage(JobPage, { at: '/jobs/11111111-0000-4000-8000-000000000002', props: { id: '11111111-0000-4000-8000-000000000002' } })
@@ -101,7 +101,7 @@ describe('JobPage', () => {
     useServices()
     const { router } = await mountPage(JobPage, { at: `/jobs/${seedId(1)}`, props: { id: seedId(1) } })
     await click(button('Back'))
-    expect(router.currentRoute.value.name).toBe('hoply-saved')
+    expect(router.currentRoute.value.name).toBe('crashr-saved')
   })
 
   it('shows a job the person added: its source, its original ad, and only the sections it has', async () => {

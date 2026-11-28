@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
-import { button, click, mountPage, useServices } from '@/test/hoply'
+import { button, click, mountPage, useServices } from '@/test/crashr'
 import ApplicationsPage from './ApplicationsPage.vue'
 import { seedId } from '@/test/jobs-seed'
 
@@ -38,7 +38,7 @@ describe('ApplicationsPage', () => {
     expect(stage('cv_ready').textContent).toContain('No CV waiting to be sent.')
 
     await click(button('View CV'))
-    expect(router.currentRoute.value.name).toBe('hoply-cv')
+    expect(router.currentRoute.value.name).toBe('crashr-cv')
   })
 
   it('points to Saved while nothing has a CV yet', async () => {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
-import { button, click, input, mountPage, settle, type, useServices as useAllServices } from '@/test/hoply'
+import { button, click, input, mountPage, settle, type, useServices as useAllServices } from '@/test/crashr'
 import { sampleProfile } from '@/test/profile-service'
 import { SEARCH_DELAY_MS } from '../composables/useDeck'
 import { useJobSearchStore } from '../stores/search'
@@ -121,12 +121,12 @@ describe('JobSearch in swipe view', () => {
     const { router } = await mountPage(JobSearch)
     await showDeck('Show 4 jobs')
     await click(button('Details'))
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-job', params: { id: seedId(2) } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'crashr-job', params: { id: seedId(2) } })
     await router.push('/jobs')
     await settle()
     await click(button('Tailor CV'))
     await wait(260)
-    expect(router.currentRoute.value).toMatchObject({ name: 'hoply-prep', params: { id: seedId(2) } })
+    expect(router.currentRoute.value).toMatchObject({ name: 'crashr-prep', params: { id: seedId(2) } })
     expect(applications.applications.get(seedId(2))?.status).toBe('saved')
   })
 
@@ -157,11 +157,11 @@ describe('JobSearch in swipe view', () => {
     pointer('pointerdown', 200, 300)
     pointer('pointerup', 200, 300)
     await settle()
-    expect(router.currentRoute.value.name).toBe('hoply-job')
+    expect(router.currentRoute.value.name).toBe('crashr-job')
     await router.push('/jobs')
     await settle()
     await swipe(0, -200)
-    expect(router.currentRoute.value.name).toBe('hoply-prep')
+    expect(router.currentRoute.value.name).toBe('crashr-prep')
   })
 
   it('fills the filters from the person’s preferences, once', async () => {
@@ -242,15 +242,15 @@ describe('JobSearch in grid view', () => {
     expect(text()).toContain('Skipped · DevOps Engineer')
     expect(rows()).not.toContain('DevOps Engineer at Bitdefender')
     await click(document.querySelector<HTMLButtonElement>('[data-test="job-tile"] button')!)
-    expect(router.currentRoute.value.name).toBe('hoply-job')
+    expect(router.currentRoute.value.name).toBe('crashr-job')
     await router.push('/jobs')
     await settle()
     await click(button('Details'))
-    expect(router.currentRoute.value.name).toBe('hoply-job')
+    expect(router.currentRoute.value.name).toBe('crashr-job')
     await router.push('/jobs')
     await settle()
     await click(button('Tailor CV'))
-    expect(router.currentRoute.value.name).toBe('hoply-prep')
+    expect(router.currentRoute.value.name).toBe('crashr-prep')
 
     await router.push('/jobs')
     await settle()

@@ -2,8 +2,8 @@
   "realm": "hoply",
   "organizationsEnabled": true,
   "enabled": true,
-  "displayName": "hoply",
-  "displayNameHtml": "<strong>hoply</strong>",
+  "displayName": "crashr",
+  "displayNameHtml": "<strong>crashr</strong>",
   "sslRequired": "none",
   "registrationAllowed": true,
   "verifyEmail": false,
@@ -53,7 +53,7 @@
   "clients": [
     {
       "clientId": "hoply-web",
-      "name": "hoply Web Application",
+      "name": "crashr Web Application",
       "description": "Public SPA client for the frontend",
       "enabled": true,
       "publicClient": true,

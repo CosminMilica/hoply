@@ -12,7 +12,7 @@ import { translated } from '../menu'
  * app's language, with Preferences after the configuration's first section.
  */
 const account = useApplicationMenu('app', 'account')
-const preferences = computed<NavigationMenuItem>(() => ({ label: t.value.shell.menu.preferences, icon: 'i-lucide-settings-2', to: { name: 'hoply-preferences' }, value: 'preferences' }))
+const preferences = computed<NavigationMenuItem>(() => ({ label: t.value.shell.menu.preferences, icon: 'i-lucide-settings-2', to: { name: 'crashr-preferences' }, value: 'preferences' }))
 const items = computed(() => dropdownMenu(account.value.map((section, index) => [...section.map(translated), ...(index === 0 ? [preferences.value] : [])])))
 
 const profile = useProfileQuery()
@@ -31,7 +31,7 @@ const menu = computed<DropdownMenuItem[][]>(() => [...(person.value ? [[{ type: 
       class="flex min-h-11 items-center gap-2 rounded-full border border-default py-[3px] pr-2.5 pl-[3px] text-toned hover:border-accented"
       data-test="account"
     >
-      <span class="flex size-9 items-center justify-center rounded-full border-2 border-hoply-500 bg-hoply-900 text-sm font-extrabold text-hoply-200" data-test="account-avatar">
+      <span class="flex size-9 items-center justify-center rounded-full border-2 border-crashr-500 bg-crashr-900 text-sm font-extrabold text-crashr-200" data-test="account-avatar">
         <template v-if="initials">{{ initials }}</template>
         <UIcon v-else name="i-lucide-user" class="size-4" />
       </span>
@@ -46,10 +46,10 @@ const menu = computed<DropdownMenuItem[][]>(() => [...(person.value ? [[{ type: 
         <span class="flex flex-col gap-1.5">
           <span class="flex justify-between text-xs font-bold text-muted">
             <span>{{ t.shell.profileComplete }}</span>
-            <span class="text-hoply-200" data-test="account-readiness">{{ readiness }}%</span>
+            <span class="text-crashr-200" data-test="account-readiness">{{ readiness }}%</span>
           </span>
           <span class="h-1.5 rounded-full bg-accented">
-            <span class="block h-1.5 rounded-full bg-hoply-500" :style="{ width: `${readiness}%` }" />
+            <span class="block h-1.5 rounded-full bg-crashr-500" :style="{ width: `${readiness}%` }" />
           </span>
         </span>
       </span>

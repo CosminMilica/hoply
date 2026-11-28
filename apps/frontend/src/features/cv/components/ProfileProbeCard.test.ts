@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
+import { button, click, input, mountPage, settle, type, useServices } from '@/test/crashr'
 import { setLocale } from '@/features/common/i18n'
 import { sampleProfile } from '@/test/profile-service'
 import ProfileProbeCard from './ProfileProbeCard.vue'

@@ -23,8 +23,8 @@ const showLabel = computed(() => (props.count ? t.value.jobs.search.show(props.c
       <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ t.jobs.search.title }}</h1>
       <p class="m-0 text-[15px] leading-snug font-medium text-muted">{{ t.jobs.search.intro }}</p>
       <p v-if="note" class="m-0 mt-1.5 flex items-start gap-1.5 text-[13px] leading-snug font-semibold text-ink-300" data-test="market-note">
-        <UIcon name="i-lucide-map-pin" class="mt-px size-4 shrink-0 text-hoply-400" />
-        <span>{{ note }} <RouterLink :to="{ name: 'hoply-profile' }" class="underline">{{ t.jobs.search.changeInProfile }}</RouterLink></span>
+        <UIcon name="i-lucide-map-pin" class="mt-px size-4 shrink-0 text-crashr-400" />
+        <span>{{ note }} <RouterLink :to="{ name: 'crashr-profile' }" class="underline">{{ t.jobs.search.changeInProfile }}</RouterLink></span>
       </p>
     </div>
 
@@ -62,10 +62,10 @@ const showLabel = computed(() => (props.count ? t.value.jobs.search.show(props.c
       <span class="h-px flex-1 bg-(--ui-border)" />{{ t.jobs.search.alreadyFound }}<span class="h-px flex-1 bg-(--ui-border)" />
     </div>
     <RouterLink
-      :to="{ name: 'hoply-job-add' }"
+      :to="{ name: 'crashr-job-add' }"
       class="flex w-full items-center gap-3.5 rounded-[14px] border-[1.5px] border-dashed border-ink-600 bg-elevated px-4 py-3.5 text-left hover:bg-accented"
     >
-      <span class="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-accented text-hoply-400">
+      <span class="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-accented text-crashr-400">
         <UIcon name="i-lucide-link" class="size-5" />
       </span>
       <span class="flex min-w-0 flex-1 flex-col gap-0.5">

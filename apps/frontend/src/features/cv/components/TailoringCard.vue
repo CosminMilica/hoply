@@ -7,9 +7,9 @@ import type { Cv } from '../api/cv.schema'
 const props = defineProps<{ tailoring: NonNullable<Cv['tailoring']> }>()
 
 const TONE: Record<NonNullable<Cv['tailoring']>['priorities'][number]['strength'], string> = {
-  direct: 'bg-hoply-600 text-white',
-  partial: 'bg-hoply-900 text-hoply-300',
-  transferable: 'border border-dashed border-hoply-500 text-hoply-300',
+  direct: 'bg-crashr-600 text-white',
+  partial: 'bg-crashr-900 text-crashr-300',
+  transferable: 'border border-dashed border-crashr-500 text-crashr-300',
   none: 'bg-accented text-muted',
 }
 const close = computed(() => {

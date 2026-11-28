@@ -66,7 +66,7 @@ const visible = computed(() => props.deck.slice(0, shown.value))
       class="sticky bottom-3 z-[3] flex min-h-11 items-center justify-between gap-3 rounded-[10px] bg-ink-800 ps-4 pe-1.5 text-sm font-bold"
     >
       <span class="truncate">{{ toast }}</span>
-      <UButton variant="ghost" color="neutral" :label="t.jobs.deck.undo" class="text-hoply-400" @click="emit('undo')" />
+      <UButton variant="ghost" color="neutral" :label="t.jobs.deck.undo" class="text-crashr-400" @click="emit('undo')" />
     </div>
   </template>
   <CaughtUp v-else :filters-label="t.jobs.search.reset" @change-filters="emit('changeFilters')" @reset-skipped="emit('resetSkipped')" />

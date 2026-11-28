@@ -5,7 +5,7 @@ import type { Job } from '../api/jobs.schema'
 import { useBoardOfQuery, useFollowBoard } from '../composables/useJobs'
 import { platformLabel } from '../match'
 
-/** For a job added from a link on a board Hoply reads: follow the company, and its jobs in Romania come to Find jobs. */
+/** For a job added from a link on a board crashr reads: follow the company, and its jobs in Romania come to Find jobs. */
 const props = defineProps<{ job: Pick<Job, 'url' | 'company'> }>()
 const board = useBoardOfQuery(() => props.job.url)
 const follow = useFollowBoard()

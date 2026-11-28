@@ -44,13 +44,13 @@ function toggleSave() {
     <USkeleton v-if="isPending" class="h-64 w-full" />
     <UAlert v-else-if="isError || !job" color="error" variant="subtle" :title="t.jobs.jobPage.notFound" />
     <div v-else class="flex flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-[minmax(0,1fr)_340px] min-[900px]:items-start min-[900px]:gap-x-12">
-      <BackButton :fallback="{ name: 'hoply-saved' }" class="min-[900px]:col-span-2" />
+      <BackButton :fallback="{ name: 'crashr-saved' }" class="min-[900px]:col-span-2" />
       <div class="-mt-2.5 flex flex-col gap-1.5 min-[900px]:col-start-1">
         <h1 class="m-0 text-[28px] leading-tight font-extrabold tracking-tight">{{ job.title }}</h1>
         <p class="m-0 text-base font-medium text-muted">{{ [job.company, placeOf(job)].filter(Boolean).join(' · ') }}</p>
         <p class="m-0 text-[13px] font-bold">{{ [sourceLine(job), tagline(job)].filter(Boolean).join(' · ') }}</p>
         <UAlert v-if="job.closed_at" color="neutral" variant="subtle" icon="i-lucide-archive" :title="t.jobs.jobPage.closed" data-test="closed" />
-        <a v-if="job.url" :href="job.url" target="_blank" rel="noopener noreferrer" class="self-start text-[13px] font-bold text-hoply-400 underline-offset-2 hover:underline">{{ t.jobs.jobPage.original }}</a>
+        <a v-if="job.url" :href="job.url" target="_blank" rel="noopener noreferrer" class="self-start text-[13px] font-bold text-crashr-400 underline-offset-2 hover:underline">{{ t.jobs.jobPage.original }}</a>
         <FollowCompanyCard v-if="job.added_by_me && job.url" :job="job" class="mt-1.5" />
       </div>
 
@@ -64,7 +64,7 @@ function toggleSave() {
           <p v-if="job.requirements_from === 'analysis'" data-test="requirements-from" class="m-0 text-xs text-muted">{{ t.jobs.jobPage.fromClaude }}</p>
         </div>
         <div class="order-last flex flex-col gap-2.5 min-[900px]:order-none">
-          <UButton :to="{ name: 'hoply-prep', params: { id: job.id } }" :label="prepareLabel" size="lg" block class="justify-center" />
+          <UButton :to="{ name: 'crashr-prep', params: { id: job.id } }" :label="prepareLabel" size="lg" block class="justify-center" />
           <UButton
             v-if="!status || status === 'saved'"
             :label="status === 'saved' ? t.jobs.jobPage.savedRemove : t.jobs.jobPage.saveForLater"

@@ -117,18 +117,18 @@ export const en = {
   followCompany: {
     thisCompany: 'This company',
     following: (company: string) => `Following ${company}. Its jobs in Romania show up in Find jobs in a few minutes.`,
-    imported: (company: string) => `Hoply brings ${company}’s jobs in Romania to Find jobs.`,
+    imported: (company: string) => `crashr brings ${company}’s jobs in Romania to Find jobs.`,
     postsOn: (company: string, platform: string) => `${company} posts its jobs on ${platform}.`,
     pitch: 'Follow it, and its jobs in Romania come to Find jobs, checked every 6 hours.',
     follow: (company: string) => `Follow ${company}`,
     failed: (company: string) => `We could not follow ${company}. Try again.`,
   },
   /** The bookmark that sends a job ad from any site to Add a job. */
-  sendToHoply: {
+  sendToCrashr: {
     title: 'Send jobs here from LinkedIn, eJobs or any site',
     text: 'Drag this button to your bookmarks bar. On a job ad, click the bookmark: the ad opens here, already read. Select part of the page first to send only that.',
     drag: 'Drag me to your bookmarks bar',
-    button: 'Send to Hoply',
+    button: 'Send to crashr',
   },
   /** The job read from an ad, before the person saves it. */
   draft: {
@@ -314,17 +314,17 @@ export const ro: typeof en = {
   followCompany: {
     thisCompany: 'Această companie',
     following: (company: string) => `Urmărești ${company}. Joburile ei din România apar în Caută joburi în câteva minute.`,
-    imported: (company: string) => `Hoply aduce joburile ${company} din România în Caută joburi.`,
+    imported: (company: string) => `crashr aduce joburile ${company} din România în Caută joburi.`,
     postsOn: (company: string, platform: string) => `${company} își publică joburile pe ${platform}.`,
     pitch: 'Urmărește compania și joburile ei din România ajung în Caută joburi, verificate la fiecare 6 ore.',
     follow: (company: string) => `Urmărește ${company}`,
     failed: (company: string) => `Nu am putut urmări ${company}. Încearcă din nou.`,
   },
-  sendToHoply: {
+  sendToCrashr: {
     title: 'Trimite joburi aici de pe LinkedIn, eJobs sau orice site',
     text: 'Trage butonul în bara de marcaje. Pe un anunț, dă clic pe marcaj: anunțul se deschide aici, deja citit. Selectează întâi o parte din pagină ca să trimiți doar acea parte.',
     drag: 'Trage-mă în bara de marcaje',
-    button: 'Trimite în Hoply',
+    button: 'Trimite în crashr',
   },
   draft: {
     title: 'Verifică ce am găsit',

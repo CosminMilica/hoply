@@ -24,7 +24,7 @@ const search = useJobSearchStore()
           @click="search.pickDomain(option.value)"
         />
       </div>
-      <RouterLink :to="{ name: 'hoply-preferences' }" class="ms-auto flex min-h-9 items-center gap-1.5 text-[13px] font-bold text-hoply-300 hover:underline">
+      <RouterLink :to="{ name: 'crashr-preferences' }" class="ms-auto flex min-h-9 items-center gap-1.5 text-[13px] font-bold text-crashr-300 hover:underline">
         <UIcon name="i-lucide-sliders-horizontal" class="size-4" />{{ t.jobs.search.changeDomains }}
       </RouterLink>
     </div>

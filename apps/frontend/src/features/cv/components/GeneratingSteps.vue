@@ -21,10 +21,10 @@ const have = computed(() => new Set(props.matched.map(item => item.toLowerCase()
     <ProgressBar :value="Math.min(100, Math.round((step / 4) * 100))" :label="t.cv.generating.progress" />
     <ol class="flex flex-col gap-3">
       <li v-for="item in steps" :key="item.label" class="flex items-center gap-3 text-base font-bold" :class="item.done || item.now ? 'text-highlighted' : 'text-ink-500'">
-        <span v-if="item.done" class="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-hoply-600 text-white">
+        <span v-if="item.done" class="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-crashr-600 text-white">
           <UIcon name="i-lucide-check" class="size-3.5" /><span class="sr-only">{{ t.cv.generating.done }}</span>
         </span>
-        <span v-else-if="item.now" class="size-[26px] shrink-0 animate-pulse rounded-full bg-hoply-500"><span class="sr-only">{{ t.cv.generating.now }}</span></span>
+        <span v-else-if="item.now" class="size-[26px] shrink-0 animate-pulse rounded-full bg-crashr-500"><span class="sr-only">{{ t.cv.generating.now }}</span></span>
         <span v-else class="size-[26px] shrink-0 rounded-full border-2 border-ink-700" />
         {{ item.label }}
       </li>
@@ -36,7 +36,7 @@ const have = computed(() => new Set(props.matched.map(item => item.toLowerCase()
           v-for="keyword in keywords"
           :key="keyword"
           class="rounded-lg border-[1.5px] px-2.5 py-1 text-[13px] font-bold"
-          :class="have.has(keyword.toLowerCase()) ? 'border-hoply-900 bg-hoply-900 text-hoply-300' : 'border-ink-700 text-toned'"
+          :class="have.has(keyword.toLowerCase()) ? 'border-crashr-900 bg-crashr-900 text-crashr-300' : 'border-ink-700 text-toned'"
         >
           {{ keyword }}
         </li>

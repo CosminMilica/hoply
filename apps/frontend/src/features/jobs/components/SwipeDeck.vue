@@ -95,9 +95,9 @@ function onUp() {
         @pointerup="onUp"
         @pointercancel="onUp"
       >
-        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-[18px] z-[2] -rotate-[8deg] rounded-xl bg-hoply-600 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-white" :style="{ opacity: stamp.save }">{{ t.jobs.deck.stampSave }}</span>
+        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-[18px] z-[2] -rotate-[8deg] rounded-xl bg-crashr-600 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-white" :style="{ opacity: stamp.save }">{{ t.jobs.deck.stampSave }}</span>
         <span aria-hidden="true" class="pointer-events-none absolute top-[18px] right-[18px] z-[2] rotate-[8deg] rounded-xl bg-ember-500 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-ink-950" :style="{ opacity: stamp.skip }">{{ t.jobs.deck.stampSkip }}</span>
-        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-1/2 z-[2] -translate-x-1/2 rounded-xl border-[1.5px] border-hoply-400 bg-accented px-3.5 py-1.5 text-base font-extrabold tracking-wider whitespace-nowrap text-hoply-400" :style="{ opacity: stamp.tailor }">{{ t.jobs.deck.stampTailor }}</span>
+        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-1/2 z-[2] -translate-x-1/2 rounded-xl border-[1.5px] border-crashr-400 bg-accented px-3.5 py-1.5 text-base font-extrabold tracking-wider whitespace-nowrap text-crashr-400" :style="{ opacity: stamp.tailor }">{{ t.jobs.deck.stampTailor }}</span>
 
         <div class="flex items-center justify-between gap-3">
           <span class="text-[13px] font-bold">{{ sourceLine(current) }}</span>
@@ -130,7 +130,7 @@ function onUp() {
         class="absolute inset-x-3 bottom-3 z-[3] flex min-h-11 items-center justify-between gap-3 rounded-[10px] bg-ink-800 ps-4 pe-1.5 text-sm font-bold"
       >
         <span class="truncate">{{ toast }}</span>
-        <UButton variant="ghost" color="neutral" :label="t.jobs.deck.undo" class="text-hoply-400" @click="emit('undo')" />
+        <UButton variant="ghost" color="neutral" :label="t.jobs.deck.undo" class="text-crashr-400" @click="emit('undo')" />
       </div>
     </div>
 

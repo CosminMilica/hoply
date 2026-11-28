@@ -18,7 +18,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 | POST | `/api/v1/jobs` | `JobInput` | 201 `Job` |
 | PUT | `/api/v1/jobs/{id}/requirements` | `{ must_have, nice_to_have }` | 200 `Job` |
 | DELETE | `/api/v1/jobs/{id}` | | 204 |
-| GET | `/api/v1/boards/of` | query: `url` | 200 `BoardOf`; 404 when the link is on no board Hoply reads |
+| GET | `/api/v1/boards/of` | query: `url` | 200 `BoardOf`; 404 when the link is on no board crashr reads |
 | POST | `/api/v1/boards` | `{ url, company }` | 201 `Board` |
 
 - `GET /jobs` returns the catalog, the imported jobs still open and the caller's own jobs (`added_by_me: true`),
@@ -38,7 +38,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
   the ad, cleaned by the same rules as `POST /jobs`, and sets `requirements_from: analysis`. A catalog or imported
   job's ad is the same for everyone, so its analysis is shared. Another person's job is 404.
 - `POST /jobs/read` saves nothing. It returns what the rules read, for the person to check and edit.
-- `POST /boards` follows the board of a job link (company required, at most 120 characters; a link on no board Hoply
+- `POST /boards` follows the board of a job link (company required, at most 120 characters; a link on no board crashr
   reads is 422 on `url`). The importer reads followed boards with the listed ones, and imports a newly followed board
   at once in the background. Following a listed or followed board again returns it as it is and imports nothing. Followed boards are
   shared, like the jobs imported from them.

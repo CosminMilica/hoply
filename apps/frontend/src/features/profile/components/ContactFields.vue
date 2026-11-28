@@ -51,7 +51,7 @@ function save(field: Field) {
 <template>
   <UFormField v-for="field in FIELDS" :key="field.key" :label="t.profile.contact[field.key]" :error="errors[field.key]" :ui="{ label: 'sr-only' }">
     <div class="flex items-center gap-2.5">
-      <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accented text-hoply-400">
+      <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accented text-crashr-400">
         <UIcon :name="field.icon" class="size-[18px]" />
       </span>
       <UInput v-model="values[field.key]" :type="field.type" :placeholder="placeholders[field.key]" maxlength="200" class="min-w-0 flex-1" @change="save(field.key)" />

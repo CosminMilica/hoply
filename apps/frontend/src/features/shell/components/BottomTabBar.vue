@@ -18,14 +18,14 @@ const tabs = useNavTabs()
       :to="tab.to"
       :aria-current="tab.active ? 'page' : undefined"
       class="flex min-h-13 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg text-xs font-extrabold"
-      :class="tab.active ? 'bg-accented text-hoply-400' : 'text-ink-200'"
+      :class="tab.active ? 'bg-accented text-crashr-400' : 'text-ink-200'"
     >
       <span class="relative flex">
         <UIcon v-if="tab.icon" :name="tab.icon" class="size-[22px]" />
         <span
           v-if="tab.badge !== undefined"
           class="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px]"
-          :class="tab.value === 'saved' ? 'bg-hoply-600 text-white' : 'bg-ink-700 text-ink-50'"
+          :class="tab.value === 'saved' ? 'bg-crashr-600 text-white' : 'bg-ink-700 text-ink-50'"
         >
           {{ tab.badge }}<span class="sr-only">{{ ` ${String(tab.label).toLowerCase()}` }}</span>
         </span>

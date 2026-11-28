@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
 import { setLocale } from '@/features/common/i18n'
 import { cvApi } from '../api/cvApi'
-import { button, click, input, mountPage, settle, type, useServices } from '@/test/hoply'
+import { button, click, input, mountPage, settle, type, useServices } from '@/test/crashr'
 import { seedId } from '@/test/jobs-seed'
 import CvPage from '../pages/CvPage.vue'
 

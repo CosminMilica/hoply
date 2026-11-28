@@ -33,7 +33,7 @@ const statusLabel = computed(() => {
           class="flex min-h-11 items-start gap-2 rounded-lg border border-default px-3 py-2 text-left text-[13px] font-medium hover:bg-accented"
           @click="answers.pick(key, suggestion.text)"
         >
-          <UIcon name="i-lucide-check" class="mt-0.5 size-3.5 shrink-0 text-hoply-400" />
+          <UIcon name="i-lucide-check" class="mt-0.5 size-3.5 shrink-0 text-crashr-400" />
           <span><span class="font-bold">{{ suggestion.label }}:</span> {{ suggestion.text }}</span>
         </button>
       </div>
@@ -50,7 +50,7 @@ const statusLabel = computed(() => {
         :label="t.cv.claim.prefill"
         variant="link"
         size="sm"
-        class="self-start px-1 text-[13px] text-hoply-400 underline"
+        class="self-start px-1 text-[13px] text-crashr-400 underline"
         @click="answers.setDraft(key, claim.prefill)"
       />
       <RolePicker :name="question" :choices="prep.roleChoices(key)" @pick="id => prep.pickRole(key, id)" />

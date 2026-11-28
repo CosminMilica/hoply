@@ -2,7 +2,7 @@
 
 Status: phases 0 to 3 done and the prompt tuned, 2026-11-25. Next: phase 4.
 
-The last mocked part of Hoply becomes a real service: it prepares the questions for a job, writes a CV tailored to that
+The last mocked part of crashr becomes a real service: it prepares the questions for a job, writes a CV tailored to that
 job with Claude, checks it, and exports PDF and DOCX. Claude is reached the way `work/reviewer` does it: the Claude Code
 CLI in print mode, authenticated with a subscription token, no API key.
 
@@ -13,13 +13,13 @@ CLI in print mode, authenticated with a subscription token, no API key.
 | Model | Sonnet 5.5 (§5.5) |
 | PDF engine | Gotenberg (§7) |
 | CV language | English only for now (§8) |
-| Who uses Hoply | the owner only, while it runs on the subscription token; the `api` writer comes before anyone else (§5.4) |
+| Who uses crashr | the owner only, while it runs on the subscription token; the `api` writer comes before anyone else (§5.4) |
 
 ## 1. Constraints that shape the design
 
 | Constraint | Consequence |
 | --- | --- |
-| Anthropic's terms: subscription OAuth is for the subscriber's own use; a product serving other people must use API keys and must not route their requests through a subscription ([legal and compliance](https://code.claude.com/docs/en/legal-and-compliance), [authentication](https://code.claude.com/docs/en/authentication)) | The subscription token is for the owner's own use while Hoply has one user. The model call sits behind a `Writer` interface with two implementations; switching to an API key before anyone else uses Hoply is a configuration change (§5.4). |
+| Anthropic's terms: subscription OAuth is for the subscriber's own use; a product serving other people must use API keys and must not route their requests through a subscription ([legal and compliance](https://code.claude.com/docs/en/legal-and-compliance), [authentication](https://code.claude.com/docs/en/authentication)) | The subscription token is for the owner's own use while crashr has one user. The model call sits behind a `Writer` interface with two implementations; switching to an API key before anyone else uses crashr is a configuration change (§5.4). |
 | `--bare` (which skips CLAUDE.md, hooks, skills, plugins and MCP) does not read `CLAUDE_CODE_OAUTH_TOKEN` ([headless](https://code.claude.com/docs/en/headless#start-faster-with-bare-mode)) | Isolation comes from flags plus an empty working directory and an empty `HOME` (§5.2), not from `--bare`. |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` and `CLAUDE_CODE_USE_*` outrank the OAuth token ([precedence](https://code.claude.com/docs/en/authentication#authentication-precedence)) | The child process gets a scrubbed environment: only `PATH`, `HOME`, `CLAUDE_CODE_OAUTH_TOKEN`, `DISABLE_AUTOUPDATER=1`. |
 | Subscription usage limits (session and weekly windows) | Generation is queued and runs one at a time; on a limit the CV is still produced by the rules (§6) and the person is told when Claude is available again. |
@@ -145,7 +145,7 @@ The patterns start from `work/reviewer` (`src/reviewer/llm/errors.py`) and are p
 | --- | --- | --- |
 | `claudecli` | `CV_WRITER=claude-cli` and a token file | phase 2 |
 | `rules` | always available; fallback | today's engine, ported from the mock |
-| `api` | before Hoply has users other than the owner | official Go SDK (`anthropic-sdk-go`), structured outputs; not in this plan's phases |
+| `api` | before crashr has users other than the owner | official Go SDK (`anthropic-sdk-go`), structured outputs; not in this plan's phases |
 
 ### 5.5 Model
 

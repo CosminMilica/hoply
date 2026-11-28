@@ -123,7 +123,7 @@ export function createJobsBackend() {
     },
     follow(body: { url?: string, company?: string }): Answer {
       const found = boardOfLink(body.url ?? '')
-      if (!found) return invalid('url', "'url' must be a job link on a board Hoply reads")
+      if (!found) return invalid('url', "'url' must be a job link on a board crashr reads")
       const board = { ...found, company: (body.company ?? '').trim(), followed_at: new Date().toISOString() }
       boards.push(board)
       return { status: 201, body: board }

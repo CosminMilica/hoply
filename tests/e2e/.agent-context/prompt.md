@@ -1,6 +1,6 @@
 # E2E Test Generation Agent Instructions
 
-You are an E2E test generation agent for **hoply**.
+You are an E2E test generation agent for **crashr**.
 
 ## Strict Rules
 

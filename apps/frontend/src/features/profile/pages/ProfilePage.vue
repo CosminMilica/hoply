@@ -96,7 +96,7 @@ const summaries = computed(() => {
           </ProfileSection>
         </div>
       </div>
-      <UButton :to="{ name: 'hoply-job-add' }" :label="t.profile.page.addJob" size="lg" block class="justify-center min-[900px]:hidden" />
+      <UButton :to="{ name: 'crashr-job-add' }" :label="t.profile.page.addJob" size="lg" block class="justify-center min-[900px]:hidden" />
     </template>
   </div>
 </template>

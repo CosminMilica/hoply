@@ -9,7 +9,7 @@ import { useProfileQuery } from '@/features/profile/composables/useProfile'
 import { useNavTabs } from '../tabs'
 import AccountMenu from './AccountMenu.vue'
 import BottomTabBar from './BottomTabBar.vue'
-import HoplyLogo from './HoplyLogo.vue'
+import CrashrLogo from './CrashrLogo.vue'
 import TopNav from './TopNav.vue'
 
 /**
@@ -34,7 +34,7 @@ watch(locale, () => {
   const titled = [...route.matched].reverse().find(record => typeof record.meta.title === 'string' && record.meta.title)
   if (titled) document.title = titled.meta.title as string
 })
-const addJob = computed(() => ({ name: 'hoply-job-add', query: tabs.value.some(tab => tab.active && tab.value === 'saved') ? { from: 'saved' } : {} }))
+const addJob = computed(() => ({ name: 'crashr-job-add', query: tabs.value.some(tab => tab.active && tab.value === 'saved') ? { from: 'saved' } : {} }))
 </script>
 
 <template>
@@ -46,7 +46,7 @@ const addJob = computed(() => ({ name: 'hoply-job-add', query: tabs.value.some(t
       :page="{ main: 'flex-1 px-4 pt-4 pb-28 sm:px-8 min-[900px]:px-12 min-[900px]:pt-8 min-[900px]:pb-12' }"
     >
       <template #logo>
-        <HoplyLogo />
+        <CrashrLogo />
       </template>
       <template #header>
         <TopNav />

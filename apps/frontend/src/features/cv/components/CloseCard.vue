@@ -25,7 +25,7 @@ const added = computed(() => answers.value.answer(key.value)?.status === 'added'
       <UButton :label="t.cv.cards.change" variant="link" color="neutral" size="sm" class="self-start px-1 text-[13px] text-muted underline" :loading="answers.state.saving[key]" @click="answers.undo(key)" />
     </template>
     <details v-else class="flex flex-col gap-2">
-      <summary class="cursor-pointer text-[13px] font-bold text-hoply-300">{{ t.cv.closeCard.usedMyself(close.skill) }}</summary>
+      <summary class="cursor-pointer text-[13px] font-bold text-crashr-300">{{ t.cv.closeCard.usedMyself(close.skill) }}</summary>
       <div class="mt-2 flex flex-col gap-2">
         <UTextarea
           :model-value="answers.draft(key)"

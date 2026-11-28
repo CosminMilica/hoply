@@ -36,7 +36,7 @@ const editor = useEntryEditor(projects)
       <div class="flex flex-col">
         <h3 class="m-0 text-[15px] font-extrabold">{{ project.name }}</h3>
         <span class="text-[13px] font-medium text-muted">{{ [project.role, monthRange(project.start, project.end)].filter(Boolean).join(' · ') }}</span>
-        <a v-if="project.url" :href="project.url.startsWith('http') ? project.url : `https://${project.url}`" target="_blank" rel="noopener" class="text-[13px] font-bold text-hoply-300 underline">{{ project.url }}</a>
+        <a v-if="project.url" :href="project.url.startsWith('http') ? project.url : `https://${project.url}`" target="_blank" rel="noopener" class="text-[13px] font-bold text-crashr-300 underline">{{ project.url }}</a>
       </div>
       <BulletList v-if="project.bullets.length" :bullets="project.bullets" />
       <template v-if="project.tools.length">

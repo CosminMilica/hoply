@@ -58,7 +58,7 @@ function onDecide(decision: Decision, job: ScoredJob) {
   setStatus.mutate({ jobId: job.id, status: 'saved' })
   analyzeImported(job)
   if (decision === 'save') remember(job, 'save')
-  else router.push({ name: 'hoply-prep', params: { id: job.id } })
+  else router.push({ name: 'crashr-prep', params: { id: job.id } })
 }
 
 function undo() {
@@ -118,7 +118,7 @@ onBeforeUnmount(() => window.clearTimeout(timer))
       :deck="deck"
       :toast="toast"
       @decide="onDecide"
-      @details="job => router.push({ name: 'hoply-job', params: { id: job.id } })"
+      @details="job => router.push({ name: 'crashr-job', params: { id: job.id } })"
       @undo="undo"
       @change-filters="search.reset()"
       @reset-skipped="clearSkips.mutate()"
@@ -128,7 +128,7 @@ onBeforeUnmount(() => window.clearTimeout(timer))
       :deck="deck"
       :toast="toast"
       @decide="onDecide"
-      @details="job => router.push({ name: 'hoply-job', params: { id: job.id } })"
+      @details="job => router.push({ name: 'crashr-job', params: { id: job.id } })"
       @undo="undo"
       @change-filters="search.stage = 'filters'"
       @reset-skipped="clearSkips.mutate()"

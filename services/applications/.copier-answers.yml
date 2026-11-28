@@ -8,7 +8,7 @@ entity_plural: applications
 go_version: '1.27'
 include_error_envelope: true
 include_platform_auth: true
-project_description: 'Hoply: job search with a CV tailored to each job'
+project_description: 'crashr: job search with a CV tailored to each job'
 project_name: applications
 project_slug: applications
 project_title: Applications

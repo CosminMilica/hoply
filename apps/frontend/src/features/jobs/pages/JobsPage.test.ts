@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { mountPage, useServices } from '@/test/hoply'
+import { mountPage, useServices } from '@/test/crashr'
 import JobsPage from './JobsPage.vue'
 
 afterEach(() => {

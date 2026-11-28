@@ -37,7 +37,7 @@ const empty = computed(() => stages.value.every(stage => !stage.entries.length))
     <UAlert v-else-if="error" color="error" variant="subtle" :title="t.applications.applicationsPage.loadError" :description="t.applications.tryLater" />
     <div v-else-if="empty" class="flex flex-col gap-2.5 rounded-[14px] border border-default bg-elevated p-[22px]">
       <p class="m-0 text-[15px] leading-normal font-medium text-muted">{{ t.applications.applicationsPage.empty }}</p>
-      <UButton :to="{ name: 'hoply-saved' }" :label="t.applications.applicationsPage.goToSaved" size="lg" block class="justify-center" />
+      <UButton :to="{ name: 'crashr-saved' }" :label="t.applications.applicationsPage.goToSaved" size="lg" block class="justify-center" />
     </div>
     <template v-else>
       <div role="group" :aria-label="t.applications.applicationsPage.stage" class="flex gap-1 rounded-[12px] bg-elevated p-0.5 min-[900px]:hidden">
@@ -62,7 +62,7 @@ const empty = computed(() => stages.value.every(stage => !stage.entries.length))
           :data-test="`stage-${stage.id}`"
         >
           <div class="flex items-center gap-2.5">
-            <span class="size-2.5 rounded-full" :class="stage.id === 'cv_ready' ? 'bg-hoply-500' : 'bg-ink-400'" aria-hidden="true" />
+            <span class="size-2.5 rounded-full" :class="stage.id === 'cv_ready' ? 'bg-crashr-500' : 'bg-ink-400'" aria-hidden="true" />
             <h2 class="m-0 text-base font-extrabold">{{ stage.label }}</h2>
             <span class="text-sm font-bold text-dimmed">{{ stage.entries.length }}</span>
           </div>
@@ -75,7 +75,7 @@ const empty = computed(() => stages.value.every(stage => !stage.entries.length))
             <div class="flex flex-col gap-0.5">
               <h3 class="m-0 text-base leading-tight font-extrabold">{{ entry.job.title }}</h3>
               <span class="text-sm font-medium text-muted">{{ [entry.job.company, placeOf(entry.job)].filter(Boolean).join(' · ') }}</span>
-              <span v-if="entry.since" class="text-xs font-bold" :class="stage.id === 'cv_ready' ? 'text-hoply-300' : 'text-dimmed'" data-test="since">{{ entry.since }}</span>
+              <span v-if="entry.since" class="text-xs font-bold" :class="stage.id === 'cv_ready' ? 'text-crashr-300' : 'text-dimmed'" data-test="since">{{ entry.since }}</span>
             </div>
             <div class="flex flex-wrap gap-2">
               <UButton
@@ -90,9 +90,9 @@ const empty = computed(() => stages.value.every(stage => !stage.entries.length))
                 color="neutral"
                 variant="outline"
                 :class="stage.id === 'cv_ready' ? 'flex-1 justify-center' : ''"
-                @click="router.push({ name: 'hoply-cv', params: { id: entry.job.id } })"
+                @click="router.push({ name: 'crashr-cv', params: { id: entry.job.id } })"
               />
-              <UButton :to="{ name: 'hoply-job', params: { id: entry.job.id } }" :label="t.applications.details" color="neutral" variant="outline" />
+              <UButton :to="{ name: 'crashr-job', params: { id: entry.job.id } }" :label="t.applications.details" color="neutral" variant="outline" />
             </div>
           </article>
         </section>

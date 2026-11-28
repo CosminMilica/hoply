@@ -9,5 +9,5 @@ export async function saveCoverage(page: Page, testInfo: TestInfo) {
   const coverage = await page.evaluate(() => (window as any).__coverage__);
   expect(coverage, 'Browser instrumentation must produce real coverage').toBeTruthy();
   await mkdir(directory, { recursive: true });
-  await writeFile(path.join(directory, `hoply-${testInfo.parallelIndex}-${Date.now()}.json`), JSON.stringify(coverage));
+  await writeFile(path.join(directory, `crashr-${testInfo.parallelIndex}-${Date.now()}.json`), JSON.stringify(coverage));
 }

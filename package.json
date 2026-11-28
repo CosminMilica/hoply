@@ -1,8 +1,8 @@
 {
-  "name": "hoply-workspace",
+  "name": "crashr-workspace",
   "version": "0.0.0",
   "private": true,
-  "description": "Workspace root for hoply — orchestrates per-service builds and pre-builds in-tree SDKs (packages/*).",
+  "description": "Workspace root for crashr — orchestrates per-service builds and pre-builds in-tree SDKs (packages/*).",
   "workspaces": [
     "apps/*",
     "services/*",

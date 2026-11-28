@@ -11,7 +11,7 @@ export const jobKeys = {
   boardOf: (url: string) => ['jobs', 'board-of', url] as const,
 }
 
-/** The board a job link belongs to; null for a link on no board Hoply reads, and a failure stays quiet. */
+/** The board a job link belongs to; null for a link on no board crashr reads, and a failure stays quiet. */
 export function useBoardOfQuery(url: MaybeRefOrGetter<string>) {
   return useQuery({
     queryKey: computed(() => jobKeys.boardOf(toValue(url))),
@@ -22,7 +22,7 @@ export function useBoardOfQuery(url: MaybeRefOrGetter<string>) {
   })
 }
 
-/** Follows a job link's board: Hoply then imports its jobs in Romania. */
+/** Follows a job link's board: crashr then imports its jobs in Romania. */
 export function useFollowBoard() {
   const client = useQueryClient()
   return useMutation({

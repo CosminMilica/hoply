@@ -1,6 +1,6 @@
 # Profile
 
-Hoply: job search with a CV tailored to each job
+crashr: job search with a CV tailored to each job
 
 ## Quick Start
 

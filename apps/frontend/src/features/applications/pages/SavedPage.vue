@@ -66,8 +66,8 @@ function keywordLine(entry: { missing: string[], related: { skill: string }[] })
         </div>
         <p class="m-0 text-[13px] font-medium text-muted">{{ keywordLine(entry) }}</p>
         <div class="mt-auto flex items-center gap-2">
-          <UButton :label="t.applications.savedPage.prepareCv" block class="flex-1 justify-center" @click="router.push({ name: 'hoply-prep', params: { id: entry.job.id } })" />
-          <UButton :to="{ name: 'hoply-job', params: { id: entry.job.id } }" :label="t.applications.details" color="neutral" variant="outline" />
+          <UButton :label="t.applications.savedPage.prepareCv" block class="flex-1 justify-center" @click="router.push({ name: 'crashr-prep', params: { id: entry.job.id } })" />
+          <UButton :to="{ name: 'crashr-job', params: { id: entry.job.id } }" :label="t.applications.details" color="neutral" variant="outline" />
           <UButton icon="i-lucide-x" :aria-label="t.applications.savedPage.remove" color="neutral" variant="outline" @click="remove.mutate(entry.job.id)" />
         </div>
       </li>
@@ -76,7 +76,7 @@ function keywordLine(entry: { missing: string[], related: { skill: string }[] })
       <p class="m-0 text-[15px] leading-normal font-medium text-muted">
         {{ tracked.length ? t.applications.savedPage.allHaveCv : t.applications.savedPage.nothingSaved }}
       </p>
-      <UButton :to="{ name: 'hoply-job-add', query: { from: 'saved' } }" icon="i-lucide-plus" :label="t.applications.addJob" size="lg" block class="justify-center" />
+      <UButton :to="{ name: 'crashr-job-add', query: { from: 'saved' } }" icon="i-lucide-plus" :label="t.applications.addJob" size="lg" block class="justify-center" />
     </div>
   </div>
 </template>

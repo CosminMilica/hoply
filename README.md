@@ -1,15 +1,15 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.svg">
-    <img src="docs/images/logo-light.svg" alt="hoply" width="264">
+    <img src="docs/images/logo-light.svg" alt="crashr.xyz" width="300">
   </picture>
 </p>
 
 <p align="center"><strong>Job search with a CV tailored to each job, written only from what you have done.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/CosminMilica/hoply/actions/workflows/ci.yml"><img src="https://github.com/CosminMilica/hoply/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/CosminMilica/hoply/actions/workflows/quality.yml"><img src="https://github.com/CosminMilica/hoply/actions/workflows/quality.yml/badge.svg" alt="Quality gates"></a>
+  <a href="https://github.com/CosminMilica/crashr.xyz/actions/workflows/ci.yml"><img src="https://github.com/CosminMilica/crashr.xyz/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/CosminMilica/crashr.xyz/actions/workflows/quality.yml"><img src="https://github.com/CosminMilica/crashr.xyz/actions/workflows/quality.yml/badge.svg" alt="Quality gates"></a>
   <img src="https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white" alt="Go 1.27">
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
   <img src="https://img.shields.io/badge/CV%20writer-Claude-2A4BFF" alt="CV writer: Claude">
@@ -17,7 +17,7 @@
 
 ---
 
-Most CVs are sent as they are, or stuffed with keywords. Hoply does what a good career coach would: it reads the
+Most CVs are sent as they are, or stuffed with keywords. crashr does what a good career coach would: it reads the
 job ad, works out what the company really needs, picks the strongest proof from your experience, and writes a
 one-page CV around it, in the company's own words. It never invents a skill, a number or a result.
 
@@ -26,7 +26,7 @@ one-page CV around it, in the company's own words. It never invents a skill, a n
 | | |
 | --- | --- |
 | **Profile** | Everything a recruiter or a screening system asks for: roles with highlights and results, projects, education, certifications, languages, work preferences. |
-| **Add a job** | Paste a link or the ad's text. Hoply reads it, from the public APIs of Greenhouse, Lever, Ashby, SmartRecruiters, BambooHR and Workable, from structured data, or from the page itself, and finds the requirements, the responsibilities, the place and the level. |
+| **Add a job** | Paste a link or the ad's text. crashr reads it, from the public APIs of Greenhouse, Lever, Ashby, SmartRecruiters, BambooHR and Workable, from structured data, or from the page itself, and finds the requirements, the responsibilities, the place and the level. |
 | **Match** | Every requirement is matched, close or missing. Matching understands other names and umbrella terms (GitHub Actions proves CI/CD) and tools of the same kind (FluxCD and Argo CD are both GitOps). |
 | **Prepare your CV** | Asks only what the job needs and your profile does not show yet. Your answers become notes that the CV is written from. |
 | **Tailored CV** | Claude analyzes the job, plans the evidence for each of its priorities, writes the CV and then reviews it as the hiring manager. Every sentence cites the facts it rests on, and code checks them. |
@@ -88,8 +88,8 @@ and zod. The project is generated and kept up to date with [forge](https://githu
 You need Docker and, for development, Go 1.27 and Node 26.
 
 ```bash
-git clone https://github.com/CosminMilica/hoply.git
-cd hoply
+git clone https://github.com/CosminMilica/crashr.xyz.git
+cd crashr.xyz
 docker compose -f docker-compose.yml -f docker-compose.dev.yaml up --build -d --wait
 ```
 
@@ -131,7 +131,7 @@ kc create "organizations/$org/members" -r hoply -b "\"$user\""
 
 ### Connect Claude
 
-Hoply runs Claude through the Claude Code CLI with a subscription token, the way you use Claude yourself:
+crashr runs Claude through the Claude Code CLI with a subscription token, the way you use Claude yourself:
 
 ```bash
 npx -y @anthropic-ai/claude-code@2.1.322 setup-token
@@ -140,7 +140,7 @@ curl -s http://app.localhost/api/cv/v1/writer    # "state": "ok"
 ```
 
 The token file is gitignored and read on every CV, so nothing needs a restart. A subscription token is for its
-owner's own use: before anyone else uses Hoply, switch to an API key. See [docs/claude-setup.md](docs/claude-setup.md).
+owner's own use: before anyone else uses crashr, switch to an API key. See [docs/claude-setup.md](docs/claude-setup.md).
 
 ## Develop
 
@@ -174,7 +174,7 @@ version in `services/cv/tests/testdata/claude/`.
 | --- | --- |
 | Profile, adding jobs from links and text, matching, saved jobs and applications | Search by meaning, and ranking by Claude's reading of each ad |
 | Finding tech and finance jobs in Romania from the job boards of 93 companies (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, BambooHR, Recruitee, Workable), and of the companies people follow | |
-| A Send to Hoply bookmarklet that brings a job from LinkedIn, eJobs or any site into Add a job | |
+| A Send to crashr bookmarklet that brings a job from LinkedIn, eJobs or any site into Add a job | |
 | CVs tailored by Claude in three steps, checked sentence by sentence | An evaluation set to tune the prompts on more people and jobs |
 | PDF and DOCX export, ATS checks | CVs in Romanian |
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { bookmarklet, sentJob } from './sendToHoply'
+import { bookmarklet, sentJob } from './sendToCrashr'
 
 /** Runs the bookmark on the current document and returns the link it opened. */
 function run(origin = 'http://app.localhost') {
@@ -18,7 +18,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('Send to Hoply', () => {
+describe('Send to crashr', () => {
   it('sends a LinkedIn ad with its title and company to Add a job', () => {
     document.body.innerHTML = `<main><h1 class="job-details-jobs-unified-top-card__job-title">DevOps Engineer</h1>
       <div class="job-details-jobs-unified-top-card__company-name"> spektr </div>

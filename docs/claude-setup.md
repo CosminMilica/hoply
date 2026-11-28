@@ -4,7 +4,7 @@ The cv service writes CVs with Claude through the Claude Code CLI and the owner'
 `work/reviewer` does. There is no API key. Without a token, the rules engine writes every CV, and the CV page says
 so.
 
-The subscription token is for the owner's own use only. Before anyone else uses Hoply, the service must move to an
+The subscription token is for the owner's own use only. Before anyone else uses crashr, the service must move to an
 API key (`docs/plans/2026-11-25-cv-service.md`, §1 and §5.4).
 
 ## Install the token

@@ -7,7 +7,7 @@ const open = defineModel<boolean>('open', { default: false })
   <section class="border-t-[1.5px] border-ink-700 pt-0.5">
     <UCollapsible v-model:open="open" :unmount-on-hide="false">
       <button type="button" class="flex min-h-13 w-full items-center gap-2.5 text-left text-highlighted">
-        <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accented text-hoply-400">
+        <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accented text-crashr-400">
           <UIcon :name="icon" class="size-[18px]" />
         </span>
         <h2 class="m-0 flex-1 text-[17px] font-extrabold tracking-tight">{{ title }}</h2>
