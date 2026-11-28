@@ -91,54 +91,80 @@ func TestBoardLists(t *testing.T) {
 	}
 }
 
-func TestAreasFromTheTitle(t *testing.T) {
-	for title, want := range map[string][]string{
-		"Senior DevOps Engineer":                                {"DevOps"},
-		"Principal Software Engineer, Site Reliability":         {"DevOps", "Backend"},
-		"Backend Developer (NodeJS)":                            {"Backend"},
-		"Senior Golang Engineer":                                {"Backend"},
-		"Frontend Software Engineer":                            {"Frontend"},
-		"Senior React Developer":                                {"Frontend"},
-		"Full-Stack Engineer (React)":                           {"Full stack"},
-		"Software Engineer (React Native)":                      {"Mobile"},
-		"Senior Backend Engineer, Mobile Platform":              {"Backend", "Mobile"},
-		"iOS Developer":                                         {"Mobile"},
-		"Lead Data Scientist":                                   {"Data", "AI"},
-		"Generative AI Engineer":                                {"AI"},
-		"Software QA Engineer":                                  {"QA"},
-		"SDET - AI Gateway":                                     {"AI", "QA"},
-		"Senior Security Operations Specialist (SOC)":           {"Security"},
-		"Embedded C++ AUTOSAR Developer":                        {"Embedded"},
-		"Linux Systems Engineer":                                {"Sysadmin"},
-		"Junior Network Administrator":                          {"Sysadmin"},
-		"Technical Product Owner":                               {"Product"},
-		"Senior UX/UI Designer":                                 {"Design"},
-		"Senior Sales Engineer":                                 {},
-		"Account Executive":                                     {},
-		"Consilier bancar Iași":                                 {"Banking"},
-		"Relationship Manager E-commerce Iasi":                  {"Banking"},
-		"Ofițer credite IMM":                                    {"Banking"},
-		"Contabil primar":                                       {"Accounting"},
-		"Accounts Payable Associate with German":                {"Accounting"},
-		"Sr. Associate - F&A - I2C 5B":                          {"Accounting"},
-		"Specialist - F&A - R2R 4A":                             {"Accounting"},
-		"Payroll Administrator":                                 {"Accounting"},
-		"Senior Management Accountant":                          {"Accounting", "Finance & control"},
-		"Group Finance Controller":                              {"Finance & control"},
-		"FP&A Analyst":                                          {"Finance & control"},
-		"Analist financiar":                                     {"Finance & control"},
-		"AML/KYC Analyst":                                       {"Risk & compliance"},
-		"Specialist - Controllership - SOX Compliance":          {"Risk & compliance"},
-		"Auditor intern":                                        {"Risk & compliance"},
-		"Fraud Detection Engineer":                              {"Risk & compliance"},
-		"Backend Engineer, Payments":                            {"Backend"},
-		"Senior Software Engineer Regulatory News (AI/C#/Java)": {"Backend", "AI"},
-		"Regulatory Compliance Senior Analyst":                  {"Risk & compliance"},
-		"CONSILIER FINANCIAR BANCAR RETAIL CALAFAT":             {"Banking"},
+func TestClassifyTheTitle(t *testing.T) {
+	type want struct{ domains, areas []string }
+	it := func(areas ...string) want { return want{[]string{"it"}, areas} }
+	for title, want := range map[string]want{
+		"Senior DevOps Engineer":                                it("DevOps"),
+		"Principal Software Engineer, Site Reliability":         it("DevOps", "Backend"),
+		"Backend Developer (NodeJS)":                            it("Backend"),
+		"Senior Golang Engineer":                                it("Backend"),
+		"Frontend Software Engineer":                            it("Frontend"),
+		"Senior React Developer":                                it("Frontend"),
+		"Full-Stack Engineer (React)":                           it("Full stack"),
+		"Software Engineer (React Native)":                      it("Mobile"),
+		"Senior Backend Engineer, Mobile Platform":              it("Backend", "Mobile"),
+		"iOS Developer":                                         it("Mobile"),
+		"Lead Data Scientist":                                   it("Data", "AI"),
+		"Generative AI Engineer":                                it("AI"),
+		"Software QA Engineer":                                  it("QA"),
+		"SDET - AI Gateway":                                     it("AI", "QA"),
+		"Senior Security Operations Specialist (SOC)":           it("Security"),
+		"Embedded C++ AUTOSAR Developer":                        it("Embedded"),
+		"Linux Systems Engineer":                                it("Sysadmin"),
+		"Junior Network Administrator":                          it("Sysadmin"),
+		"Technical Product Owner":                               it("Product"),
+		"Senior UX/UI Designer":                                 it("Design"),
+		"Senior Sales Engineer":                                 {[]string{}, []string{}},
+		"Account Executive":                                     {[]string{}, []string{}},
+		"Consilier bancar Iași":                                 {[]string{"banking"}, []string{"Front office"}},
+		"Relationship Manager E-commerce Iasi":                  {[]string{"banking"}, []string{"Corporate banking"}},
+		"Ofițer credite IMM":                                    {[]string{"banking"}, []string{"Lending", "Corporate banking"}},
+		"CONSILIER FINANCIAR BANCAR RETAIL CALAFAT":             {[]string{"banking"}, []string{"Front office"}},
+		"Contabil primar":                                       {[]string{"accounting"}, []string{"General accounting"}},
+		"Senior Accountant":                                     {[]string{"accounting"}, []string{"General accounting"}},
+		"Accounts Payable Associate with German":                {[]string{"accounting"}, []string{"Payables"}},
+		"Sr. Associate - F&A - I2C 5B":                          {[]string{"accounting"}, []string{"Receivables"}},
+		"Specialist - F&A - R2R 4A":                             {[]string{"accounting"}, []string{"General accounting"}},
+		"Payroll Administrator":                                 {[]string{"accounting", "hr"}, []string{"Payroll", "Compensation & benefits"}},
+		"Pay Advisor & Benefits Coordinator Italy":              {[]string{"hr"}, []string{"Compensation & benefits"}},
+		"Sr Manager Total Rewards EMEAI":                        {[]string{"hr"}, []string{"Compensation & benefits"}},
+		"Bancassurance Account Manager":                         {[]string{"insurance"}, []string{"Insurance sales"}},
+		"Health & Life Claim Handler":                           {[]string{"insurance"}, []string{"Claims"}},
+		"HR Knowledge Specialist":                               {[]string{"hr"}, []string{"HR generalist"}},
+		"Tax Specialist":                                        {[]string{"accounting"}, []string{"Tax"}},
+		"Senior Management Accountant":                          {[]string{"accounting", "finance"}, []string{"General accounting", "FP&A & controlling"}},
+		"Group Finance Controller":                              {[]string{"finance"}, []string{"FP&A & controlling"}},
+		"FP&A Analyst":                                          {[]string{"finance"}, []string{"FP&A & controlling"}},
+		"Analist financiar":                                     {[]string{"finance"}, []string{"FP&A & controlling"}},
+		"Treasury Specialist":                                   {[]string{"finance"}, []string{"Treasury"}},
+		"AML/KYC Analyst":                                       {[]string{"finance"}, []string{"Risk & compliance"}},
+		"Specialist - Controllership - SOX Compliance":          {[]string{"finance"}, []string{"Risk & compliance", "Audit"}},
+		"Auditor intern":                                        {[]string{"finance"}, []string{"Audit"}},
+		"Fraud Detection Engineer":                              {[]string{"finance"}, []string{"Risk & compliance"}},
+		"Regulatory Compliance Senior Analyst":                  {[]string{"finance"}, []string{"Risk & compliance"}},
+		"Backend Engineer, Payments":                            it("Backend"),
+		"Senior Software Engineer Regulatory News (AI/C#/Java)": it("Backend", "AI"),
+		"Underwriter":                                           {[]string{"insurance"}, []string{"Underwriting"}},
+		"Claims Handler":                                        {[]string{"insurance"}, []string{"Claims"}},
+		"Agent de vânzări asigurări":                            {[]string{"insurance"}, []string{"Insurance sales"}},
+		"Actuarial Analyst":                                     {[]string{"insurance"}, []string{"Actuarial"}},
+		"Talent Acquisition Specialist":                         {[]string{"hr"}, []string{"Recruitment"}},
+		"IT Recruiter":                                          {[]string{"hr"}, []string{"Recruitment"}},
+		"HR Business Partner":                                   {[]string{"hr"}, []string{"HR generalist"}},
+		"Specialist resurse umane":                              {[]string{"hr"}, []string{"HR generalist"}},
+		"Compensation & Benefits Analyst":                       {[]string{"hr"}, []string{"Compensation & benefits"}},
+		"Learning & Development Coordinator":                    {[]string{"hr"}, []string{"Training & development"}},
+		"HR Administrator":                                      {[]string{"hr"}, []string{"HR administration"}},
+		"Inspector resurse umane":                               {[]string{"hr"}, []string{"HR administration"}},
+		"Specialist asigurarea calității":                       {[]string{}, []string{}},
 	} {
-		if got := extract.AreasOf(title); !slices.Equal(got, want) {
-			t.Errorf("%s: %v, want %v", title, got, want)
+		if got := extract.Classify(title); !slices.Equal(got.Domains, want.domains) || !slices.Equal(got.Areas, want.areas) {
+			t.Errorf("%s: %v %v, want %v %v", title, got.Domains, got.Areas, want.domains, want.areas)
 		}
+	}
+	if extract.DomainOf("Payroll") != "accounting" || extract.DomainOf("Kubernetes") != "" || len(extract.Areas) != 35 {
+		t.Fatal("each area is in one domain")
 	}
 }
 
@@ -183,7 +209,7 @@ func TestJobsKeptFromABoard(t *testing.T) {
 		Page: fetch.Page{Title: "Senior DevOps Engineer", ReadFrom: "ats_api", Text: "We run Kubernetes.\nRequirements\n- Kubernetes\n- Terraform"}}
 	job, ok := importer.Job(board, posting)
 	if !ok || job.Title != "Senior DevOps Engineer" || job.Company != "Northwind Cloud" || job.City != "Iași" || job.Country != "Romania" ||
-		job.WorkMode != "hybrid" || job.Level != "senior" || !slices.Equal(job.Areas, []string{"DevOps"}) || !slices.Contains(job.MustHave, "Kubernetes") ||
+		job.WorkMode != "hybrid" || job.Level != "senior" || !slices.Equal(job.Areas, []string{"DevOps"}) || !slices.Equal(job.Domains, []string{"it"}) || !slices.Contains(job.MustHave, "Kubernetes") ||
 		job.Source != "import" || job.Origin != "greenhouse" || job.ExternalID != "4001" || job.Board != "northwind" || job.PostedAt != &posted {
 		t.Fatalf("job: %+v %v", job, ok)
 	}

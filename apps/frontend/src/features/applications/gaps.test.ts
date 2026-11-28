@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { setLocale } from '@/features/common/i18n'
 import { jobSchema } from '@/features/jobs/api/jobs.schema'
 import { askedLine, skillGaps } from './gaps'
 
@@ -31,5 +32,13 @@ describe('skillGaps', () => {
     expect(askedLine(close[0]!, 3)).toBe('Asked in 2 of 3 saved jobs, always a must-have.')
     expect(askedLine(missing[3]!, 3)).toBe('Asked in 1 of 3 saved jobs, as a plus.')
     expect(askedLine({ jobs: missing[3]!.jobs, must: 1 }, 1)).toBe('Asked in 1 of 1 saved job, always a must-have.')
+  })
+
+  it('says how often a skill is asked in Romanian', () => {
+    setLocale('ro')
+    const jobs = [{ id: 'a', title: 'A', company: 'Acme', must: true }, { id: 'b', title: 'B', company: 'Acme', must: false }]
+    expect(askedLine({ jobs, must: 1 }, 3)).toBe('Cerută în 2 din 3 joburi salvate, obligatorie în 1.')
+    expect(askedLine({ jobs, must: 2 }, 20)).toBe('Cerută în 2 din 20 de joburi salvate, mereu obligatorie.')
+    expect(askedLine({ jobs: jobs.slice(0, 1), must: 0 }, 1)).toBe('Cerută în 1 din 1 job salvat, ca avantaj.')
   })
 })

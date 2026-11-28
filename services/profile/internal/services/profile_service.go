@@ -29,6 +29,9 @@ var (
 	Seniorities        = []string{"intern", "junior", "mid", "senior", "lead", "principal"}
 	EmploymentTypes    = []string{"full_time", "part_time", "contract", "freelance", "internship"}
 	SalaryPeriods      = []string{"year", "month", "hour"}
+	AppLanguages       = []string{"en", "ro"}
+	// Domains are the jobs service's (extract.Domains).
+	Domains = []string{"it", "banking", "accounting", "finance", "insurance", "hr"}
 )
 
 const (
@@ -414,6 +417,8 @@ func CleanPatch(patch models.ProfilePatch) (models.ProfilePatch, error) {
 		}
 	}
 	c.enum("salary_period", patch.SalaryPeriod, SalaryPeriods, false)
+	c.enum("app_language", patch.AppLanguage, AppLanguages, false)
+	c.enumList("domains", &patch.Domains, Domains)
 	c.optionalList("additional_info", &patch.AdditionalInfo, 10, 300, false)
 	c.notes(&patch.Notes)
 	return patch, c.err

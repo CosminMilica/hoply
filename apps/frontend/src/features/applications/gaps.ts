@@ -1,5 +1,6 @@
 import type { JobCard } from '@/features/jobs/api/jobs.schema'
 import { matchJob, skillKey } from '@/features/jobs/match'
+import { t } from '@/features/common/i18n'
 
 export interface GapJob {
   id: string
@@ -44,7 +45,7 @@ export function skillGaps(jobs: JobCard[], skills: string[]): { missing: SkillGa
 
 /** "Asked in 3 of 5 saved jobs, a must-have in 2." */
 export function askedLine(gap: Pick<SkillGap, 'jobs' | 'must'>, total: number): string {
-  const asked = `Asked in ${gap.jobs.length} of ${total} saved ${total === 1 ? 'job' : 'jobs'}`
-  if (gap.must === gap.jobs.length) return `${asked}, always a must-have.`
-  return gap.must ? `${asked}, a must-have in ${gap.must}.` : `${asked}, as a plus.`
+  const words = t.value.applications.asked
+  if (gap.must === gap.jobs.length) return words.always(gap.jobs.length, total)
+  return gap.must ? words.some(gap.jobs.length, total, gap.must) : words.plus(gap.jobs.length, total)
 }

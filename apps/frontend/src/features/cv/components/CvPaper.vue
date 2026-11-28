@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import type { CvDocument, CvTemplate } from '../api/cv.schema'
 import HighlightedText from './HighlightedText.vue'
 import { HEADINGS } from '../language'
@@ -9,7 +10,7 @@ withDefaults(defineProps<{ document: CvDocument, highlights: string[], template?
 <template>
   <article
     data-print-root
-    aria-label="CV preview"
+    :aria-label="t.cv.paper.label"
     :lang="document.language"
     :data-template="template"
     class="cv-paper flex flex-col gap-3 rounded-xl border border-[#d8d6ce] bg-white p-5 text-[12.5px] leading-normal text-[#111111]"

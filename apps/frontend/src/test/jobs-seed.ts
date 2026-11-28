@@ -47,6 +47,7 @@ export const CATALOG_JOBS = [
       "DevOps",
       "Data"
     ],
+    domains: ["it"],
     url: "https://www.linkedin.com/jobs/view/4300000001",
     source: "catalog",
     read_from: "",
@@ -96,6 +97,7 @@ export const CATALOG_JOBS = [
     areas: [
       "DevOps"
     ],
+    domains: ["it"],
     url: "",
     source: "catalog",
     read_from: "",
@@ -145,6 +147,7 @@ export const CATALOG_JOBS = [
     areas: [
       "Backend"
     ],
+    domains: ["it"],
     url: "",
     source: "catalog",
     read_from: "",
@@ -194,6 +197,7 @@ export const CATALOG_JOBS = [
     areas: [
       "Sysadmin"
     ],
+    domains: ["it"],
     url: "",
     source: "catalog",
     read_from: "",

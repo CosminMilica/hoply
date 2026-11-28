@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { setLocale } from '@/features/common/i18n'
 import { isLink, readFromLine, siteName, unreadableMessage } from './reading'
 
 describe('reading an ad', () => {
@@ -28,5 +29,17 @@ describe('reading an ad', () => {
     expect(readFromLine({ source: 'link', read_from: 'ats_api', host: 'boards.greenhouse.io', url: '' })).toBe('Read from the job board\'s data on boards.greenhouse.io')
     expect(readFromLine({ source: 'link', read_from: 'something_new', host: 'a.example', url: '' })).toBe('Read from the page on a.example')
     expect(readFromLine({ source: 'text', read_from: 'text', host: '', url: '' })).toBe('Read from the text you pasted')
+  })
+
+  it('explains it in Romanian', () => {
+    setLocale('ro')
+    expect(siteName('')).toBe('Acest site')
+    expect(unreadableMessage('login_required', 'https://www.linkedin.com/jobs/view/1')).toMatch(/^LinkedIn arată anunțurile doar membrilor autentificați/)
+    expect(['no_job_data', 'fetch_failed', 'too_large', 'blocked_address', 'unknown'].map(reason => unreadableMessage(reason as 'unknown', 'https://a.example').split(' ').slice(0, 3).join(' ')))
+      .toEqual(['Nu am găsit', 'Pagina nu a', 'Pagina e prea', 'Linkul duce la', 'Ceva de pe'])
+    expect(readFromLine({ source: 'link', read_from: 'json_ld', host: 'jobs.lever.co', url: '' })).toBe('Citit din datele jobului de pe jobs.lever.co')
+    expect(readFromLine({ source: 'link', read_from: 'ats_api', host: 'boards.greenhouse.io', url: '' })).toBe('Citit din datele platformei de joburi de pe boards.greenhouse.io')
+    expect(readFromLine({ source: 'link', read_from: 'page_text', host: 'acme.ro', url: '' })).toBe('Citit din pagina de pe acme.ro')
+    expect(readFromLine({ source: 'text', read_from: 'text', host: '', url: '' })).toBe('Citit din textul pe care l-ai lipit')
   })
 })

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { cvApi } from '../api/cvApi'
 import { button, click, mountPage, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
@@ -156,6 +157,32 @@ describe('CvPage', () => {
     expect(card.textContent).toContain('Argo CD as GitOps experience with FluxCD')
     await click(button('Your profile'))
     expect(document.querySelector('[data-test="tailoring"]')).toBeNull()
+  })
+
+  it('speaks Romanian around an English CV when the app is in Romanian', async () => {
+    const { cvs } = useServices()
+    await cvApi.generate(request)
+    cvs.cvs[0]!.cv.tailoring = {
+      positioning: 'The engineer who automates delivery',
+      priorities: [{ theme: 'CI/CD', strength: 'direct' }],
+      close: [{ skill: 'Argo CD', via: ['FluxCD'], category: '' }],
+      changes: [],
+    }
+    setLocale('ro')
+    await mountPage(CvPage, { at: `/jobs/${seedId(1)}/cv`, props: { id: seedId(1) } })
+    expect(text()).toContain('CV-ul tău e gata')
+    expect(text()).toContain('Pentru Snowflake Administrator DevOps la Capgemini Romania')
+    expect(document.querySelector('[data-test="written-by"]')!.textContent).toBe('Scris fără AI. Serviciul e setat să scrie cu reguli.')
+    expect(text()).toContain('Verificare ATS')
+    expect(button('Clasic').getAttribute('aria-pressed')).toBe('true')
+    expect(button('Descarcă PDF')).toBeTruthy()
+    expect(button('Am aplicat la acest job')).toBeTruthy()
+    const tailoring = document.querySelector('[data-test="tailoring"]')!
+    expect(tailoring.textContent).toContain('CI/CDDovedit')
+    expect(tailoring.textContent).toContain('Argo CD ca experiență înrudită cu FluxCD')
+    const paper = document.querySelector('[data-print-root]')!
+    expect(paper.getAttribute('aria-label')).toBe('Previzualizare CV')
+    expect([...paper.querySelectorAll('h2')].map(heading => heading.textContent)).toContain('Experience')
   })
 
   it('has nothing to show before a CV is made', async () => {

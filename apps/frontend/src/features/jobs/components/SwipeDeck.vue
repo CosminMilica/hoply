@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { t } from '@/features/common/i18n'
 import KeywordChips from '@/features/common/components/KeywordChips.vue'
 import ScoreTile from '@/features/common/components/ScoreTile.vue'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
@@ -85,7 +86,7 @@ function onUp() {
     <div class="relative min-h-[360px] flex-1 min-[900px]:max-h-[700px]">
       <div v-if="next" aria-hidden="true" class="absolute inset-0 rounded-[18px] border border-default bg-accented" :style="backStyle" />
       <article
-        :aria-label="`${current.title} at ${current.company}`"
+        :aria-label="t.jobs.deck.jobLabel(current.title, current.company)"
         data-test="job-card"
         class="absolute inset-0 flex cursor-grab touch-none flex-col gap-3.5 overflow-hidden rounded-[18px] border-[1.5px] border-ink-700 bg-elevated p-[22px] select-none"
         :style="cardStyle"
@@ -94,9 +95,9 @@ function onUp() {
         @pointerup="onUp"
         @pointercancel="onUp"
       >
-        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-[18px] z-[2] -rotate-[8deg] rounded-xl bg-hoply-600 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-white" :style="{ opacity: stamp.save }">SAVE</span>
-        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] right-[18px] z-[2] rotate-[8deg] rounded-xl bg-ember-500 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-ink-950" :style="{ opacity: stamp.skip }">SKIP</span>
-        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-1/2 z-[2] -translate-x-1/2 rounded-xl border-[1.5px] border-hoply-400 bg-accented px-3.5 py-1.5 text-base font-extrabold tracking-wider whitespace-nowrap text-hoply-400" :style="{ opacity: stamp.tailor }">TAILOR CV</span>
+        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-[18px] z-[2] -rotate-[8deg] rounded-xl bg-hoply-600 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-white" :style="{ opacity: stamp.save }">{{ t.jobs.deck.stampSave }}</span>
+        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] right-[18px] z-[2] rotate-[8deg] rounded-xl bg-ember-500 px-3.5 py-1.5 text-base font-extrabold tracking-wider text-ink-950" :style="{ opacity: stamp.skip }">{{ t.jobs.deck.stampSkip }}</span>
+        <span aria-hidden="true" class="pointer-events-none absolute top-[18px] left-1/2 z-[2] -translate-x-1/2 rounded-xl border-[1.5px] border-hoply-400 bg-accented px-3.5 py-1.5 text-base font-extrabold tracking-wider whitespace-nowrap text-hoply-400" :style="{ opacity: stamp.tailor }">{{ t.jobs.deck.stampTailor }}</span>
 
         <div class="flex items-center justify-between gap-3">
           <span class="text-[13px] font-bold">{{ sourceLine(current) }}</span>
@@ -109,7 +110,7 @@ function onUp() {
         </div>
         <p class="m-0 line-clamp-4 text-[15px] leading-normal font-medium">{{ current.about }}</p>
         <div class="flex flex-col gap-1.5">
-          <SectionLabel as="h3">What you will do</SectionLabel>
+          <SectionLabel as="h3">{{ t.jobs.deck.whatYouWillDo }}</SectionLabel>
           <ul class="flex flex-col gap-1.5">
             <li v-for="item in current.responsibilities.slice(0, 3)" :key="item" class="flex gap-2 text-sm leading-snug font-medium">
               <span aria-hidden="true" class="font-extrabold">·</span><span class="line-clamp-2">{{ item }}</span>
@@ -118,8 +119,8 @@ function onUp() {
         </div>
         <KeywordChips :matched="current.matched.slice(0, 4)" :related="current.related.slice(0, 2)" :missing="current.missing.slice(0, 3)" />
         <span class="mt-auto text-[13px] font-bold text-ink-500">
-          <span class="pointer-fine:hidden">Swipe right to save, left to skip, up to tailor your CV. Tap for details.</span>
-          <span class="hidden pointer-fine:inline">Drag the card or use the buttons below. Click for details.</span>
+          <span class="pointer-fine:hidden">{{ t.jobs.deck.hintTouch }}</span>
+          <span class="hidden pointer-fine:inline">{{ t.jobs.deck.hintPointer }}</span>
         </span>
       </article>
 
@@ -129,7 +130,7 @@ function onUp() {
         class="absolute inset-x-3 bottom-3 z-[3] flex min-h-11 items-center justify-between gap-3 rounded-[10px] bg-ink-800 ps-4 pe-1.5 text-sm font-bold"
       >
         <span class="truncate">{{ toast }}</span>
-        <UButton variant="ghost" color="neutral" label="Undo" class="text-hoply-400" @click="emit('undo')" />
+        <UButton variant="ghost" color="neutral" :label="t.jobs.deck.undo" class="text-hoply-400" @click="emit('undo')" />
       </div>
     </div>
 
@@ -138,16 +139,16 @@ function onUp() {
         icon="i-lucide-x"
         color="neutral"
         variant="outline"
-        aria-label="Skip this job"
+        :aria-label="t.jobs.deck.skipThis"
         class="size-12 justify-center rounded-full"
         :ui="{ leadingIcon: 'size-6' }"
         @click="decide('skip')"
       />
-      <UButton color="neutral" variant="outline" label="Details" @click="emit('details', current)" />
-      <UButton color="neutral" label="Tailor CV" @click="decide('tailor')" />
+      <UButton color="neutral" variant="outline" :label="t.jobs.deck.details" @click="emit('details', current)" />
+      <UButton color="neutral" :label="t.jobs.deck.tailor" @click="decide('tailor')" />
       <UButton
         icon="i-lucide-heart"
-        aria-label="Save this job"
+        :aria-label="t.jobs.deck.saveThis"
         class="size-12 justify-center rounded-full"
         :ui="{ leadingIcon: 'size-6' }"
         @click="decide('save')"

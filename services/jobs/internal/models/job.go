@@ -27,7 +27,9 @@ type Job struct {
 	Product        string   `json:"product"`
 	Perks          []string `json:"perks"`
 	Areas          []string `json:"areas"`
-	URL            string   `json:"url"`
+	// Domains are the fields of work the title names (extract.Domains); a person's added job in none is in every one.
+	Domains  []string `json:"domains"`
+	URL      string   `json:"url"`
 	Source         string   `json:"source"`
 	ReadFrom       string   `json:"read_from"`
 	// RequirementsFrom is "rules" or "analysis" (Claude's reading of the ad, written by the cv service).
@@ -78,13 +80,15 @@ type ReadRequest struct {
 }
 
 // JobFilter narrows GET /jobs. City, Country and Areas are folded (lower
-// case, no diacritics); Cities holds the city's spellings to look for.
+// case, no diacritics); Cities holds the city's spellings to look for. Domains
+// keeps the jobs in any of them, and the caller's added jobs in none.
 type JobFilter struct {
 	Q             string
 	Cities        []string
 	Country       string
 	IncludeRemote bool
 	Areas         []string
+	Domains       []string
 	Level         string
 	// IDs asks for these jobs only, closed ones included.
 	IDs   []uuid.UUID
@@ -108,6 +112,7 @@ type JobCard struct {
 	Responsibilities []string   `json:"responsibilities"`
 	About            string     `json:"about"`
 	Areas            []string   `json:"areas"`
+	Domains          []string   `json:"domains"`
 	URL              string     `json:"url"`
 	Source           string     `json:"source"`
 	RequirementsFrom string     `json:"requirements_from"`
@@ -130,7 +135,7 @@ func CardOf(j Job) JobCard {
 	return JobCard{ID: j.ID, Title: j.Title, Company: j.Company, City: j.City, Country: j.Country, WorkMode: j.WorkMode,
 		Level: j.Level, YearsRequired: j.YearsRequired, MustHave: j.MustHave, NiceToHave: j.NiceToHave,
 		Responsibilities: j.Responsibilities[:min(CardResponsibilities, len(j.Responsibilities))],
-		About:            string(about[:min(CardAbout, len(about))]), Areas: j.Areas, URL: j.URL, Source: j.Source,
+		About:            string(about[:min(CardAbout, len(about))]), Areas: j.Areas, Domains: j.Domains, URL: j.URL, Source: j.Source,
 		RequirementsFrom: j.RequirementsFrom, Sample: j.Sample, AddedByMe: j.AddedByMe, CreatedAt: j.CreatedAt, Origin: j.Origin,
 		PostedAt: j.PostedAt, ClosedAt: j.ClosedAt}
 }
@@ -150,6 +155,7 @@ type RequirementsInput struct {
 type ImportedJob struct {
 	JobInput
 	Areas      []string
+	Domains    []string
 	Origin     string
 	ExternalID string
 	Board      string

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { server } from '@/shared/mocks/node'
 import { serviceErrorMessage } from '@/features/common/errors'
+import { setLocale } from '@/features/common/i18n'
 import { applicationsServiceHandlers } from '@/test/applications-service'
 import { seedId } from '@/test/jobs-seed'
 import { applicationsApi } from './applicationsApi'
-import { applicationSchema, statusSince } from './applications.schema'
+import { STATUS_LABELS, applicationSchema, statusSince } from './applications.schema'
 
 describe('applicationsApi', () => {
   it('tracks a job through its statuses, with the time of each', async () => {
@@ -60,5 +61,15 @@ describe('applications schema', () => {
     expect(statusSince({ ...base, status: 'applied' })).toBe('Applied 2 Dec')
     expect(statusSince({ ...base, status: 'applied', applied_at: null })).toBe('')
     expect(statusSince({ ...base, status: 'saved', saved_at: 'soon' })).toBe('')
+  })
+
+  it('names the statuses and their dates in Romanian', () => {
+    expect({ ...STATUS_LABELS }).toEqual({ saved: 'Saved', cv_ready: 'CV ready', applied: 'Applied' })
+    setLocale('ro')
+    expect({ ...STATUS_LABELS }).toEqual({ saved: 'Salvat', cv_ready: 'CV gata', applied: 'Aplicat' })
+    const base = { saved_at: '2026-11-25T09:00:00Z', cv_ready_at: '2026-11-26T09:00:00Z', applied_at: '2026-12-02T09:00:00Z' }
+    expect(statusSince({ ...base, status: 'saved' })).toBe('Salvat pe 25 nov.')
+    expect(statusSince({ ...base, status: 'cv_ready' })).toBe('CV gata pe 26 nov.')
+    expect(statusSince({ ...base, status: 'applied' })).toBe('Aplicat pe 2 dec.')
   })
 })

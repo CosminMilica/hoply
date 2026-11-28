@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import { projectInput, type Profile, type Project } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
@@ -20,7 +21,7 @@ const editor = useEntryEditor(projects)
 
 <template>
   <p v-if="!profile.projects.length && !editor.adding.value" class="m-0 text-[13px] font-medium text-muted">
-    Side projects, open source or a home lab count too.
+    {{ t.profile.projects.empty }}
   </p>
   <div v-for="project in profile.projects" :key="project.id" class="flex flex-col gap-2 rounded-[10px] border border-default bg-elevated px-3 py-2.5">
     <ProjectForm
@@ -39,7 +40,7 @@ const editor = useEntryEditor(projects)
       </div>
       <BulletList v-if="project.bullets.length" :bullets="project.bullets" />
       <template v-if="project.tools.length">
-        <SectionLabel as="h4">Tools</SectionLabel>
+        <SectionLabel as="h4">{{ t.profile.projects.tools }}</SectionLabel>
         <ul class="flex flex-wrap gap-1.5">
           <li v-for="tool in project.tools" :key="tool" class="rounded-lg border border-ink-700 bg-elevated px-2.5 py-1 text-[13px] font-bold">{{ tool }}</li>
         </ul>
@@ -53,7 +54,7 @@ const editor = useEntryEditor(projects)
     v-else
     color="neutral"
     variant="outline"
-    label="+ Add a project"
+    :label="t.profile.projects.add"
     block
     class="border-[1.5px] border-dashed border-ink-400 text-toned ring-0"
     @click="editor.open(null)"

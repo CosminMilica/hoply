@@ -78,7 +78,7 @@ func TestRequirementsFromTheAnalysisAgainstPostgres(t *testing.T) {
 	ctx := context.Background()
 	repo := repositories.NewPgJobRepository(pool).WithScope(bindTenant(pool))
 	me := identity.New(uuid.New(), uuid.NewString())
-	job, err := repo.Create(ctx, me, models.JobInput{Title: "DevOps", Source: "text", ReadFrom: "text", MustHave: []string{"Security"}})
+	job, err := repo.Create(ctx, me, models.JobInput{Title: "DevOps", Source: "text", ReadFrom: "text", MustHave: []string{"Security"}}, nil, nil)
 	if err != nil || job.RequirementsFrom != "rules" {
 		t.Fatalf("a new job's requirements come from the rules: %+v %v", job, err)
 	}

@@ -12,6 +12,7 @@ export function jobSearchParams(filters: JobFilters): URLSearchParams {
   if (filters.country?.trim()) params.set('country', filters.country.trim())
   if (filters.includeRemote !== undefined) params.set('include_remote', String(filters.includeRemote))
   for (const area of filters.areas ?? []) params.append('area', area)
+  for (const domain of filters.domains ?? []) params.append('domain', domain)
   if (filters.level && filters.level !== 'Any') params.set('level', filters.level.toLowerCase())
   if (filters.ids?.length) params.set('ids', filters.ids.join(','))
   return params

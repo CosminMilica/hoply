@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { t } from '@/features/common/i18n'
 import KeywordChips from '@/features/common/components/KeywordChips.vue'
 import ScoreTile from '@/features/common/components/ScoreTile.vue'
 import type { Decision, ScoredJob } from '../composables/useDeck'
@@ -27,7 +28,7 @@ const visible = computed(() => props.deck.slice(0, shown.value))
       <li
         v-for="job in visible"
         :key="job.id"
-        :aria-label="`${job.title} at ${job.company}`"
+        :aria-label="t.jobs.deck.jobLabel(job.title, job.company)"
         data-test="job-tile"
         class="flex list-none flex-col gap-2.5 rounded-[14px] border border-default bg-elevated p-3.5"
       >
@@ -43,16 +44,16 @@ const visible = computed(() => props.deck.slice(0, shown.value))
         </div>
         <KeywordChips :matched="job.matched.slice(0, 3)" :related="job.related.slice(0, 1)" :missing="job.missing.slice(0, 2)" />
         <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
-          <UButton icon="i-lucide-heart" label="Save" size="sm" @click="emit('decide', 'save', job)" />
-          <UButton label="Tailor CV" color="neutral" size="sm" @click="emit('decide', 'tailor', job)" />
-          <UButton label="Details" color="neutral" variant="outline" size="sm" @click="emit('details', job)" />
-          <UButton icon="i-lucide-x" aria-label="Skip" title="Skip" color="neutral" variant="ghost" size="sm" class="ms-auto" @click="emit('decide', 'skip', job)" />
+          <UButton icon="i-lucide-heart" :label="t.common.actions.save" size="sm" @click="emit('decide', 'save', job)" />
+          <UButton :label="t.jobs.deck.tailor" color="neutral" size="sm" @click="emit('decide', 'tailor', job)" />
+          <UButton :label="t.jobs.deck.details" color="neutral" variant="outline" size="sm" @click="emit('details', job)" />
+          <UButton icon="i-lucide-x" :aria-label="t.jobs.deck.skip" :title="t.jobs.deck.skip" color="neutral" variant="ghost" size="sm" class="ms-auto" @click="emit('decide', 'skip', job)" />
         </div>
       </li>
     </ul>
     <UButton
       v-if="deck.length > shown"
-      :label="`Show ${Math.min(PAGE, deck.length - shown)} more`"
+      :label="t.jobs.deck.showMore(Math.min(PAGE, deck.length - shown))"
       color="neutral"
       variant="outline"
       block
@@ -65,8 +66,8 @@ const visible = computed(() => props.deck.slice(0, shown.value))
       class="sticky bottom-3 z-[3] flex min-h-11 items-center justify-between gap-3 rounded-[10px] bg-ink-800 ps-4 pe-1.5 text-sm font-bold"
     >
       <span class="truncate">{{ toast }}</span>
-      <UButton variant="ghost" color="neutral" label="Undo" class="text-hoply-400" @click="emit('undo')" />
+      <UButton variant="ghost" color="neutral" :label="t.jobs.deck.undo" class="text-hoply-400" @click="emit('undo')" />
     </div>
   </template>
-  <CaughtUp v-else filters-label="Reset filters" @change-filters="emit('changeFilters')" @reset-skipped="emit('resetSkipped')" />
+  <CaughtUp v-else :filters-label="t.jobs.search.reset" @change-filters="emit('changeFilters')" @reset-skipped="emit('resetSkipped')" />
 </template>

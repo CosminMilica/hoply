@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { authorshipLine, modelLabel } from './authorship'
+import { setLocale } from '@/features/common/i18n'
+import { authorshipLine, letterFailure, modelLabel } from './authorship'
 
 const cv = { written_by: 'claude' as const, model: 'claude-sonnet-5-5', refused: 0, rules_reason: '' as const, limit_until: null }
 
@@ -18,6 +19,17 @@ describe('authorshipLine', () => {
     expect(authorshipLine({ ...rules, rules_reason: 'usage_limit', limit_until: '2026-11-25T16:20:00Z' })).toMatch(/^Written without AI\. Claude reached its usage limit\. It is back at /)
     expect(authorshipLine({ ...rules, rules_reason: '' })).toBe('Written without AI.')
     expect(authorshipLine({ ...cv, written_by: null })).toBe('')
+  })
+
+  it('says who wrote it in Romanian when the app is in Romanian', () => {
+    setLocale('ro')
+    expect(authorshipLine(cv)).toBe('Scris de Claude (Sonnet 5.5) din profilul tău.')
+    expect(authorshipLine({ ...cv, refused: 1 })).toBe('Scris de Claude (Sonnet 5.5) din profilul tău. O propoziție care depășea profilul tău a fost rescrisă de reguli.')
+    expect(authorshipLine({ ...cv, refused: 21, model: '' })).toBe('Scris de Claude din profilul tău. 21 de propoziții care depășeau profilul tău au fost rescrise de reguli.')
+    const rules = { ...cv, written_by: 'rules' as const, model: '' }
+    expect(authorshipLine({ ...rules, rules_reason: 'usage_limit', limit_until: '2026-11-25T16:20:00Z' })).toMatch(/^Scris fără AI\. Claude și-a atins limita de utilizare\. Revine la ora \d{2}:\d{2}\.$/)
+    expect(letterFailure({ reason: 'off', limit_until: null })).toBe('Serviciul e setat să scrie fără Claude, iar o scrisoare are nevoie de Claude.')
+    expect(letterFailure({ reason: 'unknown', limit_until: null })).toBe('Claude nu a putut răspunde de data asta.')
   })
 
   it('shortens Claude model names', () => {

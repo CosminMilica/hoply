@@ -39,7 +39,7 @@ Profile            { id, name, headline, about, email, phone, github, linkedin,
                      city, country, work_modes, open_to_relocation,
                      work_authorization, work_authorization_region, notice_period_weeks, available_from,
                      target_roles, target_seniority, employment_types, salary_min, salary_currency, salary_period,
-                     additional_info: [string], notes: [Note],
+                     app_language, domains: [string], additional_info: [string], notes: [Note],
                      skills: [string], experience: [Experience], projects: [Project], education: [Education],
                      certifications: [Certification], languages: [Language], created_at, updated_at }
 ProfilePatch       every Profile field above from name to notes, each optional: only the fields sent change;
@@ -84,6 +84,8 @@ Strings are never null: an unset string is `""`, an unset array is `[]`. `notice
 | `salary_min` | `null` or an integer from 0 to 100000000 |
 | `salary_currency` | empty or three letters, stored upper-case |
 | `salary_period` | empty or one of `year`, `month`, `hour` |
+| `app_language` | empty (not picked yet) or one of `en`, `ro`: the language the person uses the app in |
+| `domains` | each one of `it`, `banking`, `accounting`, `finance`, `insurance`, `hr` (the jobs service's domains); duplicates dropped. Empty until the person is through onboarding |
 | `additional_info` | trimmed, empty entries dropped, at most 10, each at most 300 characters |
 | `skills` | trimmed, empty entries dropped, duplicates dropped case-insensitively (first spelling kept), at most 50, each at most 60 characters |
 | `role` (experience), `name` (project, certification, language) | required, at most 120 characters |

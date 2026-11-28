@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { setLocale } from '@/features/common/i18n'
 import { catalogJob } from '@/test/jobs'
 import { sampleProfile } from '@/test/profile-service'
 import { keywordsIn, knockoutFor, levelLabel, lookFor, marketNote, matchJob, placeOf, platformLabel, postedAgo, requirementsOf, sourceLine, tagline, verdictFor, yearsLine } from './match'
@@ -91,5 +92,41 @@ describe('job lines', () => {
     expect(marketNote(sampleProfile({ work_modes: ['hybrid', 'onsite'] }))).toBe('From your profile: Iași, Romania · hybrid or on-site · not relocating.')
     expect(marketNote(sampleProfile({ city: '', country: 'Romania', work_modes: [], open_to_relocation: true }))).toBe('From your profile: Romania · open to relocation.')
     expect(marketNote(sampleProfile({ city: '', country: '', work_modes: [] }))).toBe('')
+  })
+})
+
+describe('in Romanian', () => {
+  it('words the match, the warnings and the job lines in Romanian', () => {
+    setLocale('ro')
+    expect([verdictFor(90), verdictFor(65), verdictFor(45), verdictFor(5)].map(verdict => verdict.split('.')[0]!.split(',')[0]))
+      .toEqual(['Potrivire puternică', 'Potrivire bună', 'Potrivire parțială', 'Potrivire slabă'])
+    expect(matchJob({ must_have: ['Linux'], nice_to_have: [] }, ['Linux']).verdict).toBe('Potrivire puternică. Ai deja aproape tot ce cer.')
+    const person = sampleProfile({ city: 'Iași', work_modes: ['remote', 'hybrid'], open_to_relocation: false })
+    expect(knockoutFor({ city: 'Cluj-Napoca', work_mode: 'onsite' }, person))
+      .toBe('La birou în Cluj-Napoca. În profil ai ales să lucrezi remote sau hibrid și nu vrei să te muți.')
+    expect(knockoutFor({ city: '', work_mode: 'remote' }, sampleProfile({ work_modes: ['onsite'] }))).toBe('Remote. În profil ai ales să lucrezi la birou.')
+    expect(knockoutFor({ city: 'Cluj-Napoca', work_mode: 'hybrid' }, person)).toBe('Jobul e în Cluj-Napoca, hibrid. Tu locuiești în Iași și nu vrei să te muți.')
+    expect(yearsLine({ years_required: 4 }, sampleProfile(), new Date('2026-11-25'))).toBe('Cere cel puțin 4 ani de experiență. Tu ai cam 6 ani.')
+    expect(placeOf(catalogJob(0))).toBe('Iași, la birou')
+    expect(placeOf({ city: '', work_mode: '' })).toBe('Locație nespecificată')
+    expect(tagline(catalogJob(0))).toBe('DevOps, Date · Senior')
+    expect(lookFor({ must_have: ['Linux'], nice_to_have: ['AWS'] })).toEqual(['Experiență cu Linux.', 'AWS e un avantaj.'])
+    expect(marketNote(sampleProfile({ work_modes: ['hybrid', 'onsite'] }))).toBe('Din profilul tău: Iași, Romania · hibrid sau la birou · fără relocare.')
+    expect(marketNote(sampleProfile({ city: '', work_modes: [], open_to_relocation: true }))).toBe('Din profilul tău: Romania · cu relocare.')
+  })
+
+  it('says when and where a job was posted in Romanian', () => {
+    setLocale('ro')
+    const now = new Date('2026-11-26T12:00:00Z')
+    expect(['2026-11-26T08:00:00Z', '2026-11-25T08:00:00Z', '2026-11-23T08:00:00Z', '2026-11-05T08:00:00Z', '2026-09-01T08:00:00Z'].map(at => postedAgo(at, now)))
+      .toEqual(['azi', 'ieri', 'acum 3 zile', 'acum 21 de zile', '1 sept.'])
+    const imported = catalogJob(1, { source: 'import', origin: 'greenhouse', url: 'https://job-boards.eu.greenhouse.io/x/jobs/1', posted_at: '2026-11-25T09:00:00Z' })
+    expect(sourceLine(imported, now)).toBe('de pe Greenhouse · publicat ieri')
+    expect(sourceLine(catalogJob(0))).toBe('de pe www.linkedin.com')
+    expect(sourceLine(catalogJob(1))).toBe('Anunț de exemplu, nu unul real')
+    expect(sourceLine(catalogJob(1, { sample: false }))).toBe('Din catalog')
+    expect(sourceLine(catalogJob(1, { source: 'link', added_by_me: true }))).toBe('Adăugat de tine · dintr-un link')
+    expect(sourceLine(catalogJob(1, { source: 'text', added_by_me: true }))).toBe('Adăugat de tine · din text lipit')
+    expect(levelLabel('lead')).toBe('Lead')
   })
 })

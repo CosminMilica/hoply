@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import { t } from '@/features/common/i18n'
 import { cleanList, EMPLOYMENT_TYPES, experienceInputSchema, withoutId, type Bullet, type Experience, type ExperienceInput } from '../api/profile.schema'
 import HighlightsField from './HighlightsField.vue'
 import MonthRangeFields from './MonthRangeFields.vue'
 
 const NONE = 'none'
 const label = { label: 'text-xs font-bold text-muted' }
-const employmentItems = [{ label: 'Not set', value: NONE }, ...Object.entries(EMPLOYMENT_TYPES).map(([value, text]) => ({ label: text, value }))]
+const employmentItems = computed(() => [
+  { label: t.value.profile.preferences.notSet, value: NONE },
+  ...EMPLOYMENT_TYPES.map(value => ({ label: t.value.profile.employmentTypes[value], value })),
+])
 
 const props = defineProps<{ initial?: Experience, pending?: boolean, serverError?: string }>()
 const emit = defineEmits<{ save: [input: ExperienceInput], cancel: [] }>()
@@ -53,41 +57,41 @@ function submit() {
 </script>
 
 <template>
-  <form class="flex flex-col gap-2 rounded-[10px] border-[1.5px] border-dashed border-ink-400 p-3" :aria-label="initial ? `Edit ${initial.role}` : 'Add a role'" @submit.prevent="submit">
-    <UFormField label="Role" :error="errors.role" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.role" placeholder="Role, e.g. Frontend developer" maxlength="120" class="w-full" />
+  <form class="flex flex-col gap-2 rounded-[10px] border-[1.5px] border-dashed border-ink-400 p-3" :aria-label="initial ? t.profile.entry.edit(initial.role) : t.profile.experienceForm.add" @submit.prevent="submit">
+    <UFormField :label="t.profile.experienceForm.role" :error="errors.role" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.role" :placeholder="t.profile.experienceForm.rolePlaceholder" maxlength="120" class="w-full" />
     </UFormField>
-    <UFormField label="Company" :error="errors.company" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.company" placeholder="Company" maxlength="120" class="w-full" />
+    <UFormField :label="t.profile.experienceForm.company" :error="errors.company" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.company" :placeholder="t.profile.experienceForm.company" maxlength="120" class="w-full" />
     </UFormField>
     <div class="grid grid-cols-2 gap-2">
-      <UFormField label="Location" :ui="{ label: 'sr-only' }">
-        <UInput v-model="draft.location" placeholder="Location, e.g. Iași" maxlength="120" class="w-full" />
+      <UFormField :label="t.profile.experienceForm.location" :ui="{ label: 'sr-only' }">
+        <UInput v-model="draft.location" :placeholder="t.profile.experienceForm.locationPlaceholder" maxlength="120" class="w-full" />
       </UFormField>
-      <UFormField label="Industry" :error="errors.industry" :ui="{ label: 'sr-only' }">
-        <UInput v-model="draft.industry" placeholder="Industry, e.g. Fintech" maxlength="60" class="w-full" />
+      <UFormField :label="t.profile.experienceForm.industry" :error="errors.industry" :ui="{ label: 'sr-only' }">
+        <UInput v-model="draft.industry" :placeholder="t.profile.experienceForm.industryPlaceholder" maxlength="60" class="w-full" />
       </UFormField>
     </div>
-    <MonthRangeFields v-model:start="draft.start" v-model:end="draft.end" ongoing-label="I still work here" :errors="{ start: errors.start, end: errors.end }" />
+    <MonthRangeFields v-model:start="draft.start" v-model:end="draft.end" :ongoing-label="t.profile.experienceForm.stillHere" :errors="{ start: errors.start, end: errors.end }" />
     <div class="grid grid-cols-3 gap-2">
-      <UFormField label="Employment type" :ui="label">
+      <UFormField :label="t.profile.experienceForm.employmentType" :ui="label">
         <USelect v-model="draft.employmentType" :items="employmentItems" class="w-full" />
       </UFormField>
-      <UFormField label="Team size" :error="errors.team_size" :ui="label">
+      <UFormField :label="t.profile.experienceForm.teamSize" :error="errors.team_size" :ui="label">
         <UInput v-model="draft.teamSize" type="number" min="0" inputmode="numeric" class="w-full" />
       </UFormField>
-      <UFormField label="People managed" :error="errors.people_managed" :ui="label">
+      <UFormField :label="t.profile.experienceForm.peopleManaged" :error="errors.people_managed" :ui="label">
         <UInput v-model="draft.peopleManaged" type="number" min="0" inputmode="numeric" class="w-full" />
       </UFormField>
     </div>
-    <UFormField label="Tools you used, separated by commas" :error="errors.tools" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.tools" placeholder="Tools, e.g. React, SQL, Figma" class="w-full" />
+    <UFormField :label="t.profile.experienceForm.tools" :error="errors.tools" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.tools" :placeholder="t.profile.experienceForm.toolsPlaceholder" class="w-full" />
     </UFormField>
     <HighlightsField v-model="bullets" :error="errors.bullets" />
     <p v-if="serverError" role="alert" class="m-0 text-sm font-bold text-error">{{ serverError }}</p>
     <div class="flex gap-2">
-      <UButton type="submit" color="neutral" label="Save" block class="flex-1" :loading="pending" />
-      <UButton color="neutral" variant="outline" label="Cancel" @click="emit('cancel')" />
+      <UButton type="submit" color="neutral" :label="t.common.actions.save" block class="flex-1" :loading="pending" />
+      <UButton color="neutral" variant="outline" :label="t.common.actions.cancel" @click="emit('cancel')" />
     </div>
   </form>
 </template>

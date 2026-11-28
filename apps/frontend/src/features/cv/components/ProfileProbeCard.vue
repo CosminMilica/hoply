@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { t } from '@/features/common/i18n'
 import SectionLabel from '@/features/common/components/SectionLabel.vue'
 import type { Profile } from '@/features/profile/api/profile.schema'
 import { useProfileProbeQuery } from '../composables/useCv'
@@ -15,14 +16,14 @@ const answers = useAnswers(useNotes(() => props.profile))
 
 <template>
   <section v-if="probe.data.value?.status === 'pending'" class="flex flex-col gap-2 rounded-2xl border border-default p-4" aria-live="polite" data-test="profile-probe-pending">
-    <SectionLabel as="h2">Make every CV stronger</SectionLabel>
-    <p class="m-0 text-[13px] font-medium text-muted">Reading your profile to find what every CV would gain from…</p>
+    <SectionLabel as="h2">{{ t.cv.profileProbe.title }}</SectionLabel>
+    <p class="m-0 text-[13px] font-medium text-muted">{{ t.cv.profileProbe.reading }}</p>
     <USkeleton class="h-16 w-full rounded-[10px]" />
   </section>
-  <section v-else-if="asked.length" class="flex flex-col gap-2.5 rounded-2xl border border-default p-4" aria-label="Make every CV stronger" data-test="profile-probe">
-    <SectionLabel as="h2">Make every CV stronger</SectionLabel>
+  <section v-else-if="asked.length" class="flex flex-col gap-2.5 rounded-2xl border border-default p-4" :aria-label="t.cv.profileProbe.title" data-test="profile-probe">
+    <SectionLabel as="h2">{{ t.cv.profileProbe.title }}</SectionLabel>
     <p class="m-0 text-[13px] leading-snug font-medium text-muted">
-      Every CV leans on these. A number makes each one stronger; an honest range is fine when you do not know the exact figure.
+      {{ t.cv.profileProbe.intro }}
     </p>
     <ProbeQuestionCard
       v-for="(item, index) in asked"
@@ -33,7 +34,7 @@ const answers = useAnswers(useNotes(() => props.profile))
       :can-add="answers.canAdd(`${index}`)"
       :saving="answers.state.saving[index]"
       :error="answers.state.errors[index]"
-      add-label="Add to my profile"
+      :add-label="t.cv.cards.addToProfile"
       @update:draft="(value: string) => answers.setDraft(`${index}`, value)"
       @add="answers.add(`${index}`, item.place)"
       @skip="answers.skip(`${index}`)"

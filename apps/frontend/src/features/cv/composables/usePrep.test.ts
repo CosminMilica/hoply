@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { setLocale } from '@/features/common/i18n'
+import type { Job } from '@/features/jobs/api/jobs.schema'
 import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
@@ -16,15 +18,15 @@ import { seedId } from '@/test/jobs-seed'
 
 const job = engineJob(0)
 
-async function setup(person: Profile = sampleProfile()) {
+async function setup(person: Profile = sampleProfile(), ad: Job = job) {
   const services = useServices(person)
-  const questions = prepQuestions(job, person)
+  const questions = prepQuestions(ad, person)
   let prep!: ReturnType<typeof usePrep>
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   mount(defineComponent({
     setup() {
       const profile = useProfileQuery()
-      prep = usePrep({ job, profile: () => profile.data.value, questions })
+      prep = usePrep({ job: ad, profile: () => profile.data.value, questions })
       return () => h('div')
     },
   }), { global: { plugins: [[VueQueryPlugin, { queryClient }]] } })
@@ -146,6 +148,33 @@ describe('usePrep', () => {
     expect(prep.toRequest(seedId(1))).toEqual({ job_id: seedId(1), skip_roles: ['r2'], focus: ['SQL', 'CI/CD', 'Python'], confirmed: [], language: 'en' })
     prep.state.language = 'ro'
     expect(prep.toRequest(seedId(1)).language).toBe('ro')
+  })
+
+  it('writes the CV in the person’s pick, else the ad’s language, else the app’s', async () => {
+    setLocale('ro')
+    const english = await setup()
+    expect(english.prep.language.value).toBe('en')
+    english.prep.state.language = 'ro'
+    expect(english.prep.toRequest(seedId(1)).language).toBe('ro')
+
+    const neutral = await setup(sampleProfile(), { ...job, title: 'DevOps Engineer', about: '', responsibilities: [], must_have: ['Kubernetes', 'Terraform'] })
+    expect(neutral.prep.language.value).toBe('ro')
+    setLocale('en')
+    expect(neutral.prep.language.value).toBe('en')
+    neutral.prep.state.language = 'ro'
+    expect(neutral.prep.language.value).toBe('ro')
+  })
+
+  it('speaks Romanian when the app does', async () => {
+    setLocale('ro')
+    const person = sampleProfile({ projects: [{ id: 'p1', name: 'Home lab', role: '', url: '', start: '', end: '', tools: [], bullets: [], notes: [] }] })
+    const { prep } = await setup(person)
+    expect(prep.progress.value).toBe('0 din 8 întrebări cu răspuns')
+    expect(prep.roleChoices('g:x').at(-1)!.label).toBe('În altă parte')
+    expect(prep.roles.value[0]!.overlap).toBe('Folosește SQL, Git, CI/CD, Monitoring și Python')
+    expect(prep.whereLabel(OTHER)).toBe('notițele tale')
+    expect(prep.whereLabel('projects:p1')).toBe('proiectul Home lab')
+    expect(prep.whereLabel('experience:r2')).toBe('Junior system administrator la Bonbon Labs')
   })
 
   it('falls back to the person’s own notes without a role or project', async () => {

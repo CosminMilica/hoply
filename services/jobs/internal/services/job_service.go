@@ -64,6 +64,7 @@ type JobQuery struct {
 	Country       string
 	IncludeRemote string
 	Areas         []string
+	Domains       []string
 	Level         string
 	IDs           string
 	Limit         string
@@ -112,7 +113,8 @@ func (s *JobService) Create(ctx context.Context, ident identity.IdentityContext,
 	if err != nil {
 		return nil, err
 	}
-	return s.repo.Create(ctx, ident, cleaned)
+	c := extract.Classify(cleaned.Title)
+	return s.repo.Create(ctx, ident, cleaned, c.Areas, c.Domains)
 }
 
 // SetRequirements replaces the requirements of one of the caller's jobs with
@@ -260,6 +262,15 @@ func CleanQuery(q JobQuery) (models.JobFilter, error) {
 		if area = strings.TrimSpace(extract.Fold(area)); area != "" && !slices.Contains(filter.Areas, area) {
 			filter.Areas = append(filter.Areas, area)
 		}
+	}
+	for _, domain := range q.Domains {
+		if domain = strings.TrimSpace(domain); domain == "" || slices.Contains(filter.Domains, domain) {
+			continue
+		}
+		if !slices.Contains(extract.Domains, domain) {
+			return filter, invalid("domain", "'domain' must be one of "+strings.Join(extract.Domains, ", "))
+		}
+		filter.Domains = append(filter.Domains, domain)
 	}
 	filter.Level = strings.TrimSpace(q.Level)
 	if filter.Level != "" && !slices.Contains(Levels, filter.Level) {

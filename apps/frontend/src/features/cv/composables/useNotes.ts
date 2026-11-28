@@ -1,5 +1,6 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
+import { t } from '@/features/common/i18n'
 import { experienceInput, projectInput, type Experience, type Note, type Profile, type Project } from '@/features/profile/api/profile.schema'
 import { profileKeys, useProfileMutations } from '@/features/profile/composables/useProfile'
 
@@ -60,11 +61,12 @@ export function useNotes(profile: MaybeRefOrGetter<Profile | undefined>) {
     })
   }
   function whereLabel(place: Place): string {
+    const words = t.value.cv.where
     const target = entryOf(place)
-    if (!target) return 'Your notes'
-    if (target.list === 'projects') return `the ${(target.entry as Project).name} project`
+    if (!target) return words.yourNotes
+    if (target.list === 'projects') return words.project((target.entry as Project).name)
     const role = target.entry as Experience
-    return role.company ? `${role.role} at ${role.company}` : role.role
+    return role.company ? words.roleAt(role.role, role.company) : role.role
   }
   /** An answer becomes a note of the role or project it is about, or of the person: material Claude writes from. */
   async function remember(place: Place, text: string, skills: string[]): Promise<Remembered> {

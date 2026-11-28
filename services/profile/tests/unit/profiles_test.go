@@ -407,6 +407,7 @@ func TestCleanPatchEnumsListsAndNumbers(t *testing.T) {
 		{NoticePeriodWeeks: nullable("0")}, {NoticePeriodWeeks: nullable("52")},
 		{SalaryMin: nullable("100000000")}, {AvailableFrom: ptr("1950-01")}, {AvailableFrom: ptr("2100-12")},
 		{WorkAuthorization: ptr("")}, {SalaryPeriod: ptr("")}, {OpenToRelocation: ptr(true)},
+		{AppLanguage: ptr("ro")}, {AppLanguage: ptr("")}, {Domains: strs("it", "hr", "insurance")},
 	} {
 		if _, err := services.CleanPatch(edge); err != nil {
 			t.Fatalf("edge %+v: %v", edge, err)
@@ -430,6 +431,8 @@ func TestCleanPatchEnumsListsAndNumbers(t *testing.T) {
 		{models.ProfilePatch{AdditionalInfo: strs(repeat(301))}, "additional_info"},
 		{models.ProfilePatch{WorkAuthorization: ptr("visa")}, "work_authorization"},
 		{models.ProfilePatch{SalaryPeriod: ptr("week")}, "salary_period"},
+		{models.ProfilePatch{AppLanguage: ptr("de")}, "app_language"},
+		{models.ProfilePatch{Domains: strs("IT")}, "domains"},
 		{models.ProfilePatch{NoticePeriodWeeks: nullable("53")}, "notice_period_weeks"},
 		{models.ProfilePatch{NoticePeriodWeeks: nullable("-1")}, "notice_period_weeks"},
 		{models.ProfilePatch{NoticePeriodWeeks: nullable("2.5")}, "notice_period_weeks"},

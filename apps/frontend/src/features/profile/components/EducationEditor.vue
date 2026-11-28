@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/features/common/i18n'
 import type { Profile } from '../api/profile.schema'
 import { useEntryEditor } from '../composables/useEntryEditor'
 import { useProfileMutations } from '../composables/useProfile'
@@ -30,7 +31,7 @@ const editor = useEntryEditor(education)
           color="neutral"
           variant="ghost"
           icon="i-lucide-pencil"
-          :aria-label="`Edit ${educationTitle(item)}`"
+          :aria-label="t.profile.entry.edit(educationTitle(item))"
           class="size-9 justify-center text-muted"
           @click="editor.open(item.id)"
         />
@@ -38,7 +39,7 @@ const editor = useEntryEditor(education)
           color="neutral"
           variant="ghost"
           icon="i-lucide-x"
-          :aria-label="`Remove ${educationTitle(item)}`"
+          :aria-label="t.profile.entry.remove(educationTitle(item))"
           class="size-9 justify-center text-muted"
           @click="education.remove.mutate(item.id)"
         />
@@ -50,7 +51,7 @@ const editor = useEntryEditor(education)
     v-else
     color="neutral"
     variant="outline"
-    label="+ Add education"
+    :label="t.profile.education.add"
     block
     class="border-[1.5px] border-dashed border-ink-400 text-toned ring-0"
     @click="editor.open(null)"

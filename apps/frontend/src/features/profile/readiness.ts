@@ -1,3 +1,4 @@
+import { t } from '@/features/common/i18n'
 import type { Experience, Profile } from './api/profile.schema'
 
 export interface ReadinessCheck {
@@ -18,26 +19,29 @@ export function isRichRole(role: Experience): boolean {
   return role.tools.length >= 3 && role.bullets.length >= 2 && filled(role.start)
 }
 
+/** How far the profile is from a good tailored CV, with its checks and hint in the app's language. */
 export function profileReadiness(profile: Profile): Readiness {
+  const words = t.value.profile.readiness
+  const label = words.checks
   const bullets = [...profile.experience, ...profile.projects].flatMap(entry => entry.bullets)
   const checks: ReadinessCheck[] = [
-    { ok: filled(profile.name), label: 'your name' },
-    { ok: filled(profile.headline), label: 'a headline' },
-    { ok: filled(profile.about), label: 'a short intro' },
-    { ok: filled(profile.email), label: 'your email' },
-    { ok: filled(profile.phone), label: 'your phone number' },
-    { ok: filled(profile.github) || filled(profile.linkedin), label: 'a GitHub or LinkedIn link' },
-    { ok: filled(profile.city) && filled(profile.country), label: 'your city and country' },
-    { ok: filled(profile.work_authorization), label: 'your work authorization' },
-    { ok: profile.skills.length >= 5, label: 'at least 5 skills' },
-    { ok: profile.experience.some(isRichRole), label: 'a role with a start month, tools and two highlights' },
-    { ok: bullets.some(bullet => filled(bullet.result)), label: 'a highlight with a result' },
-    { ok: profile.education.some(item => filled(item.level)), label: 'your education with its level' },
-    { ok: profile.languages.length >= 1, label: 'a language' },
+    { ok: filled(profile.name), label: label.name },
+    { ok: filled(profile.headline), label: label.headline },
+    { ok: filled(profile.about), label: label.about },
+    { ok: filled(profile.email), label: label.email },
+    { ok: filled(profile.phone), label: label.phone },
+    { ok: filled(profile.github) || filled(profile.linkedin), label: label.link },
+    { ok: filled(profile.city) && filled(profile.country), label: label.place },
+    { ok: filled(profile.work_authorization), label: label.workAuthorization },
+    { ok: profile.skills.length >= 5, label: label.skills },
+    { ok: profile.experience.some(isRichRole), label: label.richRole },
+    { ok: bullets.some(bullet => filled(bullet.result)), label: label.result },
+    { ok: profile.education.some(item => filled(item.level)), label: label.education },
+    { ok: profile.languages.length >= 1, label: label.language },
   ]
   const percent = Math.round((checks.filter(check => check.ok).length / checks.length) * 100)
   const next = checks.find(check => !check.ok)
-  return { percent, checks, hint: next ? `Next up: add ${next.label}` : 'All set. Time to find some jobs.' }
+  return { percent, checks, hint: next ? words.next(next.label) : words.allSet }
 }
 
 /** "Andrei Popescu" gives "AP"; one word gives its first letter. */

@@ -79,6 +79,7 @@ func TestProfileContractEndToEnd(t *testing.T) {
 	status, profile := call(t, http.MethodGet, me, nil)
 	if status != http.StatusOK || profile["name"] != "" || fmt.Sprint(profile["experience"]) != "[]" ||
 		fmt.Sprint(profile["projects"]) != "[]" || profile["salary_min"] != nil || profile["open_to_relocation"] != false ||
+		profile["app_language"] != "" || fmt.Sprint(profile["domains"]) != "[]" ||
 		profile["created_at"] == nil || profile["updated_at"] == nil {
 		t.Fatalf("GET /me creates the empty profile: %d %v", status, profile)
 	}
@@ -87,10 +88,12 @@ func TestProfileContractEndToEnd(t *testing.T) {
 		"name": " Ana Pop ", "headline": "Backend engineer", "city": "Cluj", "work_modes": []string{"remote", "hybrid", "remote"},
 		"notice_period_weeks": 4, "salary_min": 5000, "salary_currency": "eur", "salary_period": "month",
 		"employment_types": []string{"full_time"}, "available_from": "2027-02", "additional_info": []string{" Has a car ", ""},
+		"app_language": "ro", "domains": []string{"finance", "hr", "finance"},
 	})
 	if status != http.StatusOK || patched["name"] != "Ana Pop" || fmt.Sprint(patched["work_modes"]) != "[remote hybrid]" ||
 		patched["salary_currency"] != "EUR" || patched["notice_period_weeks"] != float64(4) ||
-		fmt.Sprint(patched["additional_info"]) != "[Has a car]" || patched["id"] != profile["id"] {
+		fmt.Sprint(patched["additional_info"]) != "[Has a car]" || patched["id"] != profile["id"] ||
+		patched["app_language"] != "ro" || fmt.Sprint(patched["domains"]) != "[finance hr]" {
 		t.Fatalf("PATCH /me: %d %v", status, patched)
 	}
 	status, cleared := call(t, http.MethodPatch, me, map[string]any{"notice_period_weeks": nil})
@@ -98,7 +101,8 @@ func TestProfileContractEndToEnd(t *testing.T) {
 		t.Fatalf("PATCH null clears only that field: %d %v", status, cleared)
 	}
 	for _, body := range []map[string]any{{"email": "not-an-email"}, {"name": strings.Repeat("n", 121)},
-		{"notice_period_weeks": 53}, {"work_modes": []string{"office"}}, {"salary_currency": "EURO"}} {
+		{"notice_period_weeks": 53}, {"work_modes": []string{"office"}}, {"salary_currency": "EURO"},
+		{"app_language": "fr"}, {"domains": []string{"law"}}} {
 		if status, body := call(t, http.MethodPatch, me, body); status != http.StatusUnprocessableEntity || testutil.ErrorCode(body) != "VALIDATION_FAILED" {
 			t.Fatalf("invalid patch: %d %v", status, body)
 		}

@@ -30,7 +30,7 @@ type JobRepository interface {
 	List(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) ([]models.JobCard, error)
 	Count(ctx context.Context, ident identity.IdentityContext, filter models.JobFilter) (int, error)
 	Get(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (*models.Job, error)
-	Create(ctx context.Context, ident identity.IdentityContext, data models.JobInput) (*models.Job, error)
+	Create(ctx context.Context, ident identity.IdentityContext, data models.JobInput, areas, domains []string) (*models.Job, error)
 	Delete(ctx context.Context, ident identity.IdentityContext, id uuid.UUID) (bool, error)
 	SetRequirements(ctx context.Context, ident identity.IdentityContext, id uuid.UUID, data models.RequirementsInput) (*models.Job, error)
 }
@@ -53,10 +53,10 @@ type ImportStore interface {
 
 const (
 	jobColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
-		"responsibilities, qualifications, bonuses, about, about_company, product, perks, areas, url, source, read_from, requirements_from, sample, " +
+		"responsibilities, qualifications, bonuses, about, about_company, product, perks, areas, domains, url, source, read_from, requirements_from, sample, " +
 		"customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
 	cardColumns = "id, title, company, city, country, work_mode, level, years_required, must_have, nice_to_have, " +
-		"responsibilities, about, areas, url, source, requirements_from, sample, customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
+		"responsibilities, about, areas, domains, url, source, requirements_from, sample, customer_id IS NOT NULL, created_at, origin, posted_at, closed_at"
 	// visible keeps the catalog and the jobs of the $1 tenant.
 	visible = "(customer_id IS NULL OR customer_id = $1)"
 )
@@ -126,6 +126,9 @@ func filtered(ident identity.IdentityContext, filter models.JobFilter) (string, 
 	if len(filter.Areas) > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM unnest(areas) AS area WHERE lower(area) = ANY("+arg(filter.Areas)+"))")
 	}
+	if len(filter.Domains) > 0 {
+		where = append(where, "(domains && "+arg(filter.Domains)+" OR (customer_id IS NOT NULL AND domains = '{}'))")
+	}
 	if filter.Level != "" {
 		where = append(where, "level = "+arg(filter.Level))
 	}
@@ -174,14 +177,14 @@ func (r *PgJobRepository) Get(ctx context.Context, ident identity.IdentityContex
 	return r.one(ctx, ident, "SELECT "+jobColumns+" FROM jobs WHERE id = $2 AND "+visible, ident.TenantID, id)
 }
 
-func (r *PgJobRepository) Create(ctx context.Context, ident identity.IdentityContext, d models.JobInput) (*models.Job, error) {
+func (r *PgJobRepository) Create(ctx context.Context, ident identity.IdentityContext, d models.JobInput, areas, domains []string) (*models.Job, error) {
 	return r.one(ctx, ident, "INSERT INTO jobs (customer_id, subject, title, company, city, country, work_mode, level, "+
 		"years_required, must_have, nice_to_have, responsibilities, about, url, source, read_from, qualifications, bonuses, "+
-		"about_company, perks) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) "+
+		"about_company, perks, areas, domains) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) "+
 		"RETURNING "+jobColumns,
 		ident.TenantID, ident.Subject, d.Title, d.Company, d.City, d.Country, d.WorkMode, d.Level, d.YearsRequired,
 		nonNil(d.MustHave), nonNil(d.NiceToHave), nonNil(d.Responsibilities), d.About, d.URL, d.Source, d.ReadFrom,
-		nonNil(d.Qualifications), nonNil(d.Bonuses), d.AboutCompany, nonNil(d.Perks))
+		nonNil(d.Qualifications), nonNil(d.Bonuses), d.AboutCompany, nonNil(d.Perks), nonNil(areas), nonNil(domains))
 }
 
 // SetRequirements replaces the requirements of a job the caller sees and marks
@@ -209,20 +212,20 @@ func (r *PgJobRepository) Import(ctx context.Context, j models.ImportedJob, seen
 	err := r.run(ctx, identity.IdentityContext{}, func(db DBTX) error {
 		return db.QueryRow(ctx, "INSERT INTO jobs (title, company, city, country, work_mode, level, years_required, must_have, "+
 			"nice_to_have, responsibilities, about, areas, url, source, read_from, origin, external_id, board, posted_at, last_seen_at, "+
-			"qualifications, bonuses, about_company, perks, read_at) "+
-			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $19) "+
+			"qualifications, bonuses, about_company, perks, read_at, domains) "+
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'import', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $19, $24) "+
 			"ON CONFLICT (origin, board, external_id) WHERE source = 'import' DO UPDATE SET title = EXCLUDED.title, "+
 			"company = EXCLUDED.company, city = EXCLUDED.city, country = EXCLUDED.country, work_mode = EXCLUDED.work_mode, "+
 			"level = EXCLUDED.level, years_required = EXCLUDED.years_required, "+
 			"must_have = CASE WHEN jobs.requirements_from = 'analysis' THEN jobs.must_have ELSE EXCLUDED.must_have END, "+
 			"nice_to_have = CASE WHEN jobs.requirements_from = 'analysis' THEN jobs.nice_to_have ELSE EXCLUDED.nice_to_have END, "+
-			"responsibilities = EXCLUDED.responsibilities, about = EXCLUDED.about, areas = EXCLUDED.areas, url = EXCLUDED.url, "+
+			"responsibilities = EXCLUDED.responsibilities, about = EXCLUDED.about, areas = EXCLUDED.areas, domains = EXCLUDED.domains, url = EXCLUDED.url, "+
 			"qualifications = EXCLUDED.qualifications, bonuses = EXCLUDED.bonuses, about_company = EXCLUDED.about_company, perks = EXCLUDED.perks, "+
 			"read_from = EXCLUDED.read_from, board = EXCLUDED.board, posted_at = COALESCE(EXCLUDED.posted_at, jobs.posted_at), "+
 			"last_seen_at = EXCLUDED.last_seen_at, read_at = EXCLUDED.read_at, closed_at = NULL RETURNING xmax = 0",
 			j.Title, j.Company, j.City, j.Country, j.WorkMode, j.Level, j.YearsRequired, nonNil(j.MustHave), nonNil(j.NiceToHave),
 			nonNil(j.Responsibilities), j.About, nonNil(j.Areas), j.URL, j.ReadFrom, j.Origin, j.ExternalID, j.Board, j.PostedAt, seen,
-			nonNil(j.Qualifications), nonNil(j.Bonuses), j.AboutCompany, nonNil(j.Perks),
+			nonNil(j.Qualifications), nonNil(j.Bonuses), j.AboutCompany, nonNil(j.Perks), nonNil(j.Domains),
 		).Scan(&created)
 	})
 	return created, err
@@ -311,8 +314,8 @@ func scanJob(row pgx.CollectableRow) (models.Job, error) {
 	var j models.Job
 	err := row.Scan(&j.ID, &j.Title, &j.Company, &j.City, &j.Country, &j.WorkMode, &j.Level, &j.YearsRequired,
 		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Qualifications, &j.Bonuses, &j.About, &j.AboutCompany, &j.Product, &j.Perks, &j.Areas,
-		&j.URL, &j.Source, &j.ReadFrom, &j.RequirementsFrom, &j.Sample, &j.AddedByMe, &j.CreatedAt, &j.Origin, &j.PostedAt, &j.ClosedAt)
-	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Qualifications, &j.Bonuses, &j.Perks, &j.Areas} {
+		&j.Domains, &j.URL, &j.Source, &j.ReadFrom, &j.RequirementsFrom, &j.Sample, &j.AddedByMe, &j.CreatedAt, &j.Origin, &j.PostedAt, &j.ClosedAt)
+	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Qualifications, &j.Bonuses, &j.Perks, &j.Areas, &j.Domains} {
 		*list = nonNil(*list)
 	}
 	return j, err
@@ -321,9 +324,9 @@ func scanJob(row pgx.CollectableRow) (models.Job, error) {
 func scanCard(row pgx.CollectableRow) (models.JobCard, error) {
 	var j models.Job
 	err := row.Scan(&j.ID, &j.Title, &j.Company, &j.City, &j.Country, &j.WorkMode, &j.Level, &j.YearsRequired,
-		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.About, &j.Areas, &j.URL, &j.Source, &j.RequirementsFrom,
+		&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.About, &j.Areas, &j.Domains, &j.URL, &j.Source, &j.RequirementsFrom,
 		&j.Sample, &j.AddedByMe, &j.CreatedAt, &j.Origin, &j.PostedAt, &j.ClosedAt)
-	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Areas} {
+	for _, list := range []*[]string{&j.MustHave, &j.NiceToHave, &j.Responsibilities, &j.Areas, &j.Domains} {
 		*list = nonNil(*list)
 	}
 	return models.CardOf(j), err

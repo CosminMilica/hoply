@@ -1,12 +1,17 @@
 import { z } from 'zod'
+import { formatDate, t } from '@/features/common/i18n'
 
 export const APPLICATION_STATUSES = ['saved', 'cv_ready', 'applied'] as const
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
 
-export const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  saved: 'Saved',
-  cv_ready: 'CV ready',
-  applied: 'Applied',
+/** A status's name in the app's language. */
+export const statusLabel = (status: ApplicationStatus) => t.value.applications.status[status]
+
+/** The statuses' names by key, read in the app's language each time. */
+export const STATUS_LABELS: Readonly<Record<ApplicationStatus, string>> = {
+  get saved() { return statusLabel('saved') },
+  get cv_ready() { return statusLabel('cv_ready') },
+  get applied() { return statusLabel('applied') },
 }
 
 const when = z.string().nullish().transform(value => value || null)
@@ -30,7 +35,7 @@ export function statusSince(application: Pick<Application, 'status' | 'saved_at'
   const at = { saved: application.saved_at, cv_ready: application.cv_ready_at, applied: application.applied_at }[application.status]
   const date = at ? new Date(at) : null
   if (!date || Number.isNaN(date.getTime())) return ''
-  return `${STATUS_LABELS[application.status]} ${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+  return t.value.applications.since[application.status](formatDate(date, { day: 'numeric', month: 'short' }))
 }
 
 export const skipListSchema = z.object({ job_ids: z.array(z.string()) })

@@ -29,6 +29,7 @@ async function render(at: string, session = testAuth()) {
         { path: 'saved', name: 'hoply-saved', component: Page, meta: { menu: 'saved' } },
         { path: 'applications', name: 'hoply-applications', component: Page, meta: { menu: 'applications' } },
         { path: 'skills', name: 'hoply-skills', component: Page, meta: { menu: 'skills' } },
+        { path: 'preferences', name: 'hoply-preferences', component: Page },
       ],
     },
   })
@@ -115,7 +116,7 @@ describe('AppLayout', () => {
     expect(menu.textContent).toContain('Profile complete')
     expect(document.querySelector('[data-test="account-readiness"]')!.textContent).toBe('100%')
     const items = [...menu.querySelectorAll('a')]
-    expect(items.map(item => [item.textContent?.trim(), item.getAttribute('href')])).toEqual([['Your profile', '/profile'], ['Skill gaps', '/skills']])
+    expect(items.map(item => [item.textContent?.trim(), item.getAttribute('href')])).toEqual([['Your profile', '/profile'], ['Skill gaps', '/skills'], ['Preferences', '/preferences']])
     const signOut = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(item => item.textContent?.trim() === 'Sign out')!
     signOut.click()
     await settle()

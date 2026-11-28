@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/shared/mocks/node'
+import { setLocale } from '@/features/common/i18n'
 import { mountPage, useServices } from '@/test/hoply'
 import { seedId } from '@/test/jobs-seed'
 import { sampleProfile } from '@/test/profile-service'
@@ -31,6 +32,37 @@ describe('SkillGapsPage', () => {
     expect(text()).toContain('Learned one? Add it to your profile and it leaves this list.')
     await router.push(link.getAttribute('href')!)
     expect(router.currentRoute.value.name).toBe('hoply-job')
+  })
+
+  it('speaks Romanian', async () => {
+    setLocale('ro')
+    const profile = sampleProfile()
+    profile.skills.push('Azure')
+    const { applications } = useServices(profile)
+    applications.track(seedId(1), 'saved')
+    applications.track(seedId(2), 'cv_ready')
+    applications.track(seedId(4), 'applied')
+    await mountPage(SkillGapsPage)
+    expect(text()).toContain('Competențe lipsă')
+    expect(section('missing')).toMatch(/^Nu apar în profilul tău \d+TerraformCerută în 2 din 3 joburi salvate, mereu obligatorie\./)
+    expect(section('close')).toMatch(/^Apropiate de ce știi \d+AWSȘtii Azure \(cloud infrastructure\)\.Cerută în 1 din 3 joburi salvate/)
+    expect(text()).toContain('Ai învățat una? Adaug-o în profilul tău și dispare din listă.')
+  })
+
+  it('says in Romanian when there is nothing to show', async () => {
+    setLocale('ro')
+    useServices()
+    await mountPage(SkillGapsPage)
+    expect(text()).toContain('Salvează întâi câteva joburi.')
+    document.body.innerHTML = ''
+
+    const { applications, jobs } = useServices(sampleProfile({ skills: ['Python', 'Git', 'Docker'] }))
+    const job = jobs.jobs.find(item => item.id === seedId(1))!
+    job.must_have = ['Python', 'Git']
+    job.nice_to_have = ['Docker']
+    applications.track(seedId(1), 'saved')
+    await mountPage(SkillGapsPage)
+    expect(text()).toContain('Profilul tău acoperă toate cerințele joburilor salvate.')
   })
 
   it('says when the saved jobs cannot be loaded', async () => {

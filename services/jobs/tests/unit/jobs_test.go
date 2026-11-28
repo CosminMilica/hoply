@@ -97,7 +97,7 @@ func (m *memoryJobs) Get(_ context.Context, ident identity.IdentityContext, id u
 	return nil, nil
 }
 
-func (m *memoryJobs) Create(_ context.Context, ident identity.IdentityContext, d models.JobInput) (*models.Job, error) {
+func (m *memoryJobs) Create(_ context.Context, ident identity.IdentityContext, d models.JobInput, areas, domains []string) (*models.Job, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.fail != nil {
@@ -105,7 +105,7 @@ func (m *memoryJobs) Create(_ context.Context, ident identity.IdentityContext, d
 	}
 	job := models.Job{ID: uuid.New(), Title: d.Title, Company: d.Company, City: d.City, Country: d.Country, WorkMode: d.WorkMode,
 		Level: d.Level, YearsRequired: d.YearsRequired, MustHave: d.MustHave, NiceToHave: d.NiceToHave,
-		Responsibilities: d.Responsibilities, About: d.About, Perks: []string{}, Areas: []string{}, URL: d.URL, Source: d.Source,
+		Responsibilities: d.Responsibilities, About: d.About, Perks: []string{}, Areas: areas, Domains: domains, URL: d.URL, Source: d.Source,
 		ReadFrom: d.ReadFrom, AddedByMe: true, CreatedAt: time.Now()}
 	m.jobs = append([]models.Job{job}, m.jobs...)
 	m.owners[job.ID] = owner(ident)
@@ -277,9 +277,10 @@ func TestCleanJob(t *testing.T) {
 
 func TestCleanQuery(t *testing.T) {
 	filter, err := services.CleanQuery(services.JobQuery{Q: "  devops ", City: " BUCUREȘTI ", Country: "România",
-		IncludeRemote: "true", Areas: []string{" DevOps ", "devops", "", "Data"}, Level: "senior"})
+		IncludeRemote: "true", Areas: []string{" DevOps ", "devops", "", "Data"}, Domains: []string{"it", " hr ", "it", ""}, Level: "senior"})
 	if err != nil || filter.Q != "devops" || !slices.Equal(filter.Cities, []string{"bucuresti", "bucharest"}) || filter.Country != "romania" ||
-		!filter.IncludeRemote || !slices.Equal(filter.Areas, []string{"devops", "data"}) || filter.Level != "senior" {
+		!filter.IncludeRemote || !slices.Equal(filter.Areas, []string{"devops", "data"}) || !slices.Equal(filter.Domains, []string{"it", "hr"}) ||
+		filter.Level != "senior" {
 		t.Fatalf("filter: %+v %v", filter, err)
 	}
 	if filter, err := services.CleanQuery(services.JobQuery{City: "Iasi"}); err != nil || !slices.Equal(filter.Cities, []string{"iasi", "iasi"}) {
@@ -302,6 +303,7 @@ func TestCleanQuery(t *testing.T) {
 	tooMany := strings.Repeat(id.String()+",", services.MaxIDs+1)
 	for field, query := range map[string]services.JobQuery{
 		"include_remote": {IncludeRemote: "maybe"}, "level": {Level: "Senior"}, "ids": {IDs: "not-an-id"}, "limit": {Limit: "0"},
+		"domain": {Domains: []string{"IT"}},
 	} {
 		if _, err := services.CleanQuery(query); apperrors.As(err).Context["field"] != field {
 			t.Errorf("%s: %v", field, err)
@@ -323,9 +325,9 @@ func TestJobsThroughRoutes(t *testing.T) {
 		t.Fatalf("a list cut at its limit counts every job: %d %v", status, list)
 	}
 	repo.jobs = repo.jobs[:1]
-	status, list := testutil.Do(t, handler, http.MethodGet, jobsPath+"?q=go&city=Iasi&include_remote=1&area=DevOps&area=Data&level=mid&country=RO", nil)
+	status, list := testutil.Do(t, handler, http.MethodGet, jobsPath+"?q=go&city=Iasi&include_remote=1&area=DevOps&area=Data&domain=it&level=mid&country=RO", nil)
 	if status != http.StatusOK || list["total"] != float64(1) || len(list["items"].([]any)) != 1 ||
-		repo.filter.Q != "go" || !slices.Equal(repo.filter.Areas, []string{"devops", "data"}) || !repo.filter.IncludeRemote {
+		repo.filter.Q != "go" || !slices.Equal(repo.filter.Areas, []string{"devops", "data"}) || !slices.Equal(repo.filter.Domains, []string{"it"}) || !repo.filter.IncludeRemote {
 		t.Fatalf("list: %d %v %+v", status, list, repo.filter)
 	}
 	catalogID := repo.jobs[0].ID.String()
@@ -333,7 +335,8 @@ func TestJobsThroughRoutes(t *testing.T) {
 		t.Fatalf("get catalog: %d %v", status, job)
 	}
 	status, created := testutil.Do(t, handler, http.MethodPost, jobsPath, with(validJob(), "must_have", []string{"Go", "go"}))
-	if status != http.StatusCreated || created["added_by_me"] != true || fmt.Sprint(created["must_have"]) != "[Go]" {
+	if status != http.StatusCreated || created["added_by_me"] != true || fmt.Sprint(created["must_have"]) != "[Go]" ||
+		fmt.Sprint(created["domains"]) != "[it]" || fmt.Sprint(created["areas"]) != "[DevOps]" {
 		t.Fatalf("create: %d %v", status, created)
 	}
 	path := jobsPath + "/" + created["id"].(string)

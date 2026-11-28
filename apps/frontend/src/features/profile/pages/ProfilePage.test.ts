@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
+import { setLocale } from '@/features/common/i18n'
 import { server } from '@/shared/mocks/node'
 import { button, choose, click, input, mountPage, sectionToggle, settle, type, useServices } from '@/test/hoply'
 import { emptyProfile, sampleProfile } from '@/test/profile-service'
@@ -155,5 +156,41 @@ describe('ProfilePage', () => {
     fail = false
     await click(button('Try again'))
     expect(text()).toContain('Ready to tailor')
+  })
+
+  it('switches to Romanian live, with the summaries counted in Romanian', async () => {
+    useServices(sampleProfile({ phone: '' }))
+    await mountPage(ProfilePage)
+    expect(text()).toContain('Next up: add your phone number')
+    setLocale('ro')
+    await settle()
+    expect(text()).toContain('Următorul pas: adaugă numărul de telefon')
+    expect(text()).toContain('Gata de adaptare')
+    for (const summary of ['0 proiecte', '0 certificări', '0 rânduri', 'Setat', '8 competențe', '2 roluri', '1 diplomă', '2 limbi', '4 realizări']) {
+      expect(text()).toContain(summary)
+    }
+    expect(sectionToggle('Competențe').getAttribute('aria-expanded')).toBe('true')
+    expect(sectionToggle('Despre tine').getAttribute('aria-expanded')).toBe('false')
+    expect(text()).toContain('Normă întreagă · Cloud · Iași · echipă de 6 persoane')
+    expect(text()).toContain('Ce ai făcut')
+    expect(text()).toContain('Unelte folosite')
+    expect(button('Adaugă un job').getAttribute('href')).toBe('/jobs/add')
+    await click(sectionToggle('Despre tine'))
+    expect(text()).toContain('Două-trei rânduri sunt de ajuns.')
+    expect(input('Titlu').getAttribute('placeholder')).toBe('Titlu, de ex. Frontend developer')
+  })
+
+  it('names an empty profile and a failed load in Romanian', async () => {
+    setLocale('ro')
+    useServices(emptyProfile())
+    await mountPage(ProfilePage)
+    expect(document.querySelector('h1')!.textContent).toBe('Profilul tău')
+    expect(text()).toContain('Adaugă un titlu mai jos')
+    expect(text()).toContain('De completat')
+    document.body.innerHTML = ''
+    server.use(http.get('*/api/profile/v1/profiles/me', () => HttpResponse.json({ message: 'down' }, { status: 503 })))
+    await mountPage(ProfilePage)
+    expect(text()).toContain('Nu ți-am putut încărca profilul')
+    expect(button('Încearcă din nou')).toBeTruthy()
   })
 })

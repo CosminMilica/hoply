@@ -7,6 +7,7 @@ import { SEARCH_DELAY_MS } from '../composables/useDeck'
 import { useJobSearchStore } from '../stores/search'
 import JobSearch from './JobSearch.vue'
 import { seedId } from '@/test/jobs-seed'
+import { setLocale } from '@/features/common/i18n'
 
 const text = () => document.body.textContent ?? ''
 /** A person without work preferences, so the filters start empty. */
@@ -47,11 +48,12 @@ describe('JobSearch in swipe view', () => {
     await type(input('What'), 'devops')
     await wait(SEARCH_DELAY_MS + 50)
     await showDeck('Show 2 jobs')
-    expect(text()).toContain('“devops” · All areas · Anywhere')
+    expect(text()).toContain('“devops” · IT · Anywhere')
     expect(text()).toContain('2 jobs left')
     expect(cardTitle()).toBe('DevOps Engineer')
     await click(button('Filters'))
-    expect(text()).toContain('Position area')
+    expect(text()).toContain('Field of work')
+    expect(text()).toContain('Filters for IT')
   })
 
   it('shows a job a company posts in several cities once, and leaves it once one is decided', async () => {
@@ -193,7 +195,7 @@ describe('JobSearch in swipe view', () => {
     expect(button('Anywhere in Romania').getAttribute('aria-pressed')).toBe('true')
     expect(button(/^Add a job from a link or its text/).getAttribute('href')).toBe('/jobs/add')
     await click(button('Show 4 jobs'))
-    expect(text()).toContain('All areas · Anywhere in Romania')
+    expect(text()).toContain('IT · Anywhere in Romania')
     expect(() => button('Add a job')).toThrow()
   })
 
@@ -319,5 +321,66 @@ describe('JobSearch in grid view', () => {
     await wait(SEARCH_DELAY_MS + 50)
     expect(rows()).toHaveLength(2)
     expect(() => button('Filters')).toThrow()
+  })
+})
+
+describe('JobSearch by field of work', () => {
+  /** A person who picked IT and Accounting, with an accounts payable job next to the four IT ones. */
+  function twoFields() {
+    const services = useAllServices(sampleProfile({ city: '', work_modes: [], target_seniority: [], domains: ['it', 'accounting'] }))
+    services.jobs.jobs.push({ ...structuredClone(services.jobs.jobs[0]!), id: '33333333-0000-4000-8000-000000000001', title: 'Accounts Payable Specialist',
+      areas: ['Payables'], domains: ['accounting'] })
+    return services
+  }
+
+  it('shows the fields the person picked as tabs, each with its own areas, and keeps the search in them', async () => {
+    twoFields()
+    await mountPage(JobSearch)
+    expect(button('All').getAttribute('aria-pressed')).toBe('true')
+    expect(text()).toContain('Pick a field above to filter by its areas.')
+    expect(text()).toContain('5 jobs left')
+    expect(document.querySelector('[data-test="domain-filter"] a')?.getAttribute('href')).toBe('/preferences')
+
+    await click(button('Accounting'))
+    expect(button('Accounting').getAttribute('aria-pressed')).toBe('true')
+    expect(text()).toContain('Filters for Accounting')
+    expect(text()).toContain('1 job left')
+    await click(button('Payables (AP)'))
+    expect(button('Payables (AP)').getAttribute('aria-pressed')).toBe('true')
+    expect(text()).toContain('1 job left')
+
+    await click(button('IT'))
+    expect(text()).toContain('Filters for IT')
+    expect(button('Backend').getAttribute('aria-pressed')).toBe('false')
+    expect(text()).toContain('4 jobs left')
+    await click(button('Reset filters'))
+    expect(button('All').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('leaves a field the person no longer picks', async () => {
+    twoFields()
+    await mountPage(JobSearch)
+    await click(button('Accounting'))
+    const search = useJobSearchStore()
+    search.domains = ['it']
+    await settle()
+    expect(search.domain).toBe('')
+    expect(search.shownDomain).toBe('it')
+    expect(document.querySelector('[data-test="domain-filter"] [aria-pressed]')).toBeTruthy()
+  })
+
+  it('speaks Romanian', async () => {
+    twoFields()
+    setLocale('ro')
+    await mountPage(JobSearch)
+    expect(button('Toate').getAttribute('aria-pressed')).toBe('true')
+    expect(text()).toContain('Caută joburi')
+    expect(text()).toContain('5 joburi rămase')
+    await click(button('Contabilitate'))
+    expect(text()).toContain('Filtre pentru Contabilitate')
+    expect(button('Furnizori (AP)')).toBeTruthy()
+    expect(text()).toContain('1 job rămas')
+    expect(button('Oricare').getAttribute('aria-pressed')).toBe('true')
+    expect(useJobSearchStore().summary).toBe('Contabilitate · Oriunde în Romania')
   })
 })

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
+import { setLocale } from '@/features/common/i18n'
 import { server } from '@/shared/mocks/node'
 import { button, choose, click, input, mountPage, sectionToggle, settle, type, useServices } from '@/test/hoply'
 import { sampleProfile } from '@/test/profile-service'
@@ -173,5 +174,67 @@ describe('editing education', () => {
     await click(button('Save'))
     await settle()
     expect(document.querySelector('[role="alert"]')!.textContent).toBe('end must not be before start')
+  })
+})
+
+describe('editing in Romanian', () => {
+  it('edits a role, its highlights and its notes, and confirms a removal, in Romanian', async () => {
+    setLocale('ro')
+    const { profile } = useServices()
+    profile.experience[0]!.notes = [{ text: 'i ran the CI for 40 services', skills: [] }]
+    await mountPage(ProfilePage)
+    expect(text()).toContain('Notițele tale pentru CV-uri')
+    await click(button('Șterge notița 1 din DevOps Engineer'))
+    await settle()
+    expect(profile.experience[0]!.notes).toEqual([])
+
+    await click(button('Editează DevOps Engineer'))
+    expect(form('Editează DevOps Engineer')).toBeTruthy()
+    expect(value('Realizarea 4')).toBe('Wrote SQL queries and reports for the data team.')
+    await type(input('Rol'), '')
+    await click(button('Salvează'))
+    expect(text()).toContain('Adaugă rolul')
+    await type(input('Rol'), 'SRE')
+    await choose('Tip de angajare', 'Contract')
+    await type(input('Persoane conduse'), '2')
+    await type(input('Rezultatul realizării 1'), 'zero downtime')
+    await click(button('Șterge realizarea 4'))
+    await click(button('+ Adaugă o realizare'))
+    expect(input('Realizarea 4').getAttribute('placeholder')).toBe('Altceva ce ai făcut')
+    await click(button('Salvează'))
+    expect(profile.experience[0]).toMatchObject({ role: 'SRE', employment_type: 'contract', people_managed: 2 })
+    expect(text()).toContain('Contract · Cloud · Iași · echipă de 6 persoane · ai condus 2 persoane')
+    expect(document.body.innerHTML).toContain('Rezultat:')
+
+    const removeRole = [...document.querySelectorAll('button')].find(element => element.textContent?.trim() === 'Șterge acest rol')!
+    expect(removeRole.getAttribute('aria-label')).toBe('Șterge SRE')
+    await click(removeRole)
+    expect(text()).toContain('Ștergi SRE?')
+    await click(button('Păstrează'))
+    expect(profile.experience).toHaveLength(2)
+  })
+
+  it('adds education by its Romanian level', async () => {
+    setLocale('ro')
+    const { profile } = useServices()
+    await mountPage(ProfilePage)
+    await click(sectionToggle('Educație'))
+    await click(button('+ Adaugă educație'))
+    expect(form('Adaugă educație')).toBeTruthy()
+    await click(button('Salvează'))
+    expect(text()).toContain('Alege nivelul')
+    await choose('Nivel', 'Master')
+    await type(input('Domeniul de studiu'), 'Drept')
+    await type(input('Anul de început'), '2021')
+    await type(input('Anul de final'), '2020')
+    await click(button('Salvează'))
+    expect(text()).toContain('Anul de final nu poate fi înainte de anul de început')
+    await type(input('Anul de final'), '')
+    await click(button('Salvează'))
+    expect(profile.education[1]).toMatchObject({ level: 'master', field: 'Drept' })
+    expect(text()).toContain('Master în Drept')
+    expect(text()).toContain('2021 – prezent')
+    await click(button('Editează Master în Drept'))
+    expect(form('Editează Drept')).toBeTruthy()
   })
 })

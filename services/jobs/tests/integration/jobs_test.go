@@ -45,8 +45,8 @@ func insertCatalog(t *testing.T, pool *pgxpool.Pool) []uuid.UUID {
 	ids := make([]uuid.UUID, len(catalogFixtures))
 	for i, job := range catalogFixtures {
 		err := pool.QueryRow(context.Background(), "INSERT INTO jobs (title, company, city, country, work_mode, level, "+
-			"years_required, must_have, responsibilities, about_company, product, perks, areas, source, sample, created_at) "+
-			"VALUES ($1, $2, $3, 'Romania', $4, $5, 3, $6, '{Run things}', 'About the company', 'a product', '{Learning budget}', $7, "+
+			"years_required, must_have, responsibilities, about_company, product, perks, areas, domains, source, sample, created_at) "+
+			"VALUES ($1, $2, $3, 'Romania', $4, $5, 3, $6, '{Run things}', 'About the company', 'a product', '{Learning budget}', $7, '{it}', "+
 			"'catalog', $8, NOW() - make_interval(mins => $9)) RETURNING id",
 			job.title, job.company, job.city, job.workMode, job.level, job.mustHave, job.areas, job.sample, i+1).Scan(&ids[i])
 		if err != nil {
@@ -88,15 +88,15 @@ func TestJobRepositoryAgainstPostgres(t *testing.T) {
 	mine, err := repo.Create(ctx, me, models.JobInput{Title: "Remote Go Engineer", Company: "Acme", City: "Timișoara",
 		Country: "Romania", WorkMode: "remote", Level: "senior", YearsRequired: &five, MustHave: []string{"Go", "Kafka"},
 		NiceToHave: []string{"Rust"}, Responsibilities: []string{"Build"}, About: "About", URL: "https://acme.dev/jobs/1",
-		Source: "link", ReadFrom: "json_ld"})
+		Source: "link", ReadFrom: "json_ld"}, nil, nil)
 	if err != nil || !mine.AddedByMe || mine.Sample || mine.Source != "link" || mine.ReadFrom != "json_ld" || *mine.YearsRequired != 5 ||
-		mine.Perks == nil || mine.Areas == nil || mine.AboutCompany != "" || mine.CreatedAt.IsZero() {
+		mine.Perks == nil || mine.Areas == nil || mine.Domains == nil || mine.AboutCompany != "" || mine.CreatedAt.IsZero() {
 		t.Fatalf("create: %+v %v", mine, err)
 	}
 	theirs, err := repo.Create(ctx, other, models.JobInput{Title: "Their job", Source: "text", ReadFrom: "text",
-		Qualifications: []string{"Kafka in production"}, Bonuses: []string{"Rust"}, AboutCompany: "A bank.", Perks: []string{"Gym"}})
+		Qualifications: []string{"Kafka in production"}, Bonuses: []string{"Rust"}, AboutCompany: "A bank.", Perks: []string{"Gym"}}, []string{"Front office"}, []string{"banking"})
 	if err != nil || theirs.YearsRequired != nil || theirs.MustHave == nil || theirs.Qualifications[0] != "Kafka in production" ||
-		theirs.Bonuses[0] != "Rust" || theirs.AboutCompany != "A bank." || theirs.Perks[0] != "Gym" || mine.Qualifications == nil {
+		theirs.Bonuses[0] != "Rust" || theirs.AboutCompany != "A bank." || theirs.Perks[0] != "Gym" || theirs.Domains[0] != "banking" || theirs.Areas[0] != "Front office" || mine.Qualifications == nil {
 		t.Fatalf("create other: %+v %v", theirs, err)
 	}
 
@@ -135,6 +135,9 @@ func TestJobRepositoryAgainstPostgres(t *testing.T) {
 			"DevOps Engineer", "Software Engineer", "System Administrator"}},
 		{"other country", services.JobQuery{Country: "Germany"}, []string{}},
 		{"areas", services.JobQuery{Areas: []string{"data", "Sysadmin"}}, []string{"Snowflake Administrator DevOps", "System Administrator"}},
+		{"domain", services.JobQuery{Domains: []string{"it", "hr"}}, []string{"Remote Go Engineer", "Snowflake Administrator DevOps",
+			"DevOps Engineer", "Software Engineer", "System Administrator"}},
+		{"my job in no domain is in every one", services.JobQuery{Domains: []string{"banking"}}, []string{"Remote Go Engineer"}},
 		{"level", services.JobQuery{Level: "senior"}, []string{"Remote Go Engineer", "Snowflake Administrator DevOps"}},
 		{"combined", services.JobQuery{Q: "engineer", City: "bucharest", Areas: []string{"backend"}, Level: "mid"}, []string{"Software Engineer"}},
 	}
@@ -161,7 +164,7 @@ func TestJobRepositoryAgainstPostgres(t *testing.T) {
 	if removed, err := repo.Delete(ctx, me, mine.ID); err != nil || removed {
 		t.Fatalf("delete twice: %v %v", removed, err)
 	}
-	if _, err := repo.Create(ctx, me, models.JobInput{Title: "Bad", Source: "catalog"}); err == nil {
+	if _, err := repo.Create(ctx, me, models.JobInput{Title: "Bad", Source: "catalog"}, nil, nil); err == nil {
 		t.Fatal("the database refuses an owned catalog job")
 	}
 	pool.Close()

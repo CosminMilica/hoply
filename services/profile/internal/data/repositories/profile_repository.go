@@ -50,7 +50,7 @@ const (
 	profileColumns = "id, name, headline, about, email, phone, github, linkedin, city, country, work_modes, " +
 		"open_to_relocation, work_authorization, work_authorization_region, notice_period_weeks, available_from, " +
 		"target_roles, target_seniority, employment_types, salary_min, salary_currency, salary_period, " +
-		"additional_info, notes, skills, created_at, updated_at"
+		"app_language, domains, additional_info, notes, skills, created_at, updated_at"
 	// ownedProfile selects the profile id of the $1 tenant.
 	ownedProfile = "(SELECT id FROM profiles WHERE customer_id = $1)"
 )
@@ -169,7 +169,7 @@ func (r *PgProfileRepository) Patch(ctx context.Context, ident identity.Identity
 		{"phone", patch.Phone}, {"github", patch.GitHub}, {"linkedin", patch.LinkedIn}, {"city", patch.City},
 		{"country", patch.Country}, {"work_authorization", patch.WorkAuthorization},
 		{"work_authorization_region", patch.WorkAuthorizationRegion}, {"available_from", patch.AvailableFrom},
-		{"salary_currency", patch.SalaryCurrency}, {"salary_period", patch.SalaryPeriod},
+		{"salary_currency", patch.SalaryCurrency}, {"salary_period", patch.SalaryPeriod}, {"app_language", patch.AppLanguage},
 	} {
 		if field.value != nil {
 			set(field.column, *field.value)
@@ -181,7 +181,7 @@ func (r *PgProfileRepository) Patch(ctx context.Context, ident identity.Identity
 	}{
 		{"work_modes", patch.WorkModes}, {"target_roles", patch.TargetRoles},
 		{"target_seniority", patch.TargetSeniority}, {"employment_types", patch.EmploymentTypes},
-		{"additional_info", patch.AdditionalInfo},
+		{"additional_info", patch.AdditionalInfo}, {"domains", patch.Domains},
 	} {
 		if field.value != nil {
 			set(field.column, field.value)
@@ -454,10 +454,10 @@ func scanProfile(row pgx.CollectableRow) (models.Profile, error) {
 	err := row.Scan(&p.ID, &p.Name, &p.Headline, &p.About, &p.Email, &p.Phone, &p.GitHub, &p.LinkedIn, &p.City,
 		&p.Country, &p.WorkModes, &p.OpenToRelocation, &p.WorkAuthorization, &p.WorkAuthorizationRegion,
 		&p.NoticePeriodWeeks, &p.AvailableFrom, &p.TargetRoles, &p.TargetSeniority, &p.EmploymentTypes, &p.SalaryMin,
-		&p.SalaryCurrency, &p.SalaryPeriod, &p.AdditionalInfo, &p.Notes, &p.Skills, &p.CreatedAt, &p.UpdatedAt)
+		&p.SalaryCurrency, &p.SalaryPeriod, &p.AppLanguage, &p.Domains, &p.AdditionalInfo, &p.Notes, &p.Skills, &p.CreatedAt, &p.UpdatedAt)
 	p.Notes = notes(p.Notes)
 	for _, list := range []*[]string{&p.WorkModes, &p.TargetRoles, &p.TargetSeniority, &p.EmploymentTypes,
-		&p.AdditionalInfo, &p.Skills} {
+		&p.AdditionalInfo, &p.Skills, &p.Domains} {
 		*list = nonNil(*list)
 	}
 	return p, err

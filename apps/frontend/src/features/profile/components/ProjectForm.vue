@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { t } from '@/features/common/i18n'
 import { cleanList, projectInputSchema, withoutId, type Bullet, type Project, type ProjectInput } from '../api/profile.schema'
 import HighlightsField from './HighlightsField.vue'
 import MonthRangeFields from './MonthRangeFields.vue'
@@ -35,27 +36,27 @@ function submit() {
 </script>
 
 <template>
-  <form class="flex flex-col gap-2 rounded-[10px] border-[1.5px] border-dashed border-ink-400 p-3" :aria-label="initial ? `Edit ${initial.name}` : 'Add a project'" @submit.prevent="submit">
-    <UFormField label="Project name" :error="errors.name" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.name" placeholder="Project, e.g. Home lab" maxlength="120" class="w-full" />
+  <form class="flex flex-col gap-2 rounded-[10px] border-[1.5px] border-dashed border-ink-400 p-3" :aria-label="initial ? t.profile.entry.edit(initial.name) : t.profile.projectForm.add" @submit.prevent="submit">
+    <UFormField :label="t.profile.projectForm.name" :error="errors.name" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.name" :placeholder="t.profile.projectForm.namePlaceholder" maxlength="120" class="w-full" />
     </UFormField>
     <div class="grid grid-cols-2 gap-2">
-      <UFormField label="Your role in it" :error="errors.role" :ui="{ label: 'sr-only' }">
-        <UInput v-model="draft.role" placeholder="Your role, e.g. Maintainer" maxlength="120" class="w-full" />
+      <UFormField :label="t.profile.projectForm.role" :error="errors.role" :ui="{ label: 'sr-only' }">
+        <UInput v-model="draft.role" :placeholder="t.profile.projectForm.rolePlaceholder" maxlength="120" class="w-full" />
       </UFormField>
-      <UFormField label="Link" :error="errors.url" :ui="{ label: 'sr-only' }">
-        <UInput v-model="draft.url" placeholder="Link, e.g. github.com/you/lab" maxlength="200" class="w-full" />
+      <UFormField :label="t.profile.projectForm.link" :error="errors.url" :ui="{ label: 'sr-only' }">
+        <UInput v-model="draft.url" :placeholder="t.profile.projectForm.linkPlaceholder" maxlength="200" class="w-full" />
       </UFormField>
     </div>
-    <MonthRangeFields v-model:start="draft.start" v-model:end="draft.end" ongoing-label="Still ongoing" :errors="{ start: errors.start, end: errors.end }" />
-    <UFormField label="Tools you used, separated by commas" :error="errors.tools" :ui="{ label: 'sr-only' }">
-      <UInput v-model="draft.tools" placeholder="Tools, e.g. Docker, Grafana" class="w-full" />
+    <MonthRangeFields v-model:start="draft.start" v-model:end="draft.end" :ongoing-label="t.profile.projectForm.ongoing" :errors="{ start: errors.start, end: errors.end }" />
+    <UFormField :label="t.profile.experienceForm.tools" :error="errors.tools" :ui="{ label: 'sr-only' }">
+      <UInput v-model="draft.tools" :placeholder="t.profile.projectForm.toolsPlaceholder" class="w-full" />
     </UFormField>
     <HighlightsField v-model="bullets" :error="errors.bullets" />
     <p v-if="serverError" role="alert" class="m-0 text-sm font-bold text-error">{{ serverError }}</p>
     <div class="flex gap-2">
-      <UButton type="submit" color="neutral" label="Save" block class="flex-1" :loading="pending" />
-      <UButton color="neutral" variant="outline" label="Cancel" @click="emit('cancel')" />
+      <UButton type="submit" color="neutral" :label="t.common.actions.save" block class="flex-1" :loading="pending" />
+      <UButton color="neutral" variant="outline" :label="t.common.actions.cancel" @click="emit('cancel')" />
     </div>
   </form>
 </template>

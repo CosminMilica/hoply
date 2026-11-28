@@ -12,7 +12,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 
 | Method | Path (service side) | Body | Response |
 | --- | --- | --- | --- |
-| GET | `/api/v1/jobs` | query: `q`, `city`, `country`, `include_remote`, `area`, `level`, `ids`, `limit` | 200 `{ items: [JobCard], total }` |
+| GET | `/api/v1/jobs` | query: `q`, `city`, `country`, `include_remote`, `area`, `domain`, `level`, `ids`, `limit` | 200 `{ items: [JobCard], total }` |
 | GET | `/api/v1/jobs/{id}` | | 200 `Job` |
 | POST | `/api/v1/jobs/read` | `{ url }` or `{ text, title?, company?, url? }` | 200 `JobDraft` |
 | POST | `/api/v1/jobs` | `JobInput` | 201 `Job` |
@@ -25,7 +25,9 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
   newest first (by `posted_at`, else `created_at`), at most `limit` (1–2000, 2000 by default); other people's added jobs
   are never visible. Filters: `q` matches title, company and requirements (case-insensitive); `city` matches the city
   (case- and diacritics-insensitive: `Iasi` finds `Iași`); `include_remote=true` also keeps remote jobs when `city` is
-  set; `country` matches the country; `area` may repeat; `level` is one of the level values. `ids` (comma-separated, at
+  set; `country` matches the country; `area` may repeat; `domain` may repeat, each one of `it`, `banking`, `accounting`,
+  `finance`, `insurance`, `hr`, and keeps the jobs in any of them plus the caller's added jobs in none; `level` is one of
+  the level values. `ids` (comma-separated, at
   most 200) returns those jobs only, closed ones included: Saved uses it. `total` is how many jobs the filters find,
   also when `items` stops at `limit`. Each item is a `JobCard`: a `Job` without the whole ad (`qualifications`,
   `bonuses`, `about_company`, `product`, `perks`, `read_from`), with its first 3 `responsibilities` and the first 300
@@ -47,7 +49,7 @@ and a skills dictionary only, never with an LLM. Matching against the profile st
 Job       { id, title, company, city, country, work_mode, level, years_required,
             must_have: [string], nice_to_have: [string], responsibilities: [string],
             qualifications: [string], bonuses: [string],
-            about, about_company, product, perks: [string], areas: [string],
+            about, about_company, product, perks: [string], areas: [string], domains: [string],
             url, source, read_from, requirements_from, sample, added_by_me, created_at,
             origin, posted_at, closed_at }
 JobInput  { title, company, city, country, work_mode, level, years_required, must_have, nice_to_have,
@@ -190,11 +192,23 @@ With `JOBS_IMPORT=on` (Docker Compose sets it), the service reads the boards lis
 | `workday` | `POST {host}/wday/cxs/{tenant}/{site}/jobs`, the call the career site makes (not a documented API): first to find the site's country facet named Romania (sites name it differently), else the values of its location facet that are in Romania ("Bucharest - Dacia One"), then 20 a page with them; a site with neither lists none; each wanted job's description from `{host}/wday/cxs/{tenant}/{site}{externalPath}` |
 
 - A job is kept when it is based in Romania (a Romanian city or the word Romania in any of its locations, the
-  country code `RO`, or a list the platform kept to Romania) and its title names one of the areas. Tech: `DevOps`,
-  `Backend`, `Frontend`, `Full stack`, `Mobile`, `Data`, `AI`, `QA`, `Security`, `Embedded`, `Sysadmin`, `Product`,
-  `Design` (a generic developer title is `Backend` unless it names a narrower area). Finance, from English and Romanian
-  titles and shared-service process codes: `Banking`, `Accounting` ("Contabil", "F&A - AP", "I2C", "R2R"),
-  `Finance & control`, `Risk & compliance` (an "administrator" title with a finance area is not `Sysadmin`). Where the list has no descriptions,
+  country code `RO`, or a list the platform kept to Romania) and its title names one of the domains (`extract.Classify`,
+  on English and Romanian titles and shared-service process codes). A job's `domains` and `areas`:
+
+  | Domain | Areas |
+  | --- | --- |
+  | `it` | `DevOps`, `Backend`, `Frontend`, `Full stack`, `Mobile`, `Data`, `AI`, `QA`, `Security`, `Embedded`, `Sysadmin`, `Product`, `Design` |
+  | `banking` | `Front office`, `Lending`, `Bank operations`, `Corporate banking` |
+  | `accounting` | `General accounting`, `Payables`, `Receivables`, `Payroll`, `Tax` |
+  | `finance` | `FP&A & controlling`, `Treasury`, `Risk & compliance`, `Audit` |
+  | `insurance` | `Underwriting`, `Claims`, `Insurance sales`, `Actuarial` |
+  | `hr` | `Recruitment`, `HR generalist`, `Compensation & benefits`, `Training & development`, `HR administration` |
+
+  A title is in IT when it names an IT area (a generic developer title is `Backend` unless it names a narrower area; an
+  "administrator" title in another domain is not `Sysadmin`); in another domain when it names the domain, and then in
+  the areas it names. An accounting or HR title that names none of its areas is `General accounting` or `HR generalist`;
+  in the other domains it has the domain and no area. Payroll titles are in both `accounting` and `hr`. A job a person
+  adds gets its domains and areas from its title the same way. Where the list has no descriptions,
   only those jobs are read, a quarter of a second apart, and a description read in the last 7 days is not read again
   (the job is only marked as still listed). Its text goes through the same rules as a link; the company is the one in `boards.yaml`.
 - A job is keyed by its platform, its board and the platform's id: a later run updates it and keeps requirements Claude's

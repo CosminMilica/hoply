@@ -9,38 +9,42 @@ import (
 )
 
 type Profile struct {
-	ID                      uuid.UUID       `json:"id"`
-	Name                    string          `json:"name"`
-	Headline                string          `json:"headline"`
-	About                   string          `json:"about"`
-	Email                   string          `json:"email"`
-	Phone                   string          `json:"phone"`
-	GitHub                  string          `json:"github"`
-	LinkedIn                string          `json:"linkedin"`
-	City                    string          `json:"city"`
-	Country                 string          `json:"country"`
-	WorkModes               []string        `json:"work_modes"`
-	OpenToRelocation        bool            `json:"open_to_relocation"`
-	WorkAuthorization       string          `json:"work_authorization"`
-	WorkAuthorizationRegion string          `json:"work_authorization_region"`
-	NoticePeriodWeeks       *int            `json:"notice_period_weeks"`
-	AvailableFrom           string          `json:"available_from"`
-	TargetRoles             []string        `json:"target_roles"`
-	TargetSeniority         []string        `json:"target_seniority"`
-	EmploymentTypes         []string        `json:"employment_types"`
-	SalaryMin               *int            `json:"salary_min"`
-	SalaryCurrency          string          `json:"salary_currency"`
-	SalaryPeriod            string          `json:"salary_period"`
-	AdditionalInfo          []string        `json:"additional_info"`
-	Notes                   []Note          `json:"notes"`
-	Skills                  []string        `json:"skills"`
-	Experience              []Experience    `json:"experience"`
-	Projects                []Project       `json:"projects"`
-	Education               []Education     `json:"education"`
-	Certifications          []Certification `json:"certifications"`
-	Languages               []Language      `json:"languages"`
-	CreatedAt               time.Time       `json:"created_at"`
-	UpdatedAt               time.Time       `json:"updated_at"`
+	ID                      uuid.UUID `json:"id"`
+	Name                    string    `json:"name"`
+	Headline                string    `json:"headline"`
+	About                   string    `json:"about"`
+	Email                   string    `json:"email"`
+	Phone                   string    `json:"phone"`
+	GitHub                  string    `json:"github"`
+	LinkedIn                string    `json:"linkedin"`
+	City                    string    `json:"city"`
+	Country                 string    `json:"country"`
+	WorkModes               []string  `json:"work_modes"`
+	OpenToRelocation        bool      `json:"open_to_relocation"`
+	WorkAuthorization       string    `json:"work_authorization"`
+	WorkAuthorizationRegion string    `json:"work_authorization_region"`
+	NoticePeriodWeeks       *int      `json:"notice_period_weeks"`
+	AvailableFrom           string    `json:"available_from"`
+	TargetRoles             []string  `json:"target_roles"`
+	TargetSeniority         []string  `json:"target_seniority"`
+	EmploymentTypes         []string  `json:"employment_types"`
+	SalaryMin               *int      `json:"salary_min"`
+	SalaryCurrency          string    `json:"salary_currency"`
+	SalaryPeriod            string    `json:"salary_period"`
+	// AppLanguage is the language the person uses the app in, "en" or "ro"; empty until they pick one.
+	AppLanguage string `json:"app_language"`
+	// Domains are the fields of work whose jobs Find jobs shows; none until the person is through onboarding.
+	Domains        []string        `json:"domains"`
+	AdditionalInfo []string        `json:"additional_info"`
+	Notes          []Note          `json:"notes"`
+	Skills         []string        `json:"skills"`
+	Experience     []Experience    `json:"experience"`
+	Projects       []Project       `json:"projects"`
+	Education      []Education     `json:"education"`
+	Certifications []Certification `json:"certifications"`
+	Languages      []Language      `json:"languages"`
+	CreatedAt      time.Time       `json:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at"`
 }
 
 // ProfilePatch changes only the fields that are present. A nil slice is an
@@ -67,6 +71,8 @@ type ProfilePatch struct {
 	SalaryMin               Nullable `json:"salary_min"`
 	SalaryCurrency          *string  `json:"salary_currency"`
 	SalaryPeriod            *string  `json:"salary_period"`
+	AppLanguage             *string  `json:"app_language"`
+	Domains                 []string `json:"domains"`
 	AdditionalInfo          []string `json:"additional_info"`
 	Notes                   []Note   `json:"notes"`
 }
@@ -74,12 +80,12 @@ type ProfilePatch struct {
 // Empty reports whether the patch changes nothing.
 func (p ProfilePatch) Empty() bool {
 	for _, value := range []*string{p.Name, p.Headline, p.About, p.Email, p.Phone, p.GitHub, p.LinkedIn, p.City,
-		p.Country, p.WorkAuthorization, p.WorkAuthorizationRegion, p.AvailableFrom, p.SalaryCurrency, p.SalaryPeriod} {
+		p.Country, p.WorkAuthorization, p.WorkAuthorizationRegion, p.AvailableFrom, p.SalaryCurrency, p.SalaryPeriod, p.AppLanguage} {
 		if value != nil {
 			return false
 		}
 	}
-	for _, list := range [][]string{p.WorkModes, p.TargetRoles, p.TargetSeniority, p.EmploymentTypes, p.AdditionalInfo} {
+	for _, list := range [][]string{p.WorkModes, p.TargetRoles, p.TargetSeniority, p.EmploymentTypes, p.AdditionalInfo, p.Domains} {
 		if list != nil {
 			return false
 		}
